@@ -24,8 +24,6 @@ jobs:
         run: git remote add heroku $HEROKU_REMOTE
         env:
           HEROKU_REMOTE: ${{ secrets.HEROKU_REMOTE }}
-      - name: Fetch
-        run: git fetch --unshallow origin
       - name: Push to Heroku
         run: git push heroku -f HEAD:master
 
