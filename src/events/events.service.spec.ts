@@ -151,4 +151,37 @@ describe('EventsService', () => {
       });
     });
   });
+
+  describe('getLifetimeEventCountsForAccount', () => {
+    it('sums up all the events for the accounts', async () => {
+      const eventCounts: Record<EventType, number> = {
+        BLOCK_MINED: 4,
+        BUG_CAUGHT: 1,
+        COMMUNITY_CONTRIBUTION: 2,
+        NODE_HOSTED: 1,
+        PULL_REQUEST_MERGED: 0,
+        SOCIAL_MEDIA_PROMOTION: 0,
+      };
+      const account = await prisma.account.create({
+        data: {
+          public_address: uuid(),
+        },
+      });
+
+      for (const [eventType, count] of Object.entries(eventCounts)) {
+        for (let i = 0; i < count; i++) {
+          await prisma.event.create({
+            data: {
+              account_id: account.id,
+              type: EventType[eventType as keyof typeof EventType],
+            },
+          });
+        }
+      }
+
+      const lifetimeCounts =
+        await eventsService.getLifetimeEventCountsForAccount(account);
+      expect(lifetimeCounts).toEqual(eventCounts);
+    });
+  });
 });

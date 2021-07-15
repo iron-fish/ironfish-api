@@ -165,5 +165,34 @@ describe('AccountsController', () => {
           .expect(HttpStatus.NOT_FOUND);
       });
     });
+
+    describe('with a valid lifetime request', () => {
+      it('returns the lifetime metrics for the account', async () => {
+        const account = await prisma.account.create({
+          data: {
+            public_address: uuid(),
+          },
+        });
+        const granularity = MetricsGranularity.LIFETIME;
+
+        const { body } = await request(app.getHttpServer())
+          .get(`/accounts/${account.id}/metrics`)
+          .query({
+            granularity,
+          });
+        expect(body).toMatchObject({
+          account_id: account.id,
+          granularity,
+          metrics: {
+            blocks_mined: expect.any(Number),
+            bugs_caught: expect.any(Number),
+            community_contributions: expect.any(Number),
+            nodes_hosted: expect.any(Number),
+            pull_requests_merged: expect.any(Number),
+            social_media_contributions: expect.any(Number),
+          },
+        });
+      });
+    });
   });
 });
