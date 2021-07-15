@@ -1,0 +1,64 @@
+name: API CI
+
+on: [push]
+
+env:
+  DATABASE_URL: postgres://postgres:password@localhost:5432/ironfish_api_test
+  IRONFISH_POSTGRES_CONTAINER: ironfish_postgres
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v2
+      - name: Use Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: '14.17.0'
+      - name: Restore Yarn cache
+        id: yarn-cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            node_modules
+            */*/node_modules
+          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+      - name: Install packages
+        if: steps.yarn-cache.outputs.cache-hit != 'true'
+        run: yarn --non-interactive --frozen-lockfile
+      - name: Lint
+        run: yarn lint
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v2
+      - name: Use Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: '14.17.0'
+      - name: Restore Yarn cache
+        id: yarn-cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            node_modules
+            */*/node_modules
+          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+      - name: Install packages
+        if: steps.yarn-cache.outputs.cache-hit != 'true'
+        run: yarn --non-interactive --frozen-lockfile
+      - name: Start Docker 
+        run: yarn docker:start
+      - name: Wait for Postgres
+        run: until docker exec $IRONFISH_POSTGRES_CONTAINER pg_isready; do sleep 5; done
+      - name: Run migrations
+        run: npx prisma migrate deploy
+      - name: Run tests
+        run: yarn test
+      - name: Stop Docker
+        run: yarn docker:stop

@@ -7,6 +7,9 @@
   "repository": "iron-fish/ironfish",
   "license": "MPL-2.0",
   "homepage": "https://github.com/iron-fish/ironfish-api",
+  "engines": {
+    "node": "14.x"
+  },
   "keywords": [
     "http",
     "api"
