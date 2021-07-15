@@ -14,16 +14,21 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { MS_PER_DAY } from '../common/constants';
+import { EventsService } from '../events/events.service';
 import { AccountsService } from './accounts.service';
 import { MetricsQueryDto } from './dto/metrics-query.dto';
 import { MetricsGranularity } from './enums/metrics-granularity';
-import { Account } from '.prisma/client';
+import { SerializedAccountMetrics } from './interfaces/serialized-account-metrics';
+import { Account, EventType } from '.prisma/client';
 
 const MAX_SUPPORTED_TIME_RANGE_IN_DAYS = 30;
 
 @Controller('accounts')
 export class AccountsController {
-  constructor(private readonly accountsService: AccountsService) {}
+  constructor(
+    private readonly accountsService: AccountsService,
+    private readonly eventsService: EventsService,
+  ) {}
 
   @Get(':id')
   async find(
@@ -58,7 +63,7 @@ export class AccountsController {
       }),
     )
     query: MetricsQueryDto,
-  ): Promise<void> {
+  ): Promise<SerializedAccountMetrics> {
     const { isValid, error } = this.isValidMetricsQuery(query);
     if (!isValid) {
       throw new UnprocessableEntityException(error);
@@ -66,6 +71,26 @@ export class AccountsController {
     const account = await this.accountsService.find({ id });
     if (!account) {
       throw new NotFoundException();
+    }
+
+    const { granularity } = query;
+    if (granularity === MetricsGranularity.LIFETIME) {
+      const lifetimeCounts =
+        await this.eventsService.getLifetimeEventCountsForAccount(account);
+      return {
+        account_id: account.id,
+        granularity,
+        metrics: {
+          blocks_mined: lifetimeCounts[EventType.BLOCK_MINED],
+          bugs_caught: lifetimeCounts[EventType.BUG_CAUGHT],
+          community_contributions:
+            lifetimeCounts[EventType.COMMUNITY_CONTRIBUTION],
+          nodes_hosted: lifetimeCounts[EventType.NODE_HOSTED],
+          pull_requests_merged: lifetimeCounts[EventType.PULL_REQUEST_MERGED],
+          social_media_contributions:
+            lifetimeCounts[EventType.SOCIAL_MEDIA_PROMOTION],
+        },
+      };
     }
     throw new NotImplementedException();
   }

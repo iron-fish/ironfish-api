@@ -5,7 +5,7 @@ import { Injectable } from '@nestjs/common';
 import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { PrismaService } from '../prisma/prisma.service';
 import { ListEventsOptions } from './interfaces/list-events-options';
-import { Event, Prisma } from '.prisma/client';
+import { Account, Event, EventType, Prisma } from '.prisma/client';
 
 @Injectable()
 export class EventsService {
@@ -35,5 +35,49 @@ export class EventsService {
         account_id: options.accountId,
       },
     });
+  }
+
+  async getLifetimeEventCountsForAccount(
+    account: Account,
+  ): Promise<Record<EventType, number>> {
+    const { id } = account;
+    return {
+      BLOCK_MINED: await this.prisma.event.count({
+        where: {
+          account_id: id,
+          type: EventType.BLOCK_MINED,
+        },
+      }),
+      BUG_CAUGHT: await this.prisma.event.count({
+        where: {
+          account_id: id,
+          type: EventType.BUG_CAUGHT,
+        },
+      }),
+      COMMUNITY_CONTRIBUTION: await this.prisma.event.count({
+        where: {
+          account_id: id,
+          type: EventType.COMMUNITY_CONTRIBUTION,
+        },
+      }),
+      NODE_HOSTED: await this.prisma.event.count({
+        where: {
+          account_id: id,
+          type: EventType.NODE_HOSTED,
+        },
+      }),
+      PULL_REQUEST_MERGED: await this.prisma.event.count({
+        where: {
+          account_id: id,
+          type: EventType.PULL_REQUEST_MERGED,
+        },
+      }),
+      SOCIAL_MEDIA_PROMOTION: await this.prisma.event.count({
+        where: {
+          account_id: id,
+          type: EventType.SOCIAL_MEDIA_PROMOTION,
+        },
+      }),
+    };
   }
 }
