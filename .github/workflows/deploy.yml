@@ -2,7 +2,7 @@ name: Deploy HTTP API
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   deploy:
