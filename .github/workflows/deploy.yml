@@ -25,5 +25,5 @@ jobs:
         env:
           HEROKU_REMOTE: ${{ secrets.HEROKU_REMOTE }}
       - name: Push to Heroku
-        run: git push heroku -f master
-        
+        run: git push heroku -f HEAD:master
+
