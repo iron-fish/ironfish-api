@@ -73,7 +73,7 @@ export class AccountsController {
       throw new NotFoundException();
     }
 
-    const { granularity } = query;
+    const { start, end, granularity } = query;
     if (granularity === MetricsGranularity.LIFETIME) {
       const lifetimeCounts =
         await this.eventsService.getLifetimeEventCountsForAccount(account);

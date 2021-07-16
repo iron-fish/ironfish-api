@@ -80,4 +80,64 @@ export class EventsService {
       }),
     };
   }
+
+  async getTotalEventCountsForAccount(
+    account: Account,
+    start: Date,
+    end: Date,
+  ): Promise<Record<EventType, number>> {
+    const { id } = account;
+    // TODO: Using `created_at` is temporary to MVP this functionality. We
+    // should replace this with an `occurred_at`
+    const dateFilter = {
+      created_at: {
+        gte: start,
+        lt: end
+      }
+    }
+    return {
+      BLOCK_MINED: await this.prisma.event.count({
+        where: {
+          account_id: id,
+          type: EventType.BLOCK_MINED,
+          ...dateFilter,
+        },
+      }),
+      BUG_CAUGHT: await this.prisma.event.count({
+        where: {
+          account_id: id,
+          type: EventType.BUG_CAUGHT,
+          ...dateFilter,
+        },
+      }),
+      COMMUNITY_CONTRIBUTION: await this.prisma.event.count({
+        where: {
+          account_id: id,
+          type: EventType.COMMUNITY_CONTRIBUTION,
+          ...dateFilter,
+        },
+      }),
+      NODE_HOSTED: await this.prisma.event.count({
+        where: {
+          account_id: id,
+          type: EventType.NODE_HOSTED,
+          ...dateFilter,
+        },
+      }),
+      PULL_REQUEST_MERGED: await this.prisma.event.count({
+        where: {
+          account_id: id,
+          type: EventType.PULL_REQUEST_MERGED,
+          ...dateFilter,
+        },
+      }),
+      SOCIAL_MEDIA_PROMOTION: await this.prisma.event.count({
+        where: {
+          account_id: id,
+          type: EventType.SOCIAL_MEDIA_PROMOTION,
+          ...dateFilter,
+        },
+      }),
+    };
+  }
 }

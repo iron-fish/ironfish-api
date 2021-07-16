@@ -184,4 +184,8 @@ describe('EventsService', () => {
       expect(lifetimeCounts).toEqual(eventCounts);
     });
   });
+
+  describe('getTotalEventCountsForAccount', () => {
+    
+  })
 });
