@@ -29,8 +29,9 @@ describe('EventsController', () => {
           .get(`/events`)
           .expect(HttpStatus.OK);
 
-        expect((body as unknown[]).length).toBeGreaterThan(0);
-        expect((body as unknown[])[0]).toMatchObject({
+        const { data } = body;
+        expect((data as unknown[]).length).toBeGreaterThan(0);
+        expect((data as unknown[])[0]).toMatchObject({
           id: expect.any(Number),
           account_id: expect.any(Number),
           type: expect.any(String),
@@ -73,8 +74,9 @@ describe('EventsController', () => {
           .query({ account_id: account.id })
           .expect(HttpStatus.OK);
 
-        expect(body).toHaveLength(events.length);
-        for (const event of body) {
+        const { data } = body;
+        expect(data).toHaveLength(events.length);
+        for (const event of data) {
           expect(event).toMatchObject({
             id: expect.any(Number),
             account_id: account.id,
