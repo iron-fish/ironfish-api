@@ -8,6 +8,7 @@ import {
   Query,
   ValidationPipe,
 } from '@nestjs/common';
+import { List } from '../common/interfaces/list';
 import { EventsService } from '../events/events.service';
 import { EventsQueryDto } from './dto/events-query.dto';
 import { Event } from '.prisma/client';
@@ -25,12 +26,14 @@ export class EventsController {
       }),
     )
     { account_id, after, before, limit }: EventsQueryDto,
-  ): Promise<Event[]> {
-    return this.eventsService.list({
-      accountId: account_id,
-      after,
-      before,
-      limit,
-    });
+  ): Promise<List<Event>> {
+    return {
+      data: await this.eventsService.list({
+        accountId: account_id,
+        after,
+        before,
+        limit,
+      }),
+    };
   }
 }
