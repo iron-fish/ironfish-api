@@ -87,14 +87,12 @@ export class EventsService {
     end: Date,
   ): Promise<Record<EventType, number>> {
     const { id } = account;
-    // TODO: Using `created_at` is temporary to MVP this functionality. We
-    // should replace this with an `occurred_at`
     const dateFilter = {
-      created_at: {
+      occurred_at: {
         gte: start,
-        lt: end
-      }
-    }
+        lt: end,
+      },
+    };
     return {
       BLOCK_MINED: await this.prisma.event.count({
         where: {

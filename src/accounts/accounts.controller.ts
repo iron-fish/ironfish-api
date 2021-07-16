@@ -5,8 +5,6 @@ import {
   Controller,
   Get,
   HttpStatus,
-  NotFoundException,
-  NotImplementedException,
   Param,
   ParseIntPipe,
   Query,
@@ -40,11 +38,7 @@ export class AccountsController {
     )
     id: number,
   ): Promise<Account> {
-    const account = await this.accountsService.find({ id });
-    if (!account) {
-      throw new NotFoundException();
-    }
-    return account;
+    return this.accountsService.findOrThrow(id);
   }
 
   @Get(':id/metrics')
@@ -68,31 +62,41 @@ export class AccountsController {
     if (!isValid) {
       throw new UnprocessableEntityException(error);
     }
-    const account = await this.accountsService.find({ id });
-    if (!account) {
-      throw new NotFoundException();
-    }
 
+    let eventCounts: Record<EventType, number>;
     const { start, end, granularity } = query;
     if (granularity === MetricsGranularity.LIFETIME) {
-      const lifetimeCounts =
-        await this.eventsService.getLifetimeEventCountsForAccount(account);
-      return {
-        account_id: account.id,
-        granularity,
-        metrics: {
-          blocks_mined: lifetimeCounts[EventType.BLOCK_MINED],
-          bugs_caught: lifetimeCounts[EventType.BUG_CAUGHT],
-          community_contributions:
-            lifetimeCounts[EventType.COMMUNITY_CONTRIBUTION],
-          nodes_hosted: lifetimeCounts[EventType.NODE_HOSTED],
-          pull_requests_merged: lifetimeCounts[EventType.PULL_REQUEST_MERGED],
-          social_media_contributions:
-            lifetimeCounts[EventType.SOCIAL_MEDIA_PROMOTION],
-        },
-      };
+      const account = await this.accountsService.findOrThrow(id);
+      eventCounts = await this.eventsService.getLifetimeEventCountsForAccount(
+        account,
+      );
+    } else {
+      if (start === undefined || end === undefined) {
+        throw new UnprocessableEntityException(
+          'Must provide time range for "TOTAL" requests',
+        );
+      }
+      const account = await this.accountsService.findOrThrow(id);
+      eventCounts = await this.eventsService.getTotalEventCountsForAccount(
+        account,
+        start,
+        end,
+      );
     }
-    throw new NotImplementedException();
+
+    return {
+      account_id: id,
+      granularity,
+      metrics: {
+        blocks_mined: eventCounts[EventType.BLOCK_MINED],
+        bugs_caught: eventCounts[EventType.BUG_CAUGHT],
+        community_contributions: eventCounts[EventType.COMMUNITY_CONTRIBUTION],
+        nodes_hosted: eventCounts[EventType.NODE_HOSTED],
+        pull_requests_merged: eventCounts[EventType.PULL_REQUEST_MERGED],
+        social_media_contributions:
+          eventCounts[EventType.SOCIAL_MEDIA_PROMOTION],
+      },
+    };
   }
 
   private isValidMetricsQuery({ start, end, granularity }: MetricsQueryDto): {
@@ -121,11 +125,6 @@ export class AccountsController {
           error: 'Time range too long',
         };
       }
-    } else if (granularity === MetricsGranularity.TOTAL) {
-      return {
-        isValid: false,
-        error: 'Must provide time range for "TOTAL" requests',
-      };
     }
     return { isValid: true };
   }
