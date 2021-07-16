@@ -19,12 +19,13 @@ model Account {
 }
 
 model Event {
-  id         Int       @id @default(autoincrement())
-  created_at DateTime  @default(now()) @db.Timestamp(6)
-  updated_at DateTime  @default(now()) @db.Timestamp(6)
-  account_id Int
-  type       EventType
-  account    Account   @relation(fields: [account_id], references: [id])
+  id          Int       @id @default(autoincrement())
+  created_at  DateTime  @default(now()) @db.Timestamp(6)
+  updated_at  DateTime  @default(now()) @db.Timestamp(6)
+  account_id  Int
+  type        EventType
+  occurred_at DateTime  @db.Timestamp(6)
+  account     Account   @relation(fields: [account_id], references: [id])
 
   @@index([account_id], name: "index_events_on_account_id")
   @@map("events")

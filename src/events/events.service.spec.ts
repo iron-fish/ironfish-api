@@ -36,6 +36,7 @@ describe('EventsService', () => {
           data: {
             type: EventType.BUG_CAUGHT,
             account_id: account.id,
+            occurred_at: new Date(),
           },
         });
         const record = await eventsService.find({ id: event.id });
@@ -63,18 +64,21 @@ describe('EventsService', () => {
         data: {
           type: EventType.BUG_CAUGHT,
           account_id: account.id,
+          occurred_at: new Date(),
         },
       });
       const secondEvent = await prisma.event.create({
         data: {
           type: EventType.COMMUNITY_CONTRIBUTION,
           account_id: account.id,
+          occurred_at: new Date(),
         },
       });
       const thirdEvent = await prisma.event.create({
         data: {
           type: EventType.SOCIAL_MEDIA_PROMOTION,
           account_id: account.id,
+          occurred_at: new Date(),
         },
       });
       const events = [firstEvent, secondEvent, thirdEvent];
@@ -174,6 +178,7 @@ describe('EventsService', () => {
             data: {
               account_id: account.id,
               type: EventType[eventType as keyof typeof EventType],
+              occurred_at: new Date(),
             },
           });
         }
