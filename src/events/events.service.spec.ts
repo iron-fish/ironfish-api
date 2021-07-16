@@ -189,4 +189,62 @@ describe('EventsService', () => {
       expect(lifetimeCounts).toEqual(eventCounts);
     });
   });
+
+  describe('getTotalEventCountsForAccount', () => {
+    it('returns sums of event counts within the provided time range', async () => {
+      const now = new Date();
+      const account = await prisma.account.create({
+        data: {
+          public_address: uuid(),
+        },
+      });
+      const eventCountsToReturn: Record<EventType, number> = {
+        BLOCK_MINED: 2,
+        BUG_CAUGHT: 4,
+        COMMUNITY_CONTRIBUTION: 3,
+        NODE_HOSTED: 1,
+        PULL_REQUEST_MERGED: 0,
+        SOCIAL_MEDIA_PROMOTION: 0,
+      };
+      const eventCountsToIgnore: Record<EventType, number> = {
+        BLOCK_MINED: 1,
+        BUG_CAUGHT: 1,
+        COMMUNITY_CONTRIBUTION: 2,
+        NODE_HOSTED: 1,
+        PULL_REQUEST_MERGED: 0,
+        SOCIAL_MEDIA_PROMOTION: 2,
+      };
+
+      for (const [eventType, count] of Object.entries(eventCountsToReturn)) {
+        for (let i = 0; i < count; i++) {
+          await prisma.event.create({
+            data: {
+              account_id: account.id,
+              type: EventType[eventType as keyof typeof EventType],
+              occurred_at: new Date(now.getTime() + 1),
+            },
+          });
+        }
+      }
+
+      for (const [eventType, count] of Object.entries(eventCountsToIgnore)) {
+        for (let i = 0; i < count; i++) {
+          await prisma.event.create({
+            data: {
+              account_id: account.id,
+              type: EventType[eventType as keyof typeof EventType],
+              occurred_at: new Date(now.getTime() - 1),
+            },
+          });
+        }
+      }
+
+      const totalCounts = await eventsService.getTotalEventCountsForAccount(
+        account,
+        now,
+        new Date(now.getTime() + 1000),
+      );
+      expect(totalCounts).toEqual(eventCountsToReturn);
+    });
+  });
 });

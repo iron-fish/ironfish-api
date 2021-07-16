@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, NotFoundException } from '@nestjs/common';
 import { v4 as uuid } from 'uuid';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
@@ -23,7 +23,7 @@ describe('AccountsService', () => {
     await app.close();
   });
 
-  describe('find', () => {
+  describe('findOrThrow', () => {
     describe('with a valid id', () => {
       it('returns the record', async () => {
         const account = await prisma.account.create({
@@ -31,7 +31,7 @@ describe('AccountsService', () => {
             public_address: uuid(),
           },
         });
-        const record = await accountsService.find({ id: account.id });
+        const record = await accountsService.findOrThrow(account.id);
         expect(record).not.toBeNull();
         expect(record).toMatchObject(account);
       });
@@ -39,8 +39,9 @@ describe('AccountsService', () => {
 
     describe('with a missing id', () => {
       it('returns null', async () => {
-        const record = await accountsService.find({ id: 1337 });
-        expect(record).toBeNull();
+        await expect(accountsService.findOrThrow(1337)).rejects.toThrow(
+          NotFoundException,
+        );
       });
     });
   });

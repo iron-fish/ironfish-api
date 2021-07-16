@@ -194,5 +194,38 @@ describe('AccountsController', () => {
         });
       });
     });
+
+    describe('with a valid total request', () => {
+      it('returns the total metrics for the account in the given range', async () => {
+        const account = await prisma.account.create({
+          data: {
+            public_address: uuid(),
+          },
+        });
+        const start = new Date(Date.now() - 1).toISOString();
+        const end = new Date().toISOString();
+        const granularity = MetricsGranularity.TOTAL;
+
+        const { body } = await request(app.getHttpServer())
+          .get(`/accounts/${account.id}/metrics`)
+          .query({
+            granularity,
+            start,
+            end,
+          });
+        expect(body).toMatchObject({
+          account_id: account.id,
+          granularity,
+          metrics: {
+            blocks_mined: expect.any(Number),
+            bugs_caught: expect.any(Number),
+            community_contributions: expect.any(Number),
+            nodes_hosted: expect.any(Number),
+            pull_requests_merged: expect.any(Number),
+            social_media_contributions: expect.any(Number),
+          },
+        });
+      });
+    });
   });
 });
