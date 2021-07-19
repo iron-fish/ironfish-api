@@ -51,6 +51,7 @@ describe('EventsController', () => {
             type: EventType.BUG_CAUGHT,
             account_id: account.id,
             occurred_at: new Date(),
+            points: 0,
           },
         });
         const secondEvent = await prisma.event.create({
@@ -58,6 +59,7 @@ describe('EventsController', () => {
             type: EventType.COMMUNITY_CONTRIBUTION,
             account_id: account.id,
             occurred_at: new Date(),
+            points: 0,
           },
         });
         const thirdEvent = await prisma.event.create({
@@ -65,6 +67,7 @@ describe('EventsController', () => {
             type: EventType.SOCIAL_MEDIA_PROMOTION,
             account_id: account.id,
             occurred_at: new Date(),
+            points: 0,
           },
         });
         const events = [firstEvent, secondEvent, thirdEvent];

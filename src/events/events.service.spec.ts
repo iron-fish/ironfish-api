@@ -37,6 +37,7 @@ describe('EventsService', () => {
             type: EventType.BUG_CAUGHT,
             account_id: account.id,
             occurred_at: new Date(),
+            points: 0,
           },
         });
         const record = await eventsService.find({ id: event.id });
@@ -65,6 +66,7 @@ describe('EventsService', () => {
           type: EventType.BUG_CAUGHT,
           account_id: account.id,
           occurred_at: new Date(),
+          points: 0,
         },
       });
       const secondEvent = await prisma.event.create({
@@ -72,6 +74,7 @@ describe('EventsService', () => {
           type: EventType.COMMUNITY_CONTRIBUTION,
           account_id: account.id,
           occurred_at: new Date(),
+          points: 0,
         },
       });
       const thirdEvent = await prisma.event.create({
@@ -79,6 +82,7 @@ describe('EventsService', () => {
           type: EventType.SOCIAL_MEDIA_PROMOTION,
           account_id: account.id,
           occurred_at: new Date(),
+          points: 0,
         },
       });
       const events = [firstEvent, secondEvent, thirdEvent];
@@ -179,6 +183,7 @@ describe('EventsService', () => {
               account_id: account.id,
               type: EventType[eventType as keyof typeof EventType],
               occurred_at: new Date(),
+              points: 0,
             },
           });
         }
@@ -222,6 +227,7 @@ describe('EventsService', () => {
               account_id: account.id,
               type: EventType[eventType as keyof typeof EventType],
               occurred_at: new Date(now.getTime() + 1),
+              points: 0,
             },
           });
         }
@@ -234,6 +240,7 @@ describe('EventsService', () => {
               account_id: account.id,
               type: EventType[eventType as keyof typeof EventType],
               occurred_at: new Date(now.getTime() - 1),
+              points: 0,
             },
           });
         }
