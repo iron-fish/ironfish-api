@@ -12,6 +12,8 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { MS_PER_DAY } from '../common/constants';
+import { PaginationArgsDto } from '../common/dto/pagination-args.dto';
+import { List } from '../common/interfaces/list';
 import { EventsService } from '../events/events.service';
 import { AccountsService } from './accounts.service';
 import { MetricsQueryDto } from './dto/metrics-query.dto';
@@ -127,5 +129,24 @@ export class AccountsController {
       }
     }
     return { isValid: true };
+  }
+
+  @Get()
+  async list(
+    @Query(
+      new ValidationPipe({
+        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        transform: true,
+      }),
+    )
+    { after, before, limit }: PaginationArgsDto,
+  ): Promise<List<Account>> {
+    return {
+      data: await this.accountsService.list({
+        after,
+        before,
+        limit,
+      }),
+    };
   }
 }

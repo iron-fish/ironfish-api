@@ -45,4 +45,20 @@ describe('AccountsService', () => {
       });
     });
   });
+
+  describe('list', () => {
+    it('returns a chunk of accounts', async () => {
+      const limit = 2;
+      const records = await accountsService.list({
+        limit,
+      });
+      expect(records).toHaveLength(limit);
+      for (const record of records) {
+        expect(record).toMatchObject({
+          id: expect.any(Number),
+          public_address: expect.any(String),
+        });
+      }
+    });
+  });
 });
