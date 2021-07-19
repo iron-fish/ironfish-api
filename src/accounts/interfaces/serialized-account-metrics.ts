@@ -6,6 +6,7 @@ import { MetricsGranularity } from '../enums/metrics-granularity';
 export interface SerializedAccountMetrics {
   account_id: number;
   granularity: MetricsGranularity;
+  points: number;
   metrics: {
     blocks_mined: number;
     bugs_caught: number;

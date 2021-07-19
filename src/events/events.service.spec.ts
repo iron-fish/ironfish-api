@@ -222,17 +222,20 @@ describe('EventsService', () => {
         PULL_REQUEST_MERGED: 0,
         SOCIAL_MEDIA_PROMOTION: 2,
       };
+      let totalPoints = 0;
 
       for (const [eventType, count] of Object.entries(eventCountsToReturn)) {
         for (let i = 0; i < count; i++) {
+          const pointsForEvent = Math.floor(Math.random() * 10);
           await prisma.event.create({
             data: {
               account_id: account.id,
               type: EventType[eventType as keyof typeof EventType],
               occurred_at: new Date(now.getTime() + 1),
-              points: 0,
+              points: pointsForEvent,
             },
           });
+          totalPoints += pointsForEvent;
         }
       }
 
@@ -243,18 +246,20 @@ describe('EventsService', () => {
               account_id: account.id,
               type: EventType[eventType as keyof typeof EventType],
               occurred_at: new Date(now.getTime() - 1),
-              points: 0,
+              points: 10,
             },
           });
         }
       }
 
-      const totalCounts = await eventsService.getTotalEventCountsForAccount(
-        account,
-        now,
-        new Date(now.getTime() + 1000),
-      );
-      expect(totalCounts).toEqual(eventCountsToReturn);
+      const { eventCounts, points } =
+        await eventsService.getTotalEventCountsAndPointsForAccount(
+          account,
+          now,
+          new Date(now.getTime() + 1000),
+        );
+      expect(eventCounts).toEqual(eventCountsToReturn);
+      expect(points).toBe(totalPoints);
     });
   });
 

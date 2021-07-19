@@ -66,12 +66,14 @@ export class AccountsController {
     }
 
     let eventCounts: Record<EventType, number>;
+    let points: number;
     const { start, end, granularity } = query;
     if (granularity === MetricsGranularity.LIFETIME) {
       const account = await this.accountsService.findOrThrow(id);
       eventCounts = await this.eventsService.getLifetimeEventCountsForAccount(
         account,
       );
+      points = account.total_points;
     } else {
       if (start === undefined || end === undefined) {
         throw new UnprocessableEntityException(
@@ -79,16 +81,18 @@ export class AccountsController {
         );
       }
       const account = await this.accountsService.findOrThrow(id);
-      eventCounts = await this.eventsService.getTotalEventCountsForAccount(
-        account,
-        start,
-        end,
-      );
+      ({ eventCounts, points } =
+        await this.eventsService.getTotalEventCountsAndPointsForAccount(
+          account,
+          start,
+          end,
+        ));
     }
 
     return {
       account_id: id,
       granularity,
+      points,
       metrics: {
         blocks_mined: eventCounts[EventType.BLOCK_MINED],
         bugs_caught: eventCounts[EventType.BUG_CAUGHT],
