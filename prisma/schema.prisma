@@ -25,6 +25,7 @@ model Event {
   account_id  Int
   type        EventType
   occurred_at DateTime  @db.Timestamp(6)
+  points      Int
   account     Account   @relation(fields: [account_id], references: [id])
 
   @@index([account_id], name: "index_events_on_account_id")
