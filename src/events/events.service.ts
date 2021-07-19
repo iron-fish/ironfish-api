@@ -41,43 +41,58 @@ export class EventsService {
     account: Account,
   ): Promise<Record<EventType, number>> {
     const { id } = account;
-    return {
-      BLOCK_MINED: await this.prisma.event.count({
+    const [
+      blocksMined,
+      bugsCaught,
+      communityContributions,
+      nodesHosted,
+      pullRequestsMerged,
+      socialMediaPromotions,
+    ] = await this.prisma.$transaction([
+      this.prisma.event.count({
         where: {
           account_id: id,
           type: EventType.BLOCK_MINED,
         },
       }),
-      BUG_CAUGHT: await this.prisma.event.count({
+      this.prisma.event.count({
         where: {
           account_id: id,
           type: EventType.BUG_CAUGHT,
         },
       }),
-      COMMUNITY_CONTRIBUTION: await this.prisma.event.count({
+      this.prisma.event.count({
         where: {
           account_id: id,
           type: EventType.COMMUNITY_CONTRIBUTION,
         },
       }),
-      NODE_HOSTED: await this.prisma.event.count({
+      this.prisma.event.count({
         where: {
           account_id: id,
           type: EventType.NODE_HOSTED,
         },
       }),
-      PULL_REQUEST_MERGED: await this.prisma.event.count({
+      this.prisma.event.count({
         where: {
           account_id: id,
           type: EventType.PULL_REQUEST_MERGED,
         },
       }),
-      SOCIAL_MEDIA_PROMOTION: await this.prisma.event.count({
+      this.prisma.event.count({
         where: {
           account_id: id,
           type: EventType.SOCIAL_MEDIA_PROMOTION,
         },
       }),
+    ]);
+    return {
+      BLOCK_MINED: blocksMined,
+      BUG_CAUGHT: bugsCaught,
+      COMMUNITY_CONTRIBUTION: communityContributions,
+      NODE_HOSTED: nodesHosted,
+      PULL_REQUEST_MERGED: pullRequestsMerged,
+      SOCIAL_MEDIA_PROMOTION: socialMediaPromotions,
     };
   }
 
@@ -93,58 +108,75 @@ export class EventsService {
         lt: end,
       },
     };
-    const pointsAggregate = await this.prisma.event.aggregate({
-      _sum: {
-        points: true,
-      },
-      where: {
-        ...dateFilter,
-      },
-    });
+    const [
+      blocksMined,
+      bugsCaught,
+      communityContributions,
+      nodesHosted,
+      pullRequestsMerged,
+      socialMediaPromotions,
+      pointsAggregate,
+    ] = await this.prisma.$transaction([
+      this.prisma.event.count({
+        where: {
+          account_id: id,
+          type: EventType.BLOCK_MINED,
+          ...dateFilter,
+        },
+      }),
+      this.prisma.event.count({
+        where: {
+          account_id: id,
+          type: EventType.BUG_CAUGHT,
+          ...dateFilter,
+        },
+      }),
+      this.prisma.event.count({
+        where: {
+          account_id: id,
+          type: EventType.COMMUNITY_CONTRIBUTION,
+          ...dateFilter,
+        },
+      }),
+      this.prisma.event.count({
+        where: {
+          account_id: id,
+          type: EventType.NODE_HOSTED,
+          ...dateFilter,
+        },
+      }),
+      this.prisma.event.count({
+        where: {
+          account_id: id,
+          type: EventType.PULL_REQUEST_MERGED,
+          ...dateFilter,
+        },
+      }),
+      this.prisma.event.count({
+        where: {
+          account_id: id,
+          type: EventType.SOCIAL_MEDIA_PROMOTION,
+          ...dateFilter,
+        },
+      }),
+      this.prisma.event.aggregate({
+        _sum: {
+          points: true,
+        },
+        where: {
+          ...dateFilter,
+        },
+      }),
+    ]);
+
     return {
       eventCounts: {
-        BLOCK_MINED: await this.prisma.event.count({
-          where: {
-            account_id: id,
-            type: EventType.BLOCK_MINED,
-            ...dateFilter,
-          },
-        }),
-        BUG_CAUGHT: await this.prisma.event.count({
-          where: {
-            account_id: id,
-            type: EventType.BUG_CAUGHT,
-            ...dateFilter,
-          },
-        }),
-        COMMUNITY_CONTRIBUTION: await this.prisma.event.count({
-          where: {
-            account_id: id,
-            type: EventType.COMMUNITY_CONTRIBUTION,
-            ...dateFilter,
-          },
-        }),
-        NODE_HOSTED: await this.prisma.event.count({
-          where: {
-            account_id: id,
-            type: EventType.NODE_HOSTED,
-            ...dateFilter,
-          },
-        }),
-        PULL_REQUEST_MERGED: await this.prisma.event.count({
-          where: {
-            account_id: id,
-            type: EventType.PULL_REQUEST_MERGED,
-            ...dateFilter,
-          },
-        }),
-        SOCIAL_MEDIA_PROMOTION: await this.prisma.event.count({
-          where: {
-            account_id: id,
-            type: EventType.SOCIAL_MEDIA_PROMOTION,
-            ...dateFilter,
-          },
-        }),
+        BLOCK_MINED: blocksMined,
+        BUG_CAUGHT: bugsCaught,
+        COMMUNITY_CONTRIBUTION: communityContributions,
+        NODE_HOSTED: nodesHosted,
+        PULL_REQUEST_MERGED: pullRequestsMerged,
+        SOCIAL_MEDIA_PROMOTION: socialMediaPromotions,
       },
       points: pointsAggregate._sum.points ?? 0,
     };

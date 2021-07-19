@@ -183,6 +183,7 @@ describe('AccountsController', () => {
         expect(body).toMatchObject({
           account_id: account.id,
           granularity,
+          points: expect.any(Number),
           metrics: {
             blocks_mined: expect.any(Number),
             bugs_caught: expect.any(Number),
@@ -216,6 +217,7 @@ describe('AccountsController', () => {
         expect(body).toMatchObject({
           account_id: account.id,
           granularity,
+          points: expect.any(Number),
           metrics: {
             blocks_mined: expect.any(Number),
             bugs_caught: expect.any(Number),
