@@ -3,18 +3,21 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { INestApplication } from '@nestjs/common';
 import { v4 as uuid } from 'uuid';
+import { AccountsService } from '../accounts/accounts.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { EventsService } from './events.service';
 import { EventType } from '.prisma/client';
 
 describe('EventsService', () => {
+  let accountsService: AccountsService;
   let app: INestApplication;
   let eventsService: EventsService;
   let prisma: PrismaService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
+    accountsService = app.get(AccountsService);
     eventsService = app.get(EventsService);
     prisma = app.get(PrismaService);
     await app.init();
@@ -252,6 +255,44 @@ describe('EventsService', () => {
         new Date(now.getTime() + 1000),
       );
       expect(totalCounts).toEqual(eventCountsToReturn);
+    });
+  });
+
+  describe('create', () => {
+    it('increments the total points for an account', async () => {
+      const account = await prisma.account.create({
+        data: {
+          public_address: uuid(),
+        },
+      });
+      const currentPoints = account.total_points;
+      const points = 100;
+
+      await eventsService.create(EventType.BLOCK_MINED, account, points);
+      const updatedAccount = await accountsService.findOrThrow(account.id);
+      expect(updatedAccount.total_points).toBe(currentPoints + points);
+    });
+
+    it('stores an event record', async () => {
+      const account = await prisma.account.create({
+        data: {
+          public_address: uuid(),
+        },
+      });
+      const type = EventType.BLOCK_MINED;
+      const points = 100;
+
+      const event = await eventsService.create(
+        EventType.BLOCK_MINED,
+        account,
+        points,
+      );
+      expect(event).toMatchObject({
+        id: expect.any(Number),
+        account_id: account.id,
+        points,
+        type,
+      });
     });
   });
 });

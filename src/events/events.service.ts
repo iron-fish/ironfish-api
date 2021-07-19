@@ -138,4 +138,28 @@ export class EventsService {
       }),
     };
   }
+
+  async create(type: EventType, account: Account, points = 0): Promise<Event> {
+    const [_, event] = await this.prisma.$transaction([
+      this.prisma.account.update({
+        where: {
+          id: account.id,
+        },
+        data: {
+          total_points: {
+            increment: points,
+          },
+        },
+      }),
+      this.prisma.event.create({
+        data: {
+          type,
+          points,
+          occurred_at: new Date(),
+          account_id: account.id,
+        },
+      }),
+    ]);
+    return event;
+  }
 }
