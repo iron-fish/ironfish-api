@@ -2,20 +2,29 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import {
+  Body,
   Controller,
   Get,
   HttpStatus,
+  Post,
   Query,
+  UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
+import { AccountsService } from '../accounts/accounts.service';
+import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { List } from '../common/interfaces/list';
 import { EventsService } from '../events/events.service';
+import { CreateEventDto } from './dto/create-event.dto';
 import { EventsQueryDto } from './dto/events-query.dto';
 import { Event } from '.prisma/client';
 
 @Controller('events')
 export class EventsController {
-  constructor(private readonly eventsService: EventsService) {}
+  constructor(
+    private readonly accountsService: AccountsService,
+    private readonly eventsService: EventsService,
+  ) {}
 
   @Get()
   async list(
@@ -35,5 +44,20 @@ export class EventsController {
         limit,
       }),
     };
+  }
+
+  @Post()
+  @UseGuards(ApiKeyGuard)
+  async create(
+    @Body(
+      new ValidationPipe({
+        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        transform: true,
+      }),
+    )
+    { account_id, points, type }: CreateEventDto,
+  ): Promise<Event> {
+    const account = await this.accountsService.findOrThrow(account_id);
+    return this.eventsService.create(type, account, points);
   }
 }
