@@ -129,7 +129,7 @@ describe('EventsController', () => {
           .post(`/events`)
           .set('Authorization', `Bearer ${API_KEY}`)
           .send({ account_id: 12345, type, points })
-          .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+          .expect(HttpStatus.NOT_FOUND);
 
         expect(body).toMatchSnapshot();
       });
