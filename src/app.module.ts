@@ -4,12 +4,14 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AccountsModule } from './accounts/accounts.module';
+import { AuthModule } from './auth/auth.module';
 import { EventsModule } from './events/events.module';
 import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
     AccountsModule,
+    AuthModule,
     ConfigModule.forRoot({
       isGlobal: true,
     }),
