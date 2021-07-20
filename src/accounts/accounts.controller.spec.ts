@@ -232,16 +232,31 @@ describe('AccountsController', () => {
   });
 
   describe('GET /accounts', () => {
-    it('returns a list of accounts', async () => {
-      const { body } = await request(app.getHttpServer())
-        .get(`/accounts`)
-        .expect(HttpStatus.OK);
+    describe('with an invalid order by option', () => {
+      it('returns a 422', async () => {
+        const { body } = await request(app.getHttpServer())
+          .get('/accounts')
+          .query({
+            order_by: 'foobar',
+          })
+          .expect(HttpStatus.UNPROCESSABLE_ENTITY);
 
-      const { data } = body;
-      expect((data as unknown[]).length).toBeGreaterThan(0);
-      expect((data as unknown[])[0]).toMatchObject({
-        id: expect.any(Number),
-        public_address: expect.any(String),
+        expect(body).toMatchSnapshot();
+      });
+    });
+
+    describe('with a valid request', () => {
+      it('returns a list of accounts', async () => {
+        const { body } = await request(app.getHttpServer())
+          .get(`/accounts`)
+          .expect(HttpStatus.OK);
+
+        const { data } = body;
+        expect((data as unknown[]).length).toBeGreaterThan(0);
+        expect((data as unknown[])[0]).toMatchObject({
+          id: expect.any(Number),
+          public_address: expect.any(String),
+        });
       });
     });
   });

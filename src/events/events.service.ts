@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable } from '@nestjs/common';
 import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
+import { SortOrder } from '../common/enums/sort-order';
 import { PrismaService } from '../prisma/prisma.service';
 import { ListEventsOptions } from './interfaces/list-events-options';
 import { Account, Event, EventType, Prisma } from '.prisma/client';
@@ -22,7 +23,7 @@ export class EventsService {
     const cursorId = options.before ?? options.after;
     const cursor = cursorId ? { id: cursorId } : undefined;
     const limit = Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
-    const order = backwards ? 'desc' : 'asc';
+    const order = backwards ? SortOrder.ASC : SortOrder.DESC;
     const skip = cursor ? 1 : 0;
     return this.prisma.event.findMany({
       cursor,

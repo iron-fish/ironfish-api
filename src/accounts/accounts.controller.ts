@@ -12,10 +12,10 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { MS_PER_DAY } from '../common/constants';
-import { PaginationArgsDto } from '../common/dto/pagination-args.dto';
 import { List } from '../common/interfaces/list';
 import { EventsService } from '../events/events.service';
 import { AccountsService } from './accounts.service';
+import { AccountsQueryDto } from './dto/accounts-query.dto';
 import { MetricsQueryDto } from './dto/metrics-query.dto';
 import { MetricsGranularity } from './enums/metrics-granularity';
 import { SerializedAccountMetrics } from './interfaces/serialized-account-metrics';
@@ -143,13 +143,14 @@ export class AccountsController {
         transform: true,
       }),
     )
-    { after, before, limit }: PaginationArgsDto,
+    { after, before, limit, order_by }: AccountsQueryDto,
   ): Promise<List<Account>> {
     return {
       data: await this.accountsService.list({
         after,
         before,
         limit,
+        orderBy: order_by,
       }),
     };
   }

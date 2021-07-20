@@ -1,5 +1,15 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`AccountsController GET /accounts with an invalid order by option returns a 422 1`] = `
+Object {
+  "error": "Unprocessable Entity",
+  "message": Array [
+    "order_by must be equal to total_points",
+  ],
+  "statusCode": 422,
+}
+`;
+
 exports[`AccountsController GET /accounts/:id/metrics with a TOTAL request and no time range returns a 422 1`] = `
 Object {
   "error": "Unprocessable Entity",
