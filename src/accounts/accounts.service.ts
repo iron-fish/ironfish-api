@@ -27,10 +27,10 @@ export class AccountsService {
     const cursorId = options.before ?? options.after;
     const cursor = cursorId ? { id: cursorId } : undefined;
     const limit = Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
-    const order = backwards ? SortOrder.DESC : SortOrder.ASC;
+    const order = backwards ? SortOrder.ASC : SortOrder.DESC;
     const skip = cursor ? 1 : 0;
     const orderBy = options.orderBy
-      ? { [options.orderBy]: order }
+      ? [{ [options.orderBy]: order }, { id: order }]
       : { id: order };
     return this.prisma.account.findMany({
       cursor,
