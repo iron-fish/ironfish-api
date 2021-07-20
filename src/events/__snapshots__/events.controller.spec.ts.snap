@@ -1,0 +1,28 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`EventsController POST /events with a missing account id returns a 404 1`] = `
+Object {
+  "message": "Not Found",
+  "statusCode": 404,
+}
+`;
+
+exports[`EventsController POST /events with a missing api key returns a 401 1`] = `
+Object {
+  "message": "Unauthorized",
+  "statusCode": 401,
+}
+`;
+
+exports[`EventsController POST /events with missing arguments returns a 422 1`] = `
+Object {
+  "error": "Unprocessable Entity",
+  "message": Array [
+    "account_id must be an integer number",
+    "points must not be less than 0",
+    "points must be an integer number",
+    "type must be a valid enum value",
+  ],
+  "statusCode": 422,
+}
+`;

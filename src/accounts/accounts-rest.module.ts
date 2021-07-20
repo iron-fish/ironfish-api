@@ -3,12 +3,11 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Module } from '@nestjs/common';
 import { EventsModule } from '../events/events.module';
-import { PrismaModule } from '../prisma/prisma.module';
-import { AccountsService } from './accounts.service';
+import { AccountsController } from './accounts.controller';
+import { AccountsModule } from './accounts.module';
 
 @Module({
-  exports: [AccountsService],
-  imports: [EventsModule, PrismaModule],
-  providers: [AccountsService],
+  controllers: [AccountsController],
+  imports: [AccountsModule, EventsModule],
 })
-export class AccountsModule {}
+export class AccountsRestModule {}

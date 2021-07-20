@@ -3,11 +3,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '../prisma/prisma.module';
-import { EventsController } from './events.controller';
 import { EventsService } from './events.service';
 
 @Module({
-  controllers: [EventsController],
   exports: [EventsService],
   imports: [PrismaModule],
   providers: [EventsService],
