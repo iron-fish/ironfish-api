@@ -60,5 +60,21 @@ describe('AccountsService', () => {
         });
       }
     });
+
+    describe('if an order by points is provided', () => {
+      it('sorts the accounts by points', async () => {
+        const records = await accountsService.list({
+          orderBy: 'total_points',
+        });
+
+        for (let i = 1; i < records.length; i++) {
+          const previousRecord = records[i - 1];
+          const record = records[i];
+          expect(previousRecord.total_points).toBeGreaterThanOrEqual(
+            record.total_points,
+          );
+        }
+      });
+    });
   });
 });

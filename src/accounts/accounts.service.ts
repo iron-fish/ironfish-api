@@ -3,8 +3,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
-import { PaginationOptions } from '../common/interfaces/pagination-options';
+import { SortOrder } from '../common/enums/sort-order';
 import { PrismaService } from '../prisma/prisma.service';
+import { ListAccountsOptions } from './interfaces/list-accounts-options';
 import { Account } from '.prisma/client';
 
 @Injectable()
@@ -21,18 +22,19 @@ export class AccountsService {
     return record;
   }
 
-  async list(options: PaginationOptions): Promise<Account[]> {
+  async list(options: ListAccountsOptions): Promise<Account[]> {
     const backwards = options.before !== undefined;
     const cursorId = options.before ?? options.after;
     const cursor = cursorId ? { id: cursorId } : undefined;
     const limit = Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
-    const order = backwards ? 'desc' : 'asc';
+    const order = backwards ? SortOrder.DESC : SortOrder.ASC;
     const skip = cursor ? 1 : 0;
+    const orderBy = options.orderBy
+      ? { [options.orderBy]: order }
+      : { id: order };
     return this.prisma.account.findMany({
       cursor,
-      orderBy: {
-        id: order,
-      },
+      orderBy,
       skip,
       take: limit,
     });
