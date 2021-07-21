@@ -2,20 +2,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import {
+  Body,
   Controller,
   Get,
   HttpStatus,
   Param,
   ParseIntPipe,
+  Post,
   Query,
   UnprocessableEntityException,
+  UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
+import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { MS_PER_DAY } from '../common/constants';
 import { List } from '../common/interfaces/list';
 import { EventsService } from '../events/events.service';
 import { AccountsService } from './accounts.service';
 import { AccountsQueryDto } from './dto/accounts-query.dto';
+import { CreateAccountDto } from './dto/create-account.dto';
 import { MetricsQueryDto } from './dto/metrics-query.dto';
 import { MetricsGranularity } from './enums/metrics-granularity';
 import { SerializedAccountMetrics } from './interfaces/serialized-account-metrics';
@@ -153,5 +158,19 @@ export class AccountsController {
         orderBy: order_by,
       }),
     };
+  }
+
+  @Post()
+  @UseGuards(ApiKeyGuard)
+  async create(
+    @Body(
+      new ValidationPipe({
+        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        transform: true,
+      }),
+    )
+    { public_address }: CreateAccountDto,
+  ): Promise<Account> {
+    return this.accountsService.create(public_address);
   }
 }

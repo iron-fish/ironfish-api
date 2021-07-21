@@ -1,7 +1,11 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { INestApplication, NotFoundException } from '@nestjs/common';
+import {
+  INestApplication,
+  NotFoundException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { v4 as uuid } from 'uuid';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
@@ -74,6 +78,35 @@ describe('AccountsService', () => {
             record.total_points,
           );
         }
+      });
+    });
+  });
+
+  describe('create', () => {
+    describe('with a duplicate public address', () => {
+      it('throws an exception', async () => {
+        const publicAddress = uuid();
+        await prisma.account.create({
+          data: {
+            public_address: publicAddress,
+          },
+        });
+
+        await expect(accountsService.create(publicAddress)).rejects.toThrow(
+          UnprocessableEntityException,
+        );
+      });
+    });
+
+    describe('with a new public address', () => {
+      it('creates a new record', async () => {
+        const publicAddress = uuid();
+        const account = await accountsService.create(publicAddress);
+
+        expect(account).toMatchObject({
+          id: expect.any(Number),
+          public_address: publicAddress,
+        });
       });
     });
   });
