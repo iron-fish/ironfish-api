@@ -1,7 +1,11 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
 import { PrismaService } from '../prisma/prisma.service';
@@ -38,5 +42,26 @@ export class AccountsService {
       skip,
       take: limit,
     });
+  }
+
+  async create(publicAddress: string): Promise<Account> {
+    const existingRecord = await this.prisma.account.findUnique({
+      where: {
+        public_address: publicAddress,
+      },
+    });
+    if (existingRecord) {
+      throw new UnprocessableEntityException(
+        `Account already exists for '${publicAddress}'`,
+      );
+    }
+    const [account] = await this.prisma.$transaction([
+      this.prisma.account.create({
+        data: {
+          public_address: publicAddress,
+        },
+      }),
+    ]);
+    return account;
   }
 }
