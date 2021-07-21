@@ -39,4 +39,15 @@ export class AccountsService {
       take: limit,
     });
   }
+
+  async create(publicAddress: string): Promise<Account> {
+    const [account] = await this.prisma.$transaction([
+      this.prisma.account.create({
+        data: {
+          public_address: publicAddress,
+        }
+      })
+    ])
+    return account
+  }
 }
