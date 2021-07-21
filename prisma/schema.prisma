@@ -17,6 +17,7 @@ model Account {
 
   @@index([public_address], name: "index_accounts_on_public_address")
   @@index([total_points], name: "index_accounts_on_total_points")
+  @@unique([public_address], name: "uq_accounts_on_public_address")
   @@map("accounts")
 }
 
