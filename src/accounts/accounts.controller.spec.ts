@@ -292,9 +292,24 @@ describe('AccountsController', () => {
       });
     });
 
+    describe('with a duplicate address', () => {
+      it('returns a 422', async () => {
+        const account = await prisma.account.create({
+          data: {
+            public_address: uuid(),
+          },
+        });
+        await request(app.getHttpServer())
+          .post(`/accounts`)
+          .set('Authorization', `Bearer ${API_KEY}`)
+          .send({ public_address: account.public_address })
+          .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+      });
+    });
+
     describe('with valid arguments', () => {
       it('creates an account', async () => {
-        const publicAddress = 'foo-bar-baz';
+        const publicAddress = uuid();
         const { body } = await request(app.getHttpServer())
           .post(`/accounts`)
           .set('Authorization', `Bearer ${API_KEY}`)
