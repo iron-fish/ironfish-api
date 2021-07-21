@@ -71,3 +71,20 @@ Object {
   "statusCode": 422,
 }
 `;
+
+exports[`AccountsController POST /accounts with a missing API key returns a 401 1`] = `
+Object {
+  "message": "Unauthorized",
+  "statusCode": 401,
+}
+`;
+
+exports[`AccountsController POST /accounts with missing arguments returns a 422 1`] = `
+Object {
+  "error": "Unprocessable Entity",
+  "message": Array [
+    "public_address must be a string",
+  ],
+  "statusCode": 422,
+}
+`;

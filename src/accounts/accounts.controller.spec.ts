@@ -2,18 +2,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { HttpStatus, INestApplication } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { MetricsGranularity } from './enums/metrics-granularity';
 
+const API_KEY = 'test';
+
 describe('AccountsController', () => {
   let app: INestApplication;
+  let config: ConfigService;
   let prisma: PrismaService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
+    config = app.get(ConfigService);
     prisma = app.get(PrismaService);
     await app.init();
   });
@@ -256,6 +261,49 @@ describe('AccountsController', () => {
         expect((data as unknown[])[0]).toMatchObject({
           id: expect.any(Number),
           public_address: expect.any(String),
+        });
+      });
+    });
+  });
+
+  describe('POST /accounts', () => {
+    beforeEach(() => {
+      jest.spyOn(config, 'get').mockImplementationOnce(() => API_KEY);
+    });
+
+    describe('with a missing API key', () => {
+      it('returns a 401', async () => {
+        const { body } = await request(app.getHttpServer())
+          .post(`/accounts`)
+          .expect(HttpStatus.UNAUTHORIZED);
+
+        expect(body).toMatchSnapshot();
+      });
+    });
+
+    describe('with missing arguments', () => {
+      it('returns a 422', async () => {
+        const { body } = await request(app.getHttpServer())
+          .post(`/accounts`)
+          .set('Authorization', `Bearer ${API_KEY}`)
+          .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+
+        expect(body).toMatchSnapshot();
+      });
+    });
+
+    describe('with valid arguments', () => {
+      it('creates an account', async () => {
+        const publicAddress = 'foo-bar-baz';
+        const { body } = await request(app.getHttpServer())
+          .post(`/accounts`)
+          .set('Authorization', `Bearer ${API_KEY}`)
+          .send({ public_address: publicAddress })
+          .expect(HttpStatus.CREATED);
+
+        expect(body).toMatchObject({
+          id: expect.any(Number),
+          public_address: publicAddress,
         });
       });
     });
