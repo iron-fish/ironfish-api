@@ -13,6 +13,7 @@ model Account {
   created_at     DateTime @default(now()) @db.Timestamp(6)
   updated_at     DateTime @default(now()) @db.Timestamp(6)
   total_points   Int      @default(0)
+  email          String?
   events         Event[]
 
   @@index([public_address], name: "index_accounts_on_public_address")
