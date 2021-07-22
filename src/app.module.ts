@@ -9,6 +9,7 @@ import { AccountsRestModule } from './accounts/accounts-rest.module';
 import { AuthModule } from './auth/auth.module';
 import { EventsModule } from './events/events.module';
 import { EventsRestModule } from './events/events-rest.module';
+import { GraphileWorkerModule } from './graphile-worker/graphile-worker.module';
 import { HealthModule } from './health/health.module';
 
 @Module({
@@ -25,6 +26,7 @@ import { HealthModule } from './health/health.module';
     }),
     EventsModule,
     EventsRestModule,
+    GraphileWorkerModule,
     HealthModule,
   ],
 })
