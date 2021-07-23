@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, NotFoundException } from '@nestjs/common';
 import { v4 as uuid } from 'uuid';
 import { AccountsService } from '../accounts/accounts.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -287,16 +287,42 @@ describe('EventsService', () => {
       const type = EventType.BLOCK_MINED;
       const points = 100;
 
-      const event = await eventsService.create(
-        EventType.BLOCK_MINED,
-        account,
-        points,
-      );
+      const event = await eventsService.create(type, account, points);
       expect(event).toMatchObject({
         id: expect.any(Number),
         account_id: account.id,
         points,
         type,
+      });
+    });
+  });
+
+  describe('delete', () => {
+    describe('with a missing record', () => {
+      it('throws a NotFoundException', async () => {
+        await expect(eventsService.delete(12345)).rejects.toThrow(
+          NotFoundException,
+        );
+      });
+    });
+
+    describe('with a valid identifier', () => {
+      it('deletes the record', async () => {
+        const account = await prisma.account.create({
+          data: {
+            public_address: uuid(),
+          },
+        });
+        const event = await eventsService.create(
+          EventType.BLOCK_MINED,
+          account,
+          0,
+        );
+        const id = event.id;
+
+        await eventsService.delete(event.id);
+        const record = await prisma.event.findUnique({ where: { id } });
+        expect(record).toBeNull();
       });
     });
   });

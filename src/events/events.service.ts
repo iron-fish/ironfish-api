@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
 import { PrismaService } from '../prisma/prisma.service';
@@ -205,5 +205,24 @@ export class EventsService {
       }),
     ]);
     return event;
+  }
+
+  async delete(id: number): Promise<void> {
+    const record = await this.prisma.event.findUnique({
+      where: {
+        id,
+      },
+    });
+    if (!record) {
+      throw new NotFoundException();
+    }
+
+    await this.prisma.$transaction([
+      this.prisma.event.delete({
+        where: {
+          id,
+        },
+      }),
+    ]);
   }
 }

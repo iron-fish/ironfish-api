@@ -4,8 +4,12 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
   HttpStatus,
+  Param,
+  ParseIntPipe,
   Post,
   Query,
   UseGuards,
@@ -59,5 +63,20 @@ export class EventsController {
   ): Promise<Event> {
     const account = await this.accountsService.findOrThrow(account_id);
     return this.eventsService.create(type, account, points);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(ApiKeyGuard)
+  async delete(
+    @Param(
+      'id',
+      new ParseIntPipe({
+        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+      }),
+    )
+    id: number,
+  ): Promise<void> {
+    await this.eventsService.delete(id);
   }
 }
