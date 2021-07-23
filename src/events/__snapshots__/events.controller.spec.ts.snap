@@ -1,5 +1,19 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`EventsController DELETE /events with a missing api key returns a 401 1`] = `
+Object {
+  "message": "Unauthorized",
+  "statusCode": 401,
+}
+`;
+
+exports[`EventsController DELETE /events with a missing event id returns a 404 1`] = `
+Object {
+  "message": "Not Found",
+  "statusCode": 404,
+}
+`;
+
 exports[`EventsController POST /events with a missing account id returns a 404 1`] = `
 Object {
   "message": "Not Found",
