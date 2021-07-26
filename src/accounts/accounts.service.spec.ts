@@ -50,6 +50,31 @@ describe('AccountsService', () => {
     });
   });
 
+  describe('findOrThrowByPublicAddress', () => {
+    describe('with a valid address', () => {
+      it('returns the record', async () => {
+        const account = await prisma.account.create({
+          data: {
+            public_address: uuid(),
+          },
+        });
+        const record = await accountsService.findOrThrowByPublicAddress(
+          account.public_address,
+        );
+        expect(record).not.toBeNull();
+        expect(record).toMatchObject(account);
+      });
+    });
+
+    describe('with a missing id', () => {
+      it('returns null', async () => {
+        await expect(
+          accountsService.findOrThrowByPublicAddress('1337'),
+        ).rejects.toThrow(NotFoundException);
+      });
+    });
+  });
+
   describe('list', () => {
     it('returns a chunk of accounts', async () => {
       const limit = 2;

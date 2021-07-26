@@ -128,7 +128,7 @@ describe('EventsController', () => {
         const { body } = await request(app.getHttpServer())
           .post(`/events`)
           .set('Authorization', `Bearer ${API_KEY}`)
-          .send({ account_id: 12345, type, points })
+          .send({ public_address: '123', type, points })
           .expect(HttpStatus.NOT_FOUND);
 
         expect(body).toMatchSnapshot();
@@ -147,7 +147,7 @@ describe('EventsController', () => {
         const { body } = await request(app.getHttpServer())
           .post(`/events`)
           .set('Authorization', `Bearer ${API_KEY}`)
-          .send({ account_id: account.id, type, points })
+          .send({ public_address: account.public_address, type, points })
           .expect(HttpStatus.CREATED);
 
         expect(body).toMatchObject({
