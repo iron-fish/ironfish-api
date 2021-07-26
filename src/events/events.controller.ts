@@ -59,9 +59,11 @@ export class EventsController {
         transform: true,
       }),
     )
-    { account_id, points, type }: CreateEventDto,
+    { public_address, points, type }: CreateEventDto,
   ): Promise<Event> {
-    const account = await this.accountsService.findOrThrow(account_id);
+    const account = await this.accountsService.findOrThrowByPublicAddress(
+      public_address,
+    );
     return this.eventsService.create(type, account, points);
   }
 

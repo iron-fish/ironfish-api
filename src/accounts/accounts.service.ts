@@ -26,6 +26,18 @@ export class AccountsService {
     return record;
   }
 
+  async findOrThrowByPublicAddress(publicAddress: string): Promise<Account> {
+    const record = await this.prisma.account.findUnique({
+      where: {
+        public_address: publicAddress,
+      },
+    });
+    if (!record) {
+      throw new NotFoundException();
+    }
+    return record;
+  }
+
   async list(options: ListAccountsOptions): Promise<Account[]> {
     const backwards = options.before !== undefined;
     const cursorId = options.before ?? options.after;
