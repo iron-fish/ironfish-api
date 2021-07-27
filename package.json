@@ -55,7 +55,7 @@
     "@nestjs/core": "8.0.4",
     "@nestjs/passport": "8.0.0",
     "@nestjs/platform-express": "8.0.4",
-    "@prisma/client": "2.27.0",
+    "@prisma/client": "2.28.0",
     "class-transformer": "0.4.0",
     "class-validator": "0.13.1",
     "compression": "1.7.4",
