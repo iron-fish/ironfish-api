@@ -2,8 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
+import {
+  DEFAULT_LIMIT,
+  MAX_LIMIT,
+  WEEKLY_POINT_LIMITS_BY_EVENT_TYPE,
+} from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
+import { getMondayOfThisWeek } from '../common/utils/date';
 import { PrismaService } from '../prisma/prisma.service';
 import { ListEventsOptions } from './interfaces/list-events-options';
 import { Account, Event, EventType, Prisma } from '.prisma/client';
@@ -184,6 +189,25 @@ export class EventsService {
   }
 
   async create(type: EventType, account: Account, points = 0): Promise<Event> {
+    const weeklyLimitForEventType = WEEKLY_POINT_LIMITS_BY_EVENT_TYPE[type];
+    const startOfWeek = getMondayOfThisWeek();
+    const pointsAggregateThisWeek = await this.prisma.event.aggregate({
+      _sum: {
+        points: true,
+      },
+      where: {
+        account_id: account.id,
+        occurred_at: {
+          gte: startOfWeek,
+        },
+      },
+    });
+    const pointsThisWeek = pointsAggregateThisWeek._sum.points || 0;
+    const adjustedPoints = Math.min(
+      Math.max(weeklyLimitForEventType - pointsThisWeek, 0),
+      points,
+    );
+
     const [_, event] = await this.prisma.$transaction([
       this.prisma.account.update({
         where: {
@@ -191,14 +215,14 @@ export class EventsService {
         },
         data: {
           total_points: {
-            increment: points,
+            increment: adjustedPoints,
           },
         },
       }),
       this.prisma.event.create({
         data: {
           type,
-          points,
+          points: adjustedPoints,
           occurred_at: new Date(),
           account_id: account.id,
         },

@@ -4,6 +4,7 @@
 import { INestApplication, NotFoundException } from '@nestjs/common';
 import { v4 as uuid } from 'uuid';
 import { AccountsService } from '../accounts/accounts.service';
+import { WEEKLY_POINT_LIMITS_BY_EVENT_TYPE } from '../common/constants';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { EventsService } from './events.service';
@@ -264,6 +265,107 @@ describe('EventsService', () => {
   });
 
   describe('create', () => {
+    describe('when the account has hit the weekly limit', () => {
+      it('does not increment the total points for an account', async () => {
+        const points = 1000;
+        const account = await prisma.account.create({
+          data: {
+            public_address: uuid(),
+            total_points: points,
+          },
+        });
+        const currentPoints = account.total_points;
+        const type = EventType.PULL_REQUEST_MERGED;
+        await prisma.event.create({
+          data: {
+            account_id: account.id,
+            occurred_at: new Date(),
+            points,
+            type,
+          },
+        });
+
+        await eventsService.create(type, account, 100);
+        const updatedAccount = await accountsService.findOrThrow(account.id);
+        expect(updatedAccount.total_points).toBe(currentPoints);
+      });
+
+      it('updates the event points to 0', async () => {
+        const points = 1000;
+        const account = await prisma.account.create({
+          data: {
+            public_address: uuid(),
+            total_points: points,
+          },
+        });
+        const type = EventType.PULL_REQUEST_MERGED;
+        await prisma.event.create({
+          data: {
+            account_id: account.id,
+            occurred_at: new Date(),
+            points,
+            type,
+          },
+        });
+
+        const event = await eventsService.create(type, account, 100);
+        expect(event.points).toBe(0);
+      });
+    });
+
+    describe('when the account will surpass the weekly limit', () => {
+      it('increments the total points to not go above weekly limits', async () => {
+        const currentPointsThisWeek = 900;
+        const account = await prisma.account.create({
+          data: {
+            public_address: uuid(),
+            total_points: currentPointsThisWeek,
+          },
+        });
+        const type = EventType.PULL_REQUEST_MERGED;
+        await prisma.event.create({
+          data: {
+            account_id: account.id,
+            occurred_at: new Date(),
+            points: currentPointsThisWeek,
+            type,
+          },
+        });
+
+        const points = 200;
+        await eventsService.create(type, account, points);
+        const updatedAccount = await accountsService.findOrThrow(account.id);
+        expect(updatedAccount.total_points).toBe(
+          WEEKLY_POINT_LIMITS_BY_EVENT_TYPE[type],
+        );
+      });
+
+      it('adjusts the points for the event', async () => {
+        const currentPointsThisWeek = 900;
+        const account = await prisma.account.create({
+          data: {
+            public_address: uuid(),
+            total_points: currentPointsThisWeek,
+          },
+        });
+        const type = EventType.PULL_REQUEST_MERGED;
+        await prisma.event.create({
+          data: {
+            account_id: account.id,
+            occurred_at: new Date(),
+            points: currentPointsThisWeek,
+            type,
+          },
+        });
+
+        const points = 200;
+        const event = await eventsService.create(type, account, points);
+        expect(event.points).toBe(
+          WEEKLY_POINT_LIMITS_BY_EVENT_TYPE[type] - currentPointsThisWeek,
+        );
+      });
+    });
+
     it('increments the total points for an account', async () => {
       const account = await prisma.account.create({
         data: {
