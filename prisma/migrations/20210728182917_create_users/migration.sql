@@ -1,0 +1,9 @@
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY NOT NULL,
+    created_at TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    email VARCHAR NOT NULL,
+    graffiti VARCHAR NOT NULL
+);
+
+CREATE INDEX index_users_on_email ON public.users USING btree (email);
