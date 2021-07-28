@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { INestApplication, NotFoundException } from '@nestjs/common';
+import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { AccountsService } from '../accounts/accounts.service';
 import { WEEKLY_POINT_LIMITS_BY_EVENT_TYPE } from '../common/constants';
@@ -36,10 +37,17 @@ describe('EventsService', () => {
             public_address: uuid(),
           },
         });
+        const user = await prisma.user.create({
+          data: {
+            email: faker.internet.email(),
+            graffiti: faker.internet.userName(),
+          },
+        });
         const event = await prisma.event.create({
           data: {
             type: EventType.BUG_CAUGHT,
             account_id: account.id,
+            user_id: user.id,
             occurred_at: new Date(),
             points: 0,
           },
@@ -65,10 +73,17 @@ describe('EventsService', () => {
           public_address: uuid(),
         },
       });
+      const user = await prisma.user.create({
+        data: {
+          email: faker.internet.email(),
+          graffiti: faker.internet.userName(),
+        },
+      });
       const firstEvent = await prisma.event.create({
         data: {
           type: EventType.BUG_CAUGHT,
           account_id: account.id,
+          user_id: user.id,
           occurred_at: new Date(),
           points: 0,
         },
@@ -77,6 +92,7 @@ describe('EventsService', () => {
         data: {
           type: EventType.COMMUNITY_CONTRIBUTION,
           account_id: account.id,
+          user_id: user.id,
           occurred_at: new Date(),
           points: 0,
         },
@@ -85,6 +101,7 @@ describe('EventsService', () => {
         data: {
           type: EventType.SOCIAL_MEDIA_PROMOTION,
           account_id: account.id,
+          user_id: user.id,
           occurred_at: new Date(),
           points: 0,
         },
@@ -179,12 +196,19 @@ describe('EventsService', () => {
           public_address: uuid(),
         },
       });
+      const user = await prisma.user.create({
+        data: {
+          email: faker.internet.email(),
+          graffiti: faker.internet.userName(),
+        },
+      });
 
       for (const [eventType, count] of Object.entries(eventCounts)) {
         for (let i = 0; i < count; i++) {
           await prisma.event.create({
             data: {
               account_id: account.id,
+              user_id: user.id,
               type: EventType[eventType as keyof typeof EventType],
               occurred_at: new Date(),
               points: 0,
@@ -205,6 +229,12 @@ describe('EventsService', () => {
       const account = await prisma.account.create({
         data: {
           public_address: uuid(),
+        },
+      });
+      const user = await prisma.user.create({
+        data: {
+          email: faker.internet.email(),
+          graffiti: faker.internet.userName(),
         },
       });
       const eventCountsToReturn: Record<EventType, number> = {
@@ -231,6 +261,7 @@ describe('EventsService', () => {
           await prisma.event.create({
             data: {
               account_id: account.id,
+              user_id: user.id,
               type: EventType[eventType as keyof typeof EventType],
               occurred_at: new Date(now.getTime() + 1),
               points: pointsForEvent,
@@ -245,6 +276,7 @@ describe('EventsService', () => {
           await prisma.event.create({
             data: {
               account_id: account.id,
+              user_id: user.id,
               type: EventType[eventType as keyof typeof EventType],
               occurred_at: new Date(now.getTime() - 1),
               points: 10,
@@ -274,18 +306,25 @@ describe('EventsService', () => {
             total_points: points,
           },
         });
+        const user = await prisma.user.create({
+          data: {
+            email: faker.internet.email(),
+            graffiti: faker.internet.userName(),
+          },
+        });
         const currentPoints = account.total_points;
         const type = EventType.PULL_REQUEST_MERGED;
         await prisma.event.create({
           data: {
             account_id: account.id,
+            user_id: user.id,
             occurred_at: new Date(),
             points,
             type,
           },
         });
 
-        await eventsService.create(type, account, 100);
+        await eventsService.create(type, account, user, 100);
         const updatedAccount = await accountsService.findOrThrow(account.id);
         expect(updatedAccount.total_points).toBe(currentPoints);
       });
@@ -298,17 +337,24 @@ describe('EventsService', () => {
             total_points: points,
           },
         });
+        const user = await prisma.user.create({
+          data: {
+            email: faker.internet.email(),
+            graffiti: faker.internet.userName(),
+          },
+        });
         const type = EventType.PULL_REQUEST_MERGED;
         await prisma.event.create({
           data: {
             account_id: account.id,
+            user_id: user.id,
             occurred_at: new Date(),
             points,
             type,
           },
         });
 
-        const event = await eventsService.create(type, account, 100);
+        const event = await eventsService.create(type, account, user, 100);
         expect(event.points).toBe(0);
       });
     });
@@ -322,10 +368,17 @@ describe('EventsService', () => {
             total_points: currentPointsThisWeek,
           },
         });
+        const user = await prisma.user.create({
+          data: {
+            email: faker.internet.email(),
+            graffiti: faker.internet.userName(),
+          },
+        });
         const type = EventType.PULL_REQUEST_MERGED;
         await prisma.event.create({
           data: {
             account_id: account.id,
+            user_id: user.id,
             occurred_at: new Date(),
             points: currentPointsThisWeek,
             type,
@@ -333,7 +386,7 @@ describe('EventsService', () => {
         });
 
         const points = 200;
-        await eventsService.create(type, account, points);
+        await eventsService.create(type, account, user, points);
         const updatedAccount = await accountsService.findOrThrow(account.id);
         expect(updatedAccount.total_points).toBe(
           WEEKLY_POINT_LIMITS_BY_EVENT_TYPE[type],
@@ -348,10 +401,17 @@ describe('EventsService', () => {
             total_points: currentPointsThisWeek,
           },
         });
+        const user = await prisma.user.create({
+          data: {
+            email: faker.internet.email(),
+            graffiti: faker.internet.userName(),
+          },
+        });
         const type = EventType.PULL_REQUEST_MERGED;
         await prisma.event.create({
           data: {
             account_id: account.id,
+            user_id: user.id,
             occurred_at: new Date(),
             points: currentPointsThisWeek,
             type,
@@ -359,7 +419,7 @@ describe('EventsService', () => {
         });
 
         const points = 200;
-        const event = await eventsService.create(type, account, points);
+        const event = await eventsService.create(type, account, user, points);
         expect(event.points).toBe(
           WEEKLY_POINT_LIMITS_BY_EVENT_TYPE[type] - currentPointsThisWeek,
         );
@@ -372,10 +432,16 @@ describe('EventsService', () => {
           public_address: uuid(),
         },
       });
+      const user = await prisma.user.create({
+        data: {
+          email: faker.internet.email(),
+          graffiti: faker.internet.userName(),
+        },
+      });
       const currentPoints = account.total_points;
       const points = 100;
 
-      await eventsService.create(EventType.BLOCK_MINED, account, points);
+      await eventsService.create(EventType.BLOCK_MINED, account, user, points);
       const updatedAccount = await accountsService.findOrThrow(account.id);
       expect(updatedAccount.total_points).toBe(currentPoints + points);
     });
@@ -386,10 +452,16 @@ describe('EventsService', () => {
           public_address: uuid(),
         },
       });
+      const user = await prisma.user.create({
+        data: {
+          email: faker.internet.email(),
+          graffiti: faker.internet.userName(),
+        },
+      });
       const type = EventType.BLOCK_MINED;
       const points = 100;
 
-      const event = await eventsService.create(type, account, points);
+      const event = await eventsService.create(type, account, user, points);
       expect(event).toMatchObject({
         id: expect.any(Number),
         account_id: account.id,
@@ -415,9 +487,16 @@ describe('EventsService', () => {
             public_address: uuid(),
           },
         });
+        const user = await prisma.user.create({
+          data: {
+            email: faker.internet.email(),
+            graffiti: faker.internet.userName(),
+          },
+        });
         const event = await eventsService.create(
           EventType.BLOCK_MINED,
           account,
+          user,
           0,
         );
         const id = event.id;

@@ -30,9 +30,12 @@ model Event {
   type        EventType
   occurred_at DateTime  @db.Timestamp(6)
   points      Int
+  user_id     Int
   account     Account   @relation(fields: [account_id], references: [id])
+  user        User      @relation(fields: [user_id], references: [id])
 
   @@index([account_id], name: "index_events_on_account_id")
+  @@index([user_id], name: "index_events_on_user_id")
   @@map("events")
 }
 
@@ -44,6 +47,7 @@ model User {
   graffiti          String   @db.VarChar
   discord_username  String?  @db.VarChar
   telegram_username String?  @db.VarChar
+  events            Event[]
 
   @@index([email], name: "index_users_on_email")
   @@map("users")

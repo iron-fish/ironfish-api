@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import faker from 'faker';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
 import { PrismaService } from '../prisma/prisma.service';
@@ -51,10 +52,17 @@ describe('EventsController', () => {
             public_address: uuid(),
           },
         });
+        const user = await prisma.user.create({
+          data: {
+            email: faker.internet.email(),
+            graffiti: faker.internet.userName(),
+          },
+        });
         const firstEvent = await prisma.event.create({
           data: {
             type: EventType.BUG_CAUGHT,
             account_id: account.id,
+            user_id: user.id,
             occurred_at: new Date(),
             points: 0,
           },
@@ -63,6 +71,7 @@ describe('EventsController', () => {
           data: {
             type: EventType.COMMUNITY_CONTRIBUTION,
             account_id: account.id,
+            user_id: user.id,
             occurred_at: new Date(),
             points: 0,
           },
@@ -71,6 +80,7 @@ describe('EventsController', () => {
           data: {
             type: EventType.SOCIAL_MEDIA_PROMOTION,
             account_id: account.id,
+            user_id: user.id,
             occurred_at: new Date(),
             points: 0,
           },
@@ -193,10 +203,17 @@ describe('EventsController', () => {
             public_address: uuid(),
           },
         });
+        const user = await prisma.user.create({
+          data: {
+            email: faker.internet.email(),
+            graffiti: faker.internet.userName(),
+          },
+        });
         const event = await prisma.event.create({
           data: {
             type: EventType.BUG_CAUGHT,
             account_id: account.id,
+            user_id: user.id,
             occurred_at: new Date(),
             points: 0,
           },

@@ -11,7 +11,7 @@ import { SortOrder } from '../common/enums/sort-order';
 import { getMondayOfThisWeek } from '../common/utils/date';
 import { PrismaService } from '../prisma/prisma.service';
 import { ListEventsOptions } from './interfaces/list-events-options';
-import { Account, Event, EventType, Prisma } from '.prisma/client';
+import { Account, Event, EventType, Prisma, User } from '.prisma/client';
 
 @Injectable()
 export class EventsService {
@@ -188,7 +188,12 @@ export class EventsService {
     };
   }
 
-  async create(type: EventType, account: Account, points = 0): Promise<Event> {
+  async create(
+    type: EventType,
+    account: Account,
+    user: User,
+    points = 0,
+  ): Promise<Event> {
     const weeklyLimitForEventType = WEEKLY_POINT_LIMITS_BY_EVENT_TYPE[type];
     const startOfWeek = getMondayOfThisWeek();
     const pointsAggregateThisWeek = await this.prisma.event.aggregate({
@@ -225,6 +230,7 @@ export class EventsService {
           points: adjustedPoints,
           occurred_at: new Date(),
           account_id: account.id,
+          user_id: user.id,
         },
       }),
     ]);
