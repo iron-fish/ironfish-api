@@ -9,7 +9,7 @@ datasource db {
 
 model Account {
   id             Int      @id @default(autoincrement())
-  public_address String   @unique @db.VarChar
+  public_address String   @db.VarChar
   created_at     DateTime @default(now()) @db.Timestamp(6)
   updated_at     DateTime @default(now()) @db.Timestamp(6)
   total_points   Int      @default(0)
@@ -18,6 +18,7 @@ model Account {
 
   @@index([public_address], name: "index_accounts_on_public_address")
   @@index([total_points], name: "index_accounts_on_total_points")
+  @@unique([public_address], name: "uq_accounts_on_public_address")
   @@map("accounts")
 }
 
@@ -36,11 +37,13 @@ model Event {
 }
 
 model User {
-  id         Int      @id @default(autoincrement())
-  created_at DateTime @default(now()) @db.Timestamp(6)
-  updated_at DateTime @default(now()) @updatedAt @db.Timestamp(6)
-  email      String   @db.VarChar
-  graffiti   String   @db.VarChar
+  id                Int      @id @default(autoincrement())
+  created_at        DateTime @default(now()) @db.Timestamp(6)
+  updated_at        DateTime @default(now()) @updatedAt @db.Timestamp(6)
+  email             String   @db.VarChar
+  graffiti          String   @db.VarChar
+  discord_username  String?  @db.VarChar
+  telegram_username String?  @db.VarChar
 
   @@index([email], name: "index_users_on_email")
   @@map("users")
