@@ -11,6 +11,7 @@ import { AuthModule } from '../auth/auth.module';
 import { EventsModule } from '../events/events.module';
 import { EventsRestModule } from '../events/events-rest.module';
 import { HealthModule } from '../health/health.module';
+import { UsersModule } from '../users/users.module';
 
 export async function bootstrapTestApp(): Promise<INestApplication> {
   const module = await Test.createTestingModule({
@@ -28,6 +29,7 @@ export async function bootstrapTestApp(): Promise<INestApplication> {
       EventsModule,
       EventsRestModule,
       HealthModule,
+      UsersModule,
     ],
   }).compile();
 

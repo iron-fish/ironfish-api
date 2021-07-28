@@ -138,7 +138,7 @@ describe('EventsController', () => {
         const { body } = await request(app.getHttpServer())
           .post(`/events`)
           .set('Authorization', `Bearer ${API_KEY}`)
-          .send({ public_address: '123', type, points })
+          .send({ graffiti: 'graffiti', public_address: '123', type, points })
           .expect(HttpStatus.NOT_FOUND);
 
         expect(body).toMatchSnapshot();
@@ -152,12 +152,23 @@ describe('EventsController', () => {
             public_address: uuid(),
           },
         });
+        const user = await prisma.user.create({
+          data: {
+            email: faker.internet.email(),
+            graffiti: faker.internet.userName(),
+          },
+        });
         const type = EventType.BUG_CAUGHT;
         const points = 10;
         const { body } = await request(app.getHttpServer())
           .post(`/events`)
           .set('Authorization', `Bearer ${API_KEY}`)
-          .send({ public_address: account.public_address, type, points })
+          .send({
+            graffiti: user.graffiti,
+            public_address: account.public_address,
+            type,
+            points,
+          })
           .expect(HttpStatus.CREATED);
 
         expect(body).toMatchObject({

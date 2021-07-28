@@ -7,6 +7,9 @@ import { EventType } from '.prisma/client';
 
 export class CreateEventDto {
   @IsString()
+  readonly graffiti!: string;
+
+  @IsString()
   readonly public_address!: string;
 
   @IsInt()
