@@ -32,6 +32,7 @@ exports[`EventsController POST /events with missing arguments returns a 422 1`] 
 Object {
   "error": "Unprocessable Entity",
   "message": Array [
+    "graffiti must be a string",
     "public_address must be a string",
     "points must not be less than 0",
     "points must be an integer number",

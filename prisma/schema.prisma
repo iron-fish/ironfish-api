@@ -50,6 +50,7 @@ model User {
   events            Event[]
 
   @@index([email], name: "index_users_on_email")
+  @@unique([graffiti], name: "uq_users_on_graffiti")
   @@map("users")
 }
 

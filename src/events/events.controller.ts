@@ -19,7 +19,7 @@ import { AccountsService } from '../accounts/accounts.service';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { List } from '../common/interfaces/list';
 import { EventsService } from '../events/events.service';
-import { PrismaService } from '../prisma/prisma.service';
+import { UsersService } from '../users/users.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { EventsQueryDto } from './dto/events-query.dto';
 import { Event } from '.prisma/client';
@@ -29,7 +29,7 @@ export class EventsController {
   constructor(
     private readonly accountsService: AccountsService,
     private readonly eventsService: EventsService,
-    private readonly prisma: PrismaService,
+    private readonly usersService: UsersService,
   ) {}
 
   @Get()
@@ -61,19 +61,13 @@ export class EventsController {
         transform: true,
       }),
     )
-    { public_address, points, type }: CreateEventDto,
+    { graffiti, points, public_address, type }: CreateEventDto,
   ): Promise<Event> {
     const account = await this.accountsService.findOrThrowByPublicAddress(
       public_address,
     );
-    // TODO: Remove this. Leaving this for now so it's easy to remove accounts
-    const tempUser = await this.prisma.user.create({
-      data: {
-        email: 'a@b.com',
-        graffiti: 'asdf',
-      },
-    });
-    return this.eventsService.create(type, account, tempUser, points);
+    const user = await this.usersService.findOrThrowByGraffiti(graffiti);
+    return this.eventsService.create(type, account, user, points);
   }
 
   @Delete(':id')
