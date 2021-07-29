@@ -6,7 +6,10 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
+import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
+import { SortOrder } from '../common/enums/sort-order';
 import { PrismaService } from '../prisma/prisma.service';
+import { ListUsersOptions } from './interfaces/list-users-options';
 import { User } from '.prisma/client';
 
 @Injectable()
@@ -55,5 +58,23 @@ export class UsersService {
       }),
     ]);
     return user;
+  }
+
+  async list(options: ListUsersOptions): Promise<User[]> {
+    const backwards = options.before !== undefined;
+    const cursorId = options.before ?? options.after;
+    const cursor = cursorId ? { id: cursorId } : undefined;
+    const limit = Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
+    const order = backwards ? SortOrder.ASC : SortOrder.DESC;
+    const skip = cursor ? 1 : 0;
+    const orderBy = options.orderBy
+      ? [{ [options.orderBy]: order }, { id: order }]
+      : { id: order };
+    return this.prisma.user.findMany({
+      cursor,
+      orderBy,
+      skip,
+      take: limit,
+    });
   }
 }

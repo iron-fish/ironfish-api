@@ -10,6 +10,7 @@ import { EventsModule } from './events/events.module';
 import { EventsRestModule } from './events/events-rest.module';
 import { HealthModule } from './health/health.module';
 import { UsersModule } from './users/users.module';
+import { UsersRestModule } from './users/users-rest.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { UsersModule } from './users/users.module';
     EventsRestModule,
     HealthModule,
     UsersModule,
+    UsersRestModule,
   ],
 })
 export class AppModule {}
