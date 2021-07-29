@@ -9,5 +9,5 @@ export class EventsQueryDto extends PaginationArgsDto {
   @IsInt()
   @IsOptional()
   @Type(() => Number)
-  readonly account_id?: number;
+  readonly user_id?: number;
 }
