@@ -1,7 +1,12 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { makeWorkerUtils, WorkerUtils } from 'graphile-worker';
 
@@ -12,8 +17,14 @@ export class GraphileWorkerService implements OnModuleInit, OnModuleDestroy {
   constructor(private readonly config: ConfigService) {}
 
   async onModuleInit(): Promise<void> {
+    const databaseUrl = this.config.get<string>('DATABASE_URL');
+    if (!databaseUrl) {
+      throw new InternalServerErrorException(
+        'Database URL value not configured',
+      );
+    }
     this.workerUtils = await makeWorkerUtils({
-      connectionString: `${this.config.get('DATABASE_URL')}?ssl=true`,
+      connectionString: `${databaseUrl}?ssl=true`,
     });
     await this.workerUtils.migrate();
   }
