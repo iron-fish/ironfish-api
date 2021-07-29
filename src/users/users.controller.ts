@@ -31,8 +31,8 @@ const MAX_SUPPORTED_TIME_RANGE_IN_DAYS = 30;
 @Controller('users')
 export class UsersController {
   constructor(
-    private readonly usersService: UsersService,
     private readonly eventsService: EventsService,
+    private readonly usersService: UsersService,
   ) {}
 
   @Get(':id')
