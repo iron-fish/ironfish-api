@@ -130,7 +130,7 @@ describe('EventsController', () => {
         const { body } = await request(app.getHttpServer())
           .post(`/events`)
           .set('Authorization', `Bearer ${API_KEY}`)
-          .send({ graffiti: uuid(), public_address: '123', type, points })
+          .send({ graffiti: uuid(), type, points })
           .expect(HttpStatus.NOT_FOUND);
 
         expect(body).toMatchSnapshot();
