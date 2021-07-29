@@ -9,9 +9,6 @@ export class CreateEventDto {
   @IsString()
   readonly graffiti!: string;
 
-  @IsString()
-  readonly public_address!: string;
-
   @IsInt()
   @Min(0)
   @Type(() => Number)

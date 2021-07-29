@@ -39,29 +39,23 @@ describe('EventsController', () => {
         expect((data as unknown[]).length).toBeGreaterThan(0);
         expect((data as unknown[])[0]).toMatchObject({
           id: expect.any(Number),
-          account_id: expect.any(Number),
+          user_id: expect.any(Number),
           type: expect.any(String),
         });
       });
     });
 
-    describe('with an account filter', () => {
-      it('returns events only for that account', async () => {
-        const account = await prisma.account.create({
-          data: {
-            public_address: uuid(),
-          },
-        });
+    describe('with a user filter', () => {
+      it('returns events only for that user', async () => {
         const user = await prisma.user.create({
           data: {
             email: faker.internet.email(),
-            graffiti: faker.internet.userName(),
+            graffiti: uuid(),
           },
         });
         const firstEvent = await prisma.event.create({
           data: {
             type: EventType.BUG_CAUGHT,
-            account_id: account.id,
             user_id: user.id,
             occurred_at: new Date(),
             points: 0,
@@ -70,7 +64,6 @@ describe('EventsController', () => {
         const secondEvent = await prisma.event.create({
           data: {
             type: EventType.COMMUNITY_CONTRIBUTION,
-            account_id: account.id,
             user_id: user.id,
             occurred_at: new Date(),
             points: 0,
@@ -79,7 +72,6 @@ describe('EventsController', () => {
         const thirdEvent = await prisma.event.create({
           data: {
             type: EventType.SOCIAL_MEDIA_PROMOTION,
-            account_id: account.id,
             user_id: user.id,
             occurred_at: new Date(),
             points: 0,
@@ -89,7 +81,7 @@ describe('EventsController', () => {
 
         const { body } = await request(app.getHttpServer())
           .get(`/events`)
-          .query({ account_id: account.id })
+          .query({ user_id: user.id })
           .expect(HttpStatus.OK);
 
         const { data } = body;
@@ -97,7 +89,7 @@ describe('EventsController', () => {
         for (const event of data) {
           expect(event).toMatchObject({
             id: expect.any(Number),
-            account_id: account.id,
+            user_id: user.id,
             type: expect.any(String),
           });
         }
@@ -131,14 +123,14 @@ describe('EventsController', () => {
       });
     });
 
-    describe('with a missing account id', () => {
+    describe('with a missing user id', () => {
       it('returns a 404', async () => {
         const type = EventType.BUG_CAUGHT;
         const points = 10;
         const { body } = await request(app.getHttpServer())
           .post(`/events`)
           .set('Authorization', `Bearer ${API_KEY}`)
-          .send({ graffiti: 'graffiti', public_address: '123', type, points })
+          .send({ graffiti: uuid(), public_address: '123', type, points })
           .expect(HttpStatus.NOT_FOUND);
 
         expect(body).toMatchSnapshot();
@@ -147,15 +139,10 @@ describe('EventsController', () => {
 
     describe('with a valid payload', () => {
       it('creates an event record', async () => {
-        const account = await prisma.account.create({
-          data: {
-            public_address: uuid(),
-          },
-        });
         const user = await prisma.user.create({
           data: {
             email: faker.internet.email(),
-            graffiti: faker.internet.userName(),
+            graffiti: uuid(),
           },
         });
         const type = EventType.BUG_CAUGHT;
@@ -165,7 +152,6 @@ describe('EventsController', () => {
           .set('Authorization', `Bearer ${API_KEY}`)
           .send({
             graffiti: user.graffiti,
-            public_address: account.public_address,
             type,
             points,
           })
@@ -173,7 +159,7 @@ describe('EventsController', () => {
 
         expect(body).toMatchObject({
           id: expect.any(Number),
-          account_id: account.id,
+          user_id: user.id,
           type,
           points,
         });
@@ -209,21 +195,15 @@ describe('EventsController', () => {
 
     describe('with a valid event id', () => {
       it('returns a 204', async () => {
-        const account = await prisma.account.create({
-          data: {
-            public_address: uuid(),
-          },
-        });
         const user = await prisma.user.create({
           data: {
             email: faker.internet.email(),
-            graffiti: faker.internet.userName(),
+            graffiti: uuid(),
           },
         });
         const event = await prisma.event.create({
           data: {
             type: EventType.BUG_CAUGHT,
-            account_id: account.id,
             user_id: user.id,
             occurred_at: new Date(),
             points: 0,

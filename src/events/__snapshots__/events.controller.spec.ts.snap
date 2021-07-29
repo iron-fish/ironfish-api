@@ -14,17 +14,17 @@ Object {
 }
 `;
 
-exports[`EventsController POST /events with a missing account id returns a 404 1`] = `
-Object {
-  "message": "Not Found",
-  "statusCode": 404,
-}
-`;
-
 exports[`EventsController POST /events with a missing api key returns a 401 1`] = `
 Object {
   "message": "Unauthorized",
   "statusCode": 401,
+}
+`;
+
+exports[`EventsController POST /events with a missing user id returns a 404 1`] = `
+Object {
+  "message": "Not Found",
+  "statusCode": 404,
 }
 `;
 
@@ -33,7 +33,6 @@ Object {
   "error": "Unprocessable Entity",
   "message": Array [
     "graffiti must be a string",
-    "public_address must be a string",
     "points must not be less than 0",
     "points must be an integer number",
     "type must be a valid enum value",

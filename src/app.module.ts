@@ -4,8 +4,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import joi from 'joi';
-import { AccountsModule } from './accounts/accounts.module';
-import { AccountsRestModule } from './accounts/accounts-rest.module';
 import { AuthModule } from './auth/auth.module';
 import { EventsModule } from './events/events.module';
 import { EventsRestModule } from './events/events-rest.module';
@@ -15,8 +13,6 @@ import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
-    AccountsModule,
-    AccountsRestModule,
     AuthModule,
     ConfigModule.forRoot({
       isGlobal: true,

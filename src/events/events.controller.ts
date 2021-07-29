@@ -15,7 +15,6 @@ import {
   UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
-import { AccountsService } from '../accounts/accounts.service';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { List } from '../common/interfaces/list';
 import { EventsService } from '../events/events.service';
@@ -27,7 +26,6 @@ import { Event } from '.prisma/client';
 @Controller('events')
 export class EventsController {
   constructor(
-    private readonly accountsService: AccountsService,
     private readonly eventsService: EventsService,
     private readonly usersService: UsersService,
   ) {}
@@ -40,11 +38,11 @@ export class EventsController {
         transform: true,
       }),
     )
-    { account_id, after, before, limit }: EventsQueryDto,
+    { user_id, after, before, limit }: EventsQueryDto,
   ): Promise<List<Event>> {
     return {
       data: await this.eventsService.list({
-        accountId: account_id,
+        userId: user_id,
         after,
         before,
         limit,
@@ -61,13 +59,10 @@ export class EventsController {
         transform: true,
       }),
     )
-    { graffiti, points, public_address, type }: CreateEventDto,
+    { graffiti, points, type }: CreateEventDto,
   ): Promise<Event> {
-    const account = await this.accountsService.findOrThrowByPublicAddress(
-      public_address,
-    );
     const user = await this.usersService.findOrThrowByGraffiti(graffiti);
-    return this.eventsService.create(type, account, user, points);
+    return this.eventsService.create(type, user, points);
   }
 
   @Delete(':id')
