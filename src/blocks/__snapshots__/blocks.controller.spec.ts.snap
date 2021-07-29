@@ -1,0 +1,23 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`BlocksController POST /blocks with a missing api key returns a 401 1`] = `
+Object {
+  "message": "Unauthorized",
+  "statusCode": 401,
+}
+`;
+
+exports[`BlocksController POST /blocks with missing arguments returns a 422 1`] = `
+Object {
+  "error": "Unprocessable Entity",
+  "message": Array [
+    "hash must be a string",
+    "sequence must be an integer number",
+    "difficulty must be an integer number",
+    "main must be a boolean value",
+    "timestamp must be a Date instance",
+    "transactions_count must be an integer number",
+  ],
+  "statusCode": 422,
+}
+`;
