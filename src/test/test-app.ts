@@ -6,6 +6,7 @@ import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import joi from 'joi';
 import { AuthModule } from '../auth/auth.module';
+import { BlocksModule } from '../blocks/blocks.module';
 import { EventsModule } from '../events/events.module';
 import { EventsRestModule } from '../events/events-rest.module';
 import { HealthModule } from '../health/health.module';
@@ -15,6 +16,7 @@ export async function bootstrapTestApp(): Promise<INestApplication> {
   const module = await Test.createTestingModule({
     imports: [
       AuthModule,
+      BlocksModule,
       ConfigModule.forRoot({
         isGlobal: true,
         validationSchema: joi.object({
