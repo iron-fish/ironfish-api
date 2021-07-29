@@ -48,7 +48,7 @@ model Block {
   main                Boolean
   network_version     Int
   transactions_count  Int
-  confirmed_at        DateTime @db.Timestamp(6)
+  timestamp           DateTime @db.Timestamp(6)
 
   @@index([hash], name: "index_blocks_on_hash")
   @@map("blocks")

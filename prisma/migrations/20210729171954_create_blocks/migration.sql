@@ -9,7 +9,7 @@ CREATE TABLE blocks (
     main BOOLEAN NOT NULL,
     network_version INTEGER NOT NULL,
     transactions_count INTEGER NOT NULL,
-    confirmed_at TIMESTAMP(6) NOT NULL
+    timestamp TIMESTAMP(6) NOT NULL
 );
 
 CREATE INDEX index_blocks_on_hash ON public.blocks USING btree (hash);
