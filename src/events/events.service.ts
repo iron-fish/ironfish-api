@@ -11,7 +11,7 @@ import { SortOrder } from '../common/enums/sort-order';
 import { getMondayOfThisWeek } from '../common/utils/date';
 import { PrismaService } from '../prisma/prisma.service';
 import { ListEventsOptions } from './interfaces/list-events-options';
-import { Account, Event, EventType, Prisma, User } from '.prisma/client';
+import { Event, EventType, Prisma, User } from '.prisma/client';
 
 @Injectable()
 export class EventsService {
@@ -38,15 +38,15 @@ export class EventsService {
       skip,
       take: limit,
       where: {
-        account_id: options.accountId,
+        user_id: options.userId,
       },
     });
   }
 
-  async getLifetimeEventCountsForAccount(
-    account: Account,
+  async getLifetimeEventCountsForUser(
+    user: User,
   ): Promise<Record<EventType, number>> {
-    const { id } = account;
+    const { id } = user;
     const [
       blocksMined,
       bugsCaught,
@@ -57,37 +57,37 @@ export class EventsService {
     ] = await this.prisma.$transaction([
       this.prisma.event.count({
         where: {
-          account_id: id,
+          user_id: id,
           type: EventType.BLOCK_MINED,
         },
       }),
       this.prisma.event.count({
         where: {
-          account_id: id,
+          user_id: id,
           type: EventType.BUG_CAUGHT,
         },
       }),
       this.prisma.event.count({
         where: {
-          account_id: id,
+          user_id: id,
           type: EventType.COMMUNITY_CONTRIBUTION,
         },
       }),
       this.prisma.event.count({
         where: {
-          account_id: id,
+          user_id: id,
           type: EventType.NODE_HOSTED,
         },
       }),
       this.prisma.event.count({
         where: {
-          account_id: id,
+          user_id: id,
           type: EventType.PULL_REQUEST_MERGED,
         },
       }),
       this.prisma.event.count({
         where: {
-          account_id: id,
+          user_id: id,
           type: EventType.SOCIAL_MEDIA_PROMOTION,
         },
       }),
@@ -102,12 +102,12 @@ export class EventsService {
     };
   }
 
-  async getTotalEventCountsAndPointsForAccount(
-    account: Account,
+  async getTotalEventCountsAndPointsForUser(
+    user: User,
     start: Date,
     end: Date,
   ): Promise<{ eventCounts: Record<EventType, number>; points: number }> {
-    const { id } = account;
+    const { id } = user;
     const dateFilter = {
       occurred_at: {
         gte: start,
@@ -125,42 +125,42 @@ export class EventsService {
     ] = await this.prisma.$transaction([
       this.prisma.event.count({
         where: {
-          account_id: id,
+          user_id: id,
           type: EventType.BLOCK_MINED,
           ...dateFilter,
         },
       }),
       this.prisma.event.count({
         where: {
-          account_id: id,
+          user_id: id,
           type: EventType.BUG_CAUGHT,
           ...dateFilter,
         },
       }),
       this.prisma.event.count({
         where: {
-          account_id: id,
+          user_id: id,
           type: EventType.COMMUNITY_CONTRIBUTION,
           ...dateFilter,
         },
       }),
       this.prisma.event.count({
         where: {
-          account_id: id,
+          user_id: id,
           type: EventType.NODE_HOSTED,
           ...dateFilter,
         },
       }),
       this.prisma.event.count({
         where: {
-          account_id: id,
+          user_id: id,
           type: EventType.PULL_REQUEST_MERGED,
           ...dateFilter,
         },
       }),
       this.prisma.event.count({
         where: {
-          account_id: id,
+          user_id: id,
           type: EventType.SOCIAL_MEDIA_PROMOTION,
           ...dateFilter,
         },
@@ -188,12 +188,7 @@ export class EventsService {
     };
   }
 
-  async create(
-    type: EventType,
-    account: Account,
-    user: User,
-    points = 0,
-  ): Promise<Event> {
+  async create(type: EventType, user: User, points = 0): Promise<Event> {
     const weeklyLimitForEventType = WEEKLY_POINT_LIMITS_BY_EVENT_TYPE[type];
     const startOfWeek = getMondayOfThisWeek();
     const pointsAggregateThisWeek = await this.prisma.event.aggregate({
@@ -201,7 +196,7 @@ export class EventsService {
         points: true,
       },
       where: {
-        account_id: account.id,
+        user_id: user.id,
         occurred_at: {
           gte: startOfWeek,
         },
@@ -214,9 +209,9 @@ export class EventsService {
     );
 
     const [_, event] = await this.prisma.$transaction([
-      this.prisma.account.update({
+      this.prisma.user.update({
         where: {
-          id: account.id,
+          id: user.id,
         },
         data: {
           total_points: {
@@ -229,7 +224,6 @@ export class EventsService {
           type,
           points: adjustedPoints,
           occurred_at: new Date(),
-          account_id: account.id,
           user_id: user.id,
         },
       }),

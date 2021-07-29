@@ -4,5 +4,5 @@
 import { PaginationOptions } from '../../common/interfaces/pagination-options';
 
 export interface ListEventsOptions extends PaginationOptions {
-  accountId?: number;
+  userId?: number;
 }

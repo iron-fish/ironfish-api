@@ -29,6 +29,8 @@ jobs:
       - name: Install packages
         if: steps.yarn-cache.outputs.cache-hit != 'true'
         run: yarn --non-interactive --frozen-lockfile
+      - name: Generate Prisma schema
+        run: npx prisma generate
       - name: Lint
         run: yarn lint
 
