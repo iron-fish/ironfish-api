@@ -5,6 +5,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import joi from 'joi';
 import { AuthModule } from './auth/auth.module';
+import { BlocksModule } from './blocks/blocks.module';
 import { EventsModule } from './events/events.module';
 import { EventsRestModule } from './events/events-rest.module';
 import { GraphileWorkerModule } from './graphile-worker/graphile-worker.module';
@@ -14,6 +15,7 @@ import { UsersModule } from './users/users.module';
 @Module({
   imports: [
     AuthModule,
+    BlocksModule,
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: joi.object({
