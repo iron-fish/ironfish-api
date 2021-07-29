@@ -13,7 +13,7 @@ export class GraphileWorkerService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit(): Promise<void> {
     this.workerUtils = await makeWorkerUtils({
-      connectionString: this.config.get('DATABASE_URL'),
+      connectionString: `${this.config.get('DATABASE_URL')}?ssl=true`,
     });
     await this.workerUtils.migrate();
   }
