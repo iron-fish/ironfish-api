@@ -10,7 +10,7 @@ datasource db {
 model Event {
   id          Int       @id @default(autoincrement())
   created_at  DateTime  @default(now()) @db.Timestamp(6)
-  updated_at  DateTime  @default(now()) @db.Timestamp(6)
+  updated_at  DateTime  @default(now()) @updatedAt @db.Timestamp(6)
   type        EventType
   occurred_at DateTime  @db.Timestamp(6)
   points      Int
@@ -35,6 +35,23 @@ model User {
   @@index([email], name: "index_users_on_email")
   @@unique([graffiti], name: "uq_users_on_graffiti")
   @@map("users")
+}
+
+model Block {
+  id                  Int      @id @default(autoincrement())
+  created_at          DateTime @default(now()) @db.Timestamp(6)
+  updated_at          DateTime @default(now()) @updatedAt @db.Timestamp(6)
+  hash                String   @db.VarChar
+  sequence            Int
+  previous_block_hash String?  @db.VarChar
+  difficulty          Int
+  main                Boolean
+  network_version     Int
+  transactions_count  Int
+  timestamp           DateTime @db.Timestamp(6)
+
+  @@index([hash], name: "index_blocks_on_hash")
+  @@map("blocks")
 }
 
 enum EventType {
