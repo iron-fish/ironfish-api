@@ -8,7 +8,6 @@ import { AuthModule } from './auth/auth.module';
 import { BlocksModule } from './blocks/blocks.module';
 import { EventsModule } from './events/events.module';
 import { EventsRestModule } from './events/events-rest.module';
-import { GraphileWorkerModule } from './graphile-worker/graphile-worker.module';
 import { HealthModule } from './health/health.module';
 import { UsersModule } from './users/users.module';
 
@@ -25,7 +24,6 @@ import { UsersModule } from './users/users.module';
     }),
     EventsModule,
     EventsRestModule,
-    GraphileWorkerModule,
     HealthModule,
     UsersModule,
   ],
