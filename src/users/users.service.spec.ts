@@ -53,7 +53,7 @@ describe('UsersService', () => {
   });
 
   describe('findOrThrowByGraffiti', () => {
-    describe('with a valid address', () => {
+    describe('with a valid graffiti', () => {
       it('returns the record', async () => {
         const user = await prisma.user.create({
           data: {
@@ -110,7 +110,7 @@ describe('UsersService', () => {
   });
 
   describe('create', () => {
-    describe('with a duplicate public address', () => {
+    describe('with a duplicate graffiti', () => {
       it('throws an exception', async () => {
         const graffiti = uuid();
         await prisma.user.create({
@@ -126,7 +126,23 @@ describe('UsersService', () => {
       });
     });
 
-    describe('with a new public address', () => {
+    describe('with a duplicate email', () => {
+      it('throws an exception', async () => {
+        const email = faker.internet.email();
+        await prisma.user.create({
+          data: {
+            email,
+            graffiti: uuid(),
+          },
+        });
+
+        await expect(usersService.create(email, uuid())).rejects.toThrow(
+          UnprocessableEntityException,
+        );
+      });
+    });
+
+    describe('with a new graffiti and email', () => {
       it('creates a new record', async () => {
         const email = faker.internet.email();
         const graffiti = uuid();

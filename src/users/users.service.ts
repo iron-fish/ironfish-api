@@ -39,14 +39,23 @@ export class UsersService {
   }
 
   async create(email: string, graffiti: string): Promise<User> {
-    const existingRecord = await this.prisma.user.findUnique({
+    const existingRecord = await this.prisma.user.findFirst({
       where: {
-        graffiti,
+        OR: [
+          {
+            email,
+          },
+          {
+            graffiti,
+          },
+        ],
       },
     });
     if (existingRecord) {
       throw new UnprocessableEntityException(
-        `User already exists for '${graffiti}'`,
+        `User already exists for '${
+          graffiti === existingRecord.graffiti ? graffiti : email
+        }'`,
       );
     }
     const [user] = await this.prisma.$transaction([
