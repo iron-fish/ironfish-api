@@ -40,7 +40,7 @@ export class BlocksController {
     }: CreateBlockDto,
   ): Promise<Block> {
     const main = type === BlockOperation.CONNECTED;
-    return this.blocksService.create(
+    return this.blocksService.upsert(
       hash,
       sequence,
       difficulty,

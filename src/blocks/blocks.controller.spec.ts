@@ -53,7 +53,7 @@ describe('BlocksController', () => {
     });
 
     describe('with a valid payload', () => {
-      it('stores a block', async () => {
+      it('upserts a block', async () => {
         const payload: CreateBlockDto = {
           hash: uuid(),
           difficulty: faker.datatype.number(),
