@@ -1,10 +1,11 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { Block } from '.prisma/client';
+import { SortOrder } from '../common/enums/sort-order';
 
 @Injectable()
 export class BlocksService {
@@ -54,6 +55,23 @@ export class BlocksService {
         },
       }),
     ]);
+    return block;
+  }
+
+  async head(): Promise<Block> {
+    const networkVersion = this.config.get<number>('NETWORK_VERSION', 0);
+    const block = await this.prisma.block.findFirst({
+      orderBy: {
+        sequence: SortOrder.DESC
+      },
+      where: {
+        main: true,
+        network_version: networkVersion,
+      }
+    })
+    if (!block) {
+      throw new NotFoundException()
+    }
     return block;
   }
 }
