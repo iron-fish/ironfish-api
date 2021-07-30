@@ -1,7 +1,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { bootstrapTestApp } from '../test/test-app';
@@ -10,10 +11,12 @@ import { BlocksService } from './blocks.service';
 describe('EventsService', () => {
   let app: INestApplication;
   let blocksService: BlocksService;
+  let config: ConfigService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
     blocksService = app.get(BlocksService);
+    config = app.get(ConfigService);
     await app.init();
   });
 
@@ -85,6 +88,25 @@ describe('EventsService', () => {
           transactions_count: block.transactions_count,
           graffiti: newGraffiti,
           previous_block_hash: previousBlockHash,
+        });
+      });
+    });
+  });
+
+  describe('head', () => {
+    describe('with no block for the current version and main chain', () => {
+      it('throws a NotFoundException', async () => {
+        jest.spyOn(config, 'get').mockImplementationOnce(() => 42069);
+        await expect(blocksService.head()).rejects.toThrow(NotFoundException);
+      });
+    });
+
+    describe('with a valid network version', () => {
+      it('returns the heaviest block', async () => {
+        const block = await blocksService.head();
+        expect(block).toMatchObject({
+          id: expect.any(Number),
+          main: true,
         });
       });
     });

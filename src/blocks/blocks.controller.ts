@@ -55,6 +55,6 @@ export class BlocksController {
 
   @Get('head')
   async head(): Promise<Block> {
-    return this.blocksService.head()
+    return this.blocksService.head();
   }
 }

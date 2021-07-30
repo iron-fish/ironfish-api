@@ -3,9 +3,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { SortOrder } from '../common/enums/sort-order';
 import { PrismaService } from '../prisma/prisma.service';
 import { Block } from '.prisma/client';
-import { SortOrder } from '../common/enums/sort-order';
 
 @Injectable()
 export class BlocksService {
@@ -62,15 +62,15 @@ export class BlocksService {
     const networkVersion = this.config.get<number>('NETWORK_VERSION', 0);
     const block = await this.prisma.block.findFirst({
       orderBy: {
-        sequence: SortOrder.DESC
+        sequence: SortOrder.DESC,
       },
       where: {
         main: true,
         network_version: networkVersion,
-      }
-    })
+      },
+    });
     if (!block) {
-      throw new NotFoundException()
+      throw new NotFoundException();
     }
     return block;
   }

@@ -83,4 +83,17 @@ describe('BlocksController', () => {
       });
     });
   });
+
+  describe('GET /blocks/head', () => {
+    it('returns the heaviest block', async () => {
+      const { body } = await request(app.getHttpServer())
+        .get('/blocks/head')
+        .expect(HttpStatus.OK);
+
+      expect(body).toMatchObject({
+        id: expect.any(Number),
+        main: true,
+      });
+    });
+  });
 });
