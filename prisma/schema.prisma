@@ -49,6 +49,7 @@ model Block {
   network_version     Int
   transactions_count  Int
   timestamp           DateTime @db.Timestamp(6)
+  graffiti            String   @db.VarChar
 
   @@index([hash], name: "index_blocks_on_hash")
   @@map("blocks")

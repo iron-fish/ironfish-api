@@ -1,0 +1,1 @@
+ALTER TABLE blocks ADD COLUMN graffiti VARCHAR NOT NULL;
