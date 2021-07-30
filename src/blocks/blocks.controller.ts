@@ -12,6 +12,7 @@ import {
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { BlocksService } from './blocks.service';
 import { CreateBlockDto } from './dto/create-block.dto';
+import { BlockOperation } from './enums/block-operation';
 import { Block } from '.prisma/client';
 
 @Controller('blocks')
@@ -30,7 +31,7 @@ export class BlocksController {
     {
       difficulty,
       hash,
-      main,
+      type,
       previous_block_hash,
       timestamp,
       transactions_count,
@@ -38,6 +39,7 @@ export class BlocksController {
       graffiti,
     }: CreateBlockDto,
   ): Promise<Block> {
+    const main = type === BlockOperation.CONNECTED;
     return this.blocksService.create(
       hash,
       sequence,

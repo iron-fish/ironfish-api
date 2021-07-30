@@ -2,13 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Type } from 'class-transformer';
-import {
-  IsBoolean,
-  IsDate,
-  IsInt,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { IsDate, IsEnum, IsInt, IsOptional, IsString } from 'class-validator';
+import { BlockOperation } from '../enums/block-operation';
 
 export class CreateBlockDto {
   @IsString()
@@ -22,9 +17,8 @@ export class CreateBlockDto {
   @Type(() => Number)
   readonly difficulty!: number;
 
-  @IsBoolean()
-  @Type(() => Boolean)
-  readonly main!: boolean;
+  @IsEnum(BlockOperation)
+  readonly type!: BlockOperation;
 
   @IsDate()
   @Type(() => Date)
