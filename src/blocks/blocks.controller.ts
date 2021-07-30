@@ -4,6 +4,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpStatus,
   Post,
   UseGuards,
@@ -50,5 +51,10 @@ export class BlocksController {
       graffiti,
       previous_block_hash,
     );
+  }
+
+  @Get('head')
+  async head(): Promise<Block> {
+    return this.blocksService.head();
   }
 }
