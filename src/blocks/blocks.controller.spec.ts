@@ -56,7 +56,7 @@ describe('BlocksController', () => {
       it('upserts a block', async () => {
         const payload: CreateBlockDto = {
           hash: uuid(),
-          difficulty: faker.datatype.number(),
+          difficulty: uuid(),
           type: BlockOperation.CONNECTED,
           sequence: faker.datatype.number(),
           timestamp: new Date(),

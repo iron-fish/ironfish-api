@@ -44,7 +44,7 @@ model Block {
   hash                String   @db.VarChar
   sequence            Int
   previous_block_hash String?  @db.VarChar
-  difficulty          Int
+  difficulty          String   @db.VarChar
   main                Boolean
   network_version     Int
   transactions_count  Int
