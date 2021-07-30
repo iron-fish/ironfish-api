@@ -34,6 +34,9 @@ export class CreateBlockDto {
   @Type(() => Number)
   readonly transactions_count!: number;
 
+  @IsString()
+  readonly graffiti!: string;
+
   @IsOptional()
   @IsString()
   readonly previous_block_hash?: string;

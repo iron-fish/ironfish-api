@@ -20,6 +20,7 @@ export class BlocksService {
     main: boolean,
     timestamp: Date,
     transactionsCount: number,
+    graffiti: string,
     previousBlockHash?: string,
   ): Promise<Block> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION', 0);
@@ -31,6 +32,7 @@ export class BlocksService {
           difficulty,
           main,
           timestamp,
+          graffiti,
           transactions_count: transactionsCount,
           network_version: networkVersion,
           previous_block_hash: previousBlockHash,
