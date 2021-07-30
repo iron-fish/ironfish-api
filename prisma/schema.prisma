@@ -51,7 +51,9 @@ model Block {
   timestamp           DateTime @db.Timestamp(6)
   graffiti            String   @db.VarChar
 
+  @@unique([hash, network_version], name: "uq_blocks_on_hash_and_network_version")
   @@index([hash], name: "index_blocks_on_hash")
+  @@index([hash, network_version], name: "index_blocks_on_hash_and_network_version")
   @@map("blocks")
 }
 

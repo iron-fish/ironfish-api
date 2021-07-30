@@ -13,7 +13,7 @@ export class BlocksService {
     private prisma: PrismaService,
   ) {}
 
-  async create(
+  async upsert(
     hash: string,
     sequence: number,
     difficulty: number,
@@ -25,8 +25,8 @@ export class BlocksService {
   ): Promise<Block> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION', 0);
     const [block] = await this.prisma.$transaction([
-      this.prisma.block.create({
-        data: {
+      this.prisma.block.upsert({
+        create: {
           hash,
           sequence,
           difficulty,
@@ -36,6 +36,21 @@ export class BlocksService {
           transactions_count: transactionsCount,
           network_version: networkVersion,
           previous_block_hash: previousBlockHash,
+        },
+        update: {
+          sequence,
+          difficulty,
+          main,
+          timestamp,
+          graffiti,
+          transactions_count: transactionsCount,
+          previous_block_hash: previousBlockHash,
+        },
+        where: {
+          uq_blocks_on_hash_and_network_version: {
+            hash,
+            network_version: networkVersion,
+          },
         },
       }),
     ]);
