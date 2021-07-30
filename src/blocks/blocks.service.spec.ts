@@ -31,6 +31,7 @@ describe('EventsService', () => {
         new Date(),
         0,
         uuid(),
+        uuid(),
       );
       expect(block).toMatchObject({
         id: expect.any(Number),
@@ -40,6 +41,7 @@ describe('EventsService', () => {
         main: true,
         timestamp: expect.any(Date),
         transactions_count: expect.any(Number),
+        graffiti: expect.any(String),
         previous_block_hash: expect.any(String),
       });
     });

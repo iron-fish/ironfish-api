@@ -17,6 +17,7 @@ Object {
     "main must be a boolean value",
     "timestamp must be a Date instance",
     "transactions_count must be an integer number",
+    "graffiti must be a string",
   ],
   "statusCode": 422,
 }

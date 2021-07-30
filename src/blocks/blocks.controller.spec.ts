@@ -60,6 +60,7 @@ describe('BlocksController', () => {
           sequence: faker.datatype.number(),
           timestamp: new Date(),
           transactions_count: 0,
+          graffiti: uuid(),
           previous_block_hash: uuid(),
         };
         const { body } = await request(app.getHttpServer())

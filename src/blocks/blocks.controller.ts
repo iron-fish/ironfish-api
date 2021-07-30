@@ -35,6 +35,7 @@ export class BlocksController {
       timestamp,
       transactions_count,
       sequence,
+      graffiti,
     }: CreateBlockDto,
   ): Promise<Block> {
     return this.blocksService.create(
@@ -44,6 +45,7 @@ export class BlocksController {
       main,
       timestamp,
       transactions_count,
+      graffiti,
       previous_block_hash,
     );
   }
