@@ -16,7 +16,7 @@ export class BlocksService {
   async upsert(
     hash: string,
     sequence: number,
-    difficulty: number,
+    difficulty: string,
     main: boolean,
     timestamp: Date,
     transactionsCount: number,

@@ -27,7 +27,7 @@ describe('EventsService', () => {
         const block = await blocksService.upsert(
           uuid(),
           faker.datatype.number(),
-          faker.datatype.number(),
+          uuid(),
           true,
           new Date(),
           0,
@@ -38,7 +38,7 @@ describe('EventsService', () => {
           id: expect.any(Number),
           hash: expect.any(String),
           sequence: expect.any(Number),
-          difficulty: expect.any(Number),
+          difficulty: expect.any(String),
           main: true,
           timestamp: expect.any(Date),
           transactions_count: expect.any(Number),
@@ -54,7 +54,7 @@ describe('EventsService', () => {
         const block = await blocksService.upsert(
           uuid(),
           faker.datatype.number(),
-          faker.datatype.number(),
+          uuid(),
           true,
           new Date(),
           0,
@@ -62,7 +62,7 @@ describe('EventsService', () => {
           previousBlockHash,
         );
         const newSequence = faker.datatype.number();
-        const newDifficulty = faker.datatype.number();
+        const newDifficulty = uuid();
         const newGraffiti = uuid();
 
         const newBlock = await blocksService.upsert(

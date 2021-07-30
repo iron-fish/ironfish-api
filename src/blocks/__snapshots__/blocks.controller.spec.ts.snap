@@ -13,7 +13,7 @@ Object {
   "message": Array [
     "hash must be a string",
     "sequence must be an integer number",
-    "difficulty must be an integer number",
+    "difficulty must be a string",
     "type must be a valid enum value",
     "timestamp must be a Date instance",
     "transactions_count must be an integer number",

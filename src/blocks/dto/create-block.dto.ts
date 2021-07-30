@@ -13,9 +13,8 @@ export class CreateBlockDto {
   @Type(() => Number)
   readonly sequence!: number;
 
-  @IsInt()
-  @Type(() => Number)
-  readonly difficulty!: number;
+  @IsString()
+  readonly difficulty!: string;
 
   @IsEnum(BlockOperation)
   readonly type!: BlockOperation;
