@@ -86,7 +86,8 @@ describe('UsersService', () => {
       for (const record of records) {
         expect(record).toMatchObject({
           id: expect.any(Number),
-          public_address: expect.any(String),
+          email: expect.any(String),
+          graffiti: expect.any(String),
         });
       }
     });
