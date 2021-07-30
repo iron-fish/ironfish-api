@@ -8,6 +8,7 @@ import request from 'supertest';
 import { v4 as uuid } from 'uuid';
 import { bootstrapTestApp } from '../test/test-app';
 import { CreateBlockDto } from './dto/create-block.dto';
+import { BlockOperation } from './enums/block-operation';
 
 const API_KEY = 'test';
 
@@ -56,7 +57,7 @@ describe('BlocksController', () => {
         const payload: CreateBlockDto = {
           hash: uuid(),
           difficulty: faker.datatype.number(),
-          main: true,
+          type: BlockOperation.CONNECTED,
           sequence: faker.datatype.number(),
           timestamp: new Date(),
           transactions_count: 0,
@@ -73,7 +74,7 @@ describe('BlocksController', () => {
           id: expect.any(Number),
           hash: payload.hash,
           difficulty: payload.difficulty,
-          main: payload.main,
+          main: true,
           sequence: payload.sequence,
           timestamp: payload.timestamp.toISOString(),
           transactions_count: payload.transactions_count,
