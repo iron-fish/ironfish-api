@@ -56,7 +56,7 @@ describe('BlocksController', () => {
     describe('with too many blocks', () => {
       it('returns a 422', async () => {
         const blocks = [];
-        for (let i = 0; i < 150; i++) {
+        for (let i = 0; i < 3001; i++) {
           blocks.push({
             hash: uuid(),
             difficulty: uuid(),
@@ -121,6 +121,7 @@ describe('BlocksController', () => {
 
   describe('GET /blocks/head', () => {
     it('returns the heaviest block', async () => {
+      jest.spyOn(config, 'get').mockImplementationOnce(() => 0);
       const { body } = await request(app.getHttpServer())
         .get('/blocks/head')
         .expect(HttpStatus.OK);

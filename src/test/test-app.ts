@@ -4,6 +4,7 @@
 import { INestApplication } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
+import { json } from 'express';
 import joi from 'joi';
 import { AuthModule } from '../auth/auth.module';
 import { BlocksModule } from '../blocks/blocks.module';
@@ -36,5 +37,7 @@ export async function bootstrapTestApp(): Promise<INestApplication> {
     ],
   }).compile();
 
-  return module.createNestApplication();
+  const app = module.createNestApplication();
+  app.use(json({ limit: '10mb' }));
+  return app;
 }

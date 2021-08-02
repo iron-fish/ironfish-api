@@ -8,6 +8,7 @@ import {
 } from '@nestjs/platform-express';
 import compression from 'compression';
 import express from 'express';
+import { json } from 'express';
 import helmet from 'helmet';
 import http from 'http';
 import { AppModule } from './app.module';
@@ -23,6 +24,7 @@ async function bootstrap() {
 
   app.use(compression());
   app.use(helmet());
+  app.use(json({ limit: '10mb' }));
 
   await app.init();
   http.createServer(server).listen(PORT);

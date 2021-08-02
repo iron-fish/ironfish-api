@@ -48,7 +48,7 @@ class BlockDto {
 export class CreateBlocksDto {
   @IsArray()
   @ArrayMinSize(1)
-  @ArrayMaxSize(100)
+  @ArrayMaxSize(3000)
   @ValidateNested({ each: true })
   @Type(() => BlockDto)
   readonly blocks!: BlockDto[];
