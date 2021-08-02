@@ -2,10 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Type } from 'class-transformer';
-import { IsDate, IsEnum, IsInt, IsOptional, IsString } from 'class-validator';
+import {
+  ArrayMaxSize,
+  ArrayMinSize,
+  IsArray,
+  IsDate,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 import { BlockOperation } from '../enums/block-operation';
 
-export class CreateBlockDto {
+class BlockDto {
   @IsString()
   readonly hash!: string;
 
@@ -33,4 +43,13 @@ export class CreateBlockDto {
   @IsOptional()
   @IsString()
   readonly previous_block_hash?: string;
+}
+
+export class CreateBlocksDto {
+  @IsArray()
+  @ArrayMinSize(1)
+  @ArrayMaxSize(100)
+  @ValidateNested({ each: true })
+  @Type(() => BlockDto)
+  readonly blocks!: BlockDto[];
 }

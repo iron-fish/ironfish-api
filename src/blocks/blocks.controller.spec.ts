@@ -7,7 +7,7 @@ import faker from 'faker';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
 import { bootstrapTestApp } from '../test/test-app';
-import { CreateBlockDto } from './dto/create-block.dto';
+import { CreateBlocksDto } from './dto/create-blocks.dto';
 import { BlockOperation } from './enums/block-operation';
 
 const API_KEY = 'test';
@@ -46,6 +46,34 @@ describe('BlocksController', () => {
         const { body } = await request(app.getHttpServer())
           .post(`/blocks`)
           .set('Authorization', `Bearer ${API_KEY}`)
+          .send({ blocks: [{}] })
+          .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+
+        expect(body).toMatchSnapshot();
+      });
+    });
+
+    describe('with too many blocks', () => {
+      it('returns a 422', async () => {
+        const blocks = [];
+        for (let i = 0; i < 150; i++) {
+          blocks.push({
+            hash: uuid(),
+            difficulty: uuid(),
+            type: BlockOperation.CONNECTED,
+            sequence: faker.datatype.number(),
+            timestamp: new Date(),
+            transactions_count: 0,
+            graffiti: uuid(),
+            previous_block_hash: uuid(),
+          });
+        }
+        const payload: CreateBlocksDto = { blocks };
+
+        const { body } = await request(app.getHttpServer())
+          .post(`/blocks`)
+          .set('Authorization', `Bearer ${API_KEY}`)
+          .send(payload)
           .expect(HttpStatus.UNPROCESSABLE_ENTITY);
 
         expect(body).toMatchSnapshot();
@@ -53,32 +81,39 @@ describe('BlocksController', () => {
     });
 
     describe('with a valid payload', () => {
-      it('upserts a block', async () => {
-        const payload: CreateBlockDto = {
-          hash: uuid(),
-          difficulty: uuid(),
-          type: BlockOperation.CONNECTED,
-          sequence: faker.datatype.number(),
-          timestamp: new Date(),
-          transactions_count: 0,
-          graffiti: uuid(),
-          previous_block_hash: uuid(),
+      it('upserts blocks', async () => {
+        const payload: CreateBlocksDto = {
+          blocks: [
+            {
+              hash: uuid(),
+              difficulty: uuid(),
+              type: BlockOperation.CONNECTED,
+              sequence: faker.datatype.number(),
+              timestamp: new Date(),
+              transactions_count: 0,
+              graffiti: uuid(),
+              previous_block_hash: uuid(),
+            },
+          ],
         };
+        const block = payload.blocks[0];
         const { body } = await request(app.getHttpServer())
           .post(`/blocks`)
           .set('Authorization', `Bearer ${API_KEY}`)
           .send(payload)
           .expect(HttpStatus.CREATED);
 
-        expect(body).toMatchObject({
+        const { data } = body;
+        expect((data as unknown[]).length).toBeGreaterThan(0);
+        expect((data as unknown[])[0]).toMatchObject({
           id: expect.any(Number),
-          hash: payload.hash,
-          difficulty: payload.difficulty,
+          hash: block.hash,
+          difficulty: block.difficulty,
           main: true,
-          sequence: payload.sequence,
-          timestamp: payload.timestamp.toISOString(),
-          transactions_count: payload.transactions_count,
-          previous_block_hash: payload.previous_block_hash,
+          sequence: block.sequence,
+          timestamp: block.timestamp.toISOString(),
+          transactions_count: block.transactions_count,
+          previous_block_hash: block.previous_block_hash,
         });
       });
     });
