@@ -11,9 +11,9 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
+import { List } from '../common/interfaces/list';
 import { BlocksService } from './blocks.service';
-import { CreateBlockDto } from './dto/create-block.dto';
-import { BlockOperation } from './enums/block-operation';
+import { CreateBlocksDto } from './dto/create-blocks.dto';
 import { Block } from '.prisma/client';
 
 @Controller('blocks')
@@ -22,35 +22,18 @@ export class BlocksController {
 
   @Post()
   @UseGuards(ApiKeyGuard)
-  async create(
+  async bulkCreate(
     @Body(
       new ValidationPipe({
         errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
         transform: true,
       }),
     )
-    {
-      difficulty,
-      hash,
-      type,
-      previous_block_hash,
-      timestamp,
-      transactions_count,
-      sequence,
-      graffiti,
-    }: CreateBlockDto,
-  ): Promise<Block> {
-    const main = type === BlockOperation.CONNECTED;
-    return this.blocksService.upsert(
-      hash,
-      sequence,
-      difficulty,
-      main,
-      timestamp,
-      transactions_count,
-      graffiti,
-      previous_block_hash,
-    );
+    blocks: CreateBlocksDto,
+  ): Promise<List<Block>> {
+    return {
+      data: await this.blocksService.bulkUpsert(blocks),
+    };
   }
 
   @Get('head')

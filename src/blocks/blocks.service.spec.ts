@@ -7,6 +7,7 @@ import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { bootstrapTestApp } from '../test/test-app';
 import { BlocksService } from './blocks.service';
+import { BlockOperation } from './enums/block-operation';
 
 describe('EventsService', () => {
   let app: INestApplication;
@@ -24,20 +25,24 @@ describe('EventsService', () => {
     await app.close();
   });
 
-  describe('upsert', () => {
+  describe('bulkUpsert', () => {
     describe('when a hash does not exist for the network version', () => {
       it('stores a block record', async () => {
-        const block = await blocksService.upsert(
-          uuid(),
-          faker.datatype.number(),
-          uuid(),
-          true,
-          new Date(),
-          0,
-          uuid(),
-          uuid(),
-        );
-        expect(block).toMatchObject({
+        const blocks = await blocksService.bulkUpsert({
+          blocks: [
+            {
+              hash: uuid(),
+              sequence: faker.datatype.number(),
+              difficulty: uuid(),
+              timestamp: new Date(),
+              transactions_count: 0,
+              type: BlockOperation.CONNECTED,
+              graffiti: uuid(),
+              previous_block_hash: uuid(),
+            },
+          ],
+        });
+        expect(blocks[0]).toMatchObject({
           id: expect.any(Number),
           hash: expect.any(String),
           sequence: expect.any(Number),
@@ -54,31 +59,39 @@ describe('EventsService', () => {
     describe('when a hash exists for the network version', () => {
       it('updates the block record', async () => {
         const previousBlockHash = uuid();
-        const block = await blocksService.upsert(
-          uuid(),
-          faker.datatype.number(),
-          uuid(),
-          true,
-          new Date(),
-          0,
-          uuid(),
-          previousBlockHash,
-        );
+        const blocks = await blocksService.bulkUpsert({
+          blocks: [
+            {
+              hash: uuid(),
+              sequence: faker.datatype.number(),
+              difficulty: uuid(),
+              timestamp: new Date(),
+              transactions_count: 0,
+              type: BlockOperation.CONNECTED,
+              graffiti: uuid(),
+              previous_block_hash: uuid(),
+            },
+          ],
+        });
         const newSequence = faker.datatype.number();
         const newDifficulty = uuid();
         const newGraffiti = uuid();
-
-        const newBlock = await blocksService.upsert(
-          block.hash,
-          newSequence,
-          newDifficulty,
-          true,
-          new Date(),
-          0,
-          newGraffiti,
-          previousBlockHash,
-        );
-        expect(newBlock).toMatchObject({
+        const block = blocks[0];
+        const newBlocks = await blocksService.bulkUpsert({
+          blocks: [
+            {
+              hash: block.hash,
+              sequence: newSequence,
+              difficulty: newDifficulty,
+              timestamp: new Date(),
+              transactions_count: 0,
+              type: BlockOperation.CONNECTED,
+              graffiti: newGraffiti,
+              previous_block_hash: previousBlockHash,
+            },
+          ],
+        });
+        expect(newBlocks[0]).toMatchObject({
           id: block.id,
           hash: block.hash,
           sequence: newSequence,

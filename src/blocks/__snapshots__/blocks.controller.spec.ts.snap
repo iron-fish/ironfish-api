@@ -11,13 +11,23 @@ exports[`BlocksController POST /blocks with missing arguments returns a 422 1`] 
 Object {
   "error": "Unprocessable Entity",
   "message": Array [
-    "hash must be a string",
-    "sequence must be an integer number",
-    "difficulty must be a string",
-    "type must be a valid enum value",
-    "timestamp must be a Date instance",
-    "transactions_count must be an integer number",
-    "graffiti must be a string",
+    "blocks.0.hash must be a string",
+    "blocks.0.sequence must be an integer number",
+    "blocks.0.difficulty must be a string",
+    "blocks.0.type must be a valid enum value",
+    "blocks.0.timestamp must be a Date instance",
+    "blocks.0.transactions_count must be an integer number",
+    "blocks.0.graffiti must be a string",
+  ],
+  "statusCode": 422,
+}
+`;
+
+exports[`BlocksController POST /blocks with too many blocks returns a 422 1`] = `
+Object {
+  "error": "Unprocessable Entity",
+  "message": Array [
+    "blocks must contain not more than 100 elements",
   ],
   "statusCode": 422,
 }
