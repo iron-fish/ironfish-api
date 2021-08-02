@@ -56,7 +56,7 @@ describe('BlocksController', () => {
     describe('with too many blocks', () => {
       it('returns a 422', async () => {
         const blocks = [];
-        for (let i = 0; i < 150; i++) {
+        for (let i = 0; i < 3001; i++) {
           blocks.push({
             hash: uuid(),
             difficulty: uuid(),
