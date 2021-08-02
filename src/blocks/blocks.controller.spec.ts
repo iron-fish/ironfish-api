@@ -121,6 +121,7 @@ describe('BlocksController', () => {
 
   describe('GET /blocks/head', () => {
     it('returns the heaviest block', async () => {
+      jest.spyOn(config, 'get').mockImplementationOnce(() => 0);
       const { body } = await request(app.getHttpServer())
         .get('/blocks/head')
         .expect(HttpStatus.OK);

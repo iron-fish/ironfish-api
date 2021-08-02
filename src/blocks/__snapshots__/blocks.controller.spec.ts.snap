@@ -27,7 +27,7 @@ exports[`BlocksController POST /blocks with too many blocks returns a 422 1`] = 
 Object {
   "error": "Unprocessable Entity",
   "message": Array [
-    "blocks must contain not more than 100 elements",
+    "blocks must contain not more than 3000 elements",
   ],
   "statusCode": 422,
 }
