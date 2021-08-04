@@ -8,4 +8,7 @@ export class UsersQueryDto extends PaginationArgsDto {
   @IsOptional()
   @Equals('total_points')
   readonly order_by?: 'total_points';
+
+  @IsOptional()
+  readonly search?: string;
 }

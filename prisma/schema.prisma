@@ -34,6 +34,7 @@ model User {
   events            Event[]
 
   @@index([email], name: "index_users_on_email")
+  @@index([graffiti], name: "index_users_on_graffiti")
   @@unique([graffiti], name: "uq_users_on_graffiti")
   @@unique([email], name: "uq_users_on_email")
   @@map("users")

@@ -148,7 +148,7 @@ export class UsersController {
         transform: true,
       }),
     )
-    { after, before, limit, order_by }: UsersQueryDto,
+    { after, before, limit, order_by, search }: UsersQueryDto,
   ): Promise<List<User>> {
     return {
       data: await this.usersService.list({
@@ -156,6 +156,7 @@ export class UsersController {
         before,
         limit,
         orderBy: order_by,
+        search,
       }),
     };
   }
