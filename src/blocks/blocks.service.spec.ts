@@ -124,4 +124,16 @@ describe('EventsService', () => {
       });
     });
   });
+
+  describe('list', () => {
+    it('returns blocks within the sequence range', async () => {
+      const start = 1;
+      const end = 100;
+      const blocks = await blocksService.list(2, 4);
+      for (const block of blocks) {
+        expect(block.sequence).toBeGreaterThanOrEqual(start);
+        expect(block.sequence).toBeLessThan(end);
+      }
+    });
+  });
 });

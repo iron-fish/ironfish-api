@@ -6,6 +6,7 @@ import { ConfigService } from '@nestjs/config';
 import faker from 'faker';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
+import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { CreateBlocksDto } from './dto/create-blocks.dto';
 import { BlockOperation } from './enums/block-operation';
@@ -15,10 +16,12 @@ const API_KEY = 'test';
 describe('BlocksController', () => {
   let app: INestApplication;
   let config: ConfigService;
+  let prisma: PrismaService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
     config = app.get(ConfigService);
+    prisma = app.get(PrismaService);
     await app.init();
   });
 
@@ -129,6 +132,92 @@ describe('BlocksController', () => {
       expect(body).toMatchObject({
         id: expect.any(Number),
         main: true,
+      });
+    });
+  });
+
+  describe('GET /blocks', () => {
+    describe('with missing arguments', () => {
+      it('returns a 422', async () => {
+        const { body } = await request(app.getHttpServer())
+          .get('/blocks')
+          .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+
+        expect(body).toMatchSnapshot();
+      });
+    });
+
+    describe('with invalid start and end parameters', () => {
+      describe('when start and end are not at least 1', () => {
+        it('returns a 422', async () => {
+          const { body } = await request(app.getHttpServer())
+            .get('/blocks')
+            .query({ start: -1, end: -1 })
+            .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+
+          expect(body).toMatchSnapshot();
+        });
+      });
+
+      describe('when start > end', () => {
+        it('returns a 422', async () => {
+          const { body } = await request(app.getHttpServer())
+            .get('/blocks')
+            .query({ start: 2, end: 1 })
+            .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+
+          expect(body).toMatchSnapshot();
+        });
+      });
+
+      describe('when the range is too long', () => {
+        it('returns a 422', async () => {
+          const { body } = await request(app.getHttpServer())
+            .get('/blocks')
+            .query({ start: 1, end: 1002 })
+            .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+
+          expect(body).toMatchSnapshot();
+        });
+      });
+    });
+
+    describe('with a valid range', () => {
+      it('returns blocks within the range', async () => {
+        // Seed some blocks
+        for (let i = 0; i < 10; i++) {
+          await prisma.block.create({
+            data: {
+              hash: uuid(),
+              difficulty: uuid(),
+              main: true,
+              sequence: i,
+              timestamp: new Date(),
+              transactions_count: 0,
+              graffiti: uuid(),
+              previous_block_hash: uuid(),
+              network_version: 0,
+            },
+          });
+        }
+
+        const { body } = await request(app.getHttpServer())
+          .get('/blocks')
+          .query({ start: 1, end: 420 })
+          .expect(HttpStatus.OK);
+
+        const { data } = body;
+        expect((data as unknown[]).length).toBeGreaterThan(0);
+        expect((data as unknown[])[0]).toMatchObject({
+          id: expect.any(Number),
+          hash: expect.any(String),
+          difficulty: expect.any(String),
+          main: true,
+          sequence: expect.any(Number),
+          timestamp: expect.any(String),
+          transactions_count: expect.any(Number),
+          previous_block_hash: expect.any(String),
+        });
       });
     });
   });
