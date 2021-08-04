@@ -84,6 +84,11 @@ export class UsersService {
       orderBy,
       skip,
       take: limit,
+      where: {
+        graffiti: {
+          contains: options.search,
+        },
+      },
     });
   }
 }

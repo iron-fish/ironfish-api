@@ -5,4 +5,5 @@ import { PaginationOptions } from '../../common/interfaces/pagination-options';
 
 export interface ListUsersOptions extends PaginationOptions {
   orderBy?: 'total_points';
+  search?: string;
 }
