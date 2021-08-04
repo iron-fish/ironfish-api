@@ -191,7 +191,7 @@ describe('BlocksController', () => {
               hash: uuid(),
               difficulty: uuid(),
               main: true,
-              sequence: faker.datatype.number(),
+              sequence: i,
               timestamp: new Date(),
               transactions_count: 0,
               graffiti: uuid(),
