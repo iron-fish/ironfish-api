@@ -6,6 +6,7 @@ import { ConfigService } from '@nestjs/config';
 import faker from 'faker';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
+import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { CreateBlocksDto } from './dto/create-blocks.dto';
 import { BlockOperation } from './enums/block-operation';
@@ -15,10 +16,12 @@ const API_KEY = 'test';
 describe('BlocksController', () => {
   let app: INestApplication;
   let config: ConfigService;
+  let prisma: PrismaService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
     config = app.get(ConfigService);
+    prisma = app.get(PrismaService);
     await app.init();
   });
 
@@ -181,6 +184,23 @@ describe('BlocksController', () => {
 
     describe('with a valid range', () => {
       it('returns blocks within the range', async () => {
+        // Seed some blocks
+        for (let i = 0; i < 10; i++) {
+          await prisma.block.create({
+            data: {
+              hash: uuid(),
+              difficulty: uuid(),
+              main: true,
+              sequence: faker.datatype.number(),
+              timestamp: new Date(),
+              transactions_count: 0,
+              graffiti: uuid(),
+              previous_block_hash: uuid(),
+              network_version: 0,
+            },
+          });
+        }
+
         const { body } = await request(app.getHttpServer())
           .get('/blocks')
           .query({ start: 1, end: 420 })
