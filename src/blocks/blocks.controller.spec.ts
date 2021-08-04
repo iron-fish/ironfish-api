@@ -132,4 +132,73 @@ describe('BlocksController', () => {
       });
     });
   });
+
+  describe('GET /blocks', () => {
+    describe('with missing arguments', () => {
+      it('returns a 422', async () => {
+        const { body } = await request(app.getHttpServer())
+          .get('/blocks')
+          .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+
+        expect(body).toMatchSnapshot();
+      });
+    });
+
+    describe('with invalid start and end parameters', () => {
+      describe('when start and end are not at least 1', () => {
+        it('returns a 422', async () => {
+          const { body } = await request(app.getHttpServer())
+            .get('/blocks')
+            .query({ start: -1, end: -1 })
+            .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+
+          expect(body).toMatchSnapshot();
+        });
+      });
+
+      describe('when start > end', () => {
+        it('returns a 422', async () => {
+          const { body } = await request(app.getHttpServer())
+            .get('/blocks')
+            .query({ start: 2, end: 1 })
+            .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+
+          expect(body).toMatchSnapshot();
+        });
+      });
+
+      describe('when the range is too long', () => {
+        it('returns a 422', async () => {
+          const { body } = await request(app.getHttpServer())
+            .get('/blocks')
+            .query({ start: 1, end: 1002 })
+            .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+
+          expect(body).toMatchSnapshot();
+        });
+      });
+    });
+
+    describe('with a valid range', () => {
+      it('returns blocks within the range', async () => {
+        const { body } = await request(app.getHttpServer())
+          .get('/blocks')
+          .query({ start: 1, end: 420 })
+          .expect(HttpStatus.OK);
+
+        const { data } = body;
+        expect((data as unknown[]).length).toBeGreaterThan(0);
+        expect((data as unknown[])[0]).toMatchObject({
+          id: expect.any(Number),
+          hash: expect.any(String),
+          difficulty: expect.any(String),
+          main: true,
+          sequence: expect.any(Number),
+          timestamp: expect.any(String),
+          transactions_count: expect.any(Number),
+          previous_block_hash: expect.any(String),
+        });
+      });
+    });
+  });
 });

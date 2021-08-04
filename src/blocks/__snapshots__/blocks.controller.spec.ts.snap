@@ -1,5 +1,45 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`BlocksController GET /blocks with invalid start and end parameters when start > end returns a 422 1`] = `
+Object {
+  "error": "Unprocessable Entity",
+  "message": "'start' must be strictly less than 'end'.",
+  "statusCode": 422,
+}
+`;
+
+exports[`BlocksController GET /blocks with invalid start and end parameters when start and end are not at least 1 returns a 422 1`] = `
+Object {
+  "error": "Unprocessable Entity",
+  "message": Array [
+    "start must not be less than 1",
+    "end must not be less than 1",
+  ],
+  "statusCode": 422,
+}
+`;
+
+exports[`BlocksController GET /blocks with invalid start and end parameters when the range is too long returns a 422 1`] = `
+Object {
+  "error": "Unprocessable Entity",
+  "message": "Range is too long. Max sequence difference is 1000.",
+  "statusCode": 422,
+}
+`;
+
+exports[`BlocksController GET /blocks with missing arguments returns a 422 1`] = `
+Object {
+  "error": "Unprocessable Entity",
+  "message": Array [
+    "start must be an integer number",
+    "start must not be less than 1",
+    "end must be an integer number",
+    "end must not be less than 1",
+  ],
+  "statusCode": 422,
+}
+`;
+
 exports[`BlocksController POST /blocks with a missing api key returns a 401 1`] = `
 Object {
   "message": "Unauthorized",
