@@ -586,10 +586,10 @@
     tslib "2.3.0"
     uuid "8.3.2"
 
-"@nestjs/microservices@8.0.5":
-  version "8.0.5"
-  resolved "https://registry.yarnpkg.com/@nestjs/microservices/-/microservices-8.0.5.tgz#3610cc2dc0374bd65fe16a59ea248e571327d89b"
-  integrity sha512-fSPoEYhC77i6Zrv0+/+sxMC1HomoMXnFnowNkZqhmpGV0Aua/B8wzysHhtQs/U1SAwZvUHjIWr+Y8EcXDWSt1w==
+"@nestjs/microservices@8.0.6":
+  version "8.0.6"
+  resolved "https://registry.yarnpkg.com/@nestjs/microservices/-/microservices-8.0.6.tgz#66a203af435baf1ea0fb2c1ad7b3d6f3ab8f1b8d"
+  integrity sha512-mRnYi0tk/vUre4qdXCsOVVaVk2OLO0iQVpvSpfcSrMFeROw3Qg2z8JizZTldTzjerp98PqVU6DA7LO/Eu8E91g==
   dependencies:
     iterare "1.2.1"
     json-socket "0.3.0"
