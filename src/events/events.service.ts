@@ -8,20 +8,15 @@ import {
   WEEKLY_POINT_LIMITS_BY_EVENT_TYPE,
 } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
-import { getMondayOfThisWeek } from '../common/utils/date';
+import { getMondayFromDate } from '../common/utils/date';
 import { PrismaService } from '../prisma/prisma.service';
+import { CreateEventOptions } from './interfaces/create-event-options';
 import { ListEventsOptions } from './interfaces/list-events-options';
-import { Event, EventType, Prisma, User } from '.prisma/client';
+import { Block, Event, EventType, User } from '.prisma/client';
 
 @Injectable()
 export class EventsService {
   constructor(private prisma: PrismaService) {}
-
-  async find(input: Prisma.EventWhereUniqueInput): Promise<Event | null> {
-    return this.prisma.event.findUnique({
-      where: input,
-    });
-  }
 
   async list(options: ListEventsOptions): Promise<Event[]> {
     const backwards = options.before !== undefined;
@@ -39,6 +34,7 @@ export class EventsService {
       take: limit,
       where: {
         user_id: options.userId,
+        deleted_at: null,
       },
     });
   }
@@ -188,15 +184,22 @@ export class EventsService {
     };
   }
 
-  async create(type: EventType, user: User, points = 0): Promise<Event> {
+  async create({
+    blockId,
+    occurredAt,
+    points = 0,
+    type,
+    userId,
+  }: CreateEventOptions): Promise<Event> {
     const weeklyLimitForEventType = WEEKLY_POINT_LIMITS_BY_EVENT_TYPE[type];
-    const startOfWeek = getMondayOfThisWeek();
+    const startOfWeek = getMondayFromDate(occurredAt);
     const pointsAggregateThisWeek = await this.prisma.event.aggregate({
       _sum: {
         points: true,
       },
       where: {
-        user_id: user.id,
+        type,
+        user_id: userId,
         occurred_at: {
           gte: startOfWeek,
         },
@@ -211,7 +214,7 @@ export class EventsService {
     const [_, event] = await this.prisma.$transaction([
       this.prisma.user.update({
         where: {
-          id: user.id,
+          id: userId,
         },
         data: {
           total_points: {
@@ -222,9 +225,10 @@ export class EventsService {
       this.prisma.event.create({
         data: {
           type,
+          block_id: blockId,
           points: adjustedPoints,
-          occurred_at: new Date(),
-          user_id: user.id,
+          occurred_at: (occurredAt || new Date()).toISOString(),
+          user_id: userId,
         },
       }),
     ]);
@@ -248,5 +252,56 @@ export class EventsService {
         },
       }),
     ]);
+  }
+
+  async upsertBlockMined(block: Block, user: User): Promise<Event> {
+    const points = 10;
+    const record = await this.prisma.event.findUnique({
+      where: {
+        block_id: block.id,
+      },
+    });
+    if (record) {
+      return record;
+    }
+    return this.create({
+      blockId: block.id,
+      occurredAt: block.timestamp,
+      type: EventType.BLOCK_MINED,
+      userId: user.id,
+      points,
+    });
+  }
+
+  async deleteBlockMined(block: Block, user: User): Promise<Event | null> {
+    let event = await this.prisma.event.findUnique({
+      where: {
+        block_id: block.id,
+      },
+    });
+    if (event) {
+      [, event] = await this.prisma.$transaction([
+        this.prisma.user.update({
+          where: {
+            id: user.id,
+          },
+          data: {
+            total_points: {
+              decrement: event.points,
+            },
+          },
+        }),
+        this.prisma.event.update({
+          data: {
+            deleted_at: new Date().toISOString(),
+            points: 0,
+          },
+          where: {
+            block_id: block.id,
+          },
+        }),
+      ]);
+    }
+    return event;
   }
 }

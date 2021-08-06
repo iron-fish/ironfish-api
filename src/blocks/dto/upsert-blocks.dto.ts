@@ -15,7 +15,7 @@ import {
 } from 'class-validator';
 import { BlockOperation } from '../enums/block-operation';
 
-class BlockDto {
+export class BlockDto {
   @IsString()
   readonly hash!: string;
 
@@ -45,7 +45,7 @@ class BlockDto {
   readonly previous_block_hash?: string;
 }
 
-export class CreateBlocksDto {
+export class UpsertBlocksDto {
   @IsArray()
   @ArrayMinSize(1)
   @ArrayMaxSize(3000)

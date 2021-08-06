@@ -16,8 +16,12 @@ model Event {
   points      Int
   user_id     Int
   deleted_at  DateTime? @db.Timestamp(6)
+  block_id    Int?
+  block       Block?    @relation(fields: [block_id], references: [id])
   user        User      @relation(fields: [user_id], references: [id])
 
+  @@unique([block_id], name: "uq_events_on_block_id")
+  @@index([block_id], name: "index_events_on_block_id")
   @@index([user_id], name: "index_events_on_user_id")
   @@map("events")
 }
@@ -53,6 +57,7 @@ model Block {
   transactions_count  Int
   timestamp           DateTime @db.Timestamp(6)
   graffiti            String   @db.VarChar
+  event               Event?
 
   @@unique([hash, network_version], name: "uq_blocks_on_hash_and_network_version")
   @@index([hash], name: "index_blocks_on_hash")
