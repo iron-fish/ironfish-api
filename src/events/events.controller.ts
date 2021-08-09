@@ -62,7 +62,7 @@ export class EventsController {
     { graffiti, points, type }: CreateEventDto,
   ): Promise<Event> {
     const user = await this.usersService.findOrThrowByGraffiti(graffiti);
-    return this.eventsService.create(type, user, points);
+    return this.eventsService.create({ type, points, userId: user.id });
   }
 
   @Delete(':id')

@@ -52,6 +52,28 @@ describe('UsersService', () => {
     });
   });
 
+  describe('findByGraffiti', () => {
+    describe('with a valid graffiti', () => {
+      it('returns the record', async () => {
+        const user = await prisma.user.create({
+          data: {
+            email: faker.internet.email(),
+            graffiti: uuid(),
+          },
+        });
+        const record = await usersService.findByGraffiti(user.graffiti);
+        expect(record).not.toBeNull();
+        expect(record).toMatchObject(user);
+      });
+    });
+
+    describe('with a missing id', () => {
+      it('returns null', async () => {
+        expect(await usersService.findByGraffiti('1337')).toBeNull();
+      });
+    });
+  });
+
   describe('findOrThrowByGraffiti', () => {
     describe('with a valid graffiti', () => {
       it('returns the record', async () => {
@@ -68,7 +90,7 @@ describe('UsersService', () => {
     });
 
     describe('with a missing id', () => {
-      it('returns null', async () => {
+      it('throws an exception', async () => {
         await expect(
           usersService.findOrThrowByGraffiti('1337'),
         ).rejects.toThrow(NotFoundException);

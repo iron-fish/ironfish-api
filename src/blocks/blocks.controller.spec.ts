@@ -8,7 +8,7 @@ import request from 'supertest';
 import { v4 as uuid } from 'uuid';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
-import { CreateBlocksDto } from './dto/create-blocks.dto';
+import { UpsertBlocksDto } from './dto/upsert-blocks.dto';
 import { BlockOperation } from './enums/block-operation';
 
 const API_KEY = 'test';
@@ -71,7 +71,7 @@ describe('BlocksController', () => {
             previous_block_hash: uuid(),
           });
         }
-        const payload: CreateBlocksDto = { blocks };
+        const payload: UpsertBlocksDto = { blocks };
 
         const { body } = await request(app.getHttpServer())
           .post(`/blocks`)
@@ -85,7 +85,7 @@ describe('BlocksController', () => {
 
     describe('with a valid payload', () => {
       it('upserts blocks', async () => {
-        const payload: CreateBlocksDto = {
+        const payload: UpsertBlocksDto = {
           blocks: [
             {
               hash: uuid(),

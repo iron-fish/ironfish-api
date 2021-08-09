@@ -16,7 +16,7 @@ import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { List } from '../common/interfaces/list';
 import { BlocksService } from './blocks.service';
 import { BlocksQueryDto } from './dto/blocks-query.dto';
-import { CreateBlocksDto } from './dto/create-blocks.dto';
+import { UpsertBlocksDto } from './dto/upsert-blocks.dto';
 import { Block } from '.prisma/client';
 
 @Controller('blocks')
@@ -25,14 +25,14 @@ export class BlocksController {
 
   @Post()
   @UseGuards(ApiKeyGuard)
-  async bulkCreate(
+  async bulkUpsert(
     @Body(
       new ValidationPipe({
         errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
         transform: true,
       }),
     )
-    blocks: CreateBlocksDto,
+    blocks: UpsertBlocksDto,
   ): Promise<List<Block>> {
     return {
       data: await this.blocksService.bulkUpsert(blocks),

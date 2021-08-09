@@ -29,36 +29,42 @@ describe('EventsService', () => {
     await app.close();
   });
 
-  describe('find', () => {
-    describe('with a valid id', () => {
-      it('returns the record', async () => {
-        const user = await prisma.user.create({
-          data: {
-            email: faker.internet.email(),
-            graffiti: uuid(),
-          },
-        });
-        const event = await prisma.event.create({
-          data: {
-            type: EventType.BUG_CAUGHT,
-            user_id: user.id,
-            occurred_at: new Date(),
-            points: 0,
-          },
-        });
-        const record = await eventsService.find({ id: event.id });
-        expect(record).not.toBeNull();
-        expect(record).toMatchObject(event);
-      });
+  const setupBlockMined = async () => {
+    const block = await prisma.block.create({
+      data: {
+        hash: uuid(),
+        difficulty: uuid(),
+        main: true,
+        sequence: faker.datatype.number(),
+        timestamp: new Date(),
+        transactions_count: 0,
+        graffiti: uuid(),
+        previous_block_hash: uuid(),
+        network_version: 0,
+      },
     });
+    const user = await prisma.user.create({
+      data: {
+        email: faker.internet.email(),
+        graffiti: uuid(),
+      },
+    });
+    return { block, user };
+  };
 
-    describe('with a missing id', () => {
-      it('returns null', async () => {
-        const record = await eventsService.find({ id: 1337 });
-        expect(record).toBeNull();
-      });
+  const setupBlockMinedWithEvent = async () => {
+    const { block, user } = await setupBlockMined();
+    const event = await prisma.event.create({
+      data: {
+        occurred_at: new Date(),
+        points: 10,
+        type: EventType.BLOCK_MINED,
+        block_id: block.id,
+        user_id: user.id,
+      },
     });
-  });
+    return { block, event, user };
+  };
 
   describe('list', () => {
     const setup = async () => {
@@ -292,7 +298,7 @@ describe('EventsService', () => {
           },
         });
 
-        await eventsService.create(type, user, 100);
+        await eventsService.create({ type, userId: user.id, points: 100 });
         const updatedUser = await usersService.findOrThrow(user.id);
         expect(updatedUser.total_points).toBe(currentPoints);
       });
@@ -315,7 +321,11 @@ describe('EventsService', () => {
           },
         });
 
-        const event = await eventsService.create(type, user, 100);
+        const event = await eventsService.create({
+          type,
+          userId: user.id,
+          points: 100,
+        });
         expect(event.points).toBe(0);
       });
     });
@@ -341,7 +351,7 @@ describe('EventsService', () => {
         });
 
         const points = 200;
-        await eventsService.create(type, user, points);
+        await eventsService.create({ type, userId: user.id, points });
         const updatedUser = await usersService.findOrThrow(user.id);
         expect(updatedUser.total_points).toBe(
           WEEKLY_POINT_LIMITS_BY_EVENT_TYPE[type],
@@ -367,7 +377,11 @@ describe('EventsService', () => {
         });
 
         const points = 200;
-        const event = await eventsService.create(type, user, points);
+        const event = await eventsService.create({
+          type,
+          userId: user.id,
+          points,
+        });
         expect(event.points).toBe(
           WEEKLY_POINT_LIMITS_BY_EVENT_TYPE[type] - currentPointsThisWeek,
         );
@@ -384,7 +398,11 @@ describe('EventsService', () => {
       const currentPoints = user.total_points;
       const points = 100;
 
-      await eventsService.create(EventType.BLOCK_MINED, user, points);
+      await eventsService.create({
+        type: EventType.BLOCK_MINED,
+        userId: user.id,
+        points,
+      });
       const updatedUser = await usersService.findOrThrow(user.id);
       expect(updatedUser.total_points).toBe(currentPoints + points);
     });
@@ -399,7 +417,11 @@ describe('EventsService', () => {
       const type = EventType.BLOCK_MINED;
       const points = 100;
 
-      const event = await eventsService.create(type, user, points);
+      const event = await eventsService.create({
+        type,
+        userId: user.id,
+        points,
+      });
       expect(event).toMatchObject({
         id: expect.any(Number),
         user_id: user.id,
@@ -426,16 +448,79 @@ describe('EventsService', () => {
             graffiti: uuid(),
           },
         });
-        const event = await eventsService.create(
-          EventType.BLOCK_MINED,
-          user,
-          0,
-        );
+        const event = await eventsService.create({
+          type: EventType.BLOCK_MINED,
+          userId: user.id,
+          points: 0,
+        });
         const id = event.id;
 
         await eventsService.delete(event.id);
         const record = await prisma.event.findUnique({ where: { id } });
         expect(record).toBeNull();
+      });
+    });
+  });
+
+  describe('upsertBlockMined', () => {
+    describe('when a block exists', () => {
+      it('returns the record', async () => {
+        const { block, event, user } = await setupBlockMinedWithEvent();
+        const record = await eventsService.upsertBlockMined(block, user);
+        expect(record).toMatchObject(event);
+      });
+
+      it('does not create a record', async () => {
+        const { block, user } = await setupBlockMined();
+        await eventsService.upsertBlockMined(block, user);
+        const create = jest.spyOn(eventsService, 'create');
+        expect(create).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('for a new block', () => {
+      it('creates a record', async () => {
+        const { block, user } = await setupBlockMined();
+        const create = jest.spyOn(eventsService, 'create');
+        await eventsService.upsertBlockMined(block, user);
+
+        expect(create).toHaveBeenCalledTimes(1);
+        expect(create).toHaveBeenCalledWith({
+          blockId: block.id,
+          points: expect.any(Number),
+          occurredAt: expect.any(Date),
+          type: EventType.BLOCK_MINED,
+          userId: user.id,
+        });
+      });
+    });
+  });
+
+  describe('deleteBlockMined', () => {
+    describe('when the event does not exist', () => {
+      it('returns null', async () => {
+        const { block, user } = await setupBlockMined();
+        expect(await eventsService.deleteBlockMined(block, user)).toBeNull();
+      });
+    });
+
+    describe('when the event exists', () => {
+      it('deletes the record', async () => {
+        const { block, event, user } = await setupBlockMinedWithEvent();
+        const record = await eventsService.deleteBlockMined(block, user);
+        expect(record).toMatchObject({
+          ...event,
+          deleted_at: expect.any(Date),
+          updated_at: expect.any(Date),
+          points: 0,
+        });
+      });
+
+      it('subtracts points from the user total points', async () => {
+        const { block, event, user } = await setupBlockMinedWithEvent();
+        await eventsService.deleteBlockMined(block, user);
+        const updatedUser = await usersService.findOrThrow(user.id);
+        expect(updatedUser.total_points).toBe(user.total_points - event.points);
       });
     });
   });

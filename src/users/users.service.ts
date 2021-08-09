@@ -26,12 +26,16 @@ export class UsersService {
     return record;
   }
 
-  async findOrThrowByGraffiti(graffiti: string): Promise<User> {
-    const record = await this.prisma.user.findUnique({
+  async findByGraffiti(graffiti: string): Promise<User | null> {
+    return this.prisma.user.findUnique({
       where: {
         graffiti,
       },
     });
+  }
+
+  async findOrThrowByGraffiti(graffiti: string): Promise<User> {
+    const record = await this.findByGraffiti(graffiti);
     if (!record) {
       throw new NotFoundException();
     }
