@@ -9,10 +9,10 @@ export class BlocksQueryDto extends PaginationArgsDto {
   @Min(1)
   @IsInt()
   @Type(() => Number)
-  readonly start!: number;
+  readonly sequence_gte!: number;
 
   @Min(1)
   @IsInt()
   @Type(() => Number)
-  readonly end!: number;
+  readonly sequence_lt!: number;
 }
