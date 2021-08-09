@@ -147,23 +147,23 @@ describe('BlocksController', () => {
       });
     });
 
-    describe('with invalid start and end parameters', () => {
-      describe('when start and end are not at least 1', () => {
+    describe('with invalid sequence_gte and sequence_lt parameters', () => {
+      describe('when sequence_gte and sequence_lt are not at least 1', () => {
         it('returns a 422', async () => {
           const { body } = await request(app.getHttpServer())
             .get('/blocks')
-            .query({ start: -1, end: -1 })
+            .query({ sequence_gte: -1, sequence_lt: -1 })
             .expect(HttpStatus.UNPROCESSABLE_ENTITY);
 
           expect(body).toMatchSnapshot();
         });
       });
 
-      describe('when start > end', () => {
+      describe('when sequence_gte > sequence_lt', () => {
         it('returns a 422', async () => {
           const { body } = await request(app.getHttpServer())
             .get('/blocks')
-            .query({ start: 2, end: 1 })
+            .query({ sequence_gte: 2, sequence_lt: 1 })
             .expect(HttpStatus.UNPROCESSABLE_ENTITY);
 
           expect(body).toMatchSnapshot();
@@ -174,7 +174,7 @@ describe('BlocksController', () => {
         it('returns a 422', async () => {
           const { body } = await request(app.getHttpServer())
             .get('/blocks')
-            .query({ start: 1, end: 1002 })
+            .query({ sequence_gte: 1, sequence_lt: 1002 })
             .expect(HttpStatus.UNPROCESSABLE_ENTITY);
 
           expect(body).toMatchSnapshot();
@@ -203,7 +203,7 @@ describe('BlocksController', () => {
 
         const { body } = await request(app.getHttpServer())
           .get('/blocks')
-          .query({ start: 1, end: 420 })
+          .query({ sequence_gte: 1, sequence_lt: 420 })
           .expect(HttpStatus.OK);
 
         const { data } = body;

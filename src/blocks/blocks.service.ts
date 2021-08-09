@@ -98,13 +98,13 @@ export class BlocksService {
     return block;
   }
 
-  async list(start: number, end: number): Promise<Block[]> {
+  async list(sequenceGte: number, sequenceLt: number): Promise<Block[]> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION', 0);
     return this.prisma.block.findMany({
       where: {
         sequence: {
-          gte: start,
-          lt: end,
+          gte: sequenceGte,
+          lt: sequenceLt,
         },
         main: true,
         network_version: networkVersion,

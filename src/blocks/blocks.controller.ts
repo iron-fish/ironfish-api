@@ -52,21 +52,21 @@ export class BlocksController {
         transform: true,
       }),
     )
-    { start, end }: BlocksQueryDto,
+    { sequence_gte: sequenceGte, sequence_lt: sequenceLt }: BlocksQueryDto,
   ): Promise<List<Block>> {
     const maxBlocksToReturn = 1000;
-    if (start >= end) {
+    if (sequenceGte >= sequenceLt) {
       throw new UnprocessableEntityException(
-        `'start' must be strictly less than 'end'.`,
+        `'sequence_gte' must be strictly less than 'sequence_lt'.`,
       );
     }
-    if (end - start > maxBlocksToReturn) {
+    if (sequenceLt - sequenceGte > maxBlocksToReturn) {
       throw new UnprocessableEntityException(
         `Range is too long. Max sequence difference is ${maxBlocksToReturn}.`,
       );
     }
     return {
-      data: await this.blocksService.list(start, end),
+      data: await this.blocksService.list(sequenceGte, sequenceLt),
     };
   }
 }
