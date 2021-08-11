@@ -52,6 +52,9 @@ export class UsersService {
   ): Promise<User> {
     const existingRecord = await this.prisma.user.findFirst({
       where: {
+        last_login_at: {
+          not: null,
+        },
         OR: [
           {
             email,
