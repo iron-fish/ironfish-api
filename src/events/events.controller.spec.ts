@@ -51,6 +51,7 @@ describe('EventsController', () => {
           data: {
             email: faker.internet.email(),
             graffiti: uuid(),
+            country_code: faker.address.countryCode(),
           },
         });
         const firstEvent = await prisma.event.create({
@@ -143,6 +144,7 @@ describe('EventsController', () => {
           data: {
             email: faker.internet.email(),
             graffiti: uuid(),
+            country_code: faker.address.countryCode(),
           },
         });
         const type = EventType.BUG_CAUGHT;
@@ -199,6 +201,7 @@ describe('EventsController', () => {
           data: {
             email: faker.internet.email(),
             graffiti: uuid(),
+            country_code: faker.address.countryCode(),
           },
         });
         const event = await prisma.event.create({

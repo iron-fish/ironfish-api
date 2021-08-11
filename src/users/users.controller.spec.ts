@@ -35,6 +35,7 @@ describe('UsersController', () => {
           data: {
             email: faker.internet.email(),
             graffiti: uuid(),
+            country_code: faker.address.countryCode(),
           },
         });
         const { body } = await request(app.getHttpServer())
@@ -180,6 +181,7 @@ describe('UsersController', () => {
           data: {
             email: faker.internet.email(),
             graffiti: uuid(),
+            country_code: faker.address.countryCode('alpha-3'),
           },
         });
         const granularity = MetricsGranularity.LIFETIME;
@@ -211,6 +213,7 @@ describe('UsersController', () => {
           data: {
             email: faker.internet.email(),
             graffiti: uuid(),
+            country_code: faker.address.countryCode('alpha-3'),
           },
         });
         const start = new Date(Date.now() - 1).toISOString();
@@ -304,6 +307,7 @@ describe('UsersController', () => {
           data: {
             email: faker.internet.email(),
             graffiti: uuid(),
+            country_code: faker.address.countryCode('alpha-3'),
           },
         });
         await request(app.getHttpServer())
@@ -321,7 +325,11 @@ describe('UsersController', () => {
         const { body } = await request(app.getHttpServer())
           .post(`/users`)
           .set('Authorization', `Bearer ${API_KEY}`)
-          .send({ email, graffiti })
+          .send({
+            email,
+            graffiti,
+            country_code: faker.address.countryCode('alpha-3'),
+          })
           .expect(HttpStatus.CREATED);
 
         expect(body).toMatchObject({

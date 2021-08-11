@@ -170,8 +170,8 @@ export class UsersController {
         transform: true,
       }),
     )
-    { email, graffiti }: CreateUserDto,
+    { country_code: countryCode, email, graffiti }: CreateUserDto,
   ): Promise<User> {
-    return this.usersService.create(email, graffiti);
+    return this.usersService.create(email, graffiti, countryCode);
   }
 }

@@ -47,6 +47,7 @@ describe('EventsService', () => {
       data: {
         email: faker.internet.email(),
         graffiti: uuid(),
+        country_code: faker.address.countryCode('alpha-3'),
       },
     });
     return { block, user };
@@ -72,6 +73,7 @@ describe('EventsService', () => {
         data: {
           email: faker.internet.email(),
           graffiti: uuid(),
+          country_code: faker.address.countryCode('alpha-3'),
         },
       });
       const firstEvent = await prisma.event.create({
@@ -108,6 +110,7 @@ describe('EventsService', () => {
           data: {
             email: faker.internet.email(),
             graffiti: uuid(),
+            country_code: faker.address.countryCode('alpha-3'),
           },
         });
         const records = await eventsService.list({ userId: user.id });
@@ -188,6 +191,7 @@ describe('EventsService', () => {
         data: {
           email: faker.internet.email(),
           graffiti: uuid(),
+          country_code: faker.address.countryCode('alpha-3'),
         },
       });
 
@@ -218,6 +222,7 @@ describe('EventsService', () => {
         data: {
           email: faker.internet.email(),
           graffiti: uuid(),
+          country_code: faker.address.countryCode('alpha-3'),
         },
       });
       const eventCountsToReturn: Record<EventType, number> = {
@@ -285,6 +290,7 @@ describe('EventsService', () => {
           data: {
             email: faker.internet.email(),
             graffiti: uuid(),
+            country_code: faker.address.countryCode('alpha-3'),
           },
         });
         const currentPoints = user.total_points;
@@ -309,6 +315,7 @@ describe('EventsService', () => {
           data: {
             email: faker.internet.email(),
             graffiti: uuid(),
+            country_code: faker.address.countryCode('alpha-3'),
           },
         });
         const type = EventType.PULL_REQUEST_MERGED;
@@ -338,6 +345,7 @@ describe('EventsService', () => {
             email: faker.internet.email(),
             graffiti: uuid(),
             total_points: currentPointsThisWeek,
+            country_code: faker.address.countryCode('alpha-3'),
           },
         });
         const type = EventType.PULL_REQUEST_MERGED;
@@ -364,6 +372,7 @@ describe('EventsService', () => {
           data: {
             email: faker.internet.email(),
             graffiti: uuid(),
+            country_code: faker.address.countryCode('alpha-3'),
           },
         });
         const type = EventType.PULL_REQUEST_MERGED;
@@ -393,6 +402,7 @@ describe('EventsService', () => {
         data: {
           email: faker.internet.email(),
           graffiti: uuid(),
+          country_code: faker.address.countryCode('alpha-3'),
         },
       });
       const currentPoints = user.total_points;
@@ -412,6 +422,7 @@ describe('EventsService', () => {
         data: {
           email: faker.internet.email(),
           graffiti: uuid(),
+          country_code: faker.address.countryCode('alpha-3'),
         },
       });
       const type = EventType.BLOCK_MINED;
@@ -446,6 +457,7 @@ describe('EventsService', () => {
           data: {
             email: faker.internet.email(),
             graffiti: uuid(),
+            country_code: faker.address.countryCode('alpha-3'),
           },
         });
         const event = await eventsService.create({
