@@ -2,10 +2,12 @@
 
 ## Installing
 
-* Make sure you're running at least node 14 - you may want to avail yourself of a tool like [nvm](https://nvm.sh)
+* Make sure you're running at least node 16 - you may want to avail yourself of a tool like [nvm](https://nvm.sh)
 * Run `yarn` to install dependencies
-* Run `yarn docker:start` to start docker
-* Run `yarn build` to build things locally
+* We're using `nps` for scripts, you can optionally install it with `yarn global add nps` or `npm i -g nps` and then it will be available with `nps`
+* Run `nps docker.start` to start docker
+* Run `nps build` to build things locally
+* Run `nps db.init` to initialize the database
 
 ## Environment
 
@@ -19,4 +21,13 @@ You can copy `.env.template` to your own `.env` file
 
 ## Running
 
-* Run `yarn start` to run things once you've built them with `yarn build`
+* Run `nps start` to run things once you've built them with `nps build`
+
+## Database
+
+* Run `nps db.init` to initialize your database
+* Run `nps db.migrate` to apply migrations
+
+## Update
+
+* Run `nps fresh` to clean existing builds, apply migrations, run tests and lint
