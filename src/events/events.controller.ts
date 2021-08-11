@@ -64,19 +64,4 @@ export class EventsController {
     const user = await this.usersService.findOrThrowByGraffiti(graffiti);
     return this.eventsService.create({ type, points, userId: user.id });
   }
-
-  @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(ApiKeyGuard)
-  async delete(
-    @Param(
-      'id',
-      new ParseIntPipe({
-        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-      }),
-    )
-    id: number,
-  ): Promise<void> {
-    await this.eventsService.delete(id);
-  }
 }

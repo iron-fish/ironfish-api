@@ -442,38 +442,6 @@ describe('EventsService', () => {
     });
   });
 
-  describe('delete', () => {
-    describe('with a missing record', () => {
-      it('throws a NotFoundException', async () => {
-        await expect(eventsService.delete(12345)).rejects.toThrow(
-          NotFoundException,
-        );
-      });
-    });
-
-    describe('with a valid identifier', () => {
-      it('deletes the record', async () => {
-        const user = await prisma.user.create({
-          data: {
-            email: faker.internet.email(),
-            graffiti: uuid(),
-            country_code: faker.address.countryCode('alpha-3'),
-          },
-        });
-        const event = await eventsService.create({
-          type: EventType.BLOCK_MINED,
-          userId: user.id,
-          points: 0,
-        });
-        const id = event.id;
-
-        await eventsService.delete(event.id);
-        const record = await prisma.event.findUnique({ where: { id } });
-        expect(record).toBeNull();
-      });
-    });
-  });
-
   describe('upsertBlockMined', () => {
     describe('when a block exists', () => {
       it('returns the record', async () => {

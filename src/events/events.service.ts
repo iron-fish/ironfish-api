@@ -235,25 +235,6 @@ export class EventsService {
     return event;
   }
 
-  async delete(id: number): Promise<void> {
-    const record = await this.prisma.event.findUnique({
-      where: {
-        id,
-      },
-    });
-    if (!record) {
-      throw new NotFoundException();
-    }
-
-    await this.prisma.$transaction([
-      this.prisma.event.delete({
-        where: {
-          id,
-        },
-      }),
-    ]);
-  }
-
   async upsertBlockMined(block: Block, user: User): Promise<Event> {
     const points = 10;
     const record = await this.prisma.event.findUnique({
