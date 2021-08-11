@@ -42,7 +42,11 @@ export class UsersService {
     return record;
   }
 
-  async create(email: string, graffiti: string): Promise<User> {
+  async create(
+    email: string,
+    graffiti: string,
+    countryCode: string,
+  ): Promise<User> {
     const existingRecord = await this.prisma.user.findFirst({
       where: {
         OR: [
@@ -67,6 +71,7 @@ export class UsersService {
         data: {
           email,
           graffiti,
+          country_code: countryCode,
         },
       }),
     ]);

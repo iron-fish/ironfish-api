@@ -83,6 +83,7 @@ exports[`UsersController POST /users with missing arguments returns a 422 1`] = 
 Object {
   "error": "Unprocessable Entity",
   "message": Array [
+    "country_code must be a valid ISO31661 Alpha3 code",
     "email must be a string",
     "graffiti must be a string",
   ],

@@ -35,6 +35,7 @@ describe('UsersService', () => {
           data: {
             email: faker.internet.email(),
             graffiti: uuid(),
+            country_code: faker.address.countryCode('alpha-3'),
           },
         });
         const record = await usersService.findOrThrow(user.id);
@@ -59,6 +60,7 @@ describe('UsersService', () => {
           data: {
             email: faker.internet.email(),
             graffiti: uuid(),
+            country_code: faker.address.countryCode('alpha-3'),
           },
         });
         const record = await usersService.findByGraffiti(user.graffiti);
@@ -81,6 +83,7 @@ describe('UsersService', () => {
           data: {
             email: faker.internet.email(),
             graffiti: uuid(),
+            country_code: faker.address.countryCode('alpha-3'),
           },
         });
         const record = await usersService.findOrThrowByGraffiti(user.graffiti);
@@ -139,11 +142,16 @@ describe('UsersService', () => {
           data: {
             email: faker.internet.email(),
             graffiti,
+            country_code: faker.address.countryCode('alpha-3'),
           },
         });
 
         await expect(
-          usersService.create(faker.internet.email(), graffiti),
+          usersService.create(
+            faker.internet.email(),
+            graffiti,
+            faker.address.countryCode('alpha-3'),
+          ),
         ).rejects.toThrow(UnprocessableEntityException);
       });
     });
@@ -155,12 +163,17 @@ describe('UsersService', () => {
           data: {
             email,
             graffiti: uuid(),
+            country_code: faker.address.countryCode('alpha-3'),
           },
         });
 
-        await expect(usersService.create(email, uuid())).rejects.toThrow(
-          UnprocessableEntityException,
-        );
+        await expect(
+          usersService.create(
+            email,
+            uuid(),
+            faker.address.countryCode('alpha-3'),
+          ),
+        ).rejects.toThrow(UnprocessableEntityException);
       });
     });
 
@@ -168,7 +181,11 @@ describe('UsersService', () => {
       it('creates a new record', async () => {
         const email = faker.internet.email();
         const graffiti = uuid();
-        const user = await usersService.create(email, graffiti);
+        const user = await usersService.create(
+          email,
+          graffiti,
+          faker.address.countryCode('alpha-3'),
+        );
 
         expect(user).toMatchObject({
           id: expect.any(Number),
