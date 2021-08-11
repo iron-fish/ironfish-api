@@ -61,11 +61,26 @@ describe('UsersService', () => {
             email: faker.internet.email(),
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
+            last_login_at: new Date(),
           },
         });
         const record = await usersService.findByGraffiti(user.graffiti);
         expect(record).not.toBeNull();
         expect(record).toMatchObject(user);
+      });
+    });
+
+    describe('with a user not logged in yet', () => {
+      it('returns null', async () => {
+        const user = await prisma.user.create({
+          data: {
+            email: faker.internet.email(),
+            graffiti: uuid(),
+            country_code: faker.address.countryCode('alpha-3'),
+          },
+        });
+        const record = await usersService.findByGraffiti(user.graffiti);
+        expect(record).toBeNull();
       });
     });
 
@@ -84,6 +99,7 @@ describe('UsersService', () => {
             email: faker.internet.email(),
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
+            last_login_at: new Date(),
           },
         });
         const record = await usersService.findOrThrowByGraffiti(user.graffiti);
