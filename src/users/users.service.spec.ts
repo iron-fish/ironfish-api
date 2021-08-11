@@ -152,44 +152,102 @@ describe('UsersService', () => {
 
   describe('create', () => {
     describe('with a duplicate graffiti', () => {
-      it('throws an exception', async () => {
-        const graffiti = uuid();
-        await prisma.user.create({
-          data: {
-            email: faker.internet.email(),
-            graffiti,
-            country_code: faker.address.countryCode('alpha-3'),
-          },
-        });
+      describe('with a previously activated user', () => {
+        it('throws an exception', async () => {
+          const graffiti = uuid();
+          await prisma.user.create({
+            data: {
+              email: faker.internet.email(),
+              graffiti,
+              country_code: faker.address.countryCode('alpha-3'),
+              last_login_at: new Date(),
+            },
+          });
 
-        await expect(
-          usersService.create(
-            faker.internet.email(),
+          await expect(
+            usersService.create(
+              faker.internet.email(),
+              graffiti,
+              faker.address.countryCode('alpha-3'),
+            ),
+          ).rejects.toThrow(UnprocessableEntityException);
+        });
+      });
+
+      describe('with a user that has not been activated', () => {
+        it('creates a record', async () => {
+          const graffiti = uuid();
+          await prisma.user.create({
+            data: {
+              email: faker.internet.email(),
+              graffiti,
+              country_code: faker.address.countryCode('alpha-3'),
+            },
+          });
+
+          const email = faker.internet.email();
+          const user = await usersService.create(
+            email,
             graffiti,
             faker.address.countryCode('alpha-3'),
-          ),
-        ).rejects.toThrow(UnprocessableEntityException);
+          );
+
+          expect(user).toMatchObject({
+            id: expect.any(Number),
+            email,
+            graffiti,
+          });
+        });
       });
     });
 
     describe('with a duplicate email', () => {
-      it('throws an exception', async () => {
-        const email = faker.internet.email();
-        await prisma.user.create({
-          data: {
-            email,
-            graffiti: uuid(),
-            country_code: faker.address.countryCode('alpha-3'),
-          },
-        });
+      describe('with a previously activated user', () => {
+        it('throws an exception', async () => {
+          const email = faker.internet.email();
+          await prisma.user.create({
+            data: {
+              email,
+              graffiti: uuid(),
+              country_code: faker.address.countryCode('alpha-3'),
+              last_login_at: new Date(),
+            },
+          });
 
-        await expect(
-          usersService.create(
+          await expect(
+            usersService.create(
+              email,
+              uuid(),
+              faker.address.countryCode('alpha-3'),
+            ),
+          ).rejects.toThrow(UnprocessableEntityException);
+        });
+      });
+
+      describe('with a user that has not been activated', () => {
+        it('creates a record', async () => {
+          const email = faker.internet.email();
+          await prisma.user.create({
+            data: {
+              email,
+              graffiti: uuid(),
+              country_code: faker.address.countryCode('alpha-3'),
+            },
+          });
+
+          const graffiti = uuid();
+          const user = await usersService.create(
             email,
-            uuid(),
+            graffiti,
             faker.address.countryCode('alpha-3'),
-          ),
-        ).rejects.toThrow(UnprocessableEntityException);
+          );
+
+          expect(user).toMatchObject({
+            id: expect.any(Number),
+            email,
+            graffiti,
+          });
+        });
       });
     });
 
