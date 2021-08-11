@@ -35,7 +35,7 @@ model User {
   discord_username    String?  @db.VarChar
   telegram_username   String?  @db.VarChar
   total_points        Int      @default(0)
-  country_code        String?  @db.VarChar
+  country_code        String   @db.VarChar
   email_notifications Boolean  @default(false)
   events              Event[]
 

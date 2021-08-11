@@ -1,0 +1,1 @@
+ALTER TABLE users ALTER COLUMN country_code SET NOT NULL;
