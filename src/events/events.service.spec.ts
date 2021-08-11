@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { INestApplication, NotFoundException } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { WEEKLY_POINT_LIMITS_BY_EVENT_TYPE } from '../common/constants';
@@ -438,38 +438,6 @@ describe('EventsService', () => {
         user_id: user.id,
         points,
         type,
-      });
-    });
-  });
-
-  describe('delete', () => {
-    describe('with a missing record', () => {
-      it('throws a NotFoundException', async () => {
-        await expect(eventsService.delete(12345)).rejects.toThrow(
-          NotFoundException,
-        );
-      });
-    });
-
-    describe('with a valid identifier', () => {
-      it('deletes the record', async () => {
-        const user = await prisma.user.create({
-          data: {
-            email: faker.internet.email(),
-            graffiti: uuid(),
-            country_code: faker.address.countryCode('alpha-3'),
-          },
-        });
-        const event = await eventsService.create({
-          type: EventType.BLOCK_MINED,
-          userId: user.id,
-          points: 0,
-        });
-        const id = event.id;
-
-        await eventsService.delete(event.id);
-        const record = await prisma.event.findUnique({ where: { id } });
-        expect(record).toBeNull();
       });
     });
   });
