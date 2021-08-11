@@ -27,9 +27,12 @@ export class UsersService {
   }
 
   async findByGraffiti(graffiti: string): Promise<User | null> {
-    return this.prisma.user.findUnique({
+    return this.prisma.user.findFirst({
       where: {
         graffiti,
+        last_login_at: {
+          not: null,
+        },
       },
     });
   }
