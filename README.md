@@ -15,6 +15,8 @@ You'll need a `.env` file with the following keys:
 * `IRONFISH_API_KEY`
 * `NETWORK_VERSION`
 
+You can copy `.env.template` to your own `.env` file
+
 ## Running
 
 * Run `yarn start` to run things once you've built them with `yarn build`
