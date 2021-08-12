@@ -26,6 +26,7 @@ module.exports = {
   ],
   ignorePatterns: [
     '.*',
+    'package-scripts.js',
     '*.config.js',
     'build',
     'node_modules',
@@ -42,29 +43,34 @@ module.exports = {
             assertFunctionNames: ['expect', 'request.**.expect'],
           },
         ],
-      }
-    }
+      },
+    },
   ],
   rules: {
-    '@typescript-eslint/no-unused-vars': ['error', {
-      varsIgnorePattern: '^_',
-      argsIgnorePattern: '^_'
-    }],
-    'curly': 'error',
-    'eqeqeq': ['error', 'smart'],
-    'header/header': [2, 'block', [
-      ' This Source Code Form is subject to the terms of the Mozilla Public',
-      ' * License, v. 2.0. If a copy of the MPL was not distributed with this',
-      ' * file, You can obtain one at https://mozilla.org/MPL/2.0/. ',
-    ]],
+    '@typescript-eslint/no-unused-vars': [
+      'error',
+      {
+        varsIgnorePattern: '^_',
+        argsIgnorePattern: '^_',
+      },
+    ],
+    curly: 'error',
+    eqeqeq: ['error', 'smart'],
+    'header/header': [
+      2,
+      'block',
+      [
+        ' This Source Code Form is subject to the terms of the Mozilla Public',
+        ' * License, v. 2.0. If a copy of the MPL was not distributed with this',
+        ' * file, You can obtain one at https://mozilla.org/MPL/2.0/. ',
+      ],
+    ],
     'no-console': 'error',
     'no-new-wrappers': 'error',
     'simple-import-sort/imports': [
       'error',
       {
-        groups: [
-          ['\\u0000', '^@?\\w', '^', '\\.']
-        ],
+        groups: [['\\u0000', '^@?\\w', '^', '\\.']],
       },
     ],
   },

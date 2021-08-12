@@ -8,22 +8,22 @@
   "license": "MPL-2.0",
   "homepage": "https://github.com/iron-fish/ironfish-api",
   "engines": {
-    "node": "14.x"
+    "node": "16.x"
   },
-  "keywords": [
-    "http",
-    "api"
-  ],
+  "keywords": ["http", "api"],
   "scripts": {
-    "build": "tsc -b",
-    "clean": "rm -rf ./build",
-    "docker:start": "docker-compose up -d",
-    "docker:stop": "docker-compose down",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "start": "node build/main.js",
-    "start:worker": "node build/worker.js",
-    "test": "jest --runInBand"
+    "build": "nps build",
+    "clean": "nps clean",
+    "docker:start": "nps docker.start",
+    "docker:stop": "nps docker.stop",
+    "lint": "nps lint",
+    "lint:fix": "nps lint.fix",
+    "start": "nps start",
+    "start:worker": "nps start.worker",
+    "test": "nps test",
+    "db:init": "nps db.init",
+    "db:create": "nps db.create",
+    "db:migrate": "nps db.migrate"
   },
   "devDependencies": {
     "@nestjs/testing": "8.0.6",
@@ -45,6 +45,7 @@
     "eslint-plugin-simple-import-sort": "7.0.0",
     "faker": "5.5.3",
     "jest": "27.0.6",
+    "nps": "5.10.0",
     "prettier": "2.3.2",
     "prisma": "2.29.0",
     "supertest": "6.1.5",
