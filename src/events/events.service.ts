@@ -13,6 +13,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateEventOptions } from './interfaces/create-event-options';
 import { ListEventsOptions } from './interfaces/list-events-options';
 import { Block, Event, EventType, User } from '.prisma/client';
+import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 
 @Injectable()
 export class EventsService {
@@ -184,16 +185,17 @@ export class EventsService {
     };
   }
 
-  async create({
+  async createWithClient({
     blockId,
     occurredAt,
     points = 0,
     type,
     userId,
-  }: CreateEventOptions): Promise<Event> {
+  }: CreateEventOptions, prisma?: BasePrismaClient): Promise<Event> {
+    const client = prisma ?? this.prisma
     const weeklyLimitForEventType = WEEKLY_POINT_LIMITS_BY_EVENT_TYPE[type];
     const startOfWeek = getMondayFromDate(occurredAt);
-    const pointsAggregateThisWeek = await this.prisma.event.aggregate({
+    const pointsAggregateThisWeek = await client.event.aggregate({
       _sum: {
         points: true,
       },
@@ -211,7 +213,7 @@ export class EventsService {
       points,
     );
 
-    const [_, event] = await this.prisma.$transaction([
+    const [_, event] = await client.$transaction([
       this.prisma.user.update({
         where: {
           id: userId,
@@ -235,9 +237,10 @@ export class EventsService {
     return event;
   }
 
-  async upsertBlockMined(block: Block, user: User): Promise<Event> {
+  async upsertBlockMined(block: Block, user: User, prisma?: BasePrismaClient): Promise<Event> {
+    const client = prisma ?? this.prisma;
     const points = 10;
-    const record = await this.prisma.event.findUnique({
+    const record = await client.event.findUnique({
       where: {
         block_id: block.id,
       },
