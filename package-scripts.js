@@ -19,6 +19,10 @@ module.exports = {
     start: {
       script: 'node build/main.js',
       worker: 'node build/worker.js',
+      local: {
+        script: 'CORS=true node build/main.js',
+        worker: 'CORS=true node build/worker.js',
+      }
     },
     test: 'jest --runInBand',
   },
