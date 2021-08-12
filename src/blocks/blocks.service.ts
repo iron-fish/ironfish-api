@@ -73,14 +73,14 @@ export class BlocksService {
       const user = await this.usersService.findByGraffiti(graffiti, prisma);
       if (user && timestamp > user.created_at) {
         if (main) {
-          await this.eventsService.upsertBlockMined(block, user);
+          await this.eventsService.upsertBlockMined(block, user, prisma);
         } else {
-          await this.eventsService.deleteBlockMined(block, user);
+          await this.eventsService.deleteBlockMined(block, user, prisma);
         }
       }
-  
+
       return block;
-    })
+    });
   }
 
   async head(): Promise<Block> {

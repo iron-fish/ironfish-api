@@ -9,9 +9,9 @@ import {
 import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
 import { PrismaService } from '../prisma/prisma.service';
-import { ListUsersOptions } from './interfaces/list-users-options';
-import { PrismaClient, User } from '.prisma/client';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
+import { ListUsersOptions } from './interfaces/list-users-options';
+import { User } from '.prisma/client';
 
 @Injectable()
 export class UsersService {
@@ -27,7 +27,10 @@ export class UsersService {
     return record;
   }
 
-  async findByGraffiti(graffiti: string, prisma?: BasePrismaClient): Promise<User | null> {
+  async findByGraffiti(
+    graffiti: string,
+    prisma?: BasePrismaClient,
+  ): Promise<User | null> {
     const client = prisma ?? this.prisma;
     return client.user.findFirst({
       where: {
