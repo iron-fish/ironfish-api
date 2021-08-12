@@ -40,45 +40,47 @@ export class BlocksService {
   }: BlockDto): Promise<Block> {
     const main = type === BlockOperation.CONNECTED;
     const networkVersion = this.config.get<number>('NETWORK_VERSION', 0);
-    const block = await this.prisma.block.upsert({
-      create: {
-        hash,
-        sequence,
-        difficulty,
-        main,
-        timestamp,
-        graffiti,
-        transactions_count,
-        network_version: networkVersion,
-        previous_block_hash,
-      },
-      update: {
-        sequence,
-        difficulty,
-        main,
-        timestamp,
-        graffiti,
-        transactions_count,
-        previous_block_hash,
-      },
-      where: {
-        uq_blocks_on_hash_and_network_version: {
+    return this.prisma.$transaction(async (prisma) => {
+      const block = await prisma.block.upsert({
+        create: {
           hash,
+          sequence,
+          difficulty,
+          main,
+          timestamp,
+          graffiti,
+          transactions_count,
           network_version: networkVersion,
+          previous_block_hash,
         },
-      },
-    });
+        update: {
+          sequence,
+          difficulty,
+          main,
+          timestamp,
+          graffiti,
+          transactions_count,
+          previous_block_hash,
+        },
+        where: {
+          uq_blocks_on_hash_and_network_version: {
+            hash,
+            network_version: networkVersion,
+          },
+        },
+      });
 
-    const user = await this.usersService.findByGraffiti(graffiti);
-    if (user && timestamp > user.created_at) {
-      if (main) {
-        await this.eventsService.upsertBlockMined(block, user);
-      } else {
-        await this.eventsService.deleteBlockMined(block, user);
+      const user = await this.usersService.findByGraffiti(graffiti, prisma);
+      if (user && timestamp > user.created_at) {
+        if (main) {
+          await this.eventsService.upsertBlockMined(block, user, prisma);
+        } else {
+          await this.eventsService.deleteBlockMined(block, user, prisma);
+        }
       }
-    }
 
-    return block;
+      return block;
+    });
   }
 
   async head(): Promise<Block> {

@@ -9,12 +9,13 @@ import {
 import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
 import { PrismaService } from '../prisma/prisma.service';
+import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { ListUsersOptions } from './interfaces/list-users-options';
 import { User } from '.prisma/client';
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async findOrThrow(id: number): Promise<User> {
     const record = await this.prisma.user.findUnique({
@@ -26,8 +27,12 @@ export class UsersService {
     return record;
   }
 
-  async findByGraffiti(graffiti: string): Promise<User | null> {
-    return this.prisma.user.findFirst({
+  async findByGraffiti(
+    graffiti: string,
+    prisma?: BasePrismaClient,
+  ): Promise<User | null> {
+    const client = prisma ?? this.prisma;
+    return client.user.findFirst({
       where: {
         graffiti,
         last_login_at: {
