@@ -3398,7 +3398,7 @@ npm-run-path@^4.0.1:
   dependencies:
     path-key "^3.0.0"
 
-nps@^5.10.0:
+nps@5.10.0:
   version "5.10.0"
   resolved "https://registry.yarnpkg.com/nps/-/nps-5.10.0.tgz#cb7e7c8fe9a0d28061bf1d496a7192694ddc6185"
   integrity sha512-tye+0hoKq3pB6NhykoPcOzwn4nEvwVvh1kJEDc+21gYordNdaBlkPv8ZlrZkuEWLUeujvS8VQ56KO9QGoPKkEA==
