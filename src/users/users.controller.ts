@@ -11,10 +11,8 @@ import {
   Post,
   Query,
   UnprocessableEntityException,
-  UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { MS_PER_DAY } from '../common/constants';
 import { List } from '../common/interfaces/list';
 import { EventsService } from '../events/events.service';
@@ -162,7 +160,6 @@ export class UsersController {
   }
 
   @Post()
-  @UseGuards(ApiKeyGuard)
   async create(
     @Body(
       new ValidationPipe({
