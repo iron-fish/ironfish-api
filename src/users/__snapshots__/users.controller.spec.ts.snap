@@ -72,13 +72,6 @@ Object {
 }
 `;
 
-exports[`UsersController POST /users with a missing API key returns a 401 1`] = `
-Object {
-  "message": "Unauthorized",
-  "statusCode": 401,
-}
-`;
-
 exports[`UsersController POST /users with missing arguments returns a 422 1`] = `
 Object {
   "error": "Unprocessable Entity",
