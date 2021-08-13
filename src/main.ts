@@ -22,9 +22,8 @@ async function bootstrap() {
     new ExpressAdapter(server),
   );
   app.enableCors({
-    origin: ['https://website-testnet.vercel.app', /\.ironfish\.network$/],
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true,
+    origin: /website-testnet.\.vercel\.app/,
+    methods: 'GET,POST,OPTIONS',
   });
 
   app.use(compression());
