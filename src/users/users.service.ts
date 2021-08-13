@@ -124,6 +124,7 @@ export class UsersService {
           email,
         },
         orderBy: {
+          // This does not guarantee we choose the right user
           created_at: SortOrder.DESC,
         },
       });
@@ -139,5 +140,26 @@ export class UsersService {
         },
       });
     });
+  }
+
+  async getRank(user: User): Promise<number> {
+    const numberOfHigherRankedUsers = await this.prisma.user.count({
+      where: {
+        OR: [
+          {
+            total_points: {
+              gt: user.total_points,
+            },
+          },
+          {
+            total_points: user.total_points,
+            id: {
+              gt: user.id,
+            },
+          },
+        ],
+      },
+    });
+    return numberOfHigherRankedUsers + 1;
   }
 }
