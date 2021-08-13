@@ -6,8 +6,6 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { GraphileWorkerMicroservice } from './graphile-worker/graphile-worker.microservice';
 
-const CORS = process.env.CORS || false;
-
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
