@@ -14,6 +14,7 @@ import http from 'http';
 import { AppModule } from './app.module';
 
 const PORT = process.env.PORT || 8003;
+const LOCAL = process.env.LOCAL || false;
 
 async function bootstrap() {
   const server = express();
@@ -21,6 +22,12 @@ async function bootstrap() {
     AppModule,
     new ExpressAdapter(server),
   );
+  app.enableCors({
+    origin: LOCAL ? /localhost./ : /website-testnet.*\.vercel\.app/,
+    methods: 'GET,POST,OPTIONS',
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+  });
 
   app.use(compression());
   app.use(helmet());
