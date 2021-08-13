@@ -305,12 +305,14 @@ describe('UsersController', () => {
       it('creates an user', async () => {
         const email = faker.internet.email();
         const graffiti = uuid();
+        const discord = faker.internet.userName();
         const { body } = await request(app.getHttpServer())
           .post(`/users`)
           .set('Authorization', `Bearer ${API_KEY}`)
           .send({
             email,
             graffiti,
+            discord,
             country_code: faker.address.countryCode('alpha-3'),
           })
           .expect(HttpStatus.CREATED);
@@ -319,6 +321,7 @@ describe('UsersController', () => {
           id: expect.any(Number),
           email,
           graffiti,
+          discord,
         });
       });
     });

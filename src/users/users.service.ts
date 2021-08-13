@@ -10,6 +10,7 @@ import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
+import { CreateUserDto } from './dto/create-user.dto';
 import { ListUsersOptions } from './interfaces/list-users-options';
 import { User } from '.prisma/client';
 
@@ -50,11 +51,13 @@ export class UsersService {
     return record;
   }
 
-  async create(
-    email: string,
-    graffiti: string,
-    countryCode: string,
-  ): Promise<User> {
+  async create({
+    email,
+    graffiti,
+    country_code: countryCode,
+    discord,
+    telegram,
+  }: CreateUserDto): Promise<User> {
     const existingRecord = await this.prisma.user.findFirst({
       where: {
         last_login_at: {
@@ -82,6 +85,8 @@ export class UsersService {
         data: {
           email,
           graffiti,
+          discord,
+          telegram,
           country_code: countryCode,
         },
       }),
