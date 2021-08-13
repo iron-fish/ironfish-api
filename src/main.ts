@@ -23,7 +23,7 @@ async function bootstrap() {
     new ExpressAdapter(server),
   );
   app.enableCors({
-    origin: LOCAL ? /localhost./ : /website-testnet.\.vercel\.app/,
+    origin: LOCAL ? /localhost./ : /website-testnet.*\.vercel\.app/,
     methods: 'GET,POST,OPTIONS',
     preflightContinue: false,
     optionsSuccessStatus: 204,
