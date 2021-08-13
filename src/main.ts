@@ -24,6 +24,7 @@ async function bootstrap() {
   app.enableCors({
     origin: /website-testnet.\.vercel\.app/,
     methods: 'GET,POST,OPTIONS',
+    credentials: true,
   });
 
   app.use(compression());
