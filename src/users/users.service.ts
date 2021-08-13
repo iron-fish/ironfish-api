@@ -118,6 +118,9 @@ export class UsersService {
         where: {
           email,
         },
+        orderBy: {
+          created_at: SortOrder.DESC,
+        },
       });
       if (!user) {
         throw new NotFoundException();
