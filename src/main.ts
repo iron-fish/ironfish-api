@@ -14,7 +14,6 @@ import http from 'http';
 import { AppModule } from './app.module';
 
 const PORT = process.env.PORT || 8003;
-const CORS = process.env.CORS || false;
 
 async function bootstrap() {
   const server = express();
@@ -22,9 +21,11 @@ async function bootstrap() {
     AppModule,
     new ExpressAdapter(server),
   );
-  if (CORS) {
-    app.enableCors();
-  }
+  app.enableCors({
+    origin: ['https://website-testnet.vercel.app', /\.ironfish\.network$/],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+  });
 
   app.use(compression());
   app.use(helmet());
