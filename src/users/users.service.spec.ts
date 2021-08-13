@@ -269,4 +269,32 @@ describe('UsersService', () => {
       });
     });
   });
+
+  describe('updateLastLoginAtByEmail', () => {
+    describe('with a missing email', () => {
+      it('throws a NotFoundException', async () => [
+        await expect(
+          usersService.updateLastLoginAtByEmail('foo@ironfish.network'),
+        ).rejects.toThrow(NotFoundException),
+      ]);
+    });
+
+    describe('with a valid email', () => {
+      it('updates the last login timestamp', async () => {
+        const user = await usersService.create(
+          faker.internet.email(),
+          uuid(),
+          faker.address.countryCode('alpha-3'),
+        );
+        const updatedUser = await usersService.updateLastLoginAtByEmail(
+          user.email,
+        );
+        expect(updatedUser).toMatchObject({
+          id: user.id,
+          last_login_at: expect.any(Date),
+        });
+        expect(updatedUser.last_login_at).not.toEqual(user.last_login_at);
+      });
+    });
+  });
 });

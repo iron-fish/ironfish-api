@@ -5,6 +5,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import joi from 'joi';
 import { AuthModule } from './auth/auth.module';
+import { AuthRestModule } from './auth/auth.rest.module';
 import { BlocksModule } from './blocks/blocks.module';
 import { BlocksRestModule } from './blocks/blocks.rest.module';
 import { EventsModule } from './events/events.module';
@@ -16,6 +17,7 @@ import { UsersRestModule } from './users/users.rest.module';
 @Module({
   imports: [
     AuthModule,
+    AuthRestModule,
     BlocksModule,
     BlocksRestModule,
     ConfigModule.forRoot({

@@ -111,4 +111,25 @@ export class UsersService {
       },
     });
   }
+
+  async updateLastLoginAtByEmail(email: string): Promise<User> {
+    return this.prisma.$transaction(async (prisma) => {
+      const user = await prisma.user.findFirst({
+        where: {
+          email,
+        },
+      });
+      if (!user) {
+        throw new NotFoundException();
+      }
+      return prisma.user.update({
+        where: {
+          id: user.id,
+        },
+        data: {
+          last_login_at: new Date().toISOString(),
+        },
+      });
+    });
+  }
 }
