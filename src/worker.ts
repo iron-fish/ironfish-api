@@ -10,9 +10,6 @@ const CORS = process.env.CORS || false;
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  if (CORS) {
-    app.enableCors();
-  }
 
   app.connectMicroservice({
     strategy: new GraphileWorkerMicroservice(app.get(ConfigService)),
