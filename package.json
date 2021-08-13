@@ -10,7 +10,9 @@
   "engines": {
     "node": "16.x"
   },
-  "keywords": ["http", "api"],
+  "keywords": [
+    "api"
+  ],
   "scripts": {
     "build": "nps build",
     "clean": "nps clean",
@@ -54,6 +56,7 @@
     "uuid": "8.3.2"
   },
   "dependencies": {
+    "@magic-sdk/admin": "1.3.0",
     "@nestjs/common": "8.0.6",
     "@nestjs/config": "1.0.1",
     "@nestjs/core": "8.0.6",

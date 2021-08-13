@@ -8,6 +8,6 @@ import { UsersModule } from './users.module';
 
 @Module({
   controllers: [UsersController],
-  imports: [UsersModule, EventsModule],
+  imports: [EventsModule, UsersModule],
 })
 export class UsersRestModule {}

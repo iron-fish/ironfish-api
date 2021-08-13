@@ -7,6 +7,7 @@ import { Test } from '@nestjs/testing';
 import { json } from 'express';
 import joi from 'joi';
 import { AuthModule } from '../auth/auth.module';
+import { AuthRestModule } from '../auth/auth.rest.module';
 import { BlocksModule } from '../blocks/blocks.module';
 import { BlocksRestModule } from '../blocks/blocks.rest.module';
 import { EventsModule } from '../events/events.module';
@@ -19,6 +20,7 @@ export async function bootstrapTestApp(): Promise<INestApplication> {
   const module = await Test.createTestingModule({
     imports: [
       AuthModule,
+      AuthRestModule,
       BlocksModule,
       BlocksRestModule,
       ConfigModule.forRoot({
@@ -26,6 +28,7 @@ export async function bootstrapTestApp(): Promise<INestApplication> {
         validationSchema: joi.object({
           DATABASE_URL: joi.string().required(),
           IRONFISH_API_KEY: joi.string().required(),
+          MAGIC_SECRET_KEY: joi.string().required(),
           NETWORK_VERSION: joi.number().required(),
         }),
       }),
