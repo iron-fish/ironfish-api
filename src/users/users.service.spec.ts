@@ -165,11 +165,11 @@ describe('UsersService', () => {
           });
 
           await expect(
-            usersService.create(
-              faker.internet.email(),
+            usersService.create({
+              email: faker.internet.email(),
               graffiti,
-              faker.address.countryCode('alpha-3'),
-            ),
+              country_code: faker.address.countryCode('alpha-3'),
+            }),
           ).rejects.toThrow(UnprocessableEntityException);
         });
       });
@@ -186,11 +186,11 @@ describe('UsersService', () => {
           });
 
           const email = faker.internet.email();
-          const user = await usersService.create(
+          const user = await usersService.create({
             email,
             graffiti,
-            faker.address.countryCode('alpha-3'),
-          );
+            country_code: faker.address.countryCode('alpha-3'),
+          });
 
           expect(user).toMatchObject({
             id: expect.any(Number),
@@ -215,11 +215,11 @@ describe('UsersService', () => {
           });
 
           await expect(
-            usersService.create(
+            usersService.create({
               email,
-              uuid(),
-              faker.address.countryCode('alpha-3'),
-            ),
+              graffiti: uuid(),
+              country_code: faker.address.countryCode('alpha-3'),
+            }),
           ).rejects.toThrow(UnprocessableEntityException);
         });
       });
@@ -236,11 +236,11 @@ describe('UsersService', () => {
           });
 
           const graffiti = uuid();
-          const user = await usersService.create(
+          const user = await usersService.create({
             email,
             graffiti,
-            faker.address.countryCode('alpha-3'),
-          );
+            country_code: faker.address.countryCode('alpha-3'),
+          });
 
           expect(user).toMatchObject({
             id: expect.any(Number),
@@ -255,11 +255,11 @@ describe('UsersService', () => {
       it('creates a new record', async () => {
         const email = faker.internet.email();
         const graffiti = uuid();
-        const user = await usersService.create(
+        const user = await usersService.create({
           email,
           graffiti,
-          faker.address.countryCode('alpha-3'),
-        );
+          country_code: faker.address.countryCode('alpha-3'),
+        });
 
         expect(user).toMatchObject({
           id: expect.any(Number),
@@ -281,11 +281,11 @@ describe('UsersService', () => {
 
     describe('with a valid email', () => {
       it('updates the last login timestamp', async () => {
-        const user = await usersService.create(
-          faker.internet.email(),
-          uuid(),
-          faker.address.countryCode('alpha-3'),
-        );
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          country_code: faker.address.countryCode('alpha-3'),
+        });
         const updatedUser = await usersService.updateLastLoginAtByEmail(
           user.email,
         );

@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["interactiveTransactions"]
 }
 
@@ -33,12 +33,12 @@ model User {
   updated_at          DateTime  @default(now()) @updatedAt @db.Timestamp(6)
   email               String    @db.VarChar
   graffiti            String    @db.VarChar
-  discord_username    String?   @db.VarChar
-  telegram_username   String?   @db.VarChar
   total_points        Int       @default(0)
   country_code        String    @db.VarChar
   email_notifications Boolean   @default(false)
   last_login_at       DateTime? @db.Timestamp(6)
+  discord             String?   @db.VarChar
+  telegram            String?   @db.VarChar
   events              Event[]
 
   @@index([email], name: "index_users_on_email")

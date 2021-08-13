@@ -79,6 +79,8 @@ Object {
     "country_code must be a valid ISO31661 Alpha3 code",
     "email must be a string",
     "graffiti must be a string",
+    "\\"discord\\" or \\"telegram\\" required when registering",
+    "\\"discord\\" or \\"telegram\\" required when registering",
   ],
   "statusCode": 422,
 }
