@@ -41,8 +41,8 @@ describe('UsersController', () => {
 
         expect(body).toMatchObject({
           id: user.id,
-          email: user.email,
           graffiti: user.graffiti,
+          total_points: expect.any(Number),
         });
       });
     });

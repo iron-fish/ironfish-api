@@ -297,4 +297,43 @@ describe('UsersService', () => {
       });
     });
   });
+
+  describe('getRank', () => {
+    it('returns the correct rank', async () => {
+      const aggregate = await prisma.user.aggregate({
+        _max: {
+          total_points: true,
+        },
+      });
+      const currentMaxPoints = aggregate._max.total_points || 0;
+      const totalPoints = currentMaxPoints + 2;
+      const firstUser = await prisma.user.create({
+        data: {
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          country_code: faker.address.countryCode('alpha-3'),
+          total_points: totalPoints,
+        },
+      });
+      const secondUser = await prisma.user.create({
+        data: {
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          country_code: faker.address.countryCode('alpha-3'),
+          total_points: totalPoints,
+        },
+      });
+      const thirdUser = await prisma.user.create({
+        data: {
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          country_code: faker.address.countryCode('alpha-3'),
+          total_points: totalPoints - 1,
+        },
+      });
+      expect(await usersService.getRank(secondUser)).toBe(1);
+      expect(await usersService.getRank(firstUser)).toBe(2);
+      expect(await usersService.getRank(thirdUser)).toBe(3);
+    });
+  });
 });

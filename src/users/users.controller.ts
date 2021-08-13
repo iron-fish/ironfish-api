@@ -20,8 +20,10 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { MetricsQueryDto } from './dto/metrics-query.dto';
 import { UsersQueryDto } from './dto/users-query.dto';
 import { MetricsGranularity } from './enums/metrics-granularity';
+import { SerializedUser } from './interfaces/serialized-user';
 import { SerializedUserMetrics } from './interfaces/serialized-user-metrics';
 import { UsersService } from './users.service';
+import { serializedUserFromRecord } from './utils/user-translator';
 import { EventType, User } from '.prisma/client';
 
 const MAX_SUPPORTED_TIME_RANGE_IN_DAYS = 30;
@@ -42,8 +44,12 @@ export class UsersController {
       }),
     )
     id: number,
-  ): Promise<User> {
-    return this.usersService.findOrThrow(id);
+  ): Promise<SerializedUser> {
+    const user = await this.usersService.findOrThrow(id);
+    return serializedUserFromRecord(
+      user,
+      await this.usersService.getRank(user),
+    );
   }
 
   @Get(':id/metrics')
