@@ -8,6 +8,7 @@ import request from 'supertest';
 import { v4 as uuid } from 'uuid';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
+import { BlocksService } from './blocks.service';
 import { UpsertBlocksDto } from './dto/upsert-blocks.dto';
 import { BlockOperation } from './enums/block-operation';
 
@@ -15,11 +16,13 @@ const API_KEY = 'test';
 
 describe('BlocksController', () => {
   let app: INestApplication;
+  let blocksService: BlocksService;
   let config: ConfigService;
   let prisma: PrismaService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
+    blocksService = app.get(BlocksService);
     config = app.get(ConfigService);
     prisma = app.get(PrismaService);
     await app.init();
@@ -218,6 +221,47 @@ describe('BlocksController', () => {
           transactions_count: expect.any(Number),
           previous_block_hash: expect.any(String),
         });
+      });
+    });
+  });
+
+  describe('POST /blocks/disconnect', () => {
+    beforeEach(() => {
+      jest.spyOn(config, 'get').mockImplementationOnce(() => API_KEY);
+    });
+
+    describe('with a missing api key', () => {
+      it('returns a 401', async () => {
+        const { body } = await request(app.getHttpServer())
+          .post(`/blocks/disconnect`)
+          .expect(HttpStatus.UNAUTHORIZED);
+
+        expect(body).toMatchSnapshot();
+      });
+    });
+
+    describe('with missing arguments', () => {
+      it('returns a 422', async () => {
+        const { body } = await request(app.getHttpServer())
+          .post(`/blocks/disconnect`)
+          .set('Authorization', `Bearer ${API_KEY}`)
+          .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+
+        expect(body).toMatchSnapshot();
+      });
+    });
+
+    describe('wtih a valid sequence', () => {
+      it('disconnects blocks after the sequence', async () => {
+        const disconnectAfter = jest.spyOn(blocksService, 'disconnectAfter');
+        const sequenceGt = 2;
+        await request(app.getHttpServer())
+          .post(`/blocks/disconnect`)
+          .set('Authorization', `Bearer ${API_KEY}`)
+          .send({ sequence_gt: sequenceGt })
+          .expect(HttpStatus.OK);
+
+        expect(disconnectAfter).toHaveBeenCalledWith(sequenceGt);
       });
     });
   });
