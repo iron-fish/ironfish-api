@@ -113,4 +113,21 @@ export class BlocksService {
       },
     });
   }
+
+  async disconnectAfter(sequenceGt: number): Promise<void> {
+    const networkVersion = this.config.get<number>('NETWORK_VERSION', 0);
+    await this.prisma.$transaction([
+      this.prisma.block.updateMany({
+        data: {
+          main: false,
+        },
+        where: {
+          sequence: {
+            gt: sequenceGt,
+          },
+          network_version: networkVersion,
+        },
+      }),
+    ]);
+  }
 }

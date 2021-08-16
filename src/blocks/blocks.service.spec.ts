@@ -5,6 +5,7 @@ import { INestApplication, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import faker from 'faker';
 import { v4 as uuid } from 'uuid';
+import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { BlocksService } from './blocks.service';
 import { BlockOperation } from './enums/block-operation';
@@ -13,11 +14,13 @@ describe('EventsService', () => {
   let app: INestApplication;
   let blocksService: BlocksService;
   let config: ConfigService;
+  let prisma: PrismaService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
     blocksService = app.get(BlocksService);
     config = app.get(ConfigService);
+    prisma = app.get(PrismaService);
     await app.init();
   });
 
@@ -133,6 +136,24 @@ describe('EventsService', () => {
       for (const block of blocks) {
         expect(block.sequence).toBeGreaterThanOrEqual(start);
         expect(block.sequence).toBeLessThan(end);
+      }
+    });
+  });
+
+  describe('disconnectAfter', () => {
+    it('updates `main` to false for all blocks after a sequence', async () => {
+      const sequenceGt = 10;
+      await blocksService.disconnectAfter(sequenceGt);
+      const blocks = await prisma.block.findMany({
+        where: {
+          sequence: {
+            gt: sequenceGt,
+          },
+        },
+      });
+
+      for (const block of blocks) {
+        expect(block.main).toBe(false);
       }
     });
   });

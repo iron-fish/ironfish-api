@@ -72,3 +72,21 @@ Object {
   "statusCode": 422,
 }
 `;
+
+exports[`BlocksController POST /blocks/disconnect with a missing api key returns a 401 1`] = `
+Object {
+  "message": "Unauthorized",
+  "statusCode": 401,
+}
+`;
+
+exports[`BlocksController POST /blocks/disconnect with missing arguments returns a 422 1`] = `
+Object {
+  "error": "Unprocessable Entity",
+  "message": Array [
+    "sequence_gt must be an integer number",
+    "sequence_gt must not be less than 1",
+  ],
+  "statusCode": 422,
+}
+`;
