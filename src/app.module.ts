@@ -26,6 +26,7 @@ import { UsersRestModule } from './users/users.rest.module';
       validationSchema: joi.object({
         DATABASE_URL: joi.string().required(),
         IRONFISH_API_KEY: joi.string().required(),
+        MAGIC_SECRET_KEY: joi.string().required(),
         NETWORK_VERSION: joi.number().required(),
       }),
     }),

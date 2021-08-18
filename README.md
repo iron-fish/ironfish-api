@@ -15,6 +15,7 @@ You'll need a `.env` file with the following keys:
 
 * `DATABASE_URL`
 * `IRONFISH_API_KEY`
+* `MAGIC_SECRET_KEY`
 * `NETWORK_VERSION`
 
 You can copy `.env.template` to your own `.env` file
