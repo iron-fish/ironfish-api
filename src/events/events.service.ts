@@ -279,4 +279,15 @@ export class EventsService {
     }
     return event;
   }
+
+  async lastEventForUser(user: User): Promise<Event | null> {
+    return this.prisma.event.findFirst({
+      orderBy: {
+        occurred_at: SortOrder.DESC,
+      },
+      where: {
+        user_id: user.id,
+      },
+    });
+  }
 }

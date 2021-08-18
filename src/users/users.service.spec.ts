@@ -11,6 +11,7 @@ import { v4 as uuid } from 'uuid';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from './users.service';
+import { EventType } from '.prisma/client';
 
 describe('UsersService', () => {
   let app: INestApplication;
@@ -331,6 +332,23 @@ describe('UsersService', () => {
           total_points: totalPoints - 1,
         },
       });
+      const firstEvent = await prisma.event.create({
+        data: {
+          type: EventType.BUG_CAUGHT,
+          user_id: firstUser.id,
+          occurred_at: new Date(),
+          points: 0,
+        },
+      });
+      await prisma.event.create({
+        data: {
+          type: EventType.BUG_CAUGHT,
+          user_id: secondUser.id,
+          occurred_at: new Date(firstEvent.occurred_at.valueOf() - 1000),
+          points: 0,
+        },
+      });
+
       expect(await usersService.getRank(secondUser)).toBe(1);
       expect(await usersService.getRank(firstUser)).toBe(2);
       expect(await usersService.getRank(thirdUser)).toBe(3);

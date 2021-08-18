@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
+import { EventsService } from '../events/events.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -16,7 +17,10 @@ import { User } from '.prisma/client';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly eventsService: EventsService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   async findOrThrow(id: number): Promise<User> {
     const record = await this.prisma.user.findUnique({
@@ -143,6 +147,8 @@ export class UsersService {
   }
 
   async getRank(user: User): Promise<number> {
+    const lastEvent = await this.eventsService.lastEventForUser(user);
+    const lastEventOccurredAt = lastEvent ? lastEvent.occurred_at : new Date();
     const numberOfHigherRankedUsers = await this.prisma.user.count({
       where: {
         OR: [
@@ -152,9 +158,17 @@ export class UsersService {
             },
           },
           {
-            total_points: user.total_points,
             id: {
-              gt: user.id,
+              not: user.id,
+            },
+            total_points: user.total_points,
+            events: {
+              none: {
+                deleted_at: null,
+                occurred_at: {
+                  gte: lastEventOccurredAt,
+                },
+              },
             },
           },
         ],
