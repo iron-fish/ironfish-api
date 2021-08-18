@@ -282,6 +282,18 @@ describe('UsersController', () => {
       });
     });
 
+    describe('with empty arguments', () => {
+      it('returns a 422', async () => {
+        const { body } = await request(app.getHttpServer())
+          .post(`/users`)
+          .set('Authorization', `Bearer ${API_KEY}`)
+          .send({ email: '', graffiti: '' })
+          .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+
+        expect(body).toMatchSnapshot();
+      });
+    });
+
     describe('with a duplicate email', () => {
       it('returns a 422', async () => {
         const user = await prisma.user.create({

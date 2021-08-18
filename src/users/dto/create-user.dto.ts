@@ -3,7 +3,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import {
   IsDefined,
+  IsEmail,
   IsISO31661Alpha3,
+  IsNotEmpty,
   IsString,
   ValidateIf,
 } from 'class-validator';
@@ -12,9 +14,10 @@ export class CreateUserDto {
   @IsISO31661Alpha3()
   readonly country_code!: string;
 
-  @IsString()
+  @IsEmail()
   readonly email!: string;
 
+  @IsNotEmpty()
   @IsString()
   readonly graffiti!: string;
 

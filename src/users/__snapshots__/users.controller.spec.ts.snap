@@ -72,13 +72,28 @@ Object {
 }
 `;
 
+exports[`UsersController POST /users with empty arguments returns a 422 1`] = `
+Object {
+  "error": "Unprocessable Entity",
+  "message": Array [
+    "country_code must be a valid ISO31661 Alpha3 code",
+    "email must be an email",
+    "graffiti should not be empty",
+    "\\"discord\\" or \\"telegram\\" required when registering",
+    "\\"discord\\" or \\"telegram\\" required when registering",
+  ],
+  "statusCode": 422,
+}
+`;
+
 exports[`UsersController POST /users with missing arguments returns a 422 1`] = `
 Object {
   "error": "Unprocessable Entity",
   "message": Array [
     "country_code must be a valid ISO31661 Alpha3 code",
-    "email must be a string",
+    "email must be an email",
     "graffiti must be a string",
+    "graffiti should not be empty",
     "\\"discord\\" or \\"telegram\\" required when registering",
     "\\"discord\\" or \\"telegram\\" required when registering",
   ],
