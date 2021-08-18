@@ -5,6 +5,7 @@ import { Injectable } from '@nestjs/common';
 import {
   DEFAULT_LIMIT,
   MAX_LIMIT,
+  POINTS_PER_CATEGORY,
   WEEKLY_POINT_LIMITS_BY_EVENT_TYPE,
 } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
@@ -241,7 +242,7 @@ export class EventsService {
     user: User,
     client: BasePrismaClient,
   ): Promise<Event> {
-    const points = 10;
+    const points = POINTS_PER_CATEGORY[EventType.BLOCK_MINED];
     const record = await client.event.findUnique({
       where: {
         block_id: block.id,

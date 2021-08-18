@@ -12,6 +12,7 @@ import { RequireSslMiddleware } from './common/middlewares/require-ssl.middlewar
 import { EventsModule } from './events/events.module';
 import { EventsRestModule } from './events/events.rest.module';
 import { HealthModule } from './health/health.module';
+import { MetricsRestModule } from './metrics/metrics.rest.module';
 import { UsersModule } from './users/users.module';
 import { UsersRestModule } from './users/users.rest.module';
 
@@ -33,6 +34,7 @@ import { UsersRestModule } from './users/users.rest.module';
     EventsModule,
     EventsRestModule,
     HealthModule,
+    MetricsRestModule,
     UsersModule,
     UsersRestModule,
   ],
