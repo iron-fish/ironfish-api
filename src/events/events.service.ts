@@ -49,7 +49,6 @@ export class EventsService {
       blocksMined,
       bugsCaught,
       communityContributions,
-      nodesHosted,
       pullRequestsMerged,
       socialMediaPromotions,
     ] = await this.prisma.$transaction([
@@ -74,12 +73,6 @@ export class EventsService {
       this.prisma.event.count({
         where: {
           user_id: id,
-          type: EventType.NODE_HOSTED,
-        },
-      }),
-      this.prisma.event.count({
-        where: {
-          user_id: id,
           type: EventType.PULL_REQUEST_MERGED,
         },
       }),
@@ -94,7 +87,6 @@ export class EventsService {
       BLOCK_MINED: blocksMined,
       BUG_CAUGHT: bugsCaught,
       COMMUNITY_CONTRIBUTION: communityContributions,
-      NODE_HOSTED: nodesHosted,
       PULL_REQUEST_MERGED: pullRequestsMerged,
       SOCIAL_MEDIA_PROMOTION: socialMediaPromotions,
     };
@@ -116,7 +108,6 @@ export class EventsService {
       blocksMined,
       bugsCaught,
       communityContributions,
-      nodesHosted,
       pullRequestsMerged,
       socialMediaPromotions,
       pointsAggregate,
@@ -139,13 +130,6 @@ export class EventsService {
         where: {
           user_id: id,
           type: EventType.COMMUNITY_CONTRIBUTION,
-          ...dateFilter,
-        },
-      }),
-      this.prisma.event.count({
-        where: {
-          user_id: id,
-          type: EventType.NODE_HOSTED,
           ...dateFilter,
         },
       }),
@@ -178,7 +162,6 @@ export class EventsService {
         BLOCK_MINED: blocksMined,
         BUG_CAUGHT: bugsCaught,
         COMMUNITY_CONTRIBUTION: communityContributions,
-        NODE_HOSTED: nodesHosted,
         PULL_REQUEST_MERGED: pullRequestsMerged,
         SOCIAL_MEDIA_PROMOTION: socialMediaPromotions,
       },

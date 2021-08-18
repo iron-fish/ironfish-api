@@ -11,7 +11,6 @@ export interface SerializedUserMetrics {
     blocks_mined: number;
     bugs_caught: number;
     community_contributions: number;
-    nodes_hosted: number;
     pull_requests_merged: number;
     social_media_contributions: number;
   };

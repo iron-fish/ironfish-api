@@ -183,7 +183,6 @@ describe('EventsService', () => {
         BLOCK_MINED: 4,
         BUG_CAUGHT: 1,
         COMMUNITY_CONTRIBUTION: 2,
-        NODE_HOSTED: 1,
         PULL_REQUEST_MERGED: 0,
         SOCIAL_MEDIA_PROMOTION: 0,
       };
@@ -229,7 +228,6 @@ describe('EventsService', () => {
         BLOCK_MINED: 2,
         BUG_CAUGHT: 4,
         COMMUNITY_CONTRIBUTION: 3,
-        NODE_HOSTED: 1,
         PULL_REQUEST_MERGED: 0,
         SOCIAL_MEDIA_PROMOTION: 0,
       };
@@ -237,7 +235,6 @@ describe('EventsService', () => {
         BLOCK_MINED: 1,
         BUG_CAUGHT: 1,
         COMMUNITY_CONTRIBUTION: 2,
-        NODE_HOSTED: 1,
         PULL_REQUEST_MERGED: 0,
         SOCIAL_MEDIA_PROMOTION: 2,
       };

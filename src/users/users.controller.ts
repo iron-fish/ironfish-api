@@ -106,7 +106,6 @@ export class UsersController {
         blocks_mined: eventCounts[EventType.BLOCK_MINED],
         bugs_caught: eventCounts[EventType.BUG_CAUGHT],
         community_contributions: eventCounts[EventType.COMMUNITY_CONTRIBUTION],
-        nodes_hosted: eventCounts[EventType.NODE_HOSTED],
         pull_requests_merged: eventCounts[EventType.PULL_REQUEST_MERGED],
         social_media_contributions:
           eventCounts[EventType.SOCIAL_MEDIA_PROMOTION],
