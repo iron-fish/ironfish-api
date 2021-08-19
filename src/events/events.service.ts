@@ -14,6 +14,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { CreateEventOptions } from './interfaces/create-event-options';
 import { ListEventsOptions } from './interfaces/list-events-options';
+import { SerializedEventMetrics } from './interfaces/serialized-event-metrics';
 import { Block, Event, EventType, User } from '.prisma/client';
 
 @Injectable()
@@ -41,131 +42,161 @@ export class EventsService {
     });
   }
 
-  async getLifetimeEventCountsForUser(
+  async getLifetimeEventMetricsForUser(
     user: User,
-  ): Promise<Record<EventType, number>> {
-    const { id } = user;
-    const [
-      blocksMined,
-      bugsCaught,
-      communityContributions,
-      pullRequestsMerged,
-      socialMediaPromotions,
-    ] = await this.prisma.$transaction([
-      this.prisma.event.count({
-        where: {
-          user_id: id,
-          type: EventType.BLOCK_MINED,
-        },
-      }),
-      this.prisma.event.count({
-        where: {
-          user_id: id,
-          type: EventType.BUG_CAUGHT,
-        },
-      }),
-      this.prisma.event.count({
-        where: {
-          user_id: id,
-          type: EventType.COMMUNITY_CONTRIBUTION,
-        },
-      }),
-      this.prisma.event.count({
-        where: {
-          user_id: id,
-          type: EventType.PULL_REQUEST_MERGED,
-        },
-      }),
-      this.prisma.event.count({
-        where: {
-          user_id: id,
-          type: EventType.SOCIAL_MEDIA_PROMOTION,
-        },
-      }),
-    ]);
+  ): Promise<Record<EventType, SerializedEventMetrics>> {
+    return this.prisma.$transaction(async (prisma) => {
+      return {
+        BLOCK_MINED: await this.getLifetimeEventTypeMetricsForUser(
+          user,
+          EventType.BLOCK_MINED,
+          prisma,
+        ),
+        BUG_CAUGHT: await this.getLifetimeEventTypeMetricsForUser(
+          user,
+          EventType.BUG_CAUGHT,
+          prisma,
+        ),
+        COMMUNITY_CONTRIBUTION: await this.getLifetimeEventTypeMetricsForUser(
+          user,
+          EventType.COMMUNITY_CONTRIBUTION,
+          prisma,
+        ),
+        PULL_REQUEST_MERGED: await this.getLifetimeEventTypeMetricsForUser(
+          user,
+          EventType.PULL_REQUEST_MERGED,
+          prisma,
+        ),
+        SOCIAL_MEDIA_PROMOTION: await this.getLifetimeEventTypeMetricsForUser(
+          user,
+          EventType.SOCIAL_MEDIA_PROMOTION,
+          prisma,
+        ),
+      };
+    });
+  }
+
+  private async getLifetimeEventTypeMetricsForUser(
+    { id }: User,
+    type: EventType,
+    client: BasePrismaClient,
+  ): Promise<SerializedEventMetrics> {
+    const aggregate = await client.event.aggregate({
+      _sum: {
+        points: true,
+      },
+      where: {
+        type,
+        user_id: id,
+      },
+    });
     return {
-      BLOCK_MINED: blocksMined,
-      BUG_CAUGHT: bugsCaught,
-      COMMUNITY_CONTRIBUTION: communityContributions,
-      PULL_REQUEST_MERGED: pullRequestsMerged,
-      SOCIAL_MEDIA_PROMOTION: socialMediaPromotions,
+      count: await client.event.count({
+        where: {
+          type,
+          user_id: id,
+        },
+      }),
+      points: aggregate._sum.points || 0,
     };
   }
 
-  async getTotalEventCountsAndPointsForUser(
+  async getTotalEventMetricsAndPointsForUser(
     user: User,
     start: Date,
     end: Date,
-  ): Promise<{ eventCounts: Record<EventType, number>; points: number }> {
-    const { id } = user;
+  ): Promise<{
+    eventMetrics: Record<EventType, SerializedEventMetrics>;
+    points: number;
+  }> {
+    return this.prisma.$transaction(async (prisma) => {
+      const pointsAggregate = await prisma.event.aggregate({
+        _sum: {
+          points: true,
+        },
+        where: {
+          occurred_at: {
+            gte: start,
+            lt: end,
+          },
+          user_id: user.id,
+        },
+      });
+      return {
+        eventMetrics: {
+          BLOCK_MINED: await this.getTotalEventTypeMetricsForUser(
+            user,
+            EventType.BLOCK_MINED,
+            start,
+            end,
+            prisma,
+          ),
+          BUG_CAUGHT: await this.getTotalEventTypeMetricsForUser(
+            user,
+            EventType.BUG_CAUGHT,
+            start,
+            end,
+            prisma,
+          ),
+          COMMUNITY_CONTRIBUTION: await this.getTotalEventTypeMetricsForUser(
+            user,
+            EventType.COMMUNITY_CONTRIBUTION,
+            start,
+            end,
+            prisma,
+          ),
+          PULL_REQUEST_MERGED: await this.getTotalEventTypeMetricsForUser(
+            user,
+            EventType.PULL_REQUEST_MERGED,
+            start,
+            end,
+            prisma,
+          ),
+          SOCIAL_MEDIA_PROMOTION: await this.getTotalEventTypeMetricsForUser(
+            user,
+            EventType.SOCIAL_MEDIA_PROMOTION,
+            start,
+            end,
+            prisma,
+          ),
+        },
+        points: pointsAggregate._sum.points || 0,
+      };
+    });
+  }
+
+  private async getTotalEventTypeMetricsForUser(
+    { id }: User,
+    type: EventType,
+    start: Date,
+    end: Date,
+    client: BasePrismaClient,
+  ): Promise<SerializedEventMetrics> {
     const dateFilter = {
       occurred_at: {
         gte: start,
         lt: end,
       },
     };
-    const [
-      blocksMined,
-      bugsCaught,
-      communityContributions,
-      pullRequestsMerged,
-      socialMediaPromotions,
-      pointsAggregate,
-    ] = await this.prisma.$transaction([
-      this.prisma.event.count({
-        where: {
-          user_id: id,
-          type: EventType.BLOCK_MINED,
-          ...dateFilter,
-        },
-      }),
-      this.prisma.event.count({
-        where: {
-          user_id: id,
-          type: EventType.BUG_CAUGHT,
-          ...dateFilter,
-        },
-      }),
-      this.prisma.event.count({
-        where: {
-          user_id: id,
-          type: EventType.COMMUNITY_CONTRIBUTION,
-          ...dateFilter,
-        },
-      }),
-      this.prisma.event.count({
-        where: {
-          user_id: id,
-          type: EventType.PULL_REQUEST_MERGED,
-          ...dateFilter,
-        },
-      }),
-      this.prisma.event.count({
-        where: {
-          user_id: id,
-          type: EventType.SOCIAL_MEDIA_PROMOTION,
-          ...dateFilter,
-        },
-      }),
-      this.prisma.event.aggregate({
-        _sum: {
-          points: true,
-        },
-        where: {
-          ...dateFilter,
-        },
-      }),
-    ]);
-
-    return {
-      eventCounts: {
-        BLOCK_MINED: blocksMined,
-        BUG_CAUGHT: bugsCaught,
-        COMMUNITY_CONTRIBUTION: communityContributions,
-        PULL_REQUEST_MERGED: pullRequestsMerged,
-        SOCIAL_MEDIA_PROMOTION: socialMediaPromotions,
+    const aggregate = await client.event.aggregate({
+      _sum: {
+        points: true,
       },
-      points: pointsAggregate._sum.points ?? 0,
+      where: {
+        type,
+        user_id: id,
+        ...dateFilter,
+      },
+    });
+    return {
+      count: await client.event.count({
+        where: {
+          type,
+          user_id: id,
+          ...dateFilter,
+        },
+      }),
+      points: aggregate._sum.points || 0,
     };
   }
 

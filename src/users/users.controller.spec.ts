@@ -193,11 +193,26 @@ describe('UsersController', () => {
           granularity,
           points: expect.any(Number),
           metrics: {
-            blocks_mined: expect.any(Number),
-            bugs_caught: expect.any(Number),
-            community_contributions: expect.any(Number),
-            pull_requests_merged: expect.any(Number),
-            social_media_contributions: expect.any(Number),
+            blocks_mined: {
+              count: expect.any(Number),
+              points: expect.any(Number),
+            },
+            bugs_caught: {
+              count: expect.any(Number),
+              points: expect.any(Number),
+            },
+            community_contributions: {
+              count: expect.any(Number),
+              points: expect.any(Number),
+            },
+            pull_requests_merged: {
+              count: expect.any(Number),
+              points: expect.any(Number),
+            },
+            social_media_contributions: {
+              count: expect.any(Number),
+              points: expect.any(Number),
+            },
           },
         });
       });
@@ -228,11 +243,26 @@ describe('UsersController', () => {
           granularity,
           points: expect.any(Number),
           metrics: {
-            blocks_mined: expect.any(Number),
-            bugs_caught: expect.any(Number),
-            community_contributions: expect.any(Number),
-            pull_requests_merged: expect.any(Number),
-            social_media_contributions: expect.any(Number),
+            blocks_mined: {
+              count: expect.any(Number),
+              points: expect.any(Number),
+            },
+            bugs_caught: {
+              count: expect.any(Number),
+              points: expect.any(Number),
+            },
+            community_contributions: {
+              count: expect.any(Number),
+              points: expect.any(Number),
+            },
+            pull_requests_merged: {
+              count: expect.any(Number),
+              points: expect.any(Number),
+            },
+            social_media_contributions: {
+              count: expect.any(Number),
+              points: expect.any(Number),
+            },
           },
         });
       });
