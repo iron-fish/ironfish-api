@@ -225,6 +225,101 @@ describe('BlocksController', () => {
     });
   });
 
+  describe('GET /blocks/find', () => {
+    describe('with a valid hash', () => {
+      it('returns the block with the correct hash', async () => {
+        const testBlockHash = uuid();
+        await prisma.block.create({
+          data: {
+            hash: testBlockHash,
+            difficulty: uuid(),
+            main: true,
+            sequence: faker.datatype.number(),
+            timestamp: new Date(),
+            transactions_count: 0,
+            graffiti: uuid(),
+            previous_block_hash: uuid(),
+            network_version: 0,
+          },
+        });
+
+        const { body } = await request(app.getHttpServer())
+          .get('/blocks/find')
+          .query({ hash: testBlockHash })
+          .expect(HttpStatus.OK);
+
+        expect(body).toMatchObject({
+          id: expect.any(Number),
+          hash: testBlockHash,
+          difficulty: expect.any(String),
+          main: true,
+          sequence: expect.any(Number),
+          timestamp: expect.any(String),
+          transactions_count: expect.any(Number),
+          previous_block_hash: expect.any(String),
+        });
+      });
+    });
+    describe('with a valid sequence', () => {
+      it('returns the block with the correct hash', async () => {
+        const testBlockSequence = faker.datatype.number();
+        await prisma.block.create({
+          data: {
+            hash: uuid(),
+            difficulty: uuid(),
+            main: true,
+            sequence: testBlockSequence,
+            timestamp: new Date(),
+            transactions_count: 0,
+            graffiti: uuid(),
+            previous_block_hash: uuid(),
+            network_version: 0,
+          },
+        });
+
+        const { body } = await request(app.getHttpServer())
+          .get('/blocks/find')
+          .query({ sequence: testBlockSequence })
+          .expect(HttpStatus.OK);
+
+        expect(body).toMatchObject({
+          id: expect.any(Number),
+          hash: expect.any(String),
+          difficulty: expect.any(String),
+          main: true,
+          sequence: testBlockSequence,
+          timestamp: expect.any(String),
+          transactions_count: expect.any(Number),
+          previous_block_hash: expect.any(String),
+        });
+      });
+    });
+    describe('with neither a valid hash or sequence', () => {
+      it('returns a 422', async () => {
+        await prisma.block.create({
+          data: {
+            hash: uuid(),
+            difficulty: uuid(),
+            main: true,
+            sequence: faker.datatype.number(),
+            timestamp: new Date(),
+            transactions_count: 0,
+            graffiti: uuid(),
+            previous_block_hash: uuid(),
+            network_version: 0,
+          },
+        });
+
+        const { body } = await request(app.getHttpServer())
+          .get('/blocks/find')
+          .query({ hash: undefined, sequence: undefined })
+          .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+
+        expect(body).toMatchSnapshot();
+      });
+    });
+  });
+
   describe('POST /blocks/disconnect', () => {
     beforeEach(() => {
       jest.spyOn(config, 'get').mockImplementationOnce(() => API_KEY);
