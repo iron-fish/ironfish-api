@@ -82,12 +82,12 @@ export class BlocksController {
         transform: true,
       }),
     )
-    { hash: hash, sequence: sequence}: BlockQueryDto,
+    { hash: hash, sequence: sequence }: BlockQueryDto,
   ): Promise<Block | null> {
     return this.blocksService.find({
       hash,
-      sequence
-    })
+      sequence,
+    });
   }
 
   @Post('disconnect')

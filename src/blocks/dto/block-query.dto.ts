@@ -4,7 +4,7 @@
 import { Type } from 'class-transformer';
 import { IsInt, IsString, Min } from 'class-validator';
 
-export class BlockQueryDto { 
+export class BlockQueryDto {
   @IsString()
   readonly hash!: string;
 

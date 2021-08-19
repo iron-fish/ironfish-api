@@ -9,8 +9,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
 import { BlockDto, UpsertBlocksDto } from './dto/upsert-blocks.dto';
 import { BlockOperation } from './enums/block-operation';
-import { Block } from '.prisma/client';
 import { FindBlockOptions } from './interfaces/find-block-options';
+import { Block } from '.prisma/client';
 
 @Injectable()
 export class BlocksService {
@@ -121,20 +121,20 @@ export class BlocksService {
     const seq_index = options.sequence ?? undefined;
 
     // This feels un-elegant, but it's clear.
-    if (hash != undefined) {
+    if (hash !== undefined) {
       return this.prisma.block.findFirst({
         where: {
           hash: hash,
-          network_version: networkVersion
-        }
-      })
+          network_version: networkVersion,
+        },
+      });
     } else {
       return this.prisma.block.findFirst({
         where: {
           sequence: seq_index,
-          network_version: networkVersion
+          network_version: networkVersion,
         },
-      })
+      });
     }
   }
 
