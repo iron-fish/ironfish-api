@@ -17,6 +17,7 @@ import { Response } from 'express';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { List } from '../common/interfaces/list';
 import { BlocksService } from './blocks.service';
+import { BlockQueryDto } from './dto/block-query.dto';
 import { BlocksQueryDto } from './dto/blocks-query.dto';
 import { DisconnectBlocksDto } from './dto/disconnect-blocks.dto';
 import { UpsertBlocksDto } from './dto/upsert-blocks.dto';
@@ -71,6 +72,22 @@ export class BlocksController {
     return {
       data: await this.blocksService.list(sequenceGte, sequenceLt),
     };
+  }
+
+  @Get()
+  async find(
+    @Query(
+      new ValidationPipe({
+        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        transform: true,
+      }),
+    )
+    { hash: hash, sequence: sequence}: BlockQueryDto,
+  ): Promise<Block | null> {
+    return this.blocksService.find({
+      hash,
+      sequence
+    })
   }
 
   @Post('disconnect')
