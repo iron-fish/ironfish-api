@@ -182,8 +182,8 @@ describe('EventsService', () => {
       const eventCounts: Record<EventType, number> = {
         BLOCK_MINED: 4,
         BUG_CAUGHT: 1,
-        COMMUNITY_CONTRIBUTION: 2,
-        PULL_REQUEST_MERGED: 0,
+        COMMUNITY_CONTRIBUTION: 0,
+        PULL_REQUEST_MERGED: 2,
         SOCIAL_MEDIA_PROMOTION: 0,
       };
       const user = await prisma.user.create({
@@ -236,15 +236,15 @@ describe('EventsService', () => {
       const eventCountsToReturn: Record<EventType, number> = {
         BLOCK_MINED: 2,
         BUG_CAUGHT: 4,
-        COMMUNITY_CONTRIBUTION: 3,
-        PULL_REQUEST_MERGED: 0,
+        COMMUNITY_CONTRIBUTION: 0,
+        PULL_REQUEST_MERGED: 3,
         SOCIAL_MEDIA_PROMOTION: 0,
       };
       const eventCountsToIgnore: Record<EventType, number> = {
         BLOCK_MINED: 1,
         BUG_CAUGHT: 1,
-        COMMUNITY_CONTRIBUTION: 2,
-        PULL_REQUEST_MERGED: 0,
+        COMMUNITY_CONTRIBUTION: 0,
+        PULL_REQUEST_MERGED: 2,
         SOCIAL_MEDIA_PROMOTION: 2,
       };
       let totalPoints = 0;
@@ -553,6 +553,96 @@ describe('EventsService', () => {
 
         const record = await eventsService.lastEventForUser(user);
         expect(record).toMatchObject(event);
+      });
+    });
+  });
+
+  describe('getRankForEventType', () => {
+    it('returns the correct rank for a user', async () => {
+      const highestBugCaughtAggregate = await prisma.event.aggregate({
+        max: {
+          points: true,
+        },
+        where: {
+          type: EventType.BUG_CAUGHT,
+        },
+      });
+      const highestCommunityContributionAggregate =
+        await prisma.event.aggregate({
+          max: {
+            points: true,
+          },
+          where: {
+            type: EventType.COMMUNITY_CONTRIBUTION,
+          },
+        });
+      const highestBugCaughtPoints = highestBugCaughtAggregate.max.points || 0;
+      const highestCommunityContributionPoints =
+        highestCommunityContributionAggregate.max.points || 0;
+      const firstUser = await prisma.user.create({
+        data: {
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          country_code: faker.address.countryCode('alpha-3'),
+        },
+      });
+      const secondUser = await prisma.user.create({
+        data: {
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          country_code: faker.address.countryCode('alpha-3'),
+        },
+      });
+
+      await prisma.event.create({
+        data: {
+          type: EventType.BUG_CAUGHT,
+          user_id: firstUser.id,
+          occurred_at: new Date(),
+          points: 5 * highestBugCaughtPoints + 2,
+        },
+      });
+      await prisma.event.create({
+        data: {
+          type: EventType.BUG_CAUGHT,
+          user_id: secondUser.id,
+          occurred_at: new Date(),
+          points: 5 * highestBugCaughtPoints + 1,
+        },
+      });
+      await prisma.event.create({
+        data: {
+          type: EventType.COMMUNITY_CONTRIBUTION,
+          user_id: secondUser.id,
+          occurred_at: new Date(),
+          points: 5 * highestCommunityContributionPoints + 2,
+        },
+      });
+      await prisma.event.create({
+        data: {
+          type: EventType.COMMUNITY_CONTRIBUTION,
+          user_id: firstUser.id,
+          occurred_at: new Date(),
+          points: 5 * highestCommunityContributionPoints + 1,
+        },
+      });
+
+      const firstUserRanks = await eventsService.getRanksForEventTypes(
+        firstUser,
+        prisma,
+      );
+      expect(firstUserRanks).toMatchObject({
+        [EventType.COMMUNITY_CONTRIBUTION]: 2,
+        [EventType.BUG_CAUGHT]: 1,
+      });
+
+      const secondUserRanks = await eventsService.getRanksForEventTypes(
+        secondUser,
+        prisma,
+      );
+      expect(secondUserRanks).toMatchObject({
+        [EventType.COMMUNITY_CONTRIBUTION]: 1,
+        [EventType.BUG_CAUGHT]: 2,
       });
     });
   });
