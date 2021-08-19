@@ -40,6 +40,20 @@ Object {
 }
 `;
 
+exports[`BlocksController GET /blocks/find with neither a valid hash or sequence returns a 422 1`] = `
+Object {
+  "error": "Unprocessable Entity",
+  "message": Array [
+    "\\"hash\\" or \\"sequence\\" required to query for single block",
+    "hash must be a string",
+    "\\"hash\\" or \\"sequence\\" required to query for single block",
+    "sequence must be an integer number",
+    "sequence must not be less than 1",
+  ],
+  "statusCode": 422,
+}
+`;
+
 exports[`BlocksController POST /blocks with a missing api key returns a 401 1`] = `
 Object {
   "message": "Unauthorized",
