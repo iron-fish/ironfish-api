@@ -16,6 +16,7 @@ import {
 import { MS_PER_DAY } from '../common/constants';
 import { List } from '../common/interfaces/list';
 import { EventsService } from '../events/events.service';
+import { SerializedEventMetrics } from '../events/interfaces/serialized-event-metrics';
 import { CreateUserDto } from './dto/create-user.dto';
 import { MetricsQueryDto } from './dto/metrics-query.dto';
 import { UsersQueryDto } from './dto/users-query.dto';
@@ -74,12 +75,12 @@ export class UsersController {
       throw new UnprocessableEntityException(error);
     }
 
-    let eventCounts: Record<EventType, number>;
+    let eventMetrics: Record<EventType, SerializedEventMetrics>;
     let points: number;
     const { start, end, granularity } = query;
     if (granularity === MetricsGranularity.LIFETIME) {
       const user = await this.usersService.findOrThrow(id);
-      eventCounts = await this.eventsService.getLifetimeEventCountsForUser(
+      eventMetrics = await this.eventsService.getLifetimeEventMetricsForUser(
         user,
       );
       points = user.total_points;
@@ -90,8 +91,8 @@ export class UsersController {
         );
       }
       const user = await this.usersService.findOrThrow(id);
-      ({ eventCounts, points } =
-        await this.eventsService.getTotalEventCountsAndPointsForUser(
+      ({ eventMetrics, points } =
+        await this.eventsService.getTotalEventMetricsAndPointsForUser(
           user,
           start,
           end,
@@ -103,12 +104,12 @@ export class UsersController {
       granularity,
       points,
       metrics: {
-        blocks_mined: eventCounts[EventType.BLOCK_MINED],
-        bugs_caught: eventCounts[EventType.BUG_CAUGHT],
-        community_contributions: eventCounts[EventType.COMMUNITY_CONTRIBUTION],
-        pull_requests_merged: eventCounts[EventType.PULL_REQUEST_MERGED],
+        blocks_mined: eventMetrics[EventType.BLOCK_MINED],
+        bugs_caught: eventMetrics[EventType.BUG_CAUGHT],
+        community_contributions: eventMetrics[EventType.COMMUNITY_CONTRIBUTION],
+        pull_requests_merged: eventMetrics[EventType.PULL_REQUEST_MERGED],
         social_media_contributions:
-          eventCounts[EventType.SOCIAL_MEDIA_PROMOTION],
+          eventMetrics[EventType.SOCIAL_MEDIA_PROMOTION],
       },
     };
   }

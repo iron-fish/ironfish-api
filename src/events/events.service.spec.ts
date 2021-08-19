@@ -177,7 +177,7 @@ describe('EventsService', () => {
     });
   });
 
-  describe('getLifetimeEventCountsForUser', () => {
+  describe('getLifetimeEventMetricsForUser', () => {
     it('sums up all the events for the users', async () => {
       const eventCounts: Record<EventType, number> = {
         BLOCK_MINED: 4,
@@ -207,14 +207,23 @@ describe('EventsService', () => {
         }
       }
 
-      const lifetimeCounts = await eventsService.getLifetimeEventCountsForUser(
-        user,
-      );
+      const lifetimeMetrics =
+        await eventsService.getLifetimeEventMetricsForUser(user);
+      const lifetimeCounts = {
+        [EventType.BLOCK_MINED]: lifetimeMetrics[EventType.BLOCK_MINED].count,
+        [EventType.BUG_CAUGHT]: lifetimeMetrics[EventType.BUG_CAUGHT].count,
+        [EventType.COMMUNITY_CONTRIBUTION]:
+          lifetimeMetrics[EventType.COMMUNITY_CONTRIBUTION].count,
+        [EventType.PULL_REQUEST_MERGED]:
+          lifetimeMetrics[EventType.PULL_REQUEST_MERGED].count,
+        [EventType.SOCIAL_MEDIA_PROMOTION]:
+          lifetimeMetrics[EventType.SOCIAL_MEDIA_PROMOTION].count,
+      };
       expect(lifetimeCounts).toEqual(eventCounts);
     });
   });
 
-  describe('getTotalEventCountsForUser', () => {
+  describe('getTotalEventMetricsForUser', () => {
     it('returns sums of event counts within the provided time range', async () => {
       const now = new Date();
       const user = await prisma.user.create({
@@ -268,12 +277,22 @@ describe('EventsService', () => {
         }
       }
 
-      const { eventCounts, points } =
-        await eventsService.getTotalEventCountsAndPointsForUser(
+      const { eventMetrics, points } =
+        await eventsService.getTotalEventMetricsAndPointsForUser(
           user,
           now,
           new Date(now.getTime() + 1000),
         );
+      const eventCounts = {
+        [EventType.BLOCK_MINED]: eventMetrics[EventType.BLOCK_MINED].count,
+        [EventType.BUG_CAUGHT]: eventMetrics[EventType.BUG_CAUGHT].count,
+        [EventType.COMMUNITY_CONTRIBUTION]:
+          eventMetrics[EventType.COMMUNITY_CONTRIBUTION].count,
+        [EventType.PULL_REQUEST_MERGED]:
+          eventMetrics[EventType.PULL_REQUEST_MERGED].count,
+        [EventType.SOCIAL_MEDIA_PROMOTION]:
+          eventMetrics[EventType.SOCIAL_MEDIA_PROMOTION].count,
+      };
       expect(eventCounts).toEqual(eventCountsToReturn);
       expect(points).toBe(totalPoints);
     });
