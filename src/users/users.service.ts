@@ -147,29 +147,44 @@ export class UsersService {
   }
 
   async getRank(user: User): Promise<number> {
+    const { id, created_at: createdAt, total_points: totalPoints } = user;
     const lastEvent = await this.eventsService.lastEventForUser(user);
     const lastEventOccurredAt = lastEvent ? lastEvent.occurred_at : new Date();
+    let tieBreakerFilter = {};
+    // If users are tied with 0 points, rank by join date.
+    if (totalPoints === 0) {
+      tieBreakerFilter = {
+        created_at: {
+          lt: createdAt,
+        },
+      };
+    } else {
+      // Otherwise, rank users with earlier last event timestamps higher.
+      tieBreakerFilter = {
+        events: {
+          none: {
+            deleted_at: null,
+            occurred_at: {
+              gte: lastEventOccurredAt,
+            },
+          },
+        },
+      };
+    }
     const numberOfHigherRankedUsers = await this.prisma.user.count({
       where: {
         OR: [
           {
             total_points: {
-              gt: user.total_points,
+              gt: totalPoints,
             },
           },
           {
             id: {
-              not: user.id,
+              not: id,
             },
-            total_points: user.total_points,
-            events: {
-              none: {
-                deleted_at: null,
-                occurred_at: {
-                  gte: lastEventOccurredAt,
-                },
-              },
-            },
+            total_points: totalPoints,
+            ...tieBreakerFilter,
           },
         ],
       },
