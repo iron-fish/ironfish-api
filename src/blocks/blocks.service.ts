@@ -10,6 +10,7 @@ import { UsersService } from '../users/users.service';
 import { BlockDto, UpsertBlocksDto } from './dto/upsert-blocks.dto';
 import { BlockOperation } from './enums/block-operation';
 import { Block } from '.prisma/client';
+import { FindBlockOptions } from './interfaces/find-block-options';
 
 @Injectable()
 export class BlocksService {
@@ -112,6 +113,29 @@ export class BlocksService {
         network_version: networkVersion,
       },
     });
+  }
+
+  async find(options: FindBlockOptions): Promise<Block | null> {
+    const networkVersion = this.config.get<number>('NETWORK_VERSION', 0);
+    const hash = options.hash ?? undefined;
+    const seq_index = options.sequence ?? undefined;
+
+    // This feels un-elegant, but it's clear.
+    if (hash != undefined) {
+      return this.prisma.block.findFirst({
+        where: {
+          hash: hash,
+          network_version: networkVersion
+        }
+      })
+    } else {
+      return this.prisma.block.findFirst({
+        where: {
+          sequence: seq_index,
+          network_version: networkVersion
+        },
+      })
+    }
   }
 
   async disconnectAfter(sequenceGt: number): Promise<void> {
