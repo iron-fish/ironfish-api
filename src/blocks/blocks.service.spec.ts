@@ -128,6 +128,79 @@ describe('EventsService', () => {
     });
   });
 
+  describe('find', () => {
+    describe('with a valid hash', () => {
+      it('returns the block with the correct hash', async () => {
+        const test_block_hash = uuid();
+        const blocks = await blocksService.bulkUpsert({
+          blocks: [
+            {
+              hash: test_block_hash,
+              sequence: faker.datatype.number(),
+              difficulty: uuid(),
+              timestamp: new Date(),
+              transactions_count: 0,
+              type: BlockOperation.CONNECTED,
+              graffiti: uuid(),
+              previous_block_hash: uuid(),
+            },
+          ],
+        });
+        const test_block = blocks[0];
+        const block = await blocksService.find({ hash: test_block_hash });
+        expect(block).toMatchObject(test_block);
+      });
+    });
+
+    describe('with a valid sequence index', () => {
+      it('returns the block with the correct sequence index', async () => {
+        const test_block_sequence = faker.datatype.number();
+        const blocks = await blocksService.bulkUpsert({
+          blocks: [
+            {
+              hash: uuid(),
+              sequence: test_block_sequence,
+              difficulty: uuid(),
+              timestamp: new Date(),
+              transactions_count: 0,
+              type: BlockOperation.CONNECTED,
+              graffiti: uuid(),
+              previous_block_hash: uuid(),
+            },
+          ],
+        });
+        const test_block = blocks[0];
+        const block = await blocksService.find({
+          sequence: test_block_sequence,
+        });
+        expect(block).toMatchObject(test_block);
+      });
+    });
+    describe('with neither a valid hash nor sequence', () => {
+      it('returns null', async () => {
+        await blocksService.bulkUpsert({
+          blocks: [
+            {
+              hash: uuid(),
+              sequence: faker.datatype.number(),
+              difficulty: uuid(),
+              timestamp: new Date(),
+              transactions_count: 0,
+              type: BlockOperation.CONNECTED,
+              graffiti: uuid(),
+              previous_block_hash: uuid(),
+            },
+          ],
+        });
+        const block = await blocksService.find({
+          hash: uuid(),
+          sequence: faker.datatype.number(),
+        });
+        expect(block).toBeNull();
+      });
+    });
+  });
+
   describe('list', () => {
     it('returns blocks within the sequence range', async () => {
       const start = 1;
