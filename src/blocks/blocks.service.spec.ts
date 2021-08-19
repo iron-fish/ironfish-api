@@ -131,11 +131,11 @@ describe('EventsService', () => {
   describe('find', () => {
     describe('with a valid hash', () => {
       it('returns the block with the correct hash', async () => {
-        const test_block_hash = uuid();
+        const testBlockHash = uuid();
         const blocks = await blocksService.bulkUpsert({
           blocks: [
             {
-              hash: test_block_hash,
+              hash: testBlockHash,
               sequence: faker.datatype.number(),
               difficulty: uuid(),
               timestamp: new Date(),
@@ -147,19 +147,19 @@ describe('EventsService', () => {
           ],
         });
         const test_block = blocks[0];
-        const block = await blocksService.find({ hash: test_block_hash });
+        const block = await blocksService.find({ hash: testBlockHash });
         expect(block).toMatchObject(test_block);
       });
     });
 
     describe('with a valid sequence index', () => {
       it('returns the block with the correct sequence index', async () => {
-        const test_block_sequence = faker.datatype.number();
+        const testBlockSequence = faker.datatype.number();
         const blocks = await blocksService.bulkUpsert({
           blocks: [
             {
               hash: uuid(),
-              sequence: test_block_sequence,
+              sequence: testBlockSequence,
               difficulty: uuid(),
               timestamp: new Date(),
               transactions_count: 0,
@@ -169,11 +169,11 @@ describe('EventsService', () => {
             },
           ],
         });
-        const test_block = blocks[0];
+        const testBlock = blocks[0];
         const block = await blocksService.find({
-          sequence: test_block_sequence,
+          sequence: testBlockSequence,
         });
-        expect(block).toMatchObject(test_block);
+        expect(block).toMatchObject(testBlock);
       });
     });
     describe('with neither a valid hash nor sequence', () => {
