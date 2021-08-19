@@ -117,24 +117,24 @@ export class BlocksService {
 
   async find(options: FindBlockOptions): Promise<Block | null> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION', 0);
-    const hash = options.hash ?? undefined;
-    const seq_index = options.sequence ?? undefined;
 
     // This feels un-elegant, but it's clear.
-    if (hash !== undefined) {
+    if (options.hash !== undefined) {
       return this.prisma.block.findFirst({
         where: {
-          hash: hash,
+          hash: options.hash,
+          network_version: networkVersion,
+        },
+      });
+    } else if (options.sequence !== undefined) {
+      return this.prisma.block.findFirst({
+        where: {
+          sequence: options.sequence,
           network_version: networkVersion,
         },
       });
     } else {
-      return this.prisma.block.findFirst({
-        where: {
-          sequence: seq_index,
-          network_version: networkVersion,
-        },
-      });
+      throw new NotFoundException();
     }
   }
 
