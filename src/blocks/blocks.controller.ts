@@ -74,7 +74,7 @@ export class BlocksController {
     };
   }
 
-  @Get()
+  @Get('find')
   async find(
     @Query(
       new ValidationPipe({
@@ -82,7 +82,7 @@ export class BlocksController {
         transform: true,
       }),
     )
-    { hash: hash, sequence: sequence }: BlockQueryDto,
+    { hash, sequence }: BlockQueryDto,
   ): Promise<Block | null> {
     return this.blocksService.find({
       hash,
