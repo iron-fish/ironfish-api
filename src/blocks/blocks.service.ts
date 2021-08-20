@@ -1,7 +1,11 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SortOrder } from '../common/enums/sort-order';
 import { EventsService } from '../events/events.service';
@@ -9,6 +13,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
 import { BlockDto, UpsertBlocksDto } from './dto/upsert-blocks.dto';
 import { BlockOperation } from './enums/block-operation';
+import { FindBlockOptions } from './interfaces/find-block-options';
 import { Block } from '.prisma/client';
 
 @Injectable()
@@ -112,6 +117,28 @@ export class BlocksService {
         network_version: networkVersion,
       },
     });
+  }
+
+  async find(options: FindBlockOptions): Promise<Block | null> {
+    const networkVersion = this.config.get<number>('NETWORK_VERSION', 0);
+
+    if (options.hash !== undefined) {
+      return this.prisma.block.findFirst({
+        where: {
+          hash: options.hash,
+          network_version: networkVersion,
+        },
+      });
+    } else if (options.sequence !== undefined) {
+      return this.prisma.block.findFirst({
+        where: {
+          sequence: options.sequence,
+          network_version: networkVersion,
+        },
+      });
+    } else {
+      throw new UnprocessableEntityException();
+    }
   }
 
   async disconnectAfter(sequenceGt: number): Promise<void> {

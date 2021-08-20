@@ -6,6 +6,7 @@ import {
   Controller,
   Get,
   HttpStatus,
+  NotFoundException,
   Post,
   Query,
   Res,
@@ -17,6 +18,7 @@ import { Response } from 'express';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { List } from '../common/interfaces/list';
 import { BlocksService } from './blocks.service';
+import { BlockQueryDto } from './dto/block-query.dto';
 import { BlocksQueryDto } from './dto/blocks-query.dto';
 import { DisconnectBlocksDto } from './dto/disconnect-blocks.dto';
 import { UpsertBlocksDto } from './dto/upsert-blocks.dto';
@@ -71,6 +73,24 @@ export class BlocksController {
     return {
       data: await this.blocksService.list(sequenceGte, sequenceLt),
     };
+  }
+
+  @Get('find')
+  async find(
+    @Query(
+      new ValidationPipe({
+        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        transform: true,
+      }),
+    )
+    { hash, sequence }: BlockQueryDto,
+  ): Promise<Block> {
+    const block = await this.blocksService.find({ hash, sequence });
+    if (block !== null) {
+      return block;
+    } else {
+      throw new NotFoundException();
+    }
   }
 
   @Post('disconnect')
