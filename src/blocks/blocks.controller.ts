@@ -6,6 +6,7 @@ import {
   Controller,
   Get,
   HttpStatus,
+  NotFoundException,
   Post,
   Query,
   Res,
@@ -84,10 +85,12 @@ export class BlocksController {
     )
     { hash, sequence }: BlockQueryDto,
   ): Promise<Block | null> {
-    return this.blocksService.find({
-      hash,
-      sequence,
-    });
+    const block = await this.blocksService.find({ hash, sequence });
+    if (block !== null) {
+      return block;
+    } else {
+      throw new NotFoundException();
+    }
   }
 
   @Post('disconnect')
