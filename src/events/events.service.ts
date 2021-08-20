@@ -319,17 +319,6 @@ export class EventsService {
     return event;
   }
 
-  async lastEventForUser(user: User): Promise<Event | null> {
-    return this.prisma.event.findFirst({
-      orderBy: {
-        occurred_at: SortOrder.DESC,
-      },
-      where: {
-        user_id: user.id,
-      },
-    });
-  }
-
   async getRanksForEventTypes(
     user: User,
     client: BasePrismaClient,
@@ -352,7 +341,7 @@ export class EventsService {
             RANK () OVER ( 
               PARTITION BY event_types.type
               ORDER BY COALESCE(user_event_points.points, 0) DESC, users.created_at ASC
-            ) rank 
+            ) AS rank 
           FROM
             users
           CROSS JOIN

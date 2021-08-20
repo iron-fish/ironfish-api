@@ -8,7 +8,6 @@ import {
 } from '@nestjs/common';
 import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
-import { EventsService } from '../events/events.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -17,10 +16,7 @@ import { User } from '.prisma/client';
 
 @Injectable()
 export class UsersService {
-  constructor(
-    private readonly eventsService: EventsService,
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async findOrThrow(id: number): Promise<User> {
     const record = await this.prisma.user.findUnique({
@@ -147,48 +143,52 @@ export class UsersService {
   }
 
   async getRank(user: User): Promise<number> {
-    const { id, created_at: createdAt, total_points: totalPoints } = user;
-    const lastEvent = await this.eventsService.lastEventForUser(user);
-    const lastEventOccurredAt = lastEvent ? lastEvent.occurred_at : new Date();
-    let tieBreakerFilter = {};
-    // If users are tied with 0 points, rank by join date.
-    if (totalPoints === 0) {
-      tieBreakerFilter = {
-        created_at: {
-          lt: createdAt,
-        },
-      };
-    } else {
-      // Otherwise, rank users with earlier last event timestamps higher.
-      tieBreakerFilter = {
-        events: {
-          none: {
-            deleted_at: null,
-            occurred_at: {
-              gte: lastEventOccurredAt,
-            },
-          },
-        },
-      };
+    const rankResponse = await this.prisma.$queryRaw<{ rank: number }[]>(
+      `SELECT
+        id,
+        rank
+      FROM
+        (
+          SELECT
+            id,
+            RANK () OVER ( 
+              ORDER BY 
+                total_points DESC,
+                COALESCE(latest_event_occurred_at, NOW()) ASC,
+                created_at ASC
+            ) AS rank 
+          FROM
+            users
+          LEFT JOIN
+            (
+              SELECT
+                user_id,
+                MAX(occurred_at) AS latest_event_occurred_at
+              FROM
+                (
+                  SELECT
+                    user_id,
+                    occurred_at
+                  FROM
+                    events
+                  WHERE
+                    deleted_at IS NULL
+                ) filtered_events
+              GROUP BY
+                user_id
+            ) user_latest_events
+          ON
+          user_latest_events.user_id = users.id
+        ) user_ranks
+      WHERE
+        id = $1`,
+      user.id,
+    );
+    if (rankResponse === undefined || rankResponse.length !== 1) {
+      throw new Error(
+        `Invalid response when fetching rank for user '${user.id}'`,
+      );
     }
-    const numberOfHigherRankedUsers = await this.prisma.user.count({
-      where: {
-        OR: [
-          {
-            total_points: {
-              gt: totalPoints,
-            },
-          },
-          {
-            id: {
-              not: id,
-            },
-            total_points: totalPoints,
-            ...tieBreakerFilter,
-          },
-        ],
-      },
-    });
-    return numberOfHigherRankedUsers + 1;
+    return rankResponse[0].rank;
   }
 }

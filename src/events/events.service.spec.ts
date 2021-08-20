@@ -534,29 +534,6 @@ describe('EventsService', () => {
     });
   });
 
-  describe('lastEventForUser', () => {
-    describe('for a user with no events', () => {
-      it('returns null', async () => {
-        const { user } = await setupBlockMined();
-        expect(await eventsService.lastEventForUser(user)).toBeNull();
-      });
-    });
-
-    describe('for a user with events', () => {
-      it('returns the most recent event', async () => {
-        const { user } = await setupBlockMined();
-        const event = await eventsService.create({
-          type: EventType.BLOCK_MINED,
-          userId: user.id,
-          points: 10,
-        });
-
-        const record = await eventsService.lastEventForUser(user);
-        expect(record).toMatchObject(event);
-      });
-    });
-  });
-
   describe('getRankForEventType', () => {
     it('returns the correct rank for a user', async () => {
       const highestBugCaughtAggregate = await prisma.event.aggregate({
