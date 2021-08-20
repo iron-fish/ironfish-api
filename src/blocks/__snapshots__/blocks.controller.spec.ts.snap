@@ -40,7 +40,7 @@ Object {
 }
 `;
 
-exports[`BlocksController GET /blocks/find with neither a valid hash or sequence returns a 422 1`] = `
+exports[`BlocksController GET /blocks/find with neither a valid hash nor sequence returns a 422 1`] = `
 Object {
   "error": "Unprocessable Entity",
   "message": Array [
