@@ -152,7 +152,7 @@ export class UsersController {
         transform: true,
       }),
     )
-    { after, before, limit, order_by, search }: UsersQueryDto,
+    { after, before, limit, order_by, rank, search }: UsersQueryDto,
   ): Promise<List<SerializedUser>> {
     const users = await this.usersService.list({
       after,
@@ -161,8 +161,18 @@ export class UsersController {
       orderBy: order_by,
       search,
     });
+    const serializedUsers: SerializedUser[] = [];
+    for (const user of users) {
+      if (rank) {
+        serializedUsers.push(
+          serializedUserFromRecord(user, await this.usersService.getRank(user)),
+        );
+      } else {
+        serializedUsers.push(serializedUserFromRecord(user));
+      }
+    }
     return {
-      data: users.map((user) => serializedUserFromRecord(user)),
+      data: serializedUsers,
     };
   }
 

@@ -297,6 +297,23 @@ describe('UsersController', () => {
         });
       });
     });
+
+    describe('with rank set to true', () => {
+      it('returns ranks with the users', async () => {
+        const { body } = await request(app.getHttpServer())
+          .get(`/users`)
+          .query({ order_by: 'total_points', rank: true })
+          .expect(HttpStatus.OK);
+
+        const { data } = body;
+        expect((data as unknown[]).length).toBeGreaterThan(0);
+        expect((data as unknown[])[0]).toMatchObject({
+          id: expect.any(Number),
+          graffiti: expect.any(String),
+          rank: expect.any(Number),
+        });
+      });
+    });
   });
 
   describe('POST /users', () => {
