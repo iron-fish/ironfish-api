@@ -314,7 +314,6 @@ describe('BlocksController', () => {
 
         const { body } = await request(app.getHttpServer())
           .get('/blocks/find')
-          .query({ hash: undefined, sequence: undefined })
           .expect(HttpStatus.UNPROCESSABLE_ENTITY);
 
         expect(body).toMatchSnapshot();
