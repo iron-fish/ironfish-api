@@ -296,6 +296,31 @@ describe('BlocksController', () => {
       });
     });
 
+    describe('with neither a matching hash nor sequence', () => {
+      it('returns a 404', async () => {
+        await prisma.block.create({
+          data: {
+            hash: uuid(),
+            difficulty: uuid(),
+            main: true,
+            sequence: faker.datatype.number(),
+            timestamp: new Date(),
+            transactions_count: 0,
+            graffiti: uuid(),
+            previous_block_hash: uuid(),
+            network_version: 0,
+          },
+        });
+
+        const { body } = await request(app.getHttpServer())
+          .get('/blocks/find')
+          .query({ hash: uuid(), sequence: faker.datatype.number() })
+          .expect(HttpStatus.NOT_FOUND);
+
+        expect(body).toMatchSnapshot();
+      });
+    });
+
     describe('with neither a valid hash nor sequence', () => {
       it('returns a 422', async () => {
         await prisma.block.create({
