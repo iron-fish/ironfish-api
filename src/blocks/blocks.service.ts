@@ -1,7 +1,11 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SortOrder } from '../common/enums/sort-order';
 import { EventsService } from '../events/events.service';
@@ -118,7 +122,6 @@ export class BlocksService {
   async find(options: FindBlockOptions): Promise<Block | null> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION', 0);
 
-    // This feels un-elegant, but it's clear.
     if (options.hash !== undefined) {
       return this.prisma.block.findFirst({
         where: {
@@ -134,7 +137,7 @@ export class BlocksService {
         },
       });
     } else {
-      throw new NotFoundException();
+      throw new UnprocessableEntityException();
     }
   }
 
