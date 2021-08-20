@@ -260,6 +260,7 @@ describe('BlocksController', () => {
         });
       });
     });
+
     describe('with a valid sequence', () => {
       it('returns the block with the correct hash', async () => {
         const testBlockSequence = faker.datatype.number();
@@ -294,7 +295,8 @@ describe('BlocksController', () => {
         });
       });
     });
-    describe('with neither a valid hash or sequence', () => {
+
+    describe('with neither a valid hash nor sequence', () => {
       it('returns a 422', async () => {
         await prisma.block.create({
           data: {

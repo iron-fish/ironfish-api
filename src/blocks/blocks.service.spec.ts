@@ -146,9 +146,9 @@ describe('EventsService', () => {
             },
           ],
         });
-        const test_block = blocks[0];
+        const testBlock = blocks[0];
         const block = await blocksService.find({ hash: testBlockHash });
-        expect(block).toMatchObject(test_block);
+        expect(block).toMatchObject(testBlock);
       });
     });
 
@@ -176,6 +176,7 @@ describe('EventsService', () => {
         expect(block).toMatchObject(testBlock);
       });
     });
+
     describe('with neither a valid hash nor sequence', () => {
       it('returns null', async () => {
         await blocksService.bulkUpsert({
