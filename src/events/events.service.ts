@@ -46,30 +46,36 @@ export class EventsService {
     user: User,
   ): Promise<Record<EventType, SerializedEventMetrics>> {
     return this.prisma.$transaction(async (prisma) => {
+      const ranks = await this.getRanksForEventTypes(user, prisma);
       return {
         BLOCK_MINED: await this.getLifetimeEventTypeMetricsForUser(
           user,
           EventType.BLOCK_MINED,
+          ranks,
           prisma,
         ),
         BUG_CAUGHT: await this.getLifetimeEventTypeMetricsForUser(
           user,
           EventType.BUG_CAUGHT,
+          ranks,
           prisma,
         ),
         COMMUNITY_CONTRIBUTION: await this.getLifetimeEventTypeMetricsForUser(
           user,
           EventType.COMMUNITY_CONTRIBUTION,
+          ranks,
           prisma,
         ),
         PULL_REQUEST_MERGED: await this.getLifetimeEventTypeMetricsForUser(
           user,
           EventType.PULL_REQUEST_MERGED,
+          ranks,
           prisma,
         ),
         SOCIAL_MEDIA_PROMOTION: await this.getLifetimeEventTypeMetricsForUser(
           user,
           EventType.SOCIAL_MEDIA_PROMOTION,
+          ranks,
           prisma,
         ),
       };
@@ -79,6 +85,7 @@ export class EventsService {
   private async getLifetimeEventTypeMetricsForUser(
     { id }: User,
     type: EventType,
+    ranks: Record<EventType, number>,
     client: BasePrismaClient,
   ): Promise<SerializedEventMetrics> {
     const aggregate = await client.event.aggregate({
@@ -98,6 +105,7 @@ export class EventsService {
         },
       }),
       points: aggregate._sum.points || 0,
+      rank: ranks[type],
     };
   }
 
@@ -320,5 +328,79 @@ export class EventsService {
         user_id: user.id,
       },
     });
+  }
+
+  async getRanksForEventTypes(
+    user: User,
+    client: BasePrismaClient,
+  ): Promise<Record<EventType, number>> {
+    const userRanks = await client.$queryRaw<
+      {
+        type: EventType;
+        rank: number;
+      }[]
+    >(
+      `SELECT
+        id,
+        type,
+        rank
+      FROM
+        (
+          SELECT
+            users.id,
+            event_types.type,
+            RANK () OVER ( 
+              PARTITION BY event_types.type
+              ORDER BY COALESCE(user_event_points.points, 0) DESC, users.created_at ASC
+            ) rank 
+          FROM
+            users
+          CROSS JOIN
+            (
+              SELECT
+                UNNEST(ENUM_RANGE(NULL::event_type)) AS type
+            ) event_types
+          LEFT JOIN
+            (
+              SELECT
+                user_id,
+                type,
+                SUM(points) AS points
+              FROM
+                events
+              GROUP BY
+                user_id,
+                type
+            ) user_event_points
+          ON
+            user_event_points.type = event_types.type AND
+            user_event_points.user_id = users.id
+        ) user_ranks
+      WHERE
+        id = $1`,
+      user.id,
+    );
+    const getRankForType = (type: EventType) => {
+      const userRankForEvent = userRanks.find((o) => o.type === type);
+      if (!userRankForEvent) {
+        throw new Error(
+          `Missing rank for user '${user.id}' and type '${type}'`,
+        );
+      }
+      return userRankForEvent.rank;
+    };
+    return {
+      [EventType.BLOCK_MINED]: getRankForType(EventType.BLOCK_MINED),
+      [EventType.BUG_CAUGHT]: getRankForType(EventType.BUG_CAUGHT),
+      [EventType.COMMUNITY_CONTRIBUTION]: getRankForType(
+        EventType.COMMUNITY_CONTRIBUTION,
+      ),
+      [EventType.PULL_REQUEST_MERGED]: getRankForType(
+        EventType.PULL_REQUEST_MERGED,
+      ),
+      [EventType.SOCIAL_MEDIA_PROMOTION]: getRankForType(
+        EventType.SOCIAL_MEDIA_PROMOTION,
+      ),
+    };
   }
 }
