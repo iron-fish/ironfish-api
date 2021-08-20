@@ -2,12 +2,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { SerializedUser } from '../interfaces/serialized-user';
+import { SerializedUserWithRank } from '../interfaces/serialized-user-with-rank';
 import { User } from '.prisma/client';
 
-export function serializedUserFromRecord(
+export function serializedUserFromRecord(user: User): SerializedUser {
+  return {
+    id: user.id,
+    country_code: user.country_code,
+    graffiti: user.graffiti,
+    total_points: user.total_points,
+    last_login_at: user.last_login_at,
+  };
+}
+
+export function serializedUserFromRecordWithRank(
   user: User,
-  rank?: number,
-): SerializedUser {
+  rank: number,
+): SerializedUserWithRank {
   return {
     id: user.id,
     country_code: user.country_code,

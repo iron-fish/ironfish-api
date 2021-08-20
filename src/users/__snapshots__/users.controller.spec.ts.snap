@@ -4,7 +4,7 @@ exports[`UsersController GET /users with an invalid order by option returns a 42
 Object {
   "error": "Unprocessable Entity",
   "message": Array [
-    "order_by must be equal to total_points",
+    "order_by must be equal to rank",
   ],
   "statusCode": 422,
 }

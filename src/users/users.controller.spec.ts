@@ -298,11 +298,11 @@ describe('UsersController', () => {
       });
     });
 
-    describe('with rank set to true', () => {
+    describe('with `order_by` provided', () => {
       it('returns ranks with the users', async () => {
         const { body } = await request(app.getHttpServer())
           .get(`/users`)
-          .query({ order_by: 'total_points', rank: true })
+          .query({ order_by: 'rank' })
           .expect(HttpStatus.OK);
 
         const { data } = body;
@@ -312,6 +312,15 @@ describe('UsersController', () => {
           graffiti: expect.any(String),
           rank: expect.any(Number),
         });
+      });
+    });
+
+    describe('wtih an invalid cursor', () => {
+      it('returns a 404', async () => {
+        await request(app.getHttpServer())
+          .get(`/users`)
+          .query({ order_by: 'rank', before: -1 })
+          .expect(HttpStatus.NOT_FOUND);
       });
     });
   });

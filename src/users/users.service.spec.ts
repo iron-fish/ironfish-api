@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import faker from 'faker';
 import { v4 as uuid } from 'uuid';
+import { SortOrder } from '../common/enums/sort-order';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from './users.service';
@@ -133,21 +134,20 @@ describe('UsersService', () => {
         });
       }
     });
+  });
 
-    describe('if an order by points is provided', () => {
-      it('sorts the users by points', async () => {
-        const records = await usersService.list({
-          orderBy: 'total_points',
+  describe('listByRank', () => {
+    it('returns a chunk of users with rank', async () => {
+      const limit = 10;
+      const records = await usersService.listByRank(SortOrder.ASC, limit);
+      expect(records).toHaveLength(limit);
+      for (const record of records) {
+        expect(record).toMatchObject({
+          id: expect.any(Number),
+          graffiti: expect.any(String),
+          rank: expect.any(Number),
         });
-
-        for (let i = 1; i < records.length; i++) {
-          const previousRecord = records[i - 1];
-          const record = records[i];
-          expect(previousRecord.total_points).toBeGreaterThanOrEqual(
-            record.total_points,
-          );
-        }
-      });
+      }
     });
   });
 

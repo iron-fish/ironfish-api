@@ -13,7 +13,8 @@ import {
   UnprocessableEntityException,
   ValidationPipe,
 } from '@nestjs/common';
-import { MS_PER_DAY } from '../common/constants';
+import { DEFAULT_LIMIT, MAX_LIMIT, MS_PER_DAY } from '../common/constants';
+import { SortOrder } from '../common/enums/sort-order';
 import { List } from '../common/interfaces/list';
 import { EventsService } from '../events/events.service';
 import { SerializedEventMetrics } from '../events/interfaces/serialized-event-metrics';
@@ -23,8 +24,12 @@ import { UsersQueryDto } from './dto/users-query.dto';
 import { MetricsGranularity } from './enums/metrics-granularity';
 import { SerializedUser } from './interfaces/serialized-user';
 import { SerializedUserMetrics } from './interfaces/serialized-user-metrics';
+import { SerializedUserWithRank } from './interfaces/serialized-user-with-rank';
 import { UsersService } from './users.service';
-import { serializedUserFromRecord } from './utils/user-translator';
+import {
+  serializedUserFromRecord,
+  serializedUserFromRecordWithRank,
+} from './utils/user-translator';
 import { EventType, User } from '.prisma/client';
 
 const MAX_SUPPORTED_TIME_RANGE_IN_DAYS = 30;
@@ -47,7 +52,7 @@ export class UsersController {
     id: number,
   ): Promise<SerializedUser> {
     const user = await this.usersService.findOrThrow(id);
-    return serializedUserFromRecord(
+    return serializedUserFromRecordWithRank(
       user,
       await this.usersService.getRank(user),
     );
@@ -152,27 +157,30 @@ export class UsersController {
         transform: true,
       }),
     )
-    { after, before, limit, order_by, rank, search }: UsersQueryDto,
-  ): Promise<List<SerializedUser>> {
+    { after, before, limit, order_by: orderBy, search }: UsersQueryDto,
+  ): Promise<List<SerializedUser | SerializedUserWithRank>> {
+    if (orderBy !== undefined) {
+      const backwards = before !== undefined;
+      const cursorId = before ?? after;
+      // This is the reverse order than most other endpoints since rank strictly
+      // increases and we sort by most recently created elsewhere by default
+      const order = backwards ? SortOrder.DESC : SortOrder.ASC;
+      return {
+        data: await this.usersService.listByRank(
+          order,
+          Math.min(MAX_LIMIT, limit || DEFAULT_LIMIT),
+          cursorId,
+        ),
+      };
+    }
     const users = await this.usersService.list({
       after,
       before,
       limit,
-      orderBy: order_by,
       search,
     });
-    const serializedUsers: SerializedUser[] = [];
-    for (const user of users) {
-      if (rank) {
-        serializedUsers.push(
-          serializedUserFromRecord(user, await this.usersService.getRank(user)),
-        );
-      } else {
-        serializedUsers.push(serializedUserFromRecord(user));
-      }
-    }
     return {
-      data: serializedUsers,
+      data: users.map((user) => serializedUserFromRecord(user)),
     };
   }
 
