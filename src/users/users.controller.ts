@@ -153,15 +153,16 @@ export class UsersController {
       }),
     )
     { after, before, limit, order_by, search }: UsersQueryDto,
-  ): Promise<List<User>> {
+  ): Promise<List<SerializedUser>> {
+    const users = await this.usersService.list({
+      after,
+      before,
+      limit,
+      orderBy: order_by,
+      search,
+    });
     return {
-      data: await this.usersService.list({
-        after,
-        before,
-        limit,
-        orderBy: order_by,
-        search,
-      }),
+      data: users.map((user) => serializedUserFromRecord(user)),
     };
   }
 

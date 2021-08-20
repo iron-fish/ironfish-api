@@ -293,7 +293,6 @@ describe('UsersController', () => {
         expect((data as unknown[]).length).toBeGreaterThan(0);
         expect((data as unknown[])[0]).toMatchObject({
           id: expect.any(Number),
-          email: expect.any(String),
           graffiti: expect.any(String),
         });
       });

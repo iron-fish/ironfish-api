@@ -6,7 +6,7 @@ import { User } from '.prisma/client';
 
 export function serializedUserFromRecord(
   user: User,
-  rank: number,
+  rank?: number,
 ): SerializedUser {
   return {
     id: user.id,
