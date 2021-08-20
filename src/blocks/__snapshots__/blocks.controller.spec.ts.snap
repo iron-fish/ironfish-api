@@ -40,6 +40,13 @@ Object {
 }
 `;
 
+exports[`BlocksController GET /blocks/find with neither a matching hash nor sequence returns a 404 1`] = `
+Object {
+  "message": "Not Found",
+  "statusCode": 404,
+}
+`;
+
 exports[`BlocksController GET /blocks/find with neither a valid hash nor sequence returns a 422 1`] = `
 Object {
   "error": "Unprocessable Entity",
