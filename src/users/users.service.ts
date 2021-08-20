@@ -223,7 +223,13 @@ export class UsersService {
   }
 
   async getRank(userOrId: User | number): Promise<number> {
-    const id = typeof userOrId === 'number' ? userOrId : userOrId.id;
+    let id: number;
+    if (typeof userOrId === 'number') {
+      const record = await this.findOrThrow(userOrId);
+      id = record.id;
+    } else {
+      id = userOrId.id;
+    }
     const rankResponse = await this.prisma.$queryRaw<{ rank: number }[]>(
       `SELECT
         id,
