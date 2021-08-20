@@ -84,7 +84,7 @@ export class BlocksController {
       }),
     )
     { hash, sequence }: BlockQueryDto,
-  ): Promise<Block | null> {
+  ): Promise<Block> {
     const block = await this.blocksService.find({ hash, sequence });
     if (block !== null) {
       return block;
