@@ -12,6 +12,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { CreateUserDto } from './dto/create-user.dto';
 import { ListUsersOptions } from './interfaces/list-users-options';
+import { SerializedUserWithRank } from './interfaces/serialized-user-with-rank';
 import { User } from '.prisma/client';
 
 @Injectable()
@@ -101,12 +102,9 @@ export class UsersService {
     const limit = Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
     const order = backwards ? SortOrder.ASC : SortOrder.DESC;
     const skip = cursor ? 1 : 0;
-    const orderBy = options.orderBy
-      ? [{ [options.orderBy]: order }, { id: order }]
-      : { id: order };
     return this.prisma.user.findMany({
       cursor,
-      orderBy,
+      orderBy: { id: order },
       skip,
       take: limit,
       where: {
@@ -115,6 +113,88 @@ export class UsersService {
         },
       },
     });
+  }
+
+  async listByRank(
+    order: SortOrder,
+    limit: number,
+    cursorId?: number,
+  ): Promise<SerializedUserWithRank[]> {
+    let rankCursor: number;
+    if (cursorId !== undefined) {
+      rankCursor = await this.getRank(cursorId);
+    } else if (order === SortOrder.DESC) {
+      // Ranks start at 1, so get everything before |users| + 1
+      rankCursor = (await this.prisma.user.count()) + 1;
+    } else {
+      // Ranks start at 1, so get everything after 0
+      rankCursor = 0;
+    }
+    return this.prisma.$queryRaw<SerializedUserWithRank[]>(
+      `SELECT
+        id,
+        graffiti,
+        total_points,
+        country_code,
+        last_login_at,
+        rank
+      FROM
+        (
+          SELECT
+            id,
+            graffiti,
+            total_points,
+            country_code,
+            last_login_at,
+            RANK () OVER ( 
+              ORDER BY 
+                total_points DESC,
+                COALESCE(latest_event_occurred_at, NOW()) ASC,
+                created_at ASC
+            ) AS rank 
+          FROM
+            users
+          LEFT JOIN
+            (
+              SELECT
+                user_id,
+                MAX(occurred_at) AS latest_event_occurred_at
+              FROM
+                (
+                  SELECT
+                    user_id,
+                    occurred_at
+                  FROM
+                    events
+                  WHERE
+                    deleted_at IS NULL
+                ) filtered_events
+              GROUP BY
+                user_id
+            ) user_latest_events
+          ON
+            user_latest_events.user_id = users.id
+        ) user_ranks
+      WHERE
+        CASE WHEN $1
+          THEN
+            rank > $2
+          ELSE
+            rank < $2
+        END
+      ORDER BY
+        CASE WHEN $1
+          THEN
+            rank
+          ELSE
+            rank * -1
+        END ASC
+      LIMIT
+        $3`,
+      order === SortOrder.ASC,
+      rankCursor,
+      limit,
+    );
   }
 
   async updateLastLoginAtByEmail(email: string): Promise<User> {
@@ -142,7 +222,8 @@ export class UsersService {
     });
   }
 
-  async getRank(user: User): Promise<number> {
+  async getRank(userOrId: User | number): Promise<number> {
+    const id = typeof userOrId === 'number' ? userOrId : userOrId.id;
     const rankResponse = await this.prisma.$queryRaw<{ rank: number }[]>(
       `SELECT
         id,
@@ -182,12 +263,10 @@ export class UsersService {
         ) user_ranks
       WHERE
         id = $1`,
-      user.id,
+      id,
     );
     if (rankResponse === undefined || rankResponse.length !== 1) {
-      throw new Error(
-        `Invalid response when fetching rank for user '${user.id}'`,
-      );
+      throw new Error(`Invalid response when fetching rank for user '${id}'`);
     }
     return rankResponse[0].rank;
   }

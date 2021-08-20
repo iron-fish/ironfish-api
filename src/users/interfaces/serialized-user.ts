@@ -7,5 +7,4 @@ export interface SerializedUser {
   total_points: number;
   country_code: string;
   last_login_at: Date | null;
-  rank?: number;
 }

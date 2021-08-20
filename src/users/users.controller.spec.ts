@@ -298,11 +298,11 @@ describe('UsersController', () => {
       });
     });
 
-    describe('with rank set to true', () => {
+    describe('with `order_by` provided', () => {
       it('returns ranks with the users', async () => {
         const { body } = await request(app.getHttpServer())
           .get(`/users`)
-          .query({ order_by: 'total_points', rank: true })
+          .query({ order_by: 'rank' })
           .expect(HttpStatus.OK);
 
         const { data } = body;
