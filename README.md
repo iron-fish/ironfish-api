@@ -17,6 +17,7 @@ You'll need a `.env` file with the following keys:
 * `IRONFISH_API_KEY`
 * `MAGIC_SECRET_KEY`
 * `NETWORK_VERSION`
+* `NODE_ENV`
 
 You can copy `.env.template` to your own `.env` file
 

@@ -31,6 +31,7 @@ export async function bootstrapTestApp(): Promise<INestApplication> {
           IRONFISH_API_KEY: joi.string().required(),
           MAGIC_SECRET_KEY: joi.string().required(),
           NETWORK_VERSION: joi.number().required(),
+          NODE_ENV: joi.string().required(),
         }),
       }),
       EventsModule,
