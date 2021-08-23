@@ -45,6 +45,8 @@ export class BlocksService {
   }: BlockDto): Promise<Block> {
     const main = type === BlockOperation.CONNECTED;
     const networkVersion = this.config.get<number>('NETWORK_VERSION', 0);
+    const searchable_text = hash + ' ' + String(sequence);
+
     return this.prisma.$transaction(async (prisma) => {
       const block = await prisma.block.upsert({
         create: {
@@ -57,6 +59,7 @@ export class BlocksService {
           transactions_count,
           network_version: networkVersion,
           previous_block_hash,
+          searchable_text,
         },
         update: {
           sequence,
