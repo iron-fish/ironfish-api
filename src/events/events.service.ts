@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable } from '@nestjs/common';
+import is from '@sindresorhus/is';
 import {
   DEFAULT_LIMIT,
   MAX_LIMIT,
@@ -369,6 +370,14 @@ export class EventsService {
         id = $1`,
       user.id,
     );
+    if (
+      !is.array(userRanks) ||
+      !is.object(userRanks[0]) ||
+      !('type' in userRanks[0]) ||
+      !('rank' in userRanks[0])
+    ) {
+      throw new Error('Unexpected database response');
+    }
     const getRankForType = (type: EventType) => {
       const userRankForEvent = userRanks.find((o) => o.type === type);
       if (!userRankForEvent) {

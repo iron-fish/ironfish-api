@@ -6,6 +6,7 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
+import is from '@sindresorhus/is';
 import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
 import { PrismaService } from '../prisma/prisma.service';
@@ -271,8 +272,14 @@ export class UsersService {
         id = $1`,
       id,
     );
-    if (rankResponse === undefined || rankResponse.length !== 1) {
-      throw new Error(`Invalid response when fetching rank for user '${id}'`);
+    if (
+      !is.array(rankResponse) ||
+      rankResponse.length !== 1 ||
+      !is.object(rankResponse[0]) ||
+      !('id' in rankResponse[0]) ||
+      !('rank' in rankResponse[0])
+    ) {
+      throw new Error('Unexpected database response');
     }
     return rankResponse[0].rank;
   }
