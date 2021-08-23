@@ -1,7 +1,12 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import joi from 'joi';
 import { AuthModule } from './auth/auth.module';
@@ -41,6 +46,8 @@ import { UsersRestModule } from './users/users.rest.module';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
-    consumer.apply(RequireSslMiddleware);
+    consumer
+      .apply(RequireSslMiddleware)
+      .forRoutes({ path: '*', method: RequestMethod.ALL });
   }
 }
