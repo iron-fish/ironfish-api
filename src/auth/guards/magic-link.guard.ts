@@ -1,10 +1,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { Module } from '@nestjs/common';
-import { LoginController } from './login.controller';
+import { Injectable } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 
-@Module({
-  controllers: [LoginController],
-})
-export class AuthRestModule {}
+@Injectable()
+export class MagicLinkGuard extends AuthGuard('magic-link') {}
