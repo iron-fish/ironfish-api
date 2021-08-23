@@ -33,7 +33,7 @@ describe('EventsService', () => {
     const hash = uuid();
     const sequence = faker.datatype.number();
     const searchable_text = hash + ' ' + String(sequence);
-  
+
     const block = await prisma.block.create({
       data: {
         hash,
