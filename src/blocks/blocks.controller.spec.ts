@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+import { createExpectedBearerStringError } from '@magic-sdk/admin/dist/core/sdk-exceptions';
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import faker from 'faker';
@@ -189,9 +190,11 @@ describe('BlocksController', () => {
       it('returns blocks within the range', async () => {
         // Seed some blocks
         for (let i = 0; i < 10; i++) {
+          const hash = uuid();
+          const searchableText = hash + ' ' + String(i);
           await prisma.block.create({
             data: {
-              hash: uuid(),
+              hash,
               difficulty: uuid(),
               main: true,
               sequence: i,
@@ -200,6 +203,7 @@ describe('BlocksController', () => {
               graffiti: uuid(),
               previous_block_hash: uuid(),
               network_version: 0,
+              searchable_text: searchableText,
             },
           });
         }
@@ -229,6 +233,8 @@ describe('BlocksController', () => {
     describe('with a valid hash', () => {
       it('returns the block with the correct hash', async () => {
         const testBlockHash = uuid();
+        const testSequence = faker.datatype.number();
+        const searchableText = testBlockHash + ' ' + String(testSequence);
         await prisma.block.create({
           data: {
             hash: testBlockHash,
@@ -240,6 +246,7 @@ describe('BlocksController', () => {
             graffiti: uuid(),
             previous_block_hash: uuid(),
             network_version: 0,
+            searchable_text: searchableText,
           },
         });
 
@@ -257,16 +264,19 @@ describe('BlocksController', () => {
           timestamp: expect.any(String),
           transactions_count: expect.any(Number),
           previous_block_hash: expect.any(String),
+          searchable_text: searchableText,
         });
       });
     });
 
     describe('with a valid sequence', () => {
       it('returns the block with the correct sequence', async () => {
+        const hash = uuid();
         const testBlockSequence = faker.datatype.number();
+        const searchableText = hash + ' ' + String(testBlockSequence);
         await prisma.block.create({
           data: {
-            hash: uuid(),
+            hash,
             difficulty: uuid(),
             main: true,
             sequence: testBlockSequence,
@@ -275,6 +285,7 @@ describe('BlocksController', () => {
             graffiti: uuid(),
             previous_block_hash: uuid(),
             network_version: 0,
+            searchable_text: searchableText,
           },
         });
 
@@ -298,17 +309,22 @@ describe('BlocksController', () => {
 
     describe('with neither a matching hash nor sequence', () => {
       it('returns a 404', async () => {
+        const hash = uuid();
+        const sequence = faker.datatype.number();
+        const searchableText = hash + ' ' + String(sequence);
+
         await prisma.block.create({
           data: {
-            hash: uuid(),
+            hash,
             difficulty: uuid(),
             main: true,
-            sequence: faker.datatype.number(),
+            sequence,
             timestamp: new Date(),
             transactions_count: 0,
             graffiti: uuid(),
             previous_block_hash: uuid(),
             network_version: 0,
+            searchable_text: searchableText,
           },
         });
 
@@ -323,17 +339,21 @@ describe('BlocksController', () => {
 
     describe('with neither a valid hash nor sequence', () => {
       it('returns a 422', async () => {
+        const hash = uuid();
+        const sequence = faker.datatype.number();
+        const searchableText = hash + ' ' + String(sequence);
         await prisma.block.create({
           data: {
-            hash: uuid(),
+            hash,
             difficulty: uuid(),
             main: true,
-            sequence: faker.datatype.number(),
+            sequence,
             timestamp: new Date(),
             transactions_count: 0,
             graffiti: uuid(),
             previous_block_hash: uuid(),
             network_version: 0,
+            searchable_text: searchableText,
           },
         });
 
