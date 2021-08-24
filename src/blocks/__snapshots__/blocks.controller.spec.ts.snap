@@ -27,19 +27,6 @@ Object {
 }
 `;
 
-exports[`BlocksController GET /blocks with missing arguments returns a 422 1`] = `
-Object {
-  "error": "Unprocessable Entity",
-  "message": Array [
-    "sequence_gte must be an integer number",
-    "sequence_gte must not be less than 1",
-    "sequence_lt must be an integer number",
-    "sequence_lt must not be less than 1",
-  ],
-  "statusCode": 422,
-}
-`;
-
 exports[`BlocksController GET /blocks/find with neither a matching hash nor sequence returns a 404 1`] = `
 Object {
   "message": "Not Found",
