@@ -126,6 +126,9 @@ export class BlocksService {
       });
     } else if (options.search !== undefined) {
       return this.prisma.block.findMany({
+        orderBy: {
+          id: SortOrder.DESC,
+        },
         take: limit,
         where: {
           searchable_text: {
