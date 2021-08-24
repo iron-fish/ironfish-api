@@ -1,0 +1,8 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`MeController GET /me with no logged in user returns a 401 1`] = `
+Object {
+  "message": "Unauthorized",
+  "statusCode": 401,
+}
+`;
