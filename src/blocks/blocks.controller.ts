@@ -57,21 +57,28 @@ export class BlocksController {
         transform: true,
       }),
     )
-    { sequence_gte: sequenceGte, sequence_lt: sequenceLt }: BlocksQueryDto,
+    {
+      sequence_gte: sequenceGte,
+      sequence_lt: sequenceLt,
+      search,
+    }: BlocksQueryDto,
   ): Promise<List<Block>> {
     const maxBlocksToReturn = 1000;
-    if (sequenceGte >= sequenceLt) {
-      throw new UnprocessableEntityException(
-        `'sequence_gte' must be strictly less than 'sequence_lt'.`,
-      );
+    if (sequenceGte !== undefined && sequenceLt !== undefined) {
+      if (sequenceGte >= sequenceLt) {
+        throw new UnprocessableEntityException(
+          `'sequence_gte' must be strictly less than 'sequence_lt'.`,
+        );
+      }
+      if (sequenceLt - sequenceGte > maxBlocksToReturn) {
+        throw new UnprocessableEntityException(
+          `Range is too long. Max sequence difference is ${maxBlocksToReturn}.`,
+        );
+      }
     }
-    if (sequenceLt - sequenceGte > maxBlocksToReturn) {
-      throw new UnprocessableEntityException(
-        `Range is too long. Max sequence difference is ${maxBlocksToReturn}.`,
-      );
-    }
+
     return {
-      data: await this.blocksService.list(sequenceGte, sequenceLt),
+      data: await this.blocksService.list({ sequenceGte, sequenceLt, search }),
     };
   }
 

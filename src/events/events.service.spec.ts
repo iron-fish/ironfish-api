@@ -30,17 +30,22 @@ describe('EventsService', () => {
   });
 
   const setupBlockMined = async () => {
+    const hash = uuid();
+    const sequence = faker.datatype.number();
+    const searchable_text = hash + ' ' + String(sequence);
+
     const block = await prisma.block.create({
       data: {
-        hash: uuid(),
+        hash,
         difficulty: uuid(),
         main: true,
-        sequence: faker.datatype.number(),
+        sequence,
         timestamp: new Date(),
         transactions_count: 0,
         graffiti: uuid(),
         previous_block_hash: uuid(),
         network_version: 0,
+        searchable_text,
       },
     });
     const user = await prisma.user.create({

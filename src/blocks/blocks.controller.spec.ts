@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Block } from '@prisma/client';
 import faker from 'faker';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
@@ -140,13 +141,45 @@ describe('BlocksController', () => {
   });
 
   describe('GET /blocks', () => {
-    describe('with missing arguments', () => {
-      it('returns a 422', async () => {
+    describe('with no query parameters', () => {
+      it('returns a list of blocks in descending order', async () => {
+        for (let i = 0; i < 10; i++) {
+          const hash = uuid();
+          const searchableText = hash + ' ' + String(i);
+          await prisma.block.create({
+            data: {
+              hash,
+              difficulty: uuid(),
+              main: true,
+              sequence: i,
+              timestamp: new Date(),
+              transactions_count: 0,
+              graffiti: uuid(),
+              previous_block_hash: uuid(),
+              network_version: 0,
+              searchable_text: searchableText,
+            },
+          });
+        }
         const { body } = await request(app.getHttpServer())
           .get('/blocks')
-          .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+          .expect(HttpStatus.OK);
 
-        expect(body).toMatchSnapshot();
+        const { data } = body;
+        expect((data as unknown[]).length).toBeGreaterThanOrEqual(10);
+        expect((data as unknown[])[0]).toMatchObject({
+          id: expect.any(Number),
+          hash: expect.any(String),
+          difficulty: expect.any(String),
+          main: true,
+          sequence: expect.any(Number),
+          timestamp: expect.any(String),
+          transactions_count: expect.any(Number),
+          previous_block_hash: expect.any(String),
+        });
+        expect(((data as unknown[])[0] as Block).id).toBeGreaterThan(
+          ((data as unknown[])[1] as Block).id,
+        );
       });
     });
 
@@ -185,13 +218,15 @@ describe('BlocksController', () => {
       });
     });
 
-    describe('with a valid range', () => {
+    describe('with a valid sequence range', () => {
       it('returns blocks within the range', async () => {
         // Seed some blocks
         for (let i = 0; i < 10; i++) {
+          const hash = uuid();
+          const searchableText = hash + ' ' + String(i);
           await prisma.block.create({
             data: {
-              hash: uuid(),
+              hash,
               difficulty: uuid(),
               main: true,
               sequence: i,
@@ -200,6 +235,7 @@ describe('BlocksController', () => {
               graffiti: uuid(),
               previous_block_hash: uuid(),
               network_version: 0,
+              searchable_text: searchableText,
             },
           });
         }
@@ -223,12 +259,100 @@ describe('BlocksController', () => {
         });
       });
     });
+
+    describe('with search parameters', () => {
+      describe('when string is a valid partial hash', () => {
+        it('returns block(s) with a match', async () => {
+          const testBlockHash = uuid();
+          const testSequence = faker.datatype.number();
+          const searchableText = testBlockHash + ' ' + String(testSequence);
+          const searchHash = testBlockHash.slice(0, 4);
+          await prisma.block.create({
+            data: {
+              hash: testBlockHash,
+              difficulty: uuid(),
+              main: true,
+              sequence: testSequence,
+              timestamp: new Date(),
+              transactions_count: 0,
+              graffiti: uuid(),
+              previous_block_hash: uuid(),
+              network_version: 0,
+              searchable_text: searchableText,
+            },
+          });
+
+          const { body } = await request(app.getHttpServer())
+            .get('/blocks')
+            .query({ search: searchHash })
+            .expect(HttpStatus.OK);
+
+          const { data } = body;
+          expect((data as unknown[]).length).toBeGreaterThan(0);
+          expect((data as unknown[])[0]).toMatchObject({
+            id: expect.any(Number),
+            hash: testBlockHash,
+            difficulty: expect.any(String),
+            main: true,
+            sequence: expect.any(Number),
+            timestamp: expect.any(String),
+            transactions_count: expect.any(Number),
+            previous_block_hash: expect.any(String),
+            searchable_text: searchableText,
+          });
+        });
+      });
+
+      describe('when string is a valid sequence', () => {
+        it('returns block(s) with a match', async () => {
+          const testBlockHash = uuid();
+          const testSequence = 12345;
+          const searchableText = testBlockHash + ' ' + String(testSequence);
+          const searchSequence = testBlockHash.slice(-5);
+          await prisma.block.create({
+            data: {
+              hash: testBlockHash,
+              difficulty: uuid(),
+              main: true,
+              sequence: testSequence,
+              timestamp: new Date(),
+              transactions_count: 0,
+              graffiti: uuid(),
+              previous_block_hash: uuid(),
+              network_version: 0,
+              searchable_text: searchableText,
+            },
+          });
+
+          const { body } = await request(app.getHttpServer())
+            .get('/blocks')
+            .query({ search: searchSequence })
+            .expect(HttpStatus.OK);
+
+          const { data } = body;
+          expect((data as unknown[]).length).toBeGreaterThan(0);
+          expect((data as unknown[])[0]).toMatchObject({
+            id: expect.any(Number),
+            hash: expect.any(String),
+            difficulty: expect.any(String),
+            main: true,
+            sequence: testSequence,
+            timestamp: expect.any(String),
+            transactions_count: expect.any(Number),
+            previous_block_hash: expect.any(String),
+            searchable_text: searchableText,
+          });
+        });
+      });
+    });
   });
 
   describe('GET /blocks/find', () => {
     describe('with a valid hash', () => {
       it('returns the block with the correct hash', async () => {
         const testBlockHash = uuid();
+        const testSequence = faker.datatype.number();
+        const searchableText = testBlockHash + ' ' + String(testSequence);
         await prisma.block.create({
           data: {
             hash: testBlockHash,
@@ -240,6 +364,7 @@ describe('BlocksController', () => {
             graffiti: uuid(),
             previous_block_hash: uuid(),
             network_version: 0,
+            searchable_text: searchableText,
           },
         });
 
@@ -257,16 +382,19 @@ describe('BlocksController', () => {
           timestamp: expect.any(String),
           transactions_count: expect.any(Number),
           previous_block_hash: expect.any(String),
+          searchable_text: searchableText,
         });
       });
     });
 
     describe('with a valid sequence', () => {
       it('returns the block with the correct sequence', async () => {
+        const hash = uuid();
         const testBlockSequence = faker.datatype.number();
+        const searchableText = hash + ' ' + String(testBlockSequence);
         await prisma.block.create({
           data: {
-            hash: uuid(),
+            hash,
             difficulty: uuid(),
             main: true,
             sequence: testBlockSequence,
@@ -275,6 +403,7 @@ describe('BlocksController', () => {
             graffiti: uuid(),
             previous_block_hash: uuid(),
             network_version: 0,
+            searchable_text: searchableText,
           },
         });
 
@@ -298,17 +427,22 @@ describe('BlocksController', () => {
 
     describe('with neither a matching hash nor sequence', () => {
       it('returns a 404', async () => {
+        const hash = uuid();
+        const sequence = faker.datatype.number();
+        const searchableText = hash + ' ' + String(sequence);
+
         await prisma.block.create({
           data: {
-            hash: uuid(),
+            hash,
             difficulty: uuid(),
             main: true,
-            sequence: faker.datatype.number(),
+            sequence,
             timestamp: new Date(),
             transactions_count: 0,
             graffiti: uuid(),
             previous_block_hash: uuid(),
             network_version: 0,
+            searchable_text: searchableText,
           },
         });
 
@@ -323,17 +457,21 @@ describe('BlocksController', () => {
 
     describe('with neither a valid hash nor sequence', () => {
       it('returns a 422', async () => {
+        const hash = uuid();
+        const sequence = faker.datatype.number();
+        const searchableText = hash + ' ' + String(sequence);
         await prisma.block.create({
           data: {
-            hash: uuid(),
+            hash,
             difficulty: uuid(),
             main: true,
-            sequence: faker.datatype.number(),
+            sequence,
             timestamp: new Date(),
             transactions_count: 0,
             graffiti: uuid(),
             previous_block_hash: uuid(),
             network_version: 0,
+            searchable_text: searchableText,
           },
         });
 

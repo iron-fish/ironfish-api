@@ -59,7 +59,7 @@ model Block {
   transactions_count  Int
   timestamp           DateTime @db.Timestamp(6)
   graffiti            String   @db.VarChar
-  searchable_text     String?  @db.VarChar
+  searchable_text     String   @db.VarChar
   event               Event?
 
   @@unique([hash, network_version], name: "uq_blocks_on_hash_and_network_version")

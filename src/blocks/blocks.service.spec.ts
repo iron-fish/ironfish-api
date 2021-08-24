@@ -203,14 +203,43 @@ describe('EventsService', () => {
   });
 
   describe('list', () => {
-    it('returns blocks within the sequence range', async () => {
-      const start = 1;
-      const end = 100;
-      const blocks = await blocksService.list(2, 4);
-      for (const block of blocks) {
-        expect(block.sequence).toBeGreaterThanOrEqual(start);
-        expect(block.sequence).toBeLessThan(end);
-      }
+    describe('with a valid sequence range', () => {
+      it('returns blocks within the range', async () => {
+        const start = 1;
+        const end = 100;
+        const blocks = await blocksService.list({
+          sequenceGte: 2,
+          sequenceLt: 4,
+        });
+        for (const block of blocks) {
+          expect(block.sequence).toBeGreaterThanOrEqual(start);
+          expect(block.sequence).toBeLessThan(end);
+        }
+      });
+    });
+
+    describe('with a valid partial hash search string', () => {
+      it('returns block(s) with matches', async () => {
+        const searchHash = 'aa';
+        const blocks = await blocksService.list({ search: searchHash });
+        expect(blocks.length).toBeGreaterThanOrEqual(0);
+      });
+    });
+
+    describe('with a valid sequence search string', () => {
+      it('returns block(s) with matches', async () => {
+        const searchSequence = '50';
+        const blocks = await blocksService.list({ search: searchSequence });
+        expect(blocks.length).toBeGreaterThanOrEqual(0);
+      });
+    });
+
+    describe('with no query parameters', () => {
+      it('returns block(s) in descending order', async () => {
+        const blocks = await blocksService.list({});
+        expect(blocks.length).toBeGreaterThanOrEqual(0);
+        expect(blocks[0].id).toBeGreaterThan(blocks[1].id);
+      });
     });
   });
 
