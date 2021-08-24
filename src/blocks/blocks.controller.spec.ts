@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Block } from '@prisma/client';
 import faker from 'faker';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
@@ -140,13 +141,45 @@ describe('BlocksController', () => {
   });
 
   describe('GET /blocks', () => {
-    describe('with missing arguments', () => {
-      it('returns a 422', async () => {
+    describe('with no query parameters', () => {
+      it('returns a list of blocks in descending order', async () => {
+        for (let i = 0; i < 10; i++) {
+          const hash = uuid();
+          const searchableText = hash + ' ' + String(i);
+          await prisma.block.create({
+            data: {
+              hash,
+              difficulty: uuid(),
+              main: true,
+              sequence: i,
+              timestamp: new Date(),
+              transactions_count: 0,
+              graffiti: uuid(),
+              previous_block_hash: uuid(),
+              network_version: 0,
+              searchable_text: searchableText,
+            },
+          });
+        }
         const { body } = await request(app.getHttpServer())
           .get('/blocks')
-          .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+          .expect(HttpStatus.OK);
 
-        expect(body).toMatchSnapshot();
+        const { data } = body;
+        expect((data as unknown[]).length).toBeGreaterThanOrEqual(10);
+        expect((data as unknown[])[0]).toMatchObject({
+          id: expect.any(Number),
+          hash: expect.any(String),
+          difficulty: expect.any(String),
+          main: true,
+          sequence: expect.any(Number),
+          timestamp: expect.any(String),
+          transactions_count: expect.any(Number),
+          previous_block_hash: expect.any(String),
+        });
+        expect(((data as unknown[])[0] as Block).id).toBeGreaterThan(
+          ((data as unknown[])[1] as Block).id,
+        );
       });
     });
 
@@ -185,7 +218,7 @@ describe('BlocksController', () => {
       });
     });
 
-    describe('with a valid range', () => {
+    describe('with a valid sequence range', () => {
       it('returns blocks within the range', async () => {
         // Seed some blocks
         for (let i = 0; i < 10; i++) {
