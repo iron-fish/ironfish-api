@@ -7,6 +7,7 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
 import { EventsService } from '../events/events.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -14,6 +15,7 @@ import { UsersService } from '../users/users.service';
 import { BlockDto, UpsertBlocksDto } from './dto/upsert-blocks.dto';
 import { BlockOperation } from './enums/block-operation';
 import { FindBlockOptions } from './interfaces/find-block-options';
+import { ListBlocksOptions } from './interfaces/list-block-options';
 import { Block } from '.prisma/client';
 
 @Injectable()
@@ -108,18 +110,39 @@ export class BlocksService {
     return block;
   }
 
-  async list(sequenceGte: number, sequenceLt: number): Promise<Block[]> {
+  async list(options: ListBlocksOptions): Promise<Block[]> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION', 0);
-    return this.prisma.block.findMany({
-      where: {
-        sequence: {
-          gte: sequenceGte,
-          lt: sequenceLt,
+    const limit = Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
+    if (options.sequenceGte !== undefined && options.sequenceLt !== undefined) {
+      return this.prisma.block.findMany({
+        where: {
+          sequence: {
+            gte: options.sequenceGte,
+            lt: options.sequenceLt,
+          },
+          main: true,
+          network_version: networkVersion,
         },
-        main: true,
-        network_version: networkVersion,
-      },
-    });
+      });
+    } else if (options.search !== undefined) {
+      return this.prisma.block.findMany({
+        take: limit,
+        where: {
+          searchable_text: {
+            contains: options.search,
+          },
+          main: true,
+          network_version: networkVersion,
+        },
+      });
+    } else {
+      return this.prisma.block.findMany({
+        orderBy: {
+          id: SortOrder.DESC,
+        },
+        take: limit,
+      });
+    }
   }
 
   async find(options: FindBlockOptions): Promise<Block | null> {
