@@ -75,18 +75,11 @@ export class BlocksController {
           `Range is too long. Max sequence difference is ${maxBlocksToReturn}.`,
         );
       }
-      return {
-        data: await this.blocksService.list({
-          sequenceGte,
-          sequenceLt,
-          search,
-        }),
-      };
-    } else {
-      return {
-        data: await this.blocksService.list({ search }),
-      };
     }
+
+    return {
+      data: await this.blocksService.list({ sequenceGte, sequenceLt, search }),
+    };
   }
 
   @Get('find')
