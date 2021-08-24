@@ -5,6 +5,7 @@ import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Request } from 'express';
 import { Strategy } from 'passport';
+import { MagicLinkContext } from '../../common/interfaces/magic-link-context';
 import { MagicLinkService } from '../../magic-link/magic-link.service';
 import { UsersService } from '../../users/users.service';
 
@@ -33,7 +34,11 @@ export class MagicLinkStrategy extends PassportStrategy(
       if (!email) {
         throw new Error('No email found for token');
       }
-      await this.usersService.updateLastLoginAtByEmail(email);
+      const user = await this.usersService.updateLastLoginAtByEmail(email);
+      req.context = {
+        ...req.context,
+        user,
+      } as MagicLinkContext;
     } catch {
       return this.fail();
     }

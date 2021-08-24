@@ -32,7 +32,7 @@ describe('LoginController', () => {
     describe('with no authorization header', () => {
       it('throws a 401', async () => {
         const { body } = await request(app.getHttpServer())
-          .post(`/login`)
+          .post('/login')
           .expect(HttpStatus.UNAUTHORIZED);
 
         expect(body).toMatchSnapshot();
@@ -45,7 +45,7 @@ describe('LoginController', () => {
           throw new Error('Invalid token');
         });
         const { body } = await request(app.getHttpServer())
-          .post(`/login`)
+          .post('/login')
           .set('Authorization', 'invalid-token')
           .expect(HttpStatus.UNAUTHORIZED);
 
@@ -69,7 +69,7 @@ describe('LoginController', () => {
           );
 
         const { body } = await request(app.getHttpServer())
-          .post(`/login`)
+          .post('/login')
           .set('Authorization', 'valid-token')
           .expect(HttpStatus.UNAUTHORIZED);
 
@@ -105,7 +105,7 @@ describe('LoginController', () => {
           );
 
         await request(app.getHttpServer())
-          .post(`/login`)
+          .post('/login')
           .set('Authorization', 'valid-token')
           .expect(HttpStatus.OK);
 
