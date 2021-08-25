@@ -28,7 +28,16 @@ async function bootstrap() {
     new ExpressAdapter(server),
   );
 
-  const enabledOrigins = [BLOCK_EXPLORER_URL, INCENTIVIZED_TESTNET_URL];
+  const defaultOrigins = [BLOCK_EXPLORER_URL, INCENTIVIZED_TESTNET_URL];
+  const enabledOrigins =
+    process.env.NODE_ENV === 'staging'
+      ? [
+          ...defaultOrigins,
+          /block-explorer.*\.vercel\.app/,
+          /website-testnet.*\.vercel\.app/,
+        ]
+      : defaultOrigins;
+
   app.enableCors({
     origin: enabledOrigins,
     methods: 'GET,POST,OPTIONS',
