@@ -13,8 +13,13 @@ import helmet from 'helmet';
 import http from 'http';
 import { AppModule } from './app.module';
 
+// TODO(rohanjadvani): Move these into a custom config service
+// https://linear.app/ironfish/issue/IRO-1015/create-custom-config-service-to-wrap-default-nestjs
+const BLOCK_EXPLORER_URL =
+  process.env.BLOCK_EXPLORER_URL || 'http://localhost:3000';
+const INCENTIVIZED_TESTNET_URL =
+  process.env.INCENTIVIZED_TESTNET_URL || 'http://localhost:3001';
 const PORT = process.env.PORT || 8003;
-const LOCAL = process.env.LOCAL || false;
 
 async function bootstrap() {
   const server = express();
@@ -22,13 +27,13 @@ async function bootstrap() {
     AppModule,
     new ExpressAdapter(server),
   );
+
+  const enabledOrigins = [BLOCK_EXPLORER_URL, INCENTIVIZED_TESTNET_URL];
   app.enableCors({
-    origin: LOCAL
-      ? /localhost./
-      : [/website-testnet.*\.vercel\.app/, /block-explorer.*\.vercel\.app/],
+    origin: enabledOrigins,
     methods: 'GET,POST,OPTIONS',
+    allowedHeaders: ['Content-Type', 'Accept'],
     preflightContinue: false,
-    optionsSuccessStatus: 204,
   });
 
   app.use(compression());
