@@ -22,14 +22,14 @@ export class MagicLinkStrategy extends PassportStrategy(
   }
 
   async authenticate(req: Request): Promise<void> {
-    const { authorization: didToken } = req.headers;
-    if (!didToken) {
+    const { authorization } = req.headers;
+    if (!authorization) {
       return this.fail();
     }
     try {
-      this.magicLinkService.validate(didToken);
-      const { email } = await this.magicLinkService.getMetadataByToken(
-        didToken,
+      this.magicLinkService.validate(authorization);
+      const { email } = await this.magicLinkService.getMetadataByHeader(
+        authorization,
       );
       if (!email) {
         throw new Error('No email found for token');
