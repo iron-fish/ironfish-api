@@ -13,11 +13,15 @@ export class MagicLinkService {
     this.magic = new Magic(this.config.get('MAGIC_SECRET_KEY'));
   }
 
-  validate(didToken: string): void {
-    this.magic.token.validate(didToken);
+  validate(header: string): void {
+    this.magic.token.validate(
+      this.magic.utils.parseAuthorizationHeader(header),
+    );
   }
 
-  async getMetadataByToken(didToken: string): Promise<MagicUserMetadata> {
-    return this.magic.users.getMetadataByToken(didToken);
+  async getMetadataByHeader(header: string): Promise<MagicUserMetadata> {
+    return this.magic.users.getMetadataByToken(
+      this.magic.utils.parseAuthorizationHeader(header),
+    );
   }
 }

@@ -48,7 +48,7 @@ describe('MeController', () => {
           .spyOn(magicLinkService, 'validate')
           .mockImplementationOnce(jest.fn());
         jest
-          .spyOn(magicLinkService, 'getMetadataByToken')
+          .spyOn(magicLinkService, 'getMetadataByHeader')
           .mockImplementationOnce(async () =>
             Promise.resolve({
               issuer: null,
