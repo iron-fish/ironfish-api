@@ -4,7 +4,7 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Block } from '@prisma/client';
-import faker, { fake } from 'faker';
+import faker from 'faker';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
 import { PrismaService } from '../prisma/prisma.service';
@@ -262,7 +262,7 @@ describe('BlocksController', () => {
           timestamp: expect.any(String),
           transactions_count: expect.any(Number),
           previous_block_hash: expect.any(String),
-          size: expect.any(Number)
+          size: expect.any(Number),
         });
       });
     });
@@ -351,7 +351,7 @@ describe('BlocksController', () => {
             transactions_count: expect.any(Number),
             previous_block_hash: expect.any(String),
             searchable_text: searchableText,
-            size: expect.any(Number)
+            size: expect.any(Number),
           });
         });
       });
@@ -395,7 +395,7 @@ describe('BlocksController', () => {
           transactions_count: expect.any(Number),
           previous_block_hash: expect.any(String),
           searchable_text: searchableText,
-          size: expect.any(Number)
+          size: expect.any(Number),
         });
       });
     });
