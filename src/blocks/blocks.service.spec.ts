@@ -36,12 +36,13 @@ describe('EventsService', () => {
             {
               hash: uuid(),
               sequence: faker.datatype.number(),
-              difficulty: uuid(),
+              difficulty: faker.datatype.number(),
               timestamp: new Date(),
               transactions_count: 0,
               type: BlockOperation.CONNECTED,
               graffiti: uuid(),
               previous_block_hash: uuid(),
+              size: faker.datatype.number(),
             },
           ],
         });
@@ -49,12 +50,13 @@ describe('EventsService', () => {
           id: expect.any(Number),
           hash: expect.any(String),
           sequence: expect.any(Number),
-          difficulty: expect.any(String),
+          difficulty: expect.any(Number),
           main: true,
           timestamp: expect.any(Date),
           transactions_count: expect.any(Number),
           graffiti: expect.any(String),
           previous_block_hash: expect.any(String),
+          size: expect.any(Number),
         });
       });
     });
@@ -67,17 +69,19 @@ describe('EventsService', () => {
             {
               hash: uuid(),
               sequence: faker.datatype.number(),
-              difficulty: uuid(),
+              difficulty: faker.datatype.number(),
               timestamp: new Date(),
               transactions_count: 0,
               type: BlockOperation.CONNECTED,
               graffiti: uuid(),
               previous_block_hash: uuid(),
+              size: faker.datatype.number(),
             },
           ],
         });
         const newSequence = faker.datatype.number();
-        const newDifficulty = uuid();
+        const newDifficulty = faker.datatype.number();
+        const newSize = faker.datatype.number();
         const newGraffiti = uuid();
         const block = blocks[0];
         const newBlocks = await blocksService.bulkUpsert({
@@ -91,6 +95,7 @@ describe('EventsService', () => {
               type: BlockOperation.CONNECTED,
               graffiti: newGraffiti,
               previous_block_hash: previousBlockHash,
+              size: newSize,
             },
           ],
         });
@@ -104,6 +109,7 @@ describe('EventsService', () => {
           transactions_count: block.transactions_count,
           graffiti: newGraffiti,
           previous_block_hash: previousBlockHash,
+          size: newSize,
         });
       });
     });
@@ -137,12 +143,13 @@ describe('EventsService', () => {
             {
               hash: testBlockHash,
               sequence: faker.datatype.number(),
-              difficulty: uuid(),
+              difficulty: faker.datatype.number(),
               timestamp: new Date(),
               transactions_count: 0,
               type: BlockOperation.CONNECTED,
               graffiti: uuid(),
               previous_block_hash: uuid(),
+              size: faker.datatype.number(),
             },
           ],
         });
@@ -160,12 +167,13 @@ describe('EventsService', () => {
             {
               hash: uuid(),
               sequence: testBlockSequence,
-              difficulty: uuid(),
+              difficulty: faker.datatype.number(),
               timestamp: new Date(),
               transactions_count: 0,
               type: BlockOperation.CONNECTED,
               graffiti: uuid(),
               previous_block_hash: uuid(),
+              size: faker.datatype.number(),
             },
           ],
         });
@@ -184,12 +192,13 @@ describe('EventsService', () => {
             {
               hash: uuid(),
               sequence: faker.datatype.number(),
-              difficulty: uuid(),
+              difficulty: faker.datatype.number(),
               timestamp: new Date(),
               transactions_count: 0,
               type: BlockOperation.CONNECTED,
               graffiti: uuid(),
               previous_block_hash: uuid(),
+              size: faker.datatype.number(),
             },
           ],
         });
