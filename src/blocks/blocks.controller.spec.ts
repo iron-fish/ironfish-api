@@ -4,7 +4,7 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Block } from '@prisma/client';
-import faker from 'faker';
+import faker, { fake } from 'faker';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
 import { PrismaService } from '../prisma/prisma.service';
@@ -66,13 +66,14 @@ describe('BlocksController', () => {
         for (let i = 0; i < 3001; i++) {
           blocks.push({
             hash: uuid(),
-            difficulty: uuid(),
+            difficulty: faker.datatype.number(),
             type: BlockOperation.CONNECTED,
             sequence: faker.datatype.number(),
             timestamp: new Date(),
             transactions_count: 0,
             graffiti: uuid(),
             previous_block_hash: uuid(),
+            size: faker.datatype.number(),
           });
         }
         const payload: UpsertBlocksDto = { blocks };
@@ -93,13 +94,14 @@ describe('BlocksController', () => {
           blocks: [
             {
               hash: uuid(),
-              difficulty: uuid(),
+              difficulty: faker.datatype.number(),
               type: BlockOperation.CONNECTED,
               sequence: faker.datatype.number(),
               timestamp: new Date(),
               transactions_count: 0,
               graffiti: uuid(),
               previous_block_hash: uuid(),
+              size: faker.datatype.number(),
             },
           ],
         };
@@ -121,6 +123,7 @@ describe('BlocksController', () => {
           timestamp: block.timestamp.toISOString(),
           transactions_count: block.transactions_count,
           previous_block_hash: block.previous_block_hash,
+          size: block.size,
         });
       });
     });
@@ -149,7 +152,7 @@ describe('BlocksController', () => {
           await prisma.block.create({
             data: {
               hash,
-              difficulty: uuid(),
+              difficulty: faker.datatype.number(),
               main: true,
               sequence: i,
               timestamp: new Date(),
@@ -158,6 +161,7 @@ describe('BlocksController', () => {
               previous_block_hash: uuid(),
               network_version: 0,
               searchable_text: searchableText,
+              size: faker.datatype.number(),
             },
           });
         }
@@ -170,12 +174,13 @@ describe('BlocksController', () => {
         expect((data as unknown[])[0]).toMatchObject({
           id: expect.any(Number),
           hash: expect.any(String),
-          difficulty: expect.any(String),
+          difficulty: expect.any(Number),
           main: true,
           sequence: expect.any(Number),
           timestamp: expect.any(String),
           transactions_count: expect.any(Number),
           previous_block_hash: expect.any(String),
+          size: expect.any(Number),
         });
         expect(((data as unknown[])[0] as Block).id).toBeGreaterThan(
           ((data as unknown[])[1] as Block).id,
@@ -227,7 +232,7 @@ describe('BlocksController', () => {
           await prisma.block.create({
             data: {
               hash,
-              difficulty: uuid(),
+              difficulty: faker.datatype.number(),
               main: true,
               sequence: i,
               timestamp: new Date(),
@@ -236,6 +241,7 @@ describe('BlocksController', () => {
               previous_block_hash: uuid(),
               network_version: 0,
               searchable_text: searchableText,
+              size: faker.datatype.number(),
             },
           });
         }
@@ -250,12 +256,13 @@ describe('BlocksController', () => {
         expect((data as unknown[])[0]).toMatchObject({
           id: expect.any(Number),
           hash: expect.any(String),
-          difficulty: expect.any(String),
+          difficulty: expect.any(Number),
           main: true,
           sequence: expect.any(Number),
           timestamp: expect.any(String),
           transactions_count: expect.any(Number),
           previous_block_hash: expect.any(String),
+          size: expect.any(Number)
         });
       });
     });
@@ -270,7 +277,7 @@ describe('BlocksController', () => {
           await prisma.block.create({
             data: {
               hash: testBlockHash,
-              difficulty: uuid(),
+              difficulty: faker.datatype.number(),
               main: true,
               sequence: testSequence,
               timestamp: new Date(),
@@ -279,6 +286,7 @@ describe('BlocksController', () => {
               previous_block_hash: uuid(),
               network_version: 0,
               searchable_text: searchableText,
+              size: faker.datatype.number(),
             },
           });
 
@@ -292,13 +300,14 @@ describe('BlocksController', () => {
           expect((data as unknown[])[0]).toMatchObject({
             id: expect.any(Number),
             hash: testBlockHash,
-            difficulty: expect.any(String),
+            difficulty: expect.any(Number),
             main: true,
             sequence: expect.any(Number),
             timestamp: expect.any(String),
             transactions_count: expect.any(Number),
             previous_block_hash: expect.any(String),
             searchable_text: searchableText,
+            size: expect.any(Number),
           });
         });
       });
@@ -312,7 +321,7 @@ describe('BlocksController', () => {
           await prisma.block.create({
             data: {
               hash: testBlockHash,
-              difficulty: uuid(),
+              difficulty: faker.datatype.number(),
               main: true,
               sequence: testSequence,
               timestamp: new Date(),
@@ -321,6 +330,7 @@ describe('BlocksController', () => {
               previous_block_hash: uuid(),
               network_version: 0,
               searchable_text: searchableText,
+              size: faker.datatype.number(),
             },
           });
 
@@ -334,13 +344,14 @@ describe('BlocksController', () => {
           expect((data as unknown[])[0]).toMatchObject({
             id: expect.any(Number),
             hash: expect.any(String),
-            difficulty: expect.any(String),
+            difficulty: expect.any(Number),
             main: true,
             sequence: testSequence,
             timestamp: expect.any(String),
             transactions_count: expect.any(Number),
             previous_block_hash: expect.any(String),
             searchable_text: searchableText,
+            size: expect.any(Number)
           });
         });
       });
@@ -356,7 +367,7 @@ describe('BlocksController', () => {
         await prisma.block.create({
           data: {
             hash: testBlockHash,
-            difficulty: uuid(),
+            difficulty: faker.datatype.number(),
             main: true,
             sequence: faker.datatype.number(),
             timestamp: new Date(),
@@ -365,6 +376,7 @@ describe('BlocksController', () => {
             previous_block_hash: uuid(),
             network_version: 0,
             searchable_text: searchableText,
+            size: faker.datatype.number(),
           },
         });
 
@@ -376,13 +388,14 @@ describe('BlocksController', () => {
         expect(body).toMatchObject({
           id: expect.any(Number),
           hash: testBlockHash,
-          difficulty: expect.any(String),
+          difficulty: expect.any(Number),
           main: true,
           sequence: expect.any(Number),
           timestamp: expect.any(String),
           transactions_count: expect.any(Number),
           previous_block_hash: expect.any(String),
           searchable_text: searchableText,
+          size: expect.any(Number)
         });
       });
     });
@@ -395,7 +408,7 @@ describe('BlocksController', () => {
         await prisma.block.create({
           data: {
             hash,
-            difficulty: uuid(),
+            difficulty: faker.datatype.number(),
             main: true,
             sequence: testBlockSequence,
             timestamp: new Date(),
@@ -404,6 +417,7 @@ describe('BlocksController', () => {
             previous_block_hash: uuid(),
             network_version: 0,
             searchable_text: searchableText,
+            size: faker.datatype.number(),
           },
         });
 
@@ -415,12 +429,13 @@ describe('BlocksController', () => {
         expect(body).toMatchObject({
           id: expect.any(Number),
           hash: expect.any(String),
-          difficulty: expect.any(String),
+          difficulty: expect.any(Number),
           main: true,
           sequence: testBlockSequence,
           timestamp: expect.any(String),
           transactions_count: expect.any(Number),
           previous_block_hash: expect.any(String),
+          size: expect.any(Number),
         });
       });
     });
@@ -434,7 +449,7 @@ describe('BlocksController', () => {
         await prisma.block.create({
           data: {
             hash,
-            difficulty: uuid(),
+            difficulty: faker.datatype.number(),
             main: true,
             sequence,
             timestamp: new Date(),
@@ -443,6 +458,7 @@ describe('BlocksController', () => {
             previous_block_hash: uuid(),
             network_version: 0,
             searchable_text: searchableText,
+            size: faker.datatype.number(),
           },
         });
 
@@ -463,7 +479,7 @@ describe('BlocksController', () => {
         await prisma.block.create({
           data: {
             hash,
-            difficulty: uuid(),
+            difficulty: faker.datatype.number(),
             main: true,
             sequence,
             timestamp: new Date(),
@@ -472,6 +488,7 @@ describe('BlocksController', () => {
             previous_block_hash: uuid(),
             network_version: 0,
             searchable_text: searchableText,
+            size: faker.datatype.number(),
           },
         });
 
