@@ -31,7 +31,9 @@ import { UsersRestModule } from './users/users.rest.module';
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: joi.object({
+        BLOCK_EXPLORER_URL: joi.string().required(),
         DATABASE_URL: joi.string().required(),
+        INCENTIVIZED_TESTNET_URL: joi.string().required(),
         IRONFISH_API_KEY: joi.string().required(),
         MAGIC_SECRET_KEY: joi.string().required(),
         NETWORK_VERSION: joi.number().required(),

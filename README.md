@@ -13,7 +13,9 @@
 
 You'll need a `.env` file with the following keys:
 
+* `BLOCK_EXPLORER_URL`
 * `DATABASE_URL`
+* `INCENTIVIZED_TESTNET_URL`
 * `IRONFISH_API_KEY`
 * `MAGIC_SECRET_KEY`
 * `NETWORK_VERSION`
