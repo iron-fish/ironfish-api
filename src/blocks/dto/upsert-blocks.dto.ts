@@ -23,8 +23,9 @@ export class BlockDto {
   @Type(() => Number)
   readonly sequence!: number;
 
-  @IsString()
-  readonly difficulty!: string;
+  @IsInt()
+  @Type(() => Number)
+  readonly difficulty!: number;
 
   @IsEnum(BlockOperation)
   readonly type!: BlockOperation;
@@ -43,6 +44,12 @@ export class BlockDto {
   @IsOptional()
   @IsString()
   readonly previous_block_hash?: string;
+
+  // This will probably need to be changed when the syncer reports size properly
+  @IsOptional()
+  @IsInt()
+  @Type(() => Number)
+  readonly size?: number;
 }
 
 export class UpsertBlocksDto {
