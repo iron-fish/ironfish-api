@@ -37,7 +37,7 @@ describe('EventsService', () => {
     const block = await prisma.block.create({
       data: {
         hash,
-        difficulty: uuid(),
+        difficulty: faker.datatype.number(),
         main: true,
         sequence,
         timestamp: new Date(),
@@ -46,6 +46,7 @@ describe('EventsService', () => {
         previous_block_hash: uuid(),
         network_version: 0,
         searchable_text,
+        size: faker.datatype.number(),
       },
     });
     const user = await prisma.user.create({
