@@ -61,7 +61,7 @@ Object {
   "message": Array [
     "blocks.0.hash must be a string",
     "blocks.0.sequence must be an integer number",
-    "blocks.0.difficulty must be a string",
+    "blocks.0.difficulty must be an integer number",
     "blocks.0.type must be a valid enum value",
     "blocks.0.timestamp must be a Date instance",
     "blocks.0.transactions_count must be an integer number",

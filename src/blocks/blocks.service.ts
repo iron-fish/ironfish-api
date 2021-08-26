@@ -44,6 +44,7 @@ export class BlocksService {
     timestamp,
     transactions_count,
     type,
+    size,
   }: BlockDto): Promise<Block> {
     const main = type === BlockOperation.CONNECTED;
     const networkVersion = this.config.get<number>('NETWORK_VERSION', 0);
@@ -62,6 +63,7 @@ export class BlocksService {
           network_version: networkVersion,
           previous_block_hash,
           searchable_text,
+          size,
         },
         update: {
           sequence,
@@ -71,6 +73,7 @@ export class BlocksService {
           graffiti,
           transactions_count,
           previous_block_hash,
+          size,
         },
         where: {
           uq_blocks_on_hash_and_network_version: {

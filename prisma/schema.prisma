@@ -53,13 +53,14 @@ model Block {
   hash                String   @db.VarChar
   sequence            Int
   previous_block_hash String?  @db.VarChar
-  difficulty          String   @db.VarChar
+  difficulty          Int
   main                Boolean
   network_version     Int
   transactions_count  Int
   timestamp           DateTime @db.Timestamp(6)
   graffiti            String   @db.VarChar
   searchable_text     String   @db.VarChar
+  size                Int?
   event               Event?
 
   @@unique([hash, network_version], name: "uq_blocks_on_hash_and_network_version")
