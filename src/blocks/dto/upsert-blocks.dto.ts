@@ -45,7 +45,6 @@ export class BlockDto {
   @IsString()
   readonly previous_block_hash?: string;
 
-  // This will probably need to be changed when the syncer reports size properly
   @IsOptional()
   @IsInt()
   @Type(() => Number)
