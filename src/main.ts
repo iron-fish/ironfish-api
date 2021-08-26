@@ -40,9 +40,9 @@ async function bootstrap() {
 
   app.enableCors({
     origin: enabledOrigins,
-    methods: 'GET,POST,OPTIONS',
+    methods: 'GET, POST, OPTIONS',
     allowedHeaders: ['Content-Type', 'Accept'],
-    preflightContinue: false,
+    credentials: true,
   });
 
   app.use(compression());
