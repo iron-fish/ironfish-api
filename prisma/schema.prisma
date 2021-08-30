@@ -84,6 +84,10 @@ model Transaction {
   block      Block    @relation(fields: [block_id], references: [id])
   notes      Json
   spends     Json
+
+  @@index([block_id], name: "index_transactions_on_block_id")
+  @@index([hash], name: "index_transactions_on_hash")
+  @@map("transactions")
 }
 
 enum EventType {
