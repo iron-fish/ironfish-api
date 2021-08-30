@@ -2,7 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Type } from 'class-transformer';
-import { IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import {
+  IsDate,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  Min,
+} from 'class-validator';
 import { EventType } from '.prisma/client';
 
 export class CreateEventDto {
@@ -17,4 +24,9 @@ export class CreateEventDto {
 
   @IsEnum(EventType)
   readonly type!: EventType;
+
+  @IsOptional()
+  @IsDate()
+  @Type(() => Date)
+  readonly occurred_at?: Date;
 }
