@@ -19,8 +19,6 @@ Object {
   "error": "Unprocessable Entity",
   "message": Array [
     "graffiti must be a string",
-    "points must not be less than 0",
-    "points must be an integer number",
     "type must be a valid enum value",
   ],
   "statusCode": 422,
