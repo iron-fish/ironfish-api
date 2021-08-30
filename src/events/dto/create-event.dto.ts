@@ -16,10 +16,11 @@ export class CreateEventDto {
   @IsString()
   readonly graffiti!: string;
 
+  @IsOptional()
   @IsInt()
   @Min(0)
   @Type(() => Number)
-  readonly points!: number;
+  readonly points?: number;
 
   @IsEnum(EventType)
   readonly type!: EventType;

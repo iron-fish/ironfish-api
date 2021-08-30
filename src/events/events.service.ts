@@ -216,7 +216,7 @@ export class EventsService {
   }
 
   async createWithClient(
-    { blockId, occurredAt, points = 0, type, userId }: CreateEventOptions,
+    { blockId, occurredAt, points, type, userId }: CreateEventOptions,
     client: BasePrismaClient,
   ): Promise<Event> {
     const weeklyLimitForEventType = WEEKLY_POINT_LIMITS_BY_EVENT_TYPE[type];
@@ -236,7 +236,7 @@ export class EventsService {
     const pointsThisWeek = pointsAggregateThisWeek._sum.points || 0;
     const adjustedPoints = Math.min(
       Math.max(weeklyLimitForEventType - pointsThisWeek, 0),
-      points,
+      points ?? POINTS_PER_CATEGORY[type],
     );
 
     await client.user.update({
