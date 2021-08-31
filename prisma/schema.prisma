@@ -47,19 +47,19 @@ model User {
 }
 
 model Block {
-  id                  Int      @id @default(autoincrement())
-  created_at          DateTime @default(now()) @db.Timestamp(6)
-  updated_at          DateTime @default(now()) @updatedAt @db.Timestamp(6)
-  hash                String   @db.VarChar
+  id                  Int           @id @default(autoincrement())
+  created_at          DateTime      @default(now()) @db.Timestamp(6)
+  updated_at          DateTime      @default(now()) @updatedAt @db.Timestamp(6)
+  hash                String        @db.VarChar
   sequence            Int
-  previous_block_hash String?  @db.VarChar
+  previous_block_hash String?       @db.VarChar
   difficulty          Int
   main                Boolean
   network_version     Int
   transactions_count  Int
-  timestamp           DateTime @db.Timestamp(6)
-  graffiti            String   @db.VarChar
-  searchable_text     String   @db.VarChar
+  timestamp           DateTime      @db.Timestamp(6)
+  graffiti            String        @db.VarChar
+  searchable_text     String        @db.VarChar
   size                Int?
   event               Event?
   transactions        Transaction[]
@@ -73,20 +73,23 @@ model Block {
 }
 
 model Transaction {
-  id         Int      @id @default(autoincrement())
-  created_at DateTime @default(now()) @db.Timestamp(6)
-  updated_at DateTime @default(now()) @updatedAt @db.Timestamp(6)
-  hash       String   @db.VarChar
-  fee        BigInt
-  size       Int
-  timestamp  DateTime @db.Timestamp(6)
-  block_id   Int
-  block      Block    @relation(fields: [block_id], references: [id])
-  notes      Json
-  spends     Json
+  id              Int      @id @default(autoincrement())
+  created_at      DateTime @default(now()) @db.Timestamp(6)
+  updated_at      DateTime @default(now()) @updatedAt @db.Timestamp(6)
+  hash            String   @db.VarChar
+  network_version Int
+  fee             BigInt
+  size            Int
+  timestamp       DateTime @db.Timestamp(6)
+  block_id        Int
+  block           Block    @relation(fields: [block_id], references: [id])
+  notes           Json
+  spends          Json
 
-  @@index([block_id], name: "index_transactions_on_block_id")
+  @@unique([hash, network_version], name: "uq_transactions_on_hash_and_network_version")
   @@index([hash], name: "index_transactions_on_hash")
+  @@index([hash, network_version], name: "index_transactions_on_hash_and_network_version")
+  @@index([block_id], name: "index_transactions_on_block_id")
   @@map("transactions")
 }
 
