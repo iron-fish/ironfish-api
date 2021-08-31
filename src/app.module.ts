@@ -9,25 +9,24 @@ import {
 } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import joi from 'joi';
-import { AuthModule } from './auth/auth.module';
 import { AuthRestModule } from './auth/auth.rest.module';
-import { BlocksModule } from './blocks/blocks.module';
 import { BlocksRestModule } from './blocks/blocks.rest.module';
 import { ContextMiddleware } from './common/middlewares/context.middleware';
 import { RequireSslMiddleware } from './common/middlewares/require-ssl.middleware';
-import { EventsModule } from './events/events.module';
 import { EventsRestModule } from './events/events.rest.module';
-import { HealthModule } from './health/health.module';
 import { MetricsRestModule } from './metrics/metrics.rest.module';
-import { UsersModule } from './users/users.module';
 import { UsersRestModule } from './users/users.rest.module';
+
+export const REST_MODULES = [
+  AuthRestModule,
+  BlocksRestModule,
+  EventsRestModule,
+  MetricsRestModule,
+  UsersRestModule,
+];
 
 @Module({
   imports: [
-    AuthModule,
-    AuthRestModule,
-    BlocksModule,
-    BlocksRestModule,
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: joi.object({
@@ -40,12 +39,7 @@ import { UsersRestModule } from './users/users.rest.module';
         NODE_ENV: joi.string().required(),
       }),
     }),
-    EventsModule,
-    EventsRestModule,
-    HealthModule,
-    MetricsRestModule,
-    UsersModule,
-    UsersRestModule,
+    ...REST_MODULES,
   ],
 })
 export class AppModule implements NestModule {
