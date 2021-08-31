@@ -3,7 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 export function getMondayFromDate(date: Date = new Date()): Date {
   const monday = new Date(
-    date.setUTCDate(date.getUTCDate() - date.getUTCDay()),
+    new Date(date).setUTCDate(date.getUTCDate() - date.getUTCDay()),
   );
   monday.setUTCHours(0, 0, 0, 0);
   return monday;

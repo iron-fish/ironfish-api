@@ -4,7 +4,10 @@
 import { INestApplication } from '@nestjs/common';
 import faker from 'faker';
 import { v4 as uuid } from 'uuid';
-import { WEEKLY_POINT_LIMITS_BY_EVENT_TYPE } from '../common/constants';
+import {
+  POINTS_PER_CATEGORY,
+  WEEKLY_POINT_LIMITS_BY_EVENT_TYPE,
+} from '../common/constants';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
@@ -416,6 +419,30 @@ describe('EventsService', () => {
         expect(event.points).toBe(
           WEEKLY_POINT_LIMITS_BY_EVENT_TYPE[type] - currentPointsThisWeek,
         );
+      });
+    });
+
+    describe('when points are not provided', () => {
+      it('defaults to the points specified in the registry', async () => {
+        const user = await prisma.user.create({
+          data: {
+            email: faker.internet.email(),
+            graffiti: uuid(),
+            country_code: faker.address.countryCode('alpha-3'),
+          },
+        });
+        const type = EventType.BLOCK_MINED;
+
+        const event = await eventsService.create({
+          type,
+          userId: user.id,
+        });
+        expect(event).toMatchObject({
+          id: expect.any(Number),
+          user_id: user.id,
+          points: POINTS_PER_CATEGORY[type],
+          type,
+        });
       });
     });
 

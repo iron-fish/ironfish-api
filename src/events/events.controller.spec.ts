@@ -148,6 +148,7 @@ describe('EventsController', () => {
             last_login_at: new Date(),
           },
         });
+        const occurredAt = new Date().toISOString();
         const type = EventType.BUG_CAUGHT;
         const points = 10;
         const { body } = await request(app.getHttpServer())
@@ -157,6 +158,7 @@ describe('EventsController', () => {
             graffiti: user.graffiti,
             type,
             points,
+            occurred_at: occurredAt,
           })
           .expect(HttpStatus.CREATED);
 
@@ -165,6 +167,7 @@ describe('EventsController', () => {
           user_id: user.id,
           type,
           points,
+          occurred_at: occurredAt,
         });
       });
     });
