@@ -6,24 +6,20 @@ import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import { json } from 'express';
 import joi from 'joi';
+import { ApiConfigModule } from '../api-config/api-config.module';
+import { REST_MODULES } from '../app.module';
 import { AuthModule } from '../auth/auth.module';
-import { AuthRestModule } from '../auth/auth.rest.module';
 import { BlocksModule } from '../blocks/blocks.module';
-import { BlocksRestModule } from '../blocks/blocks.rest.module';
 import { EventsModule } from '../events/events.module';
-import { EventsRestModule } from '../events/events.rest.module';
 import { HealthModule } from '../health/health.module';
-import { MetricsRestModule } from '../metrics/metrics.rest.module';
 import { UsersModule } from '../users/users.module';
-import { UsersRestModule } from '../users/users.rest.module';
 
 export async function bootstrapTestApp(): Promise<INestApplication> {
   const module = await Test.createTestingModule({
     imports: [
+      ApiConfigModule,
       AuthModule,
-      AuthRestModule,
       BlocksModule,
-      BlocksRestModule,
       ConfigModule.forRoot({
         isGlobal: true,
         validationSchema: joi.object({
@@ -37,11 +33,9 @@ export async function bootstrapTestApp(): Promise<INestApplication> {
         }),
       }),
       EventsModule,
-      EventsRestModule,
       HealthModule,
-      MetricsRestModule,
       UsersModule,
-      UsersRestModule,
+      ...REST_MODULES,
     ],
   }).compile();
 
