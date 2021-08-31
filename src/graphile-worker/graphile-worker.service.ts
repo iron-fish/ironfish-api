@@ -2,17 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { Job, makeWorkerUtils, WorkerUtils } from 'graphile-worker';
 import { Pool, PoolConfig } from 'pg';
 import { v4 as uuid } from 'uuid';
+import { ApiConfigService } from '../api-config/api-config.service';
 import { GraphileWorkerPattern } from './enums/graphile-worker-pattern';
 
 @Injectable()
 export class GraphileWorkerService {
   private workerUtils!: WorkerUtils;
 
-  constructor(private readonly config: ConfigService) {}
+  constructor(private readonly config: ApiConfigService) {}
 
   async addJob(
     pattern: GraphileWorkerPattern,

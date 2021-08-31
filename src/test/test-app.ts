@@ -6,6 +6,7 @@ import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import { json } from 'express';
 import joi from 'joi';
+import { ApiConfigModule } from '../api-config/api-config.module';
 import { REST_MODULES } from '../app.module';
 import { AuthModule } from '../auth/auth.module';
 import { BlocksModule } from '../blocks/blocks.module';
@@ -16,6 +17,7 @@ import { UsersModule } from '../users/users.module';
 export async function bootstrapTestApp(): Promise<INestApplication> {
   const module = await Test.createTestingModule({
     imports: [
+      ApiConfigModule,
       AuthModule,
       BlocksModule,
       ConfigModule.forRoot({
