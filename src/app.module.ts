@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import joi from 'joi';
+import { ApiConfigModule } from './api-config/api-config.module';
 import { AuthModule } from './auth/auth.module';
 import { AuthRestModule } from './auth/auth.rest.module';
 import { BlocksModule } from './blocks/blocks.module';
@@ -24,6 +25,7 @@ import { UsersRestModule } from './users/users.rest.module';
 
 @Module({
   imports: [
+    ApiConfigModule,
     AuthModule,
     AuthRestModule,
     BlocksModule,

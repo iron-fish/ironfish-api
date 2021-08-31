@@ -2,12 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Module } from '@nestjs/common';
-import { ApiConfigModule } from '../api-config/api-config.module';
-import { MagicLinkService } from './magic-link.service';
+import { ApiConfigService } from './api-config.service';
 
 @Module({
-  imports: [ApiConfigModule],
-  providers: [MagicLinkService],
-  exports: [MagicLinkService],
+  exports: [ApiConfigService],
+  providers: [ApiConfigService],
 })
-export class MagicLinkModule {}
+export class ApiConfigModule {}

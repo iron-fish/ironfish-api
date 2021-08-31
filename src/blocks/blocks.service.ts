@@ -6,7 +6,7 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { ApiConfigService } from '../api-config/api-config.service';
 import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
 import { EventsService } from '../events/events.service';
@@ -21,7 +21,7 @@ import { Block } from '.prisma/client';
 @Injectable()
 export class BlocksService {
   constructor(
-    private readonly config: ConfigService,
+    private readonly config: ApiConfigService,
     private readonly eventsService: EventsService,
     private readonly prisma: PrismaService,
     private readonly usersService: UsersService,
@@ -47,7 +47,7 @@ export class BlocksService {
     size,
   }: BlockDto): Promise<Block> {
     const main = type === BlockOperation.CONNECTED;
-    const networkVersion = this.config.get<number>('NETWORK_VERSION', 0);
+    const networkVersion = this.config.get<number>('NETWORK_VERSION');
     const searchable_text = hash + ' ' + String(sequence);
 
     return this.prisma.$transaction(async (prisma) => {
@@ -97,7 +97,7 @@ export class BlocksService {
   }
 
   async head(): Promise<Block> {
-    const networkVersion = this.config.get<number>('NETWORK_VERSION', 0);
+    const networkVersion = this.config.get<number>('NETWORK_VERSION');
     const block = await this.prisma.block.findFirst({
       orderBy: {
         sequence: SortOrder.DESC,
@@ -114,7 +114,7 @@ export class BlocksService {
   }
 
   async list(options: ListBlocksOptions): Promise<Block[]> {
-    const networkVersion = this.config.get<number>('NETWORK_VERSION', 0);
+    const networkVersion = this.config.get<number>('NETWORK_VERSION');
     const limit = Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
     if (options.sequenceGte !== undefined && options.sequenceLt !== undefined) {
       return this.prisma.block.findMany({
@@ -152,7 +152,7 @@ export class BlocksService {
   }
 
   async find(options: FindBlockOptions): Promise<Block | null> {
-    const networkVersion = this.config.get<number>('NETWORK_VERSION', 0);
+    const networkVersion = this.config.get<number>('NETWORK_VERSION');
 
     if (options.hash !== undefined) {
       return this.prisma.block.findFirst({
@@ -174,7 +174,7 @@ export class BlocksService {
   }
 
   async disconnectAfter(sequenceGt: number): Promise<void> {
-    const networkVersion = this.config.get<number>('NETWORK_VERSION', 0);
+    const networkVersion = this.config.get<number>('NETWORK_VERSION');
     await this.prisma.$transaction([
       this.prisma.block.updateMany({
         data: {

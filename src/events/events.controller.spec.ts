@@ -2,10 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import faker from 'faker';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
+import { ApiConfigService } from '../api-config/api-config.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { EventType } from '.prisma/client';
@@ -14,12 +14,12 @@ const API_KEY = 'test';
 
 describe('EventsController', () => {
   let app: INestApplication;
-  let config: ConfigService;
+  let config: ApiConfigService;
   let prisma: PrismaService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
-    config = app.get(ConfigService);
+    config = app.get(ApiConfigService);
     prisma = app.get(PrismaService);
     await app.init();
   });
