@@ -10,12 +10,12 @@ import { AuthModule } from '../auth/auth.module';
 import { AuthRestModule } from '../auth/auth.rest.module';
 import { BlocksModule } from '../blocks/blocks.module';
 import { BlocksRestModule } from '../blocks/blocks.rest.module';
-import { TransactionsModule } from '../transactions/transactions.module';
-import { TransactionsRestModule } from '../transactions/transactions.rest.module';
 import { EventsModule } from '../events/events.module';
 import { EventsRestModule } from '../events/events.rest.module';
 import { HealthModule } from '../health/health.module';
 import { MetricsRestModule } from '../metrics/metrics.rest.module';
+import { TransactionsModule } from '../transactions/transactions.module';
+import { TransactionsRestModule } from '../transactions/transactions.rest.module';
 import { UsersModule } from '../users/users.module';
 import { UsersRestModule } from '../users/users.rest.module';
 

@@ -1,8 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { INestApplication, NotFoundException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { INestApplication } from '@nestjs/common';
 import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { PrismaService } from '../prisma/prisma.service';
@@ -12,13 +11,11 @@ import { TransactionsService } from './transactions.service';
 describe('TransactionsService', () => {
   let app: INestApplication;
   let transactionsService: TransactionsService;
-  let config: ConfigService;
   let prisma: PrismaService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
     transactionsService = app.get(TransactionsService);
-    config = app.get(ConfigService);
     prisma = app.get(PrismaService);
     await app.init();
   });

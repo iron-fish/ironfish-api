@@ -17,12 +17,14 @@ export class TransactionsService {
     private readonly prisma: PrismaService,
   ) {}
 
-  async bulkUpsert({ transactions }: UpsertTransactionsDto): Promise<Transaction[]> {
-      const records = [];
-      for (const transaction of transactions) {
-          records.push(await this.upsert(transaction));
-      }
-      return records;
+  async bulkUpsert({
+    transactions,
+  }: UpsertTransactionsDto): Promise<Transaction[]> {
+    const records = [];
+    for (const transaction of transactions) {
+      records.push(await this.upsert(transaction));
+    }
+    return records;
   }
 
   private async upsert({
