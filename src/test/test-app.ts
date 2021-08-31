@@ -10,6 +10,8 @@ import { AuthModule } from '../auth/auth.module';
 import { AuthRestModule } from '../auth/auth.rest.module';
 import { BlocksModule } from '../blocks/blocks.module';
 import { BlocksRestModule } from '../blocks/blocks.rest.module';
+import { TransactionsModule } from '../transactions/transactions.module';
+import { TransactionsRestModule } from '../transactions/transactions.rest.module';
 import { EventsModule } from '../events/events.module';
 import { EventsRestModule } from '../events/events.rest.module';
 import { HealthModule } from '../health/health.module';
@@ -24,6 +26,8 @@ export async function bootstrapTestApp(): Promise<INestApplication> {
       AuthRestModule,
       BlocksModule,
       BlocksRestModule,
+      TransactionsModule,
+      TransactionsRestModule,
       ConfigModule.forRoot({
         isGlobal: true,
         validationSchema: joi.object({

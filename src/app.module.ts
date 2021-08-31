@@ -13,6 +13,8 @@ import { AuthModule } from './auth/auth.module';
 import { AuthRestModule } from './auth/auth.rest.module';
 import { BlocksModule } from './blocks/blocks.module';
 import { BlocksRestModule } from './blocks/blocks.rest.module';
+import { TransactionsModule } from './transactions/transactions.module';
+import { TransactionsRestModule } from './transactions/transactions.rest.module';
 import { ContextMiddleware } from './common/middlewares/context.middleware';
 import { RequireSslMiddleware } from './common/middlewares/require-ssl.middleware';
 import { EventsModule } from './events/events.module';
@@ -28,6 +30,8 @@ import { UsersRestModule } from './users/users.rest.module';
     AuthRestModule,
     BlocksModule,
     BlocksRestModule,
+    TransactionsModule,
+    TransactionsRestModule,
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: joi.object({
