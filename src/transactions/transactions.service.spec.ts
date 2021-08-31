@@ -77,5 +77,51 @@ describe('TransactionsService', () => {
         });
       });
     });
+
+    describe('when a hash does exist for the the network version', () => {
+      it('updates the transaction record', async () => {
+        const { block } = await setupBlockMined();
+        const transactions = await transactionsService.bulkUpsert({
+          transactions: [
+            {
+              hash: uuid(),
+              fee: faker.datatype.number(),
+              size: faker.datatype.number(),
+              timestamp: new Date(),
+              block_id: block.id,
+              notes: faker.datatype.json(),
+              spends: faker.datatype.json(),
+            },
+          ],
+        });
+        const newFee = faker.datatype.number();
+        const newSize = faker.datatype.number();
+        const newTime = new Date();
+        const newNotes = faker.datatype.json();
+        const newSpends = faker.datatype.json();
+        const transaction = transactions[0];
+        const newTransactions = await transactionsService.bulkUpsert({
+          transactions: [
+            {
+              hash: transaction.hash,
+              fee: newFee,
+              size: newSize,
+              timestamp: newTime,
+              block_id: block.id,
+              notes: newNotes,
+              spends: newSpends,
+            },
+          ],
+        });
+        expect(newTransactions[0]).toMatchObject({
+          id: transaction.id,
+          hash: transaction.hash,
+          timestamp: newTime,
+          block_id: block.id,
+          notes: newNotes,
+          spends: newSpends,
+        });
+      });
+    });
   });
 });
