@@ -34,7 +34,7 @@ export class MagicLinkStrategy extends PassportStrategy(
       if (!email) {
         throw new Error('No email found for token');
       }
-      const user = await this.usersService.updateLastLoginAtByEmail(email);
+      const user = await this.usersService.findOrThrowByEmail(email);
       req.context = {
         ...req.context,
         user,

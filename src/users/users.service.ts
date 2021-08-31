@@ -53,6 +53,22 @@ export class UsersService {
     return record;
   }
 
+  async findOrThrowByEmail(email: string): Promise<User> {
+    const record = await this.prisma.user.findFirst({
+      where: {
+        email,
+      },
+      orderBy: {
+        // This does not guarantee we choose the right user
+        created_at: SortOrder.DESC,
+      },
+    });
+    if (!record) {
+      throw new NotFoundException();
+    }
+    return record;
+  }
+
   async create({
     email,
     graffiti,
@@ -198,20 +214,8 @@ export class UsersService {
     );
   }
 
-  async updateLastLoginAtByEmail(email: string): Promise<User> {
+  async updateLastLoginAt(user: User): Promise<User> {
     return this.prisma.$transaction(async (prisma) => {
-      const user = await prisma.user.findFirst({
-        where: {
-          email,
-        },
-        orderBy: {
-          // This does not guarantee we choose the right user
-          created_at: SortOrder.DESC,
-        },
-      });
-      if (!user) {
-        throw new NotFoundException();
-      }
       return prisma.user.update({
         where: {
           id: user.id,

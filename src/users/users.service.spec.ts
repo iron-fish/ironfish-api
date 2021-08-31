@@ -93,6 +93,39 @@ describe('UsersService', () => {
     });
   });
 
+  describe('findOrThrowByEmail', () => {
+    describe('with a missing email', () => {
+      it('throws an exception', async () => {
+        await expect(
+          usersService.findOrThrowByEmail('howdy@partner.com'),
+        ).rejects.toThrow(NotFoundException);
+      });
+    });
+
+    describe('with a valid email', () => {
+      it('returns the most recently created record', async () => {
+        const email = faker.internet.email();
+        await prisma.user.create({
+          data: {
+            email,
+            graffiti: uuid(),
+            country_code: faker.address.countryCode('alpha-3'),
+          },
+        });
+        const user = await prisma.user.create({
+          data: {
+            email,
+            graffiti: uuid(),
+            country_code: faker.address.countryCode('alpha-3'),
+          },
+        });
+
+        const record = await usersService.findOrThrowByEmail(email);
+        expect(record).toMatchObject(user);
+      });
+    });
+  });
+
   describe('findOrThrowByGraffiti', () => {
     describe('with a valid graffiti', () => {
       it('returns the record', async () => {
@@ -272,30 +305,18 @@ describe('UsersService', () => {
   });
 
   describe('updateLastLoginAtByEmail', () => {
-    describe('with a missing email', () => {
-      it('throws a NotFoundException', async () => [
-        await expect(
-          usersService.updateLastLoginAtByEmail('foo@ironfish.network'),
-        ).rejects.toThrow(NotFoundException),
-      ]);
-    });
-
-    describe('with a valid email', () => {
-      it('updates the last login timestamp', async () => {
-        const user = await usersService.create({
-          email: faker.internet.email(),
-          graffiti: uuid(),
-          country_code: faker.address.countryCode('alpha-3'),
-        });
-        const updatedUser = await usersService.updateLastLoginAtByEmail(
-          user.email,
-        );
-        expect(updatedUser).toMatchObject({
-          id: user.id,
-          last_login_at: expect.any(Date),
-        });
-        expect(updatedUser.last_login_at).not.toEqual(user.last_login_at);
+    it('updates the last login timestamp', async () => {
+      const user = await usersService.create({
+        email: faker.internet.email(),
+        graffiti: uuid(),
+        country_code: faker.address.countryCode('alpha-3'),
       });
+      const updatedUser = await usersService.updateLastLoginAt(user);
+      expect(updatedUser).toMatchObject({
+        id: user.id,
+        last_login_at: expect.any(Date),
+      });
+      expect(updatedUser.last_login_at).not.toEqual(user.last_login_at);
     });
   });
 
