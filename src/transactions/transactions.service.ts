@@ -1,13 +1,14 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   TransactionDto,
   UpsertTransactionsDto,
 } from './dto/upsert-transactions.dto';
+import { FindTransactionOptions } from './interfaces/find-transactions-options';
 import { Transaction } from '.prisma/client';
 
 @Injectable()
@@ -66,5 +67,17 @@ export class TransactionsService {
 
       return transaction;
     });
+  }
+
+  async find(options: FindTransactionOptions): Promise<Transaction | null> {
+    if (options.hash !== undefined) {
+      return this.prisma.transaction.findFirst({
+        where: {
+          hash: options.hash,
+        },
+      });
+    } else {
+      throw new UnprocessableEntityException();
+    }
   }
 }

@@ -124,4 +124,53 @@ describe('TransactionsService', () => {
       });
     });
   });
+
+  describe('find', () => {
+    describe('with a valid hash', () => {
+      it('returns the transaction with the correct hash', async () => {
+        const { block } = await setupBlockMined();
+        const testTransactionHash = uuid();
+        const transactions = await transactionsService.bulkUpsert({
+          transactions: [
+            {
+              hash: testTransactionHash,
+              fee: faker.datatype.number(),
+              size: faker.datatype.number(),
+              timestamp: new Date(),
+              block_id: block.id,
+              notes: faker.datatype.json(),
+              spends: faker.datatype.json(),
+            },
+          ],
+        });
+        const testTransaction = transactions[0];
+        const transaction = await transactionsService.find({
+          hash: testTransactionHash,
+        });
+        expect(transaction).toMatchObject(testTransaction);
+      });
+    });
+
+    describe('with an invalid hash', () => {
+      it('returns null', async () => {
+        const { block } = await setupBlockMined();
+        await transactionsService.bulkUpsert({
+          transactions: [
+            {
+              hash: uuid(),
+              fee: faker.datatype.number(),
+              size: faker.datatype.number(),
+              timestamp: new Date(),
+              block_id: block.id,
+              notes: faker.datatype.json(),
+              spends: faker.datatype.json(),
+            },
+          ],
+        });
+
+        const transaction = await transactionsService.find({ hash: uuid() });
+        expect(transaction).toBeNull();
+      });
+    });
+  });
 });
