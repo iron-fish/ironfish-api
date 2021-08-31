@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import joi from 'joi';
+import { ApiConfigModule } from './api-config/api-config.module';
 import { AuthRestModule } from './auth/auth.rest.module';
 import { BlocksRestModule } from './blocks/blocks.rest.module';
 import { ContextMiddleware } from './common/middlewares/context.middleware';
@@ -27,6 +28,7 @@ export const REST_MODULES = [
 
 @Module({
   imports: [
+    ApiConfigModule,
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: joi.object({
