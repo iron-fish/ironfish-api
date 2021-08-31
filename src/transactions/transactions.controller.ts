@@ -4,17 +4,11 @@
 import {
   Body,
   Controller,
-  Get,
   HttpStatus,
-  NotFoundException,
   Post,
-  Query,
-  Res,
-  UnprocessableEntityException,
   UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
-import { Response } from 'express';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { List } from '../common/interfaces/list';
 import { UpsertTransactionsDto } from './dto/upsert-transactions.dto';
