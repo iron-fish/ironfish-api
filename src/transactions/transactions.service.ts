@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { ApiConfigService } from '../api-config/api-config.service';
 import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
 import { PrismaService } from '../prisma/prisma.service';
@@ -17,7 +17,7 @@ import { Transaction } from '.prisma/client';
 @Injectable()
 export class TransactionsService {
   constructor(
-    private readonly config: ConfigService,
+    private readonly config: ApiConfigService,
     private readonly prisma: PrismaService,
   ) {}
 
@@ -40,7 +40,7 @@ export class TransactionsService {
     notes,
     spends,
   }: TransactionDto): Promise<Transaction> {
-    const networkVersion = this.config.get<number>('NETWORK_VERSION', 0);
+    const networkVersion = this.config.get<number>('NETWORK_VERSION');
     return await this.prisma.transaction.upsert({
       create: {
         hash,
@@ -69,7 +69,7 @@ export class TransactionsService {
   }
 
   async find(options: FindTransactionOptions): Promise<Transaction | null> {
-    const networkVersion = this.config.get<number>('NETWORK_VERSION', 0);
+    const networkVersion = this.config.get<number>('NETWORK_VERSION');
     return this.prisma.transaction.findFirst({
       where: {
         hash: options.hash,
@@ -79,7 +79,7 @@ export class TransactionsService {
   }
 
   async list(options: ListTransactionOptions): Promise<Transaction[]> {
-    const networkVersion = this.config.get<number>('NETWORK_VERSION', 0);
+    const networkVersion = this.config.get<number>('NETWORK_VERSION');
     const limit = Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
 
     if (options.search !== undefined) {
