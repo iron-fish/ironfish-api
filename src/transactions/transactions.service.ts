@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { Injectable, UnprocessableEntityException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
@@ -41,49 +41,41 @@ export class TransactionsService {
     spends,
   }: TransactionDto): Promise<Transaction> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION', 0);
-    return this.prisma.$transaction(async (prisma) => {
-      const transaction = await prisma.transaction.upsert({
-        create: {
+    return await this.prisma.transaction.upsert({
+      create: {
+        hash,
+        network_version: networkVersion,
+        fee,
+        size,
+        timestamp,
+        block_id,
+        notes,
+        spends,
+      },
+      update: {
+        fee,
+        size,
+        timestamp,
+        notes,
+        spends,
+      },
+      where: {
+        uq_transactions_on_hash_and_network_version: {
           hash,
           network_version: networkVersion,
-          fee,
-          size,
-          timestamp,
-          block_id,
-          notes,
-          spends,
         },
-        update: {
-          fee,
-          size,
-          timestamp,
-          notes,
-          spends,
-        },
-        where: {
-          uq_transactions_on_hash_and_network_version: {
-            hash,
-            network_version: networkVersion,
-          },
-        },
-      });
-
-      return transaction;
+      },
     });
   }
 
   async find(options: FindTransactionOptions): Promise<Transaction | null> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION', 0);
-    if (options.hash !== undefined) {
-      return this.prisma.transaction.findFirst({
-        where: {
-          hash: options.hash,
-          network_version: networkVersion,
-        },
-      });
-    } else {
-      throw new UnprocessableEntityException();
-    }
+    return this.prisma.transaction.findFirst({
+      where: {
+        hash: options.hash,
+        network_version: networkVersion,
+      },
+    });
   }
 
   async list(options: ListTransactionOptions): Promise<Transaction[]> {
