@@ -2,12 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { ForbiddenException, Injectable, NestMiddleware } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { NextFunction, Request, Response } from 'express';
+import { ApiConfigService } from '../../api-config/api-config.service';
 
 @Injectable()
 export class RequireSslMiddleware implements NestMiddleware {
-  constructor(private readonly config: ConfigService) {}
+  constructor(private readonly config: ApiConfigService) {}
 
   use(req: Request, _res: Response, next: NextFunction): void {
     if (
