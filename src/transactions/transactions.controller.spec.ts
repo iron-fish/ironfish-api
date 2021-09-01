@@ -4,13 +4,13 @@
 
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Transaction } from '.prisma/client';
 import faker from 'faker';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UpsertTransactionsDto } from './dto/upsert-transactions.dto';
+import { Transaction } from '.prisma/client';
 
 const API_KEY = 'test';
 
@@ -205,6 +205,30 @@ describe('TransactionsController', () => {
           .get('/transactions/find')
           .query({ hash: uuid() })
           .expect(HttpStatus.NOT_FOUND);
+
+        expect(body).toMatchSnapshot();
+      });
+    });
+
+    describe('with an undefined hash', () => {
+      it('returns a 422', async () => {
+        const { block } = await seedBlock();
+        await prisma.transaction.create({
+          data: {
+            hash: uuid(),
+            network_version: 0,
+            fee: faker.datatype.number(),
+            size: faker.datatype.number(),
+            timestamp: new Date(),
+            block_id: block.id,
+            notes: faker.datatype.json(),
+            spends: faker.datatype.json(),
+          },
+        });
+
+        const { body } = await request(app.getHttpServer())
+          .get('/transactions/find')
+          .expect(HttpStatus.UNPROCESSABLE_ENTITY);
 
         expect(body).toMatchSnapshot();
       });

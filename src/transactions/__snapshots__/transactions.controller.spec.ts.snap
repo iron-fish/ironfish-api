@@ -7,6 +7,16 @@ Object {
 }
 `;
 
+exports[`TransactionsController GET /transactions/find with an undefined hash returns a 422 1`] = `
+Object {
+  "error": "Unprocessable Entity",
+  "message": Array [
+    "hash must be a string",
+  ],
+  "statusCode": 422,
+}
+`;
+
 exports[`TransactionsController POST /transactions with a missing API key returns a 401 1`] = `
 Object {
   "message": "Unauthorized",

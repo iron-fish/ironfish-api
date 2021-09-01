@@ -5,5 +5,5 @@ import { IsString } from 'class-validator';
 
 export class TransactionQueryDto {
   @IsString()
-  readonly hash?: string;
+  readonly hash!: string;
 }
