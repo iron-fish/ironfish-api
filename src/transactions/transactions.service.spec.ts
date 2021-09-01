@@ -173,4 +173,73 @@ describe('TransactionsService', () => {
       });
     });
   });
+
+  describe('list', () => {
+    describe('with a valid partial hash search string', () => {
+      it('returns transactions with match(es)', async () => {
+        const { block } = await setupBlockMined();
+        const testTransactionHash = uuid();
+        await transactionsService.bulkUpsert({
+          transactions: [
+            {
+              hash: testTransactionHash,
+              fee: faker.datatype.number(),
+              size: faker.datatype.number(),
+              timestamp: new Date(),
+              block_id: block.id,
+              notes: faker.datatype.json(),
+              spends: faker.datatype.json(),
+            },
+            {
+              hash: uuid(),
+              fee: faker.datatype.number(),
+              size: faker.datatype.number(),
+              timestamp: new Date(),
+              block_id: block.id,
+              notes: faker.datatype.json(),
+              spends: faker.datatype.json(),
+            },
+          ],
+        });
+
+        const transactions = await transactionsService.list({
+          search: testTransactionHash.slice(0, 5),
+        });
+        expect(transactions.length).toBeGreaterThan(0);
+      });
+    });
+
+    describe('with no query parameters', () => {
+      it('returns transactions in descending order', async () => {
+        const { block } = await setupBlockMined();
+        const testTransactionHash = uuid();
+        await transactionsService.bulkUpsert({
+          transactions: [
+            {
+              hash: testTransactionHash,
+              fee: faker.datatype.number(),
+              size: faker.datatype.number(),
+              timestamp: new Date(),
+              block_id: block.id,
+              notes: faker.datatype.json(),
+              spends: faker.datatype.json(),
+            },
+            {
+              hash: uuid(),
+              fee: faker.datatype.number(),
+              size: faker.datatype.number(),
+              timestamp: new Date(),
+              block_id: block.id,
+              notes: faker.datatype.json(),
+              spends: faker.datatype.json(),
+            },
+          ],
+        });
+
+        const transactions = await transactionsService.list({});
+        expect(transactions.length).toBeGreaterThan(0);
+        expect(transactions[0].id).toBeGreaterThan(transactions[1].id);
+      });
+    });
+  });
 });

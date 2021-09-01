@@ -3,12 +3,15 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
+import { SortOrder } from '../common/enums/sort-order';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   TransactionDto,
   UpsertTransactionsDto,
 } from './dto/upsert-transactions.dto';
 import { FindTransactionOptions } from './interfaces/find-transactions-options';
+import { ListTransactionOptions } from './interfaces/list-transactions-options';
 import { Transaction } from '.prisma/client';
 
 @Injectable()
@@ -80,6 +83,33 @@ export class TransactionsService {
       });
     } else {
       throw new UnprocessableEntityException();
+    }
+  }
+
+  async list(options: ListTransactionOptions): Promise<Transaction[]> {
+    const networkVersion = this.config.get<number>('NETWORK_VERSION', 0);
+    const limit = Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
+
+    if (options.search !== undefined) {
+      return this.prisma.transaction.findMany({
+        orderBy: {
+          id: SortOrder.DESC,
+        },
+        take: limit,
+        where: {
+          hash: {
+            contains: options.search,
+          },
+          network_version: networkVersion,
+        },
+      });
+    } else {
+      return this.prisma.transaction.findMany({
+        orderBy: {
+          id: SortOrder.DESC,
+        },
+        take: limit,
+      });
     }
   }
 }
