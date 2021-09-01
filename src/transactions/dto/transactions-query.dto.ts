@@ -4,7 +4,7 @@
 import { IsOptional, IsString } from 'class-validator';
 import { PaginationArgsDto } from '../../common/dto/pagination-args.dto';
 
-export class BlocksQueryDto extends PaginationArgsDto {
+export class TransactionsQueryDto extends PaginationArgsDto {
   @IsOptional()
   @IsString()
   readonly search?: string;

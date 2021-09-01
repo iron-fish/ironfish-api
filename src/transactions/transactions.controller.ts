@@ -15,6 +15,7 @@ import {
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { List } from '../common/interfaces/list';
 import { TransactionQueryDto } from './dto/transaction-query.dto';
+import { TransactionsQueryDto } from './dto/transactions-query.dto';
 import { UpsertTransactionsDto } from './dto/upsert-transactions.dto';
 import { SerializedTransaction } from './interfaces/serialized-transaction';
 import { TransactionsService } from './transactions.service';
@@ -59,5 +60,23 @@ export class TransactionsController {
     } else {
       throw new NotFoundException();
     }
+  }
+
+  @Get()
+  async list(
+    @Query(
+      new ValidationPipe({
+        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        transform: true,
+      }),
+    )
+    { search }: TransactionsQueryDto,
+  ): Promise<List<SerializedTransaction>> {
+    const transactions = await this.transactionsService.list({ search });
+    return {
+      data: transactions.map((transaction) =>
+        serializedTransactionFromRecord(transaction),
+      ),
+    };
   }
 }

@@ -10,6 +10,7 @@ import { v4 as uuid } from 'uuid';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UpsertTransactionsDto } from './dto/upsert-transactions.dto';
+import { Transaction } from '.prisma/client';
 
 const API_KEY = 'test';
 
@@ -206,6 +207,85 @@ describe('TransactionsController', () => {
           .expect(HttpStatus.NOT_FOUND);
 
         expect(body).toMatchSnapshot();
+      });
+    });
+  });
+
+  describe('GET /transactions', () => {
+    describe('with a valid partial hash search string', () => {
+      it('retuns transactions with match(es)', async () => {
+        const { block } = await setupBlockMined();
+        const testTransactionHash = uuid();
+        const transaction = await prisma.transaction.create({
+          data: {
+            hash: testTransactionHash,
+            network_version: 0,
+            fee: faker.datatype.number(),
+            size: faker.datatype.number(),
+            timestamp: new Date(),
+            block_id: block.id,
+            notes: faker.datatype.json(),
+            spends: faker.datatype.json(),
+          },
+        });
+
+        const { body } = await request(app.getHttpServer())
+          .get('/transactions')
+          .query({ search: testTransactionHash.slice(0, 5) })
+          .expect(HttpStatus.OK);
+
+        const { data } = body;
+        expect((data as unknown[]).length).toBeGreaterThan(0);
+        expect((data as unknown[])[0]).toMatchObject({
+          id: expect.any(Number),
+          hash: transaction.hash,
+          fee: transaction.fee.toString(),
+          size: transaction.size,
+          timestamp: transaction.timestamp.toISOString(),
+          block_id: transaction.block_id,
+          notes: transaction.notes,
+          spends: transaction.spends,
+        });
+      });
+    });
+
+    describe('with no query parameters', () => {
+      it('retuns transactions with match(es)', async () => {
+        const { block } = await setupBlockMined();
+        for (let i = 0; i < 10; i++) {
+          await prisma.transaction.create({
+            data: {
+              hash: uuid(),
+              network_version: 0,
+              fee: faker.datatype.number(),
+              size: faker.datatype.number(),
+              timestamp: new Date(),
+              block_id: block.id,
+              notes: faker.datatype.json(),
+              spends: faker.datatype.json(),
+            },
+          });
+        }
+
+        const { body } = await request(app.getHttpServer())
+          .get('/transactions')
+          .expect(HttpStatus.OK);
+
+        const { data } = body;
+        expect((data as unknown[]).length).toBeGreaterThan(10);
+        expect((data as unknown[])[0]).toMatchObject({
+          id: expect.any(Number),
+          hash: expect.any(String),
+          fee: expect.any(String),
+          size: expect.any(Number),
+          timestamp: expect.any(String),
+          block_id: block.id,
+          notes: expect.any(String),
+          spends: expect.any(String),
+        });
+        expect(((data as unknown[])[0] as Transaction).id).toBeGreaterThan(
+          ((data as unknown[])[1] as Transaction).id,
+        );
       });
     });
   });
