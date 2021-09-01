@@ -74,6 +74,7 @@
     "joi": "17.4.2",
     "passport": "0.4.1",
     "reflect-metadata": "0.1.13",
-    "rxjs": "7.3.0"
+    "rxjs": "7.3.0",
+    "type-fest": "^2.1.0"
   }
 }
