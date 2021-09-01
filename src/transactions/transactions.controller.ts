@@ -4,16 +4,21 @@
 import {
   Body,
   Controller,
+  Get,
   HttpStatus,
+  NotFoundException,
   Post,
+  Query,
   UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { List } from '../common/interfaces/list';
+import { TransactionQueryDto } from './dto/transaction-query.dto';
 import { UpsertTransactionsDto } from './dto/upsert-transactions.dto';
+import { SerializedTransaction } from './interfaces/serialized-transaction';
 import { TransactionsService } from './transactions.service';
-import { Transaction } from '.prisma/client';
+import { serializedTransactionFromRecord } from './utils/transaction-translator';
 
 @Controller('transactions')
 export class TransactionsController {
@@ -28,10 +33,31 @@ export class TransactionsController {
         transform: true,
       }),
     )
-    transactions: UpsertTransactionsDto,
-  ): Promise<List<Transaction>> {
+    txs: UpsertTransactionsDto,
+  ): Promise<List<SerializedTransaction>> {
+    const transactions = await this.transactionsService.bulkUpsert(txs);
     return {
-      data: await this.transactionsService.bulkUpsert(transactions),
+      data: transactions.map((transaction) =>
+        serializedTransactionFromRecord(transaction),
+      ),
     };
+  }
+
+  @Get('find')
+  async find(
+    @Query(
+      new ValidationPipe({
+        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        transform: true,
+      }),
+    )
+    { hash }: TransactionQueryDto,
+  ): Promise<SerializedTransaction> {
+    const transaction = await this.transactionsService.find({ hash });
+    if (transaction !== null) {
+      return serializedTransactionFromRecord(transaction);
+    } else {
+      throw new NotFoundException();
+    }
   }
 }
