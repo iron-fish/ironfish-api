@@ -70,10 +70,12 @@ export class TransactionsService {
   }
 
   async find(options: FindTransactionOptions): Promise<Transaction | null> {
+    const networkVersion = this.config.get<number>('NETWORK_VERSION', 0);
     if (options.hash !== undefined) {
       return this.prisma.transaction.findFirst({
         where: {
           hash: options.hash,
+          network_version: networkVersion,
         },
       });
     } else {
