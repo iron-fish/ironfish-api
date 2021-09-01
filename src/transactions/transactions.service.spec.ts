@@ -24,7 +24,7 @@ describe('TransactionsService', () => {
     await app.close();
   });
 
-  const setupBlockMined = async () => {
+  const seedBlock = async () => {
     const hash = uuid();
     const sequence = faker.datatype.number();
     const searchable_text = hash + ' ' + String(sequence);
@@ -51,7 +51,7 @@ describe('TransactionsService', () => {
   describe('bulkUpsert', () => {
     describe('when a hash does not exist for the network version', () => {
       it('stores a transaction record', async () => {
-        const { block } = await setupBlockMined();
+        const { block } = await seedBlock();
         const transactions = await transactionsService.bulkUpsert({
           transactions: [
             {
@@ -80,7 +80,7 @@ describe('TransactionsService', () => {
 
     describe('when a hash does exist for the the network version', () => {
       it('updates the transaction record', async () => {
-        const { block } = await setupBlockMined();
+        const { block } = await seedBlock();
         const transactions = await transactionsService.bulkUpsert({
           transactions: [
             {
@@ -128,7 +128,7 @@ describe('TransactionsService', () => {
   describe('find', () => {
     describe('with a valid hash', () => {
       it('returns the transaction with the correct hash', async () => {
-        const { block } = await setupBlockMined();
+        const { block } = await seedBlock();
         const testTransactionHash = uuid();
         const transactions = await transactionsService.bulkUpsert({
           transactions: [
@@ -153,7 +153,7 @@ describe('TransactionsService', () => {
 
     describe('with an invalid hash', () => {
       it('returns null', async () => {
-        const { block } = await setupBlockMined();
+        const { block } = await seedBlock();
         await transactionsService.bulkUpsert({
           transactions: [
             {
@@ -177,7 +177,7 @@ describe('TransactionsService', () => {
   describe('list', () => {
     describe('with a valid partial hash search string', () => {
       it('returns transactions with match(es)', async () => {
-        const { block } = await setupBlockMined();
+        const { block } = await seedBlock();
         const testTransactionHash = uuid();
         await transactionsService.bulkUpsert({
           transactions: [
@@ -211,7 +211,7 @@ describe('TransactionsService', () => {
 
     describe('with no query parameters', () => {
       it('returns transactions in descending order', async () => {
-        const { block } = await setupBlockMined();
+        const { block } = await seedBlock();
         const testTransactionHash = uuid();
         await transactionsService.bulkUpsert({
           transactions: [

@@ -4,13 +4,13 @@
 
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Transaction } from '.prisma/client';
 import faker from 'faker';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UpsertTransactionsDto } from './dto/upsert-transactions.dto';
-import { Transaction } from '.prisma/client';
 
 const API_KEY = 'test';
 
@@ -30,7 +30,7 @@ describe('TransactionsController', () => {
     await app.close();
   });
 
-  const setupBlockMined = async () => {
+  const seedBlock = async () => {
     const hash = uuid();
     const sequence = faker.datatype.number();
     const searchable_text = hash + ' ' + String(sequence);
@@ -84,7 +84,7 @@ describe('TransactionsController', () => {
     describe('with too many transactions', () => {
       it('returns a 422', async () => {
         const transactions = [];
-        const { block } = await setupBlockMined();
+        const { block } = await seedBlock();
         for (let i = 0; i < 3001; i++) {
           transactions.push({
             hash: uuid(),
@@ -111,7 +111,7 @@ describe('TransactionsController', () => {
 
     describe('with a valid payload', () => {
       it('upserts transactions', async () => {
-        const { block } = await setupBlockMined();
+        const { block } = await seedBlock();
         const payload: UpsertTransactionsDto = {
           transactions: [
             {
@@ -153,7 +153,7 @@ describe('TransactionsController', () => {
     describe('with a valid hash', () => {
       it('returns the transaction with the correct hash', async () => {
         const testTransactionHash = uuid();
-        const { block } = await setupBlockMined();
+        const { block } = await seedBlock();
         await prisma.transaction.create({
           data: {
             hash: testTransactionHash,
@@ -187,7 +187,7 @@ describe('TransactionsController', () => {
 
     describe('with an invalid hash', () => {
       it('returns a 404', async () => {
-        const { block } = await setupBlockMined();
+        const { block } = await seedBlock();
         await prisma.transaction.create({
           data: {
             hash: uuid(),
@@ -214,7 +214,7 @@ describe('TransactionsController', () => {
   describe('GET /transactions', () => {
     describe('with a valid partial hash search string', () => {
       it('retuns transactions with match(es)', async () => {
-        const { block } = await setupBlockMined();
+        const { block } = await seedBlock();
         const testTransactionHash = uuid();
         const transaction = await prisma.transaction.create({
           data: {
@@ -251,7 +251,7 @@ describe('TransactionsController', () => {
 
     describe('with no query parameters', () => {
       it('retuns transactions with match(es)', async () => {
-        const { block } = await setupBlockMined();
+        const { block } = await seedBlock();
         for (let i = 0; i < 10; i++) {
           await prisma.transaction.create({
             data: {
