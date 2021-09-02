@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable } from '@nestjs/common';
+import { classToPlain } from 'class-transformer';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
@@ -49,15 +50,15 @@ export class TransactionsService {
         size,
         timestamp,
         block_id,
-        notes,
-        spends,
+        notes: classToPlain(notes),
+        spends: classToPlain(spends),
       },
       update: {
         fee,
         size,
         timestamp,
-        notes,
-        spends,
+        notes: classToPlain(notes),
+        spends: classToPlain(spends),
       },
       where: {
         uq_transactions_on_hash_and_network_version: {

@@ -9,7 +9,6 @@ import {
   IsArray,
   IsDate,
   IsInt,
-  IsJSON,
   IsString,
   ValidateNested,
 } from 'class-validator';

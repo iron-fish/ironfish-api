@@ -52,6 +52,8 @@ describe('TransactionsService', () => {
     describe('when a hash does not exist for the network version', () => {
       it('stores a transaction record', async () => {
         const { block } = await seedBlock();
+        const notes = [{ commitment: uuid() }];
+        const spends = [{ nullifier: uuid() }];
         const transactions = await transactionsService.bulkUpsert({
           transactions: [
             {
@@ -60,8 +62,8 @@ describe('TransactionsService', () => {
               size: faker.datatype.number(),
               timestamp: new Date(),
               block_id: block.id,
-              notes: faker.datatype.json(),
-              spends: faker.datatype.json(),
+              notes,
+              spends,
             },
           ],
         });
@@ -72,8 +74,8 @@ describe('TransactionsService', () => {
           size: expect.any(Number),
           timestamp: expect.any(Date),
           block_id: expect.any(Number),
-          notes: expect.any(String),
-          spends: expect.any(String),
+          notes: notes,
+          spends: spends,
         });
       });
     });
@@ -81,6 +83,8 @@ describe('TransactionsService', () => {
     describe('when a hash does exist for the the network version', () => {
       it('updates the transaction record', async () => {
         const { block } = await seedBlock();
+        const notes = [{ commitment: uuid() }];
+        const spends = [{ nullifier: uuid() }];
         const transactions = await transactionsService.bulkUpsert({
           transactions: [
             {
@@ -89,16 +93,16 @@ describe('TransactionsService', () => {
               size: faker.datatype.number(),
               timestamp: new Date(),
               block_id: block.id,
-              notes: faker.datatype.json(),
-              spends: faker.datatype.json(),
+              notes,
+              spends,
             },
           ],
         });
         const newFee = faker.datatype.number();
         const newSize = faker.datatype.number();
         const newTime = new Date();
-        const newNotes = faker.datatype.json();
-        const newSpends = faker.datatype.json();
+        const newNotes = [{ commitment: uuid() }];
+        const newSpends = [{ nullifier: uuid() }];
         const transaction = transactions[0];
         const newTransactions = await transactionsService.bulkUpsert({
           transactions: [
@@ -129,6 +133,8 @@ describe('TransactionsService', () => {
     describe('with a valid hash', () => {
       it('returns the transaction with the correct hash', async () => {
         const { block } = await seedBlock();
+        const notes = [{ commitment: uuid() }];
+        const spends = [{ nullifier: uuid() }];
         const testTransactionHash = uuid();
         const transactions = await transactionsService.bulkUpsert({
           transactions: [
@@ -138,8 +144,8 @@ describe('TransactionsService', () => {
               size: faker.datatype.number(),
               timestamp: new Date(),
               block_id: block.id,
-              notes: faker.datatype.json(),
-              spends: faker.datatype.json(),
+              notes,
+              spends,
             },
           ],
         });
@@ -154,6 +160,8 @@ describe('TransactionsService', () => {
     describe('with an invalid hash', () => {
       it('returns null', async () => {
         const { block } = await seedBlock();
+        const notes = [{ commitment: uuid() }];
+        const spends = [{ nullifier: uuid() }];
         await transactionsService.bulkUpsert({
           transactions: [
             {
@@ -162,8 +170,8 @@ describe('TransactionsService', () => {
               size: faker.datatype.number(),
               timestamp: new Date(),
               block_id: block.id,
-              notes: faker.datatype.json(),
-              spends: faker.datatype.json(),
+              notes,
+              spends,
             },
           ],
         });
@@ -179,6 +187,8 @@ describe('TransactionsService', () => {
       it('returns transactions with match(es)', async () => {
         const { block } = await seedBlock();
         const testTransactionHash = uuid();
+        const notes = [{ commitment: uuid() }];
+        const spends = [{ nullifier: uuid() }];
         await transactionsService.bulkUpsert({
           transactions: [
             {
@@ -187,8 +197,8 @@ describe('TransactionsService', () => {
               size: faker.datatype.number(),
               timestamp: new Date(),
               block_id: block.id,
-              notes: faker.datatype.json(),
-              spends: faker.datatype.json(),
+              notes,
+              spends,
             },
             {
               hash: uuid(),
@@ -196,8 +206,8 @@ describe('TransactionsService', () => {
               size: faker.datatype.number(),
               timestamp: new Date(),
               block_id: block.id,
-              notes: faker.datatype.json(),
-              spends: faker.datatype.json(),
+              notes,
+              spends,
             },
           ],
         });
@@ -213,6 +223,8 @@ describe('TransactionsService', () => {
       it('returns transactions in descending order', async () => {
         const { block } = await seedBlock();
         const testTransactionHash = uuid();
+        const notes = [{ commitment: uuid() }];
+        const spends = [{ nullifier: uuid() }];
         await transactionsService.bulkUpsert({
           transactions: [
             {
@@ -221,8 +233,8 @@ describe('TransactionsService', () => {
               size: faker.datatype.number(),
               timestamp: new Date(),
               block_id: block.id,
-              notes: faker.datatype.json(),
-              spends: faker.datatype.json(),
+              notes,
+              spends,
             },
             {
               hash: uuid(),
@@ -230,8 +242,8 @@ describe('TransactionsService', () => {
               size: faker.datatype.number(),
               timestamp: new Date(),
               block_id: block.id,
-              notes: faker.datatype.json(),
-              spends: faker.datatype.json(),
+              notes,
+              spends,
             },
           ],
         });

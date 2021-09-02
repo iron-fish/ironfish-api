@@ -33,8 +33,8 @@ Object {
     "transactions.0.size must be an integer number",
     "transactions.0.timestamp must be a Date instance",
     "transactions.0.block_id must be an integer number",
-    "transactions.0.notes must be a json string",
-    "transactions.0.spends must be a json string",
+    "transactions.0.notes must be an array",
+    "transactions.0.spends must be an array",
   ],
   "statusCode": 422,
 }
