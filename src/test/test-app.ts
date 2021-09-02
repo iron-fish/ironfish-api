@@ -11,6 +11,7 @@ import { AuthModule } from '../auth/auth.module';
 import { BlocksModule } from '../blocks/blocks.module';
 import { EventsModule } from '../events/events.module';
 import { HealthModule } from '../health/health.module';
+import { TransactionsModule } from '../transactions/transactions.module';
 import { UsersModule } from '../users/users.module';
 
 export async function bootstrapTestApp(): Promise<INestApplication> {
@@ -18,6 +19,7 @@ export async function bootstrapTestApp(): Promise<INestApplication> {
     imports: [
       AuthModule,
       BlocksModule,
+      TransactionsModule,
       ConfigModule.forRoot({
         isGlobal: true,
         validationSchema: joi.object({
