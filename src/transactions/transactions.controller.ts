@@ -34,9 +34,9 @@ export class TransactionsController {
         transform: true,
       }),
     )
-    txs: UpsertTransactionsDto,
+    upsertTransactionsDto: UpsertTransactionsDto,
   ): Promise<List<SerializedTransaction>> {
-    const transactions = await this.transactionsService.bulkUpsert(txs);
+    const transactions = await this.transactionsService.bulkUpsert(upsertTransactionsDto);
     return {
       data: transactions.map((transaction) =>
         serializedTransactionFromRecord(transaction),
