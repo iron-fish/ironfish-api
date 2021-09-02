@@ -13,6 +13,8 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
+import { NoteDto } from './note.dto';
+import { SpendDto } from './spend.dto';
 
 export class TransactionDto {
   @IsString()
@@ -34,11 +36,13 @@ export class TransactionDto {
   @Type(() => Number)
   readonly block_id!: number;
 
-  @IsJSON()
-  readonly notes!: string;
+  @IsArray()
+  @ValidateNested({ each: true })
+  readonly notes!: NoteDto[];
 
-  @IsJSON()
-  readonly spends!: string;
+  @IsArray()
+  @ValidateNested({ each: true })
+  readonly spends!: SpendDto[];
 }
 
 export class UpsertTransactionsDto {

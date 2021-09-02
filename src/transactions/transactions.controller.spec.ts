@@ -85,6 +85,7 @@ describe('TransactionsController', () => {
       it('returns a 422', async () => {
         const transactions = [];
         const { block } = await seedBlock();
+
         for (let i = 0; i < 3001; i++) {
           transactions.push({
             hash: uuid(),
@@ -92,8 +93,8 @@ describe('TransactionsController', () => {
             size: faker.datatype.number(),
             timestamp: new Date(),
             block_id: block.id,
-            notes: faker.datatype.json(),
-            spends: faker.datatype.json(),
+            notes: [{ commitment: uuid() }],
+            spends: [{ nullifier: uuid() }],
           });
         }
 
@@ -120,8 +121,8 @@ describe('TransactionsController', () => {
               size: faker.datatype.number(),
               timestamp: new Date(),
               block_id: block.id,
-              notes: faker.datatype.json(),
-              spends: faker.datatype.json(),
+              notes: [{ commitment: uuid() }],
+              spends: [{ nullifier: uuid() }],
             },
           ],
         };
@@ -142,8 +143,8 @@ describe('TransactionsController', () => {
           size: transaction.size,
           timestamp: transaction.timestamp.toISOString(),
           block_id: transaction.block_id,
-          notes: transaction.notes,
-          spends: transaction.spends,
+          notes: expect.any(Array),
+          spends: expect.any(Array),
         });
       });
     });
@@ -162,8 +163,8 @@ describe('TransactionsController', () => {
             size: faker.datatype.number(),
             timestamp: new Date(),
             block_id: block.id,
-            notes: faker.datatype.json(),
-            spends: faker.datatype.json(),
+            notes: [faker.datatype.json()],
+            spends: [faker.datatype.json()],
           },
         });
 
@@ -196,8 +197,8 @@ describe('TransactionsController', () => {
             size: faker.datatype.number(),
             timestamp: new Date(),
             block_id: block.id,
-            notes: faker.datatype.json(),
-            spends: faker.datatype.json(),
+            notes: [faker.datatype.json()],
+            spends: [faker.datatype.json()],
           },
         });
 
@@ -221,8 +222,8 @@ describe('TransactionsController', () => {
             size: faker.datatype.number(),
             timestamp: new Date(),
             block_id: block.id,
-            notes: faker.datatype.json(),
-            spends: faker.datatype.json(),
+            notes: [faker.datatype.json()],
+            spends: [faker.datatype.json()],
           },
         });
 
@@ -248,8 +249,8 @@ describe('TransactionsController', () => {
             size: faker.datatype.number(),
             timestamp: new Date(),
             block_id: block.id,
-            notes: faker.datatype.json(),
-            spends: faker.datatype.json(),
+            notes: [faker.datatype.json()],
+            spends: [faker.datatype.json()],
           },
         });
 
@@ -285,8 +286,8 @@ describe('TransactionsController', () => {
               size: faker.datatype.number(),
               timestamp: new Date(),
               block_id: block.id,
-              notes: faker.datatype.json(),
-              spends: faker.datatype.json(),
+              notes: [faker.datatype.json()],
+              spends: [faker.datatype.json()],
             },
           });
         }
