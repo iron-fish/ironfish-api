@@ -33,9 +33,6 @@ export const REST_MODULES = [
   imports: [
     ApiConfigModule,
     AuthModule,
-    AuthRestModule,
-    BlocksRestModule,
-    TransactionsRestModule,
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: joi.object({
