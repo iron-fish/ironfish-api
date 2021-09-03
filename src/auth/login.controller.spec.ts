@@ -87,10 +87,7 @@ describe('LoginController', () => {
           },
         });
 
-        const updateLastLoginAtByEmail = jest.spyOn(
-          usersService,
-          'updateLastLoginAtByEmail',
-        );
+        const updateLastLoginAt = jest.spyOn(usersService, 'updateLastLoginAt');
         jest
           .spyOn(magicLinkService, 'validate')
           .mockImplementationOnce(jest.fn());
@@ -109,7 +106,7 @@ describe('LoginController', () => {
           .set('Authorization', 'valid-token')
           .expect(HttpStatus.OK);
 
-        expect(updateLastLoginAtByEmail).toHaveBeenCalledTimes(1);
+        expect(updateLastLoginAt).toHaveBeenCalledTimes(1);
       });
     });
   });
