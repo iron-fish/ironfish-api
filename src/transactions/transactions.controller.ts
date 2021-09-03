@@ -65,9 +65,7 @@ export class TransactionsController {
       withBlock: with_block,
     });
     if (transaction !== null && 'block' in transaction) {
-      return serializedTransactionFromRecordWithBlock(
-        transaction
-      );
+      return serializedTransactionFromRecordWithBlock(transaction);
     } else if (transaction !== null) {
       return serializedTransactionFromRecord(transaction);
     } else {
@@ -92,9 +90,7 @@ export class TransactionsController {
     return {
       data: transactions.map((transaction) => {
         if ('block' in transaction) {
-          return serializedTransactionFromRecordWithBlock(
-            transaction,
-          );
+          return serializedTransactionFromRecordWithBlock(transaction);
         } else {
           return serializedTransactionFromRecord(transaction);
         }

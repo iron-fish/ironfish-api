@@ -5,7 +5,7 @@ import { SerializedTransaction } from './serialized-transaction';
 
 export interface SerializedTransactionWithBlock extends SerializedTransaction {
   block: {
-    hash: string,
-    index: number,
-  }
+    hash: string;
+    index: number;
+  };
 }
