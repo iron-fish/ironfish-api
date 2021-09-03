@@ -19,9 +19,6 @@ module.exports = {
     start: {
       script: 'node build/main.js',
       worker: 'node build/worker.js',
-      local: {
-        script: 'LOCAL=true nps start',
-      }
     },
     test: 'jest --runInBand',
   },
