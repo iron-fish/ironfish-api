@@ -155,143 +155,51 @@ describe('TransactionsController', () => {
   });
 
   describe('GET /transactions/find', () => {
-    describe('with a valid hash', () => {
-      it('returns the transaction with the correct hash', async () => {
-        const testTransactionHash = uuid();
-        const { block } = await seedBlock();
-        const notes = [{ commitment: uuid() }];
-        const spends = [{ nullifier: uuid() }];
-        await prisma.transaction.create({
-          data: {
+    describe('with block info requested', () => {
+      describe('with a valid hash', () => {
+        it('returns the transaction with the correct hash and block', async () => {
+          const testTransactionHash = uuid();
+          const { block } = await seedBlock();
+          const notes = [{ commitment: uuid() }];
+          const spends = [{ nullifier: uuid() }];
+          await prisma.transaction.create({
+            data: {
+              hash: testTransactionHash,
+              network_version: 0,
+              fee: faker.datatype.number(),
+              size: faker.datatype.number(),
+              timestamp: new Date(),
+              block_id: block.id,
+              notes,
+              spends,
+            },
+          });
+
+          const { body } = await request(app.getHttpServer())
+            .get('/transactions/find')
+            .query({ hash: testTransactionHash, with_block: true })
+            .expect(HttpStatus.OK);
+
+          expect(body).toMatchObject({
+            id: expect.any(Number),
             hash: testTransactionHash,
-            network_version: 0,
-            fee: faker.datatype.number(),
-            size: faker.datatype.number(),
-            timestamp: new Date(),
+            fee: expect.any(String),
+            size: expect.any(Number),
+            timestamp: expect.any(String),
             block_id: block.id,
-            notes,
-            spends,
-          },
-        });
-
-        const { body } = await request(app.getHttpServer())
-          .get('/transactions/find')
-          .query({ hash: testTransactionHash })
-          .expect(HttpStatus.OK);
-
-        expect(body).toMatchObject({
-          id: expect.any(Number),
-          hash: testTransactionHash,
-          fee: expect.any(String),
-          size: expect.any(Number),
-          timestamp: expect.any(String),
-          block_id: block.id,
-          notes: notes,
-          spends: spends,
+            notes: notes,
+            spends: spends,
+            block_hash: block.hash,
+            block_index: block.sequence,
+          });
         });
       });
-    });
 
-    describe('with an invalid hash', () => {
-      it('returns a 404', async () => {
-        const { block } = await seedBlock();
-        const notes = [{ commitment: uuid() }];
-        const spends = [{ nullifier: uuid() }];
-        await prisma.transaction.create({
-          data: {
-            hash: uuid(),
-            network_version: 0,
-            fee: faker.datatype.number(),
-            size: faker.datatype.number(),
-            timestamp: new Date(),
-            block_id: block.id,
-            notes,
-            spends,
-          },
-        });
-
-        const { body } = await request(app.getHttpServer())
-          .get('/transactions/find')
-          .query({ hash: uuid() })
-          .expect(HttpStatus.NOT_FOUND);
-
-        expect(body).toMatchSnapshot();
-      });
-    });
-
-    describe('with an undefined hash', () => {
-      it('returns a 422', async () => {
-        const { block } = await seedBlock();
-        const notes = [{ commitment: uuid() }];
-        const spends = [{ nullifier: uuid() }];
-        await prisma.transaction.create({
-          data: {
-            hash: uuid(),
-            network_version: 0,
-            fee: faker.datatype.number(),
-            size: faker.datatype.number(),
-            timestamp: new Date(),
-            block_id: block.id,
-            notes,
-            spends,
-          },
-        });
-
-        const { body } = await request(app.getHttpServer())
-          .get('/transactions/find')
-          .expect(HttpStatus.UNPROCESSABLE_ENTITY);
-
-        expect(body).toMatchSnapshot();
-      });
-    });
-  });
-
-  describe('GET /transactions', () => {
-    describe('with a valid partial hash search string', () => {
-      it('retuns transactions with match(es)', async () => {
-        const { block } = await seedBlock();
-        const testTransactionHash = uuid();
-        const notes = [{ commitment: uuid() }];
-        const spends = [{ nullifier: uuid() }];
-        const transaction = await prisma.transaction.create({
-          data: {
-            hash: testTransactionHash,
-            network_version: 0,
-            fee: faker.datatype.number(),
-            size: faker.datatype.number(),
-            timestamp: new Date(),
-            block_id: block.id,
-            notes,
-            spends,
-          },
-        });
-
-        const { body } = await request(app.getHttpServer())
-          .get('/transactions')
-          .query({ search: testTransactionHash.slice(0, 5) })
-          .expect(HttpStatus.OK);
-
-        const { data } = body;
-        expect((data as unknown[]).length).toBeGreaterThan(0);
-        expect((data as unknown[])[0]).toMatchObject({
-          id: expect.any(Number),
-          hash: transaction.hash,
-          fee: transaction.fee.toString(),
-          size: transaction.size,
-          timestamp: transaction.timestamp.toISOString(),
-          block_id: transaction.block_id,
-          notes: notes,
-          spends: spends,
-        });
-      });
-    });
-
-    describe('with no query parameters', () => {
-      it('retuns transactions with match(es)', async () => {
-        const { block } = await seedBlock();
-        const notes = [{ commitment: uuid() }];
-        const spends = [{ nullifier: uuid() }];
-        for (let i = 0; i < 10; i++) {
+      describe('with an invalid hash', () => {
+        it('returns a 404', async () => {
+          const { block } = await seedBlock();
+          const notes = [{ commitment: uuid() }];
+          const spends = [{ nullifier: uuid() }];
           await prisma.transaction.create({
             data: {
               hash: uuid(),
@@ -304,27 +212,309 @@ describe('TransactionsController', () => {
               spends,
             },
           });
-        }
 
-        const { body } = await request(app.getHttpServer())
-          .get('/transactions')
-          .expect(HttpStatus.OK);
+          const { body } = await request(app.getHttpServer())
+            .get('/transactions/find')
+            .query({ hash: uuid(), with_block: true })
+            .expect(HttpStatus.NOT_FOUND);
 
-        const { data } = body;
-        expect((data as unknown[]).length).toBeGreaterThan(10);
-        expect((data as unknown[])[0]).toMatchObject({
-          id: expect.any(Number),
-          hash: expect.any(String),
-          fee: expect.any(String),
-          size: expect.any(Number),
-          timestamp: expect.any(String),
-          block_id: block.id,
-          notes: notes,
-          spends: spends,
+          expect(body).toMatchSnapshot();
         });
-        expect(((data as unknown[])[0] as Transaction).id).toBeGreaterThan(
-          ((data as unknown[])[1] as Transaction).id,
-        );
+      });
+
+      describe('with an undefined hash', () => {
+        it('returns a 422', async () => {
+          const { block } = await seedBlock();
+          const notes = [{ commitment: uuid() }];
+          const spends = [{ nullifier: uuid() }];
+          await prisma.transaction.create({
+            data: {
+              hash: uuid(),
+              network_version: 0,
+              fee: faker.datatype.number(),
+              size: faker.datatype.number(),
+              timestamp: new Date(),
+              block_id: block.id,
+              notes,
+              spends,
+            },
+          });
+
+          const { body } = await request(app.getHttpServer())
+            .get('/transactions/find')
+            .query({ with_block: true })
+            .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+
+          expect(body).toMatchSnapshot();
+        });
+      });
+    });
+
+    describe('with block info not requested', () => {
+      describe('with a valid hash', () => {
+        it('returns the transaction with the correct hash', async () => {
+          const testTransactionHash = uuid();
+          const { block } = await seedBlock();
+          const notes = [{ commitment: uuid() }];
+          const spends = [{ nullifier: uuid() }];
+          await prisma.transaction.create({
+            data: {
+              hash: testTransactionHash,
+              network_version: 0,
+              fee: faker.datatype.number(),
+              size: faker.datatype.number(),
+              timestamp: new Date(),
+              block_id: block.id,
+              notes,
+              spends,
+            },
+          });
+
+          const { body } = await request(app.getHttpServer())
+            .get('/transactions/find')
+            .query({ hash: testTransactionHash })
+            .expect(HttpStatus.OK);
+
+          expect(body).toMatchObject({
+            id: expect.any(Number),
+            hash: testTransactionHash,
+            fee: expect.any(String),
+            size: expect.any(Number),
+            timestamp: expect.any(String),
+            block_id: block.id,
+            notes: notes,
+            spends: spends,
+          });
+        });
+      });
+
+      describe('with an invalid hash', () => {
+        it('returns a 404', async () => {
+          const { block } = await seedBlock();
+          const notes = [{ commitment: uuid() }];
+          const spends = [{ nullifier: uuid() }];
+          await prisma.transaction.create({
+            data: {
+              hash: uuid(),
+              network_version: 0,
+              fee: faker.datatype.number(),
+              size: faker.datatype.number(),
+              timestamp: new Date(),
+              block_id: block.id,
+              notes,
+              spends,
+            },
+          });
+
+          const { body } = await request(app.getHttpServer())
+            .get('/transactions/find')
+            .query({ hash: uuid() })
+            .expect(HttpStatus.NOT_FOUND);
+
+          expect(body).toMatchSnapshot();
+        });
+      });
+
+      describe('with an undefined hash', () => {
+        it('returns a 422', async () => {
+          const { block } = await seedBlock();
+          const notes = [{ commitment: uuid() }];
+          const spends = [{ nullifier: uuid() }];
+          await prisma.transaction.create({
+            data: {
+              hash: uuid(),
+              network_version: 0,
+              fee: faker.datatype.number(),
+              size: faker.datatype.number(),
+              timestamp: new Date(),
+              block_id: block.id,
+              notes,
+              spends,
+            },
+          });
+
+          const { body } = await request(app.getHttpServer())
+            .get('/transactions/find')
+            .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+
+          expect(body).toMatchSnapshot();
+        });
+      });
+    });
+  });
+
+  describe('GET /transactions', () => {
+    describe('with block info requested', () => {
+      describe('with a valid partial hash search string', () => {
+        it('retuns matching transactions with block info included', async () => {
+          const { block } = await seedBlock();
+          const testTransactionHash = uuid();
+          const notes = [{ commitment: uuid() }];
+          const spends = [{ nullifier: uuid() }];
+          const transaction = await prisma.transaction.create({
+            data: {
+              hash: testTransactionHash,
+              network_version: 0,
+              fee: faker.datatype.number(),
+              size: faker.datatype.number(),
+              timestamp: new Date(),
+              block_id: block.id,
+              notes,
+              spends,
+            },
+          });
+
+          const { body } = await request(app.getHttpServer())
+            .get('/transactions')
+            .query({
+              search: testTransactionHash.slice(0, 5),
+              with_block: true,
+            })
+            .expect(HttpStatus.OK);
+
+          const { data } = body;
+          expect((data as unknown[]).length).toBeGreaterThan(0);
+          expect((data as unknown[])[0]).toMatchObject({
+            id: expect.any(Number),
+            hash: transaction.hash,
+            fee: transaction.fee.toString(),
+            size: transaction.size,
+            timestamp: transaction.timestamp.toISOString(),
+            block_id: transaction.block_id,
+            notes: notes,
+            spends: spends,
+            block_hash: block.hash,
+            block_index: block.sequence,
+          });
+        });
+      });
+
+      describe('with only block info requested', () => {
+        it('retuns transactions in descending order', async () => {
+          const { block } = await seedBlock();
+          const notes = [{ commitment: uuid() }];
+          const spends = [{ nullifier: uuid() }];
+          for (let i = 0; i < 10; i++) {
+            await prisma.transaction.create({
+              data: {
+                hash: uuid(),
+                network_version: 0,
+                fee: faker.datatype.number(),
+                size: faker.datatype.number(),
+                timestamp: new Date(),
+                block_id: block.id,
+                notes,
+                spends,
+              },
+            });
+          }
+
+          const { body } = await request(app.getHttpServer())
+            .get('/transactions')
+            .query({ with_block: true })
+            .expect(HttpStatus.OK);
+
+          const { data } = body;
+          expect((data as unknown[]).length).toBeGreaterThan(10);
+          expect((data as unknown[])[0]).toMatchObject({
+            id: expect.any(Number),
+            hash: expect.any(String),
+            fee: expect.any(String),
+            size: expect.any(Number),
+            timestamp: expect.any(String),
+            block_id: block.id,
+            notes: notes,
+            spends: spends,
+            block_hash: block.hash,
+            block_index: block.sequence,
+          });
+          expect(((data as unknown[])[0] as Transaction).id).toBeGreaterThan(
+            ((data as unknown[])[1] as Transaction).id,
+          );
+        });
+      });
+    });
+
+    describe('with block info not reqeusted', () => {
+      describe('with a valid partial hash search string', () => {
+        it('retuns matching transactions', async () => {
+          const { block } = await seedBlock();
+          const testTransactionHash = uuid();
+          const notes = [{ commitment: uuid() }];
+          const spends = [{ nullifier: uuid() }];
+          const transaction = await prisma.transaction.create({
+            data: {
+              hash: testTransactionHash,
+              network_version: 0,
+              fee: faker.datatype.number(),
+              size: faker.datatype.number(),
+              timestamp: new Date(),
+              block_id: block.id,
+              notes,
+              spends,
+            },
+          });
+
+          const { body } = await request(app.getHttpServer())
+            .get('/transactions')
+            .query({ search: testTransactionHash.slice(0, 5) })
+            .expect(HttpStatus.OK);
+
+          const { data } = body;
+          expect((data as unknown[]).length).toBeGreaterThan(0);
+          expect((data as unknown[])[0]).toMatchObject({
+            id: expect.any(Number),
+            hash: transaction.hash,
+            fee: transaction.fee.toString(),
+            size: transaction.size,
+            timestamp: transaction.timestamp.toISOString(),
+            block_id: transaction.block_id,
+            notes: notes,
+            spends: spends,
+          });
+        });
+      });
+
+      describe('with no query parameters', () => {
+        it('retuns transactions in descending order', async () => {
+          const { block } = await seedBlock();
+          const notes = [{ commitment: uuid() }];
+          const spends = [{ nullifier: uuid() }];
+          for (let i = 0; i < 10; i++) {
+            await prisma.transaction.create({
+              data: {
+                hash: uuid(),
+                network_version: 0,
+                fee: faker.datatype.number(),
+                size: faker.datatype.number(),
+                timestamp: new Date(),
+                block_id: block.id,
+                notes,
+                spends,
+              },
+            });
+          }
+
+          const { body } = await request(app.getHttpServer())
+            .get('/transactions')
+            .expect(HttpStatus.OK);
+
+          const { data } = body;
+          expect((data as unknown[]).length).toBeGreaterThan(10);
+          expect((data as unknown[])[0]).toMatchObject({
+            id: expect.any(Number),
+            hash: expect.any(String),
+            fee: expect.any(String),
+            size: expect.any(Number),
+            timestamp: expect.any(String),
+            block_id: block.id,
+            notes: notes,
+            spends: spends,
+          });
+          expect(((data as unknown[])[0] as Transaction).id).toBeGreaterThan(
+            ((data as unknown[])[1] as Transaction).id,
+          );
+        });
       });
     });
   });

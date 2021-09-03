@@ -18,8 +18,12 @@ import { TransactionQueryDto } from './dto/transaction-query.dto';
 import { TransactionsQueryDto } from './dto/transactions-query.dto';
 import { UpsertTransactionsDto } from './dto/upsert-transactions.dto';
 import { SerializedTransaction } from './interfaces/serialized-transaction';
+import { SerializedTransactionWithBlock } from './interfaces/serialized-transaction-with-block';
 import { TransactionsService } from './transactions.service';
-import { serializedTransactionFromRecord } from './utils/transaction-translator';
+import {
+  serializedTransactionFromRecord,
+  serializedTransactionFromRecordWithBlock,
+} from './utils/transaction-translator';
 
 @Controller('transactions')
 export class TransactionsController {
@@ -54,10 +58,18 @@ export class TransactionsController {
         transform: true,
       }),
     )
-    { hash }: TransactionQueryDto,
-  ): Promise<SerializedTransaction> {
-    const transaction = await this.transactionsService.find({ hash });
-    if (transaction !== null) {
+    { hash, with_block }: TransactionQueryDto,
+  ): Promise<SerializedTransaction | SerializedTransactionWithBlock> {
+    const transaction = await this.transactionsService.find({
+      hash,
+      with_block,
+    });
+    if (transaction !== null && 'block' in transaction) {
+      return serializedTransactionFromRecordWithBlock(
+        transaction,
+        transaction.block,
+      );
+    } else if (transaction !== null) {
       return serializedTransactionFromRecord(transaction);
     } else {
       throw new NotFoundException();
@@ -72,13 +84,23 @@ export class TransactionsController {
         transform: true,
       }),
     )
-    { search }: TransactionsQueryDto,
-  ): Promise<List<SerializedTransaction>> {
-    const transactions = await this.transactionsService.list({ search });
+    { search, with_block }: TransactionsQueryDto,
+  ): Promise<List<SerializedTransaction | SerializedTransactionWithBlock>> {
+    const transactions = await this.transactionsService.list({
+      search,
+      with_block,
+    });
     return {
-      data: transactions.map((transaction) =>
-        serializedTransactionFromRecord(transaction),
-      ),
+      data: transactions.map((transaction) => {
+        if ('block' in transaction) {
+          return serializedTransactionFromRecordWithBlock(
+            transaction,
+            transaction.block,
+          );
+        } else {
+          return serializedTransactionFromRecord(transaction);
+        }
+      }),
     };
   }
 }
