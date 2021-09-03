@@ -74,7 +74,7 @@ export class TransactionsService {
     options: FindTransactionOptions,
   ): Promise<Transaction | (Transaction & { block: Block }) | null> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
-    if (options.withBlock === true) {
+    if (options.withBlock) {
       return this.prisma.transaction.findFirst({
         where: {
           hash: options.hash,
@@ -100,7 +100,7 @@ export class TransactionsService {
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
     const limit = Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
 
-    if (options.withBlock === true) {
+    if (options.withBlock) {
       if (options.search !== undefined) {
         return this.prisma.transaction.findMany({
           orderBy: {
