@@ -2,7 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { SerializedTransaction } from '../interfaces/serialized-transaction';
+import { SerializedTransactionWithBlock } from '../interfaces/serialized-transaction-with-block';
 import { Transaction } from '.prisma/client';
+import { Block } from '.prisma/client';
 
 export function serializedTransactionFromRecord(
   transaction: Transaction,
@@ -16,5 +18,23 @@ export function serializedTransactionFromRecord(
     block_id: transaction.block_id,
     notes: transaction.notes,
     spends: transaction.spends,
+  };
+}
+
+export function serializedTransactionFromRecordWithBlock(
+  transaction: Transaction,
+  block: Block,
+): SerializedTransactionWithBlock {
+  return {
+    id: transaction.id,
+    hash: transaction.hash,
+    fee: transaction.fee.toString(),
+    size: transaction.size,
+    timestamp: transaction.timestamp,
+    block_id: transaction.block_id,
+    notes: transaction.notes,
+    spends: transaction.spends,
+    block_hash: block.hash,
+    block_index: block.sequence,
   };
 }
