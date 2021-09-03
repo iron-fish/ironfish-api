@@ -130,127 +130,267 @@ describe('TransactionsService', () => {
   });
 
   describe('find', () => {
-    describe('with a valid hash', () => {
-      it('returns the transaction with the correct hash', async () => {
-        const { block } = await seedBlock();
-        const notes = [{ commitment: uuid() }];
-        const spends = [{ nullifier: uuid() }];
-        const testTransactionHash = uuid();
-        const transactions = await transactionsService.bulkUpsert({
-          transactions: [
-            {
-              hash: testTransactionHash,
-              fee: faker.datatype.number(),
-              size: faker.datatype.number(),
-              timestamp: new Date(),
-              block_id: block.id,
-              notes,
-              spends,
-            },
-          ],
+    describe('with block info requested', () => {
+      describe('with a valid hash', () => {
+        it('returns the transaction with the correct hash and block', async () => {
+          const { block } = await seedBlock();
+          const notes = [{ commitment: uuid() }];
+          const spends = [{ nullifier: uuid() }];
+          const testTransactionHash = uuid();
+          const transactions = await transactionsService.bulkUpsert({
+            transactions: [
+              {
+                hash: testTransactionHash,
+                fee: faker.datatype.number(),
+                size: faker.datatype.number(),
+                timestamp: new Date(),
+                block_id: block.id,
+                notes,
+                spends,
+              },
+            ],
+          });
+          const testTransaction = transactions[0];
+          const transaction = await transactionsService.find({
+            hash: testTransactionHash,
+            withBlock: true,
+          });
+          expect(transaction).toMatchObject(testTransaction);
+          expect(transaction).toHaveProperty('block', block);
         });
-        const testTransaction = transactions[0];
-        const transaction = await transactionsService.find({
-          hash: testTransactionHash,
+      });
+
+      describe('with an invalid hash', () => {
+        it('returns null', async () => {
+          const { block } = await seedBlock();
+          const notes = [{ commitment: uuid() }];
+          const spends = [{ nullifier: uuid() }];
+          await transactionsService.bulkUpsert({
+            transactions: [
+              {
+                hash: uuid(),
+                fee: faker.datatype.number(),
+                size: faker.datatype.number(),
+                timestamp: new Date(),
+                block_id: block.id,
+                notes,
+                spends,
+              },
+            ],
+          });
+
+          const transaction = await transactionsService.find({
+            hash: uuid(),
+            withBlock: true,
+          });
+          expect(transaction).toBeNull();
         });
-        expect(transaction).toMatchObject(testTransaction);
       });
     });
 
-    describe('with an invalid hash', () => {
-      it('returns null', async () => {
-        const { block } = await seedBlock();
-        const notes = [{ commitment: uuid() }];
-        const spends = [{ nullifier: uuid() }];
-        await transactionsService.bulkUpsert({
-          transactions: [
-            {
-              hash: uuid(),
-              fee: faker.datatype.number(),
-              size: faker.datatype.number(),
-              timestamp: new Date(),
-              block_id: block.id,
-              notes,
-              spends,
-            },
-          ],
+    describe('with block info not requested', () => {
+      describe('with a valid hash', () => {
+        it('returns the transaction with the correct hash', async () => {
+          const { block } = await seedBlock();
+          const notes = [{ commitment: uuid() }];
+          const spends = [{ nullifier: uuid() }];
+          const testTransactionHash = uuid();
+          const transactions = await transactionsService.bulkUpsert({
+            transactions: [
+              {
+                hash: testTransactionHash,
+                fee: faker.datatype.number(),
+                size: faker.datatype.number(),
+                timestamp: new Date(),
+                block_id: block.id,
+                notes,
+                spends,
+              },
+            ],
+          });
+          const testTransaction = transactions[0];
+          const transaction = await transactionsService.find({
+            hash: testTransactionHash,
+          });
+          expect(transaction).toMatchObject(testTransaction);
         });
+      });
 
-        const transaction = await transactionsService.find({ hash: uuid() });
-        expect(transaction).toBeNull();
+      describe('with an invalid hash', () => {
+        it('returns null', async () => {
+          const { block } = await seedBlock();
+          const notes = [{ commitment: uuid() }];
+          const spends = [{ nullifier: uuid() }];
+          await transactionsService.bulkUpsert({
+            transactions: [
+              {
+                hash: uuid(),
+                fee: faker.datatype.number(),
+                size: faker.datatype.number(),
+                timestamp: new Date(),
+                block_id: block.id,
+                notes,
+                spends,
+              },
+            ],
+          });
+
+          const transaction = await transactionsService.find({ hash: uuid() });
+          expect(transaction).toBeNull();
+        });
       });
     });
   });
 
   describe('list', () => {
-    describe('with a valid partial hash search string', () => {
-      it('returns transactions with match(es)', async () => {
-        const { block } = await seedBlock();
-        const testTransactionHash = uuid();
-        const notes = [{ commitment: uuid() }];
-        const spends = [{ nullifier: uuid() }];
-        await transactionsService.bulkUpsert({
-          transactions: [
-            {
-              hash: testTransactionHash,
-              fee: faker.datatype.number(),
-              size: faker.datatype.number(),
-              timestamp: new Date(),
-              block_id: block.id,
-              notes,
-              spends,
-            },
-            {
-              hash: uuid(),
-              fee: faker.datatype.number(),
-              size: faker.datatype.number(),
-              timestamp: new Date(),
-              block_id: block.id,
-              notes,
-              spends,
-            },
-          ],
-        });
+    describe('with block info requested', () => {
+      describe('with a valid partial hash search string', () => {
+        it('returns transactions with match(es) with blocks included', async () => {
+          const { block } = await seedBlock();
+          const testTransactionHash = uuid();
+          const notes = [{ commitment: uuid() }];
+          const spends = [{ nullifier: uuid() }];
+          await transactionsService.bulkUpsert({
+            transactions: [
+              {
+                hash: testTransactionHash,
+                fee: faker.datatype.number(),
+                size: faker.datatype.number(),
+                timestamp: new Date(),
+                block_id: block.id,
+                notes,
+                spends,
+              },
+              {
+                hash: uuid(),
+                fee: faker.datatype.number(),
+                size: faker.datatype.number(),
+                timestamp: new Date(),
+                block_id: block.id,
+                notes,
+                spends,
+              },
+            ],
+          });
 
-        const transactions = await transactionsService.list({
-          search: testTransactionHash.slice(0, 5),
+          const transactions = await transactionsService.list({
+            search: testTransactionHash.slice(0, 5),
+            withBlock: true,
+          });
+          expect(transactions.length).toBeGreaterThan(0);
+          expect(transactions[0]).toHaveProperty('block', block);
         });
-        expect(transactions.length).toBeGreaterThan(0);
+      });
+
+      describe('with only block info requested', () => {
+        it('returns transactions in descending order with blocks included', async () => {
+          const { block } = await seedBlock();
+          const testTransactionHash = uuid();
+          const notes = [{ commitment: uuid() }];
+          const spends = [{ nullifier: uuid() }];
+          await transactionsService.bulkUpsert({
+            transactions: [
+              {
+                hash: testTransactionHash,
+                fee: faker.datatype.number(),
+                size: faker.datatype.number(),
+                timestamp: new Date(),
+                block_id: block.id,
+                notes,
+                spends,
+              },
+              {
+                hash: uuid(),
+                fee: faker.datatype.number(),
+                size: faker.datatype.number(),
+                timestamp: new Date(),
+                block_id: block.id,
+                notes,
+                spends,
+              },
+            ],
+          });
+
+          const transactions = await transactionsService.list({
+            withBlock: true,
+          });
+          expect(transactions.length).toBeGreaterThan(0);
+          expect(transactions[0].id).toBeGreaterThan(transactions[1].id);
+          expect(transactions[0]).toHaveProperty('block', block);
+        });
       });
     });
 
-    describe('with no query parameters', () => {
-      it('returns transactions in descending order', async () => {
-        const { block } = await seedBlock();
-        const testTransactionHash = uuid();
-        const notes = [{ commitment: uuid() }];
-        const spends = [{ nullifier: uuid() }];
-        await transactionsService.bulkUpsert({
-          transactions: [
-            {
-              hash: testTransactionHash,
-              fee: faker.datatype.number(),
-              size: faker.datatype.number(),
-              timestamp: new Date(),
-              block_id: block.id,
-              notes,
-              spends,
-            },
-            {
-              hash: uuid(),
-              fee: faker.datatype.number(),
-              size: faker.datatype.number(),
-              timestamp: new Date(),
-              block_id: block.id,
-              notes,
-              spends,
-            },
-          ],
-        });
+    describe('with block info not requested', () => {
+      describe('with a valid partial hash search string', () => {
+        it('returns transactions with match(es)', async () => {
+          const { block } = await seedBlock();
+          const testTransactionHash = uuid();
+          const notes = [{ commitment: uuid() }];
+          const spends = [{ nullifier: uuid() }];
+          await transactionsService.bulkUpsert({
+            transactions: [
+              {
+                hash: testTransactionHash,
+                fee: faker.datatype.number(),
+                size: faker.datatype.number(),
+                timestamp: new Date(),
+                block_id: block.id,
+                notes,
+                spends,
+              },
+              {
+                hash: uuid(),
+                fee: faker.datatype.number(),
+                size: faker.datatype.number(),
+                timestamp: new Date(),
+                block_id: block.id,
+                notes,
+                spends,
+              },
+            ],
+          });
 
-        const transactions = await transactionsService.list({});
-        expect(transactions.length).toBeGreaterThan(0);
-        expect(transactions[0].id).toBeGreaterThan(transactions[1].id);
+          const transactions = await transactionsService.list({
+            search: testTransactionHash.slice(0, 5),
+          });
+          expect(transactions.length).toBeGreaterThan(0);
+        });
+      });
+
+      describe('with no query parameters', () => {
+        it('returns transactions in descending order', async () => {
+          const { block } = await seedBlock();
+          const testTransactionHash = uuid();
+          const notes = [{ commitment: uuid() }];
+          const spends = [{ nullifier: uuid() }];
+          await transactionsService.bulkUpsert({
+            transactions: [
+              {
+                hash: testTransactionHash,
+                fee: faker.datatype.number(),
+                size: faker.datatype.number(),
+                timestamp: new Date(),
+                block_id: block.id,
+                notes,
+                spends,
+              },
+              {
+                hash: uuid(),
+                fee: faker.datatype.number(),
+                size: faker.datatype.number(),
+                timestamp: new Date(),
+                block_id: block.id,
+                notes,
+                spends,
+              },
+            ],
+          });
+
+          const transactions = await transactionsService.list({});
+          expect(transactions.length).toBeGreaterThan(0);
+          expect(transactions[0].id).toBeGreaterThan(transactions[1].id);
+        });
       });
     });
   });

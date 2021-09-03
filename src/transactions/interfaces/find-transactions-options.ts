@@ -4,4 +4,5 @@
 
 export interface FindTransactionOptions {
   hash: string;
+  withBlock?: boolean;
 }

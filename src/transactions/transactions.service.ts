@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable } from '@nestjs/common';
+import { Block } from '@prisma/client';
 import { classToPlain } from 'class-transformer';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
@@ -69,21 +70,65 @@ export class TransactionsService {
     });
   }
 
-  async find(options: FindTransactionOptions): Promise<Transaction | null> {
+  async find(
+    options: FindTransactionOptions,
+  ): Promise<Transaction | (Transaction & { block: Block }) | null> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
-    return this.prisma.transaction.findFirst({
-      where: {
-        hash: options.hash,
-        network_version: networkVersion,
-      },
-    });
+    if (options.withBlock) {
+      return this.prisma.transaction.findFirst({
+        where: {
+          hash: options.hash,
+          network_version: networkVersion,
+        },
+        include: {
+          block: true,
+        },
+      });
+    } else {
+      return this.prisma.transaction.findFirst({
+        where: {
+          hash: options.hash,
+          network_version: networkVersion,
+        },
+      });
+    }
   }
 
-  async list(options: ListTransactionOptions): Promise<Transaction[]> {
+  async list(
+    options: ListTransactionOptions,
+  ): Promise<Transaction[] | (Transaction & { block: Block })[]> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
     const limit = Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
 
-    if (options.search !== undefined) {
+    if (options.withBlock) {
+      if (options.search !== undefined) {
+        return this.prisma.transaction.findMany({
+          orderBy: {
+            id: SortOrder.DESC,
+          },
+          take: limit,
+          where: {
+            hash: {
+              contains: options.search,
+            },
+            network_version: networkVersion,
+          },
+          include: {
+            block: true,
+          },
+        });
+      } else {
+        return this.prisma.transaction.findMany({
+          orderBy: {
+            id: SortOrder.DESC,
+          },
+          take: limit,
+          include: {
+            block: true,
+          },
+        });
+      }
+    } else if (options.search !== undefined) {
       return this.prisma.transaction.findMany({
         orderBy: {
           id: SortOrder.DESC,
