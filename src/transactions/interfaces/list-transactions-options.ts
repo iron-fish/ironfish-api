@@ -6,5 +6,5 @@ import { PaginationOptions } from '../../common/interfaces/pagination-options';
 
 export interface ListTransactionOptions extends PaginationOptions {
   search?: string;
-  with_block?: boolean;
+  withBlock?: boolean;
 }

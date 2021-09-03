@@ -62,7 +62,7 @@ export class TransactionsController {
   ): Promise<SerializedTransaction | SerializedTransactionWithBlock> {
     const transaction = await this.transactionsService.find({
       hash,
-      with_block,
+      withBlock: with_block,
     });
     if (transaction !== null && 'block' in transaction) {
       return serializedTransactionFromRecordWithBlock(
@@ -88,7 +88,7 @@ export class TransactionsController {
   ): Promise<List<SerializedTransaction | SerializedTransactionWithBlock>> {
     const transactions = await this.transactionsService.list({
       search,
-      with_block,
+      withBlock: with_block,
     });
     return {
       data: transactions.map((transaction) => {
