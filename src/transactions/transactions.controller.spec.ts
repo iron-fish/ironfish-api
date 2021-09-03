@@ -147,8 +147,8 @@ describe('TransactionsController', () => {
           size: transaction.size,
           timestamp: transaction.timestamp.toISOString(),
           block_id: transaction.block_id,
-          notes: notes,
-          spends: spends,
+          notes,
+          spends,
         });
       });
     });
@@ -187,8 +187,8 @@ describe('TransactionsController', () => {
             size: expect.any(Number),
             timestamp: expect.any(String),
             block_id: block.id,
-            notes: notes,
-            spends: spends,
+            notes,
+            spends,
             block_hash: block.hash,
             block_index: block.sequence,
           });
@@ -381,8 +381,8 @@ describe('TransactionsController', () => {
             size: transaction.size,
             timestamp: transaction.timestamp.toISOString(),
             block_id: transaction.block_id,
-            notes: notes,
-            spends: spends,
+            notes,
+            spends,
             block_hash: block.hash,
             block_index: block.sequence,
           });
@@ -423,8 +423,8 @@ describe('TransactionsController', () => {
             size: expect.any(Number),
             timestamp: expect.any(String),
             block_id: block.id,
-            notes: notes,
-            spends: spends,
+            notes,
+            spends,
             block_hash: block.hash,
             block_index: block.sequence,
           });
@@ -469,8 +469,8 @@ describe('TransactionsController', () => {
             size: transaction.size,
             timestamp: transaction.timestamp.toISOString(),
             block_id: transaction.block_id,
-            notes: notes,
-            spends: spends,
+            notes,
+            spends,
           });
         });
       });
@@ -508,8 +508,8 @@ describe('TransactionsController', () => {
             size: expect.any(Number),
             timestamp: expect.any(String),
             block_id: block.id,
-            notes: notes,
-            spends: spends,
+            notes,
+            spends,
           });
           expect(((data as unknown[])[0] as Transaction).id).toBeGreaterThan(
             ((data as unknown[])[1] as Transaction).id,

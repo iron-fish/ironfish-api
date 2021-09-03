@@ -153,7 +153,7 @@ describe('TransactionsService', () => {
           const testTransaction = transactions[0];
           const transaction = await transactionsService.find({
             hash: testTransactionHash,
-            with_block: true,
+            withBlock: true,
           });
           expect(transaction).toMatchObject(testTransaction);
           expect(transaction).toHaveProperty('block', block);
@@ -181,7 +181,7 @@ describe('TransactionsService', () => {
 
           const transaction = await transactionsService.find({
             hash: uuid(),
-            with_block: true,
+            withBlock: true,
           });
           expect(transaction).toBeNull();
         });
@@ -275,7 +275,7 @@ describe('TransactionsService', () => {
 
           const transactions = await transactionsService.list({
             search: testTransactionHash.slice(0, 5),
-            with_block: true,
+            withBlock: true,
           });
           expect(transactions.length).toBeGreaterThan(0);
           expect(transactions[0]).toHaveProperty('block', block);
@@ -312,7 +312,7 @@ describe('TransactionsService', () => {
           });
 
           const transactions = await transactionsService.list({
-            with_block: true,
+            withBlock: true,
           });
           expect(transactions.length).toBeGreaterThan(0);
           expect(transactions[0].id).toBeGreaterThan(transactions[1].id);
