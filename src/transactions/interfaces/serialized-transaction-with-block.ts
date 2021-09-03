@@ -4,6 +4,8 @@
 import { SerializedTransaction } from './serialized-transaction';
 
 export interface SerializedTransactionWithBlock extends SerializedTransaction {
-  block_hash: string;
-  block_index: number;
+  block: {
+    hash: string,
+    index: number,
+  }
 }

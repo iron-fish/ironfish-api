@@ -22,8 +22,7 @@ export function serializedTransactionFromRecord(
 }
 
 export function serializedTransactionFromRecordWithBlock(
-  transaction: Transaction,
-  block: Block,
+  transaction: Transaction & { block: Block},
 ): SerializedTransactionWithBlock {
   return {
     id: transaction.id,
@@ -34,7 +33,9 @@ export function serializedTransactionFromRecordWithBlock(
     block_id: transaction.block_id,
     notes: transaction.notes,
     spends: transaction.spends,
-    block_hash: block.hash,
-    block_index: block.sequence,
+    block: {
+      hash: transaction.block.hash,
+      index: transaction.block.sequence,
+    }
   };
 }
