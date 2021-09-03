@@ -128,28 +128,26 @@ export class TransactionsService {
           },
         });
       }
+    } else if (options.search !== undefined) {
+      return this.prisma.transaction.findMany({
+        orderBy: {
+          id: SortOrder.DESC,
+        },
+        take: limit,
+        where: {
+          hash: {
+            contains: options.search,
+          },
+          network_version: networkVersion,
+        },
+      });
     } else {
-      if (options.search !== undefined) {
-        return this.prisma.transaction.findMany({
-          orderBy: {
-            id: SortOrder.DESC,
-          },
-          take: limit,
-          where: {
-            hash: {
-              contains: options.search,
-            },
-            network_version: networkVersion,
-          },
-        });
-      } else {
-        return this.prisma.transaction.findMany({
-          orderBy: {
-            id: SortOrder.DESC,
-          },
-          take: limit,
-        });
-      }
+      return this.prisma.transaction.findMany({
+        orderBy: {
+          id: SortOrder.DESC,
+        },
+        take: limit,
+      });
     }
   }
 }
