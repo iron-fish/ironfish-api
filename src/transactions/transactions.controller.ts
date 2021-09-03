@@ -66,8 +66,7 @@ export class TransactionsController {
     });
     if (transaction !== null && 'block' in transaction) {
       return serializedTransactionFromRecordWithBlock(
-        transaction,
-        transaction.block,
+        transaction
       );
     } else if (transaction !== null) {
       return serializedTransactionFromRecord(transaction);
@@ -95,7 +94,6 @@ export class TransactionsController {
         if ('block' in transaction) {
           return serializedTransactionFromRecordWithBlock(
             transaction,
-            transaction.block,
           );
         } else {
           return serializedTransactionFromRecord(transaction);

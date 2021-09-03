@@ -189,8 +189,10 @@ describe('TransactionsController', () => {
             block_id: block.id,
             notes,
             spends,
-            block_hash: block.hash,
-            block_index: block.sequence,
+            block: expect.objectContaining({
+              hash: expect.any(String),
+              index: expect.any(Number)
+            })
           });
         });
       });
@@ -383,8 +385,10 @@ describe('TransactionsController', () => {
             block_id: transaction.block_id,
             notes,
             spends,
-            block_hash: block.hash,
-            block_index: block.sequence,
+            block: expect.objectContaining({
+              hash: expect.any(String),
+              index: expect.any(Number)
+            })
           });
         });
       });
@@ -425,8 +429,10 @@ describe('TransactionsController', () => {
             block_id: block.id,
             notes,
             spends,
-            block_hash: block.hash,
-            block_index: block.sequence,
+            block: expect.objectContaining({
+              hash: expect.any(String),
+              index: expect.any(Number)
+            })
           });
           expect(((data as unknown[])[0] as Transaction).id).toBeGreaterThan(
             ((data as unknown[])[1] as Transaction).id,
