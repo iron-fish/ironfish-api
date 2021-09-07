@@ -156,7 +156,14 @@ export class UsersController {
         transform: true,
       }),
     )
-    { after, before, limit, order_by: orderBy, search }: UsersQueryDto,
+    {
+      after,
+      before,
+      limit,
+      order_by: orderBy,
+      country_code: countryCode,
+      search,
+    }: UsersQueryDto,
   ): Promise<PaginatedList<SerializedUser | SerializedUserWithRank>> {
     if (orderBy !== undefined) {
       const { data, hasNext, hasPrevious } =
@@ -165,6 +172,7 @@ export class UsersController {
           before,
           limit: Math.min(MAX_LIMIT, limit || DEFAULT_LIMIT),
           search,
+          country_code: countryCode,
         });
       return {
         object: 'list',
@@ -180,6 +188,7 @@ export class UsersController {
       before,
       limit,
       search,
+      country_code: countryCode,
     });
     return {
       object: 'list',

@@ -20,6 +20,9 @@ module.exports = {
       script: 'node build/main.js',
       worker: 'node build/worker.js',
     },
-    test: 'jest --runInBand',
+    test: {
+      script: 'jest --runInBand',
+      coverage: 'nps "test --coverage"',
+    },
   },
-}
+};

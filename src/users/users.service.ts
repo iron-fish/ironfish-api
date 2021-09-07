@@ -208,6 +208,7 @@ export class UsersService {
     before,
     limit,
     search,
+    country_code: countryCode,
   }: ListUsersWithRankOptions): Promise<{
     data: SerializedUserWithRank[];
     hasNext: boolean;
@@ -276,6 +277,12 @@ export class UsersService {
             rank > $3
           ELSE
             rank < $3
+        END AND
+        CASE WHEN $5::text IS NOT NULL
+          THEN
+            country_code = $5
+          ELSE
+            country_code = country_code
         END
       ORDER BY
         rank ASC
@@ -287,6 +294,7 @@ export class UsersService {
       before === undefined,
       rankCursor,
       limit,
+      countryCode,
     );
     return {
       data,

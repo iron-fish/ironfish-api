@@ -306,7 +306,7 @@ describe('UsersController', () => {
     });
 
     describe('with `order_by` provided', () => {
-      it('returns ranks with the users', async () => {
+      it('returns ranks with the users (and no country_code provided)', async () => {
         const { body } = await request(app.getHttpServer())
           .get(`/users`)
           .query({ order_by: 'rank' })
@@ -321,8 +321,46 @@ describe('UsersController', () => {
         });
       });
     });
+    const getLocation = async () => {
+      const { body } = await request(app.getHttpServer())
+        .get('/users')
+        .expect(HttpStatus.OK);
 
-    describe('wtih an invalid cursor', () => {
+      const { data } = body;
+      const places = (data as Record<string, unknown>[]).map(
+        ({ country_code: cc }) => cc,
+      );
+      return places[0] as string;
+    };
+    describe('with `country_code` provided', () => {
+      it('allows filtering by country_code', async () => {
+        const someplace = await getLocation();
+        const { body } = await request(app.getHttpServer())
+          .get('/users')
+          .query({ country_code: someplace })
+          .expect(HttpStatus.OK);
+        const { data } = body;
+        (data as Record<string, unknown>[]).map(({ country_code }) =>
+          expect(country_code).toEqual(someplace),
+        );
+      });
+    });
+
+    describe('when rank is provided', () => {
+      it('filters by country code', async () => {
+        const someplace = await getLocation();
+        const { body } = await request(app.getHttpServer())
+          .get('/users')
+          .query({ country_code: someplace, order_by: 'rank' })
+          .expect(HttpStatus.OK);
+        const { data } = body;
+        (data as Record<string, unknown>[]).map(({ country_code }) =>
+          expect(country_code).toEqual(someplace),
+        );
+      });
+    });
+
+    describe('with an invalid cursor', () => {
       it('returns a 404', async () => {
         await request(app.getHttpServer())
           .get(`/users`)
@@ -389,7 +427,6 @@ describe('UsersController', () => {
             country_code: faker.address.countryCode('alpha-3'),
           })
           .expect(HttpStatus.CREATED);
-
         expect(body).toMatchObject({
           id: expect.any(Number),
           email,
