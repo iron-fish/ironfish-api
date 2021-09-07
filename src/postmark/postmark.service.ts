@@ -13,12 +13,20 @@ export class PostmarkService {
     this.client = new Client(this.config.get('POSTMARK_API_KEY'));
   }
 
-  async send(): Promise<void> {
-    await this.client.sendEmail({
+  async send({
+    alias,
+    templateModel,
+    to,
+  }: {
+    alias: string;
+    templateModel: Record<string, unknown>;
+    to: string;
+  }): Promise<void> {
+    await this.client.sendEmailWithTemplate({
       From: 'noreply@ironfish.network',
-      To: 'rohan@ironfish.network',
-      Subject: 'The Boys',
-      TextBody: 'Congrats! By receiving this email, your boss is obligated to buy you a lambo'
+      To: to,
+      TemplateAlias: alias,
+      TemplateModel: templateModel,
     });
   }
 }
