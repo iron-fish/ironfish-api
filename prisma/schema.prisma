@@ -39,8 +39,12 @@ model User {
   last_login_at       DateTime? @db.Timestamp(6)
   discord             String?   @db.VarChar
   telegram            String?   @db.VarChar
+  confirmation_token  String?   @db.VarChar
+  confirmed_at        DateTime? @db.Timestamp(6)
   events              Event[]
 
+  @@unique([confirmation_token], name: "uq_users_on_confirmation_token")
+  @@index([confirmation_token], name: "index_users_on_confirmation_token")
   @@index([email], name: "index_users_on_email")
   @@index([graffiti], name: "index_users_on_graffiti")
   @@map("users")
