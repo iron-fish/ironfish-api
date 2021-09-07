@@ -75,6 +75,7 @@
     "passport": "0.4.1",
     "reflect-metadata": "0.1.13",
     "rxjs": "7.3.0",
-    "type-fest": "2.2.0"
+    "type-fest": "2.2.0",
+    "ulid": "2.3.0"
   }
 }

@@ -7,6 +7,7 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import faker from 'faker';
+import { ulid } from 'ulid';
 import { v4 as uuid } from 'uuid';
 import { SortOrder } from '../common/enums/sort-order';
 import { PrismaService } from '../prisma/prisma.service';
@@ -35,6 +36,7 @@ describe('UsersService', () => {
       it('returns the record', async () => {
         const user = await prisma.user.create({
           data: {
+            confirmation_token: ulid(),
             email: faker.internet.email(),
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
@@ -60,6 +62,7 @@ describe('UsersService', () => {
       it('returns the record', async () => {
         const user = await prisma.user.create({
           data: {
+            confirmation_token: ulid(),
             email: faker.internet.email(),
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
@@ -76,6 +79,7 @@ describe('UsersService', () => {
       it('returns null', async () => {
         const user = await prisma.user.create({
           data: {
+            confirmation_token: ulid(),
             email: faker.internet.email(),
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
@@ -107,6 +111,7 @@ describe('UsersService', () => {
         const email = faker.internet.email();
         await prisma.user.create({
           data: {
+            confirmation_token: ulid(),
             email,
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
@@ -114,6 +119,7 @@ describe('UsersService', () => {
         });
         const user = await prisma.user.create({
           data: {
+            confirmation_token: ulid(),
             email,
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
@@ -131,6 +137,7 @@ describe('UsersService', () => {
       it('returns the record', async () => {
         const user = await prisma.user.create({
           data: {
+            confirmation_token: ulid(),
             email: faker.internet.email(),
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
@@ -191,6 +198,7 @@ describe('UsersService', () => {
           const graffiti = uuid();
           await prisma.user.create({
             data: {
+              confirmation_token: ulid(),
               email: faker.internet.email(),
               graffiti,
               country_code: faker.address.countryCode('alpha-3'),
@@ -213,6 +221,7 @@ describe('UsersService', () => {
           const graffiti = uuid();
           await prisma.user.create({
             data: {
+              confirmation_token: ulid(),
               email: faker.internet.email(),
               graffiti,
               country_code: faker.address.countryCode('alpha-3'),
@@ -241,6 +250,7 @@ describe('UsersService', () => {
           const email = faker.internet.email();
           await prisma.user.create({
             data: {
+              confirmation_token: ulid(),
               email,
               graffiti: uuid(),
               country_code: faker.address.countryCode('alpha-3'),
@@ -263,6 +273,7 @@ describe('UsersService', () => {
           const email = faker.internet.email();
           await prisma.user.create({
             data: {
+              confirmation_token: ulid(),
               email,
               graffiti: uuid(),
               country_code: faker.address.countryCode('alpha-3'),
@@ -331,6 +342,7 @@ describe('UsersService', () => {
       const totalPoints = currentMaxPoints + 2;
       const firstUser = await prisma.user.create({
         data: {
+          confirmation_token: ulid(),
           email: faker.internet.email(),
           graffiti: uuid(),
           country_code: faker.address.countryCode('alpha-3'),
@@ -339,6 +351,7 @@ describe('UsersService', () => {
       });
       const secondUser = await prisma.user.create({
         data: {
+          confirmation_token: ulid(),
           email: faker.internet.email(),
           graffiti: uuid(),
           country_code: faker.address.countryCode('alpha-3'),
@@ -347,6 +360,7 @@ describe('UsersService', () => {
       });
       const thirdUser = await prisma.user.create({
         data: {
+          confirmation_token: ulid(),
           email: faker.internet.email(),
           graffiti: uuid(),
           country_code: faker.address.countryCode('alpha-3'),

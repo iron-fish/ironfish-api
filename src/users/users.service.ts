@@ -7,6 +7,7 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import is from '@sindresorhus/is';
+import { ulid } from 'ulid';
 import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
 import { PrismaService } from '../prisma/prisma.service';
@@ -101,6 +102,7 @@ export class UsersService {
     const [user] = await this.prisma.$transaction([
       this.prisma.user.create({
         data: {
+          confirmation_token: ulid(),
           email,
           graffiti,
           discord,
