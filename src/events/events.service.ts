@@ -324,7 +324,7 @@ export class EventsService {
     user: User,
     client: BasePrismaClient,
   ): Promise<Record<EventType, number>> {
-    const userRanks = await client.$queryRaw<
+    const userRanks = await client.$queryRawUnsafe<
       {
         type: EventType;
         rank: number;

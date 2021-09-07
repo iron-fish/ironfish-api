@@ -570,7 +570,7 @@ describe('EventsService', () => {
   describe('getRankForEventType', () => {
     it('returns the correct rank for a user', async () => {
       const highestBugCaughtAggregate = await prisma.event.aggregate({
-        max: {
+        _max: {
           points: true,
         },
         where: {
@@ -579,16 +579,16 @@ describe('EventsService', () => {
       });
       const highestCommunityContributionAggregate =
         await prisma.event.aggregate({
-          max: {
+          _max: {
             points: true,
           },
           where: {
             type: EventType.COMMUNITY_CONTRIBUTION,
           },
         });
-      const highestBugCaughtPoints = highestBugCaughtAggregate.max.points || 0;
+      const highestBugCaughtPoints = highestBugCaughtAggregate._max.points || 0;
       const highestCommunityContributionPoints =
-        highestCommunityContributionAggregate.max.points || 0;
+        highestCommunityContributionAggregate._max.points || 0;
       const firstUser = await prisma.user.create({
         data: {
           email: faker.internet.email(),
