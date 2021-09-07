@@ -147,7 +147,7 @@ export class UsersService {
       // Ranks start at 1, so get everything after 0
       rankCursor = 0;
     }
-    return this.prisma.$queryRaw<SerializedUserWithRank[]>(
+    return this.prisma.$queryRawUnsafe<SerializedUserWithRank[]>(
       `SELECT
         id,
         graffiti,
@@ -235,7 +235,7 @@ export class UsersService {
     } else {
       id = userOrId.id;
     }
-    const rankResponse = await this.prisma.$queryRaw<{ rank: number }[]>(
+    const rankResponse = await this.prisma.$queryRawUnsafe<{ rank: number }[]>(
       `SELECT
         id,
         rank
