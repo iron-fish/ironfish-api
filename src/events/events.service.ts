@@ -16,7 +16,7 @@ import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { CreateEventOptions } from './interfaces/create-event-options';
 import { ListEventsOptions } from './interfaces/list-events-options';
 import { SerializedEventMetrics } from './interfaces/serialized-event-metrics';
-import { Block, Event, EventType, User } from '.prisma/client';
+import { Block, Event, EventType, Prisma, User } from '.prisma/client';
 
 @Injectable()
 export class EventsService {
@@ -330,7 +330,7 @@ export class EventsService {
         rank: number;
       }[]
     >(
-      `SELECT
+      Prisma.sql`SELECT
         id,
         type,
         rank

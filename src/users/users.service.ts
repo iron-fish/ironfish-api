@@ -14,7 +14,7 @@ import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { CreateUserDto } from './dto/create-user.dto';
 import { ListUsersOptions } from './interfaces/list-users-options';
 import { SerializedUserWithRank } from './interfaces/serialized-user-with-rank';
-import { User } from '.prisma/client';
+import { Prisma, User } from '.prisma/client';
 
 @Injectable()
 export class UsersService {
@@ -148,7 +148,7 @@ export class UsersService {
       rankCursor = 0;
     }
     return this.prisma.$queryRaw<SerializedUserWithRank[]>(
-      `SELECT
+      Prisma.sql`SELECT
         id,
         graffiti,
         total_points,
@@ -236,7 +236,7 @@ export class UsersService {
       id = userOrId.id;
     }
     const rankResponse = await this.prisma.$queryRaw<{ rank: number }[]>(
-      `SELECT
+      Prisma.sql`SELECT
         id,
         rank
       FROM
