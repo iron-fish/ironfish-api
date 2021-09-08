@@ -6,6 +6,7 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
+import assert from 'assert';
 import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { SortOrder } from '../common/enums/sort-order';
@@ -148,6 +149,30 @@ describe('UsersService', () => {
         await expect(
           usersService.findOrThrowByGraffiti('1337'),
         ).rejects.toThrow(NotFoundException);
+      });
+    });
+  });
+
+  describe('findByConfirmationToken', () => {
+    describe('with an invalid token', () => {
+      it('returns null', async () => {
+        expect(await usersService.findByConfirmationToken('token')).toBeNull();
+      });
+    });
+
+    describe('with a valid token', () => {
+      it('returns the record', async () => {
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          country_code: faker.address.countryCode('alpha-3'),
+        });
+
+        assert.ok(user.confirmation_token);
+        const record = await usersService.findByConfirmationToken(
+          user.confirmation_token,
+        );
+        expect(record).toMatchObject(user);
       });
     });
   });
@@ -373,6 +398,20 @@ describe('UsersService', () => {
       expect(await usersService.getRank(secondUser)).toBe(1);
       expect(await usersService.getRank(firstUser)).toBe(2);
       expect(await usersService.getRank(thirdUser)).toBe(3);
+    });
+  });
+
+  describe('confirm', () => {
+    it('updates the confirmation timestamp', async () => {
+      const user = await usersService.create({
+        email: faker.internet.email(),
+        graffiti: uuid(),
+        country_code: faker.address.countryCode('alpha-3'),
+      });
+      expect(user.confirmed_at).toBeNull();
+
+      const updatedUser = await usersService.confirm(user);
+      expect(updatedUser.confirmed_at).not.toBeNull();
     });
   });
 });
