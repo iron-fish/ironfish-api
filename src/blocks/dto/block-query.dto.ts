@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Type } from 'class-transformer';
-import { IsDefined, IsInt, IsString, Min, ValidateIf } from 'class-validator';
+import { IsBoolean, IsDefined, IsInt, IsOptional, IsString, Min, ValidateIf } from 'class-validator';
 
 export class BlockQueryDto {
   @ValidateIf((o: BlockQueryDto) => o.sequence === undefined)
@@ -20,4 +20,9 @@ export class BlockQueryDto {
   @IsInt()
   @Type(() => Number)
   readonly sequence?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  @Type(() => Boolean)
+  readonly with_transactions?: boolean;
 }

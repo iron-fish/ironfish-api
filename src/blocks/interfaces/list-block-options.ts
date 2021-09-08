@@ -7,4 +7,5 @@ export interface ListBlocksOptions extends PaginationOptions {
   sequenceGte?: number;
   sequenceLt?: number;
   search?: string;
+  withTransactions?: boolean;
 }
