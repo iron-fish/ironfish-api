@@ -169,11 +169,15 @@ describe('UsersService', () => {
     });
   });
 
-  describe('listByRank', () => {
+  describe('listWithRank', () => {
     it('returns a chunk of users with rank', async () => {
       const limit = 10;
-      const records = await usersService.listByRank(SortOrder.ASC, limit);
-      expect(records).toHaveLength(limit);
+      const records = await usersService.listWithRank({
+        order: SortOrder.ASC,
+        limit,
+        search: '7',
+      });
+      expect(records.length).toBeLessThanOrEqual(limit);
       for (const record of records) {
         expect(record).toMatchObject({
           id: expect.any(Number),

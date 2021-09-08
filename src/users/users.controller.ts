@@ -166,11 +166,12 @@ export class UsersController {
       // increases and we sort by most recently created elsewhere by default
       const order = backwards ? SortOrder.DESC : SortOrder.ASC;
       return {
-        data: await this.usersService.listByRank(
+        data: await this.usersService.listWithRank({
           order,
-          Math.min(MAX_LIMIT, limit || DEFAULT_LIMIT),
+          limit: Math.min(MAX_LIMIT, limit || DEFAULT_LIMIT),
           cursorId,
-        ),
+          search,
+        }),
         object: 'list',
       };
     }
