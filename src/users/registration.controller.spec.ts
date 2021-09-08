@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import assert from 'assert';
 import faker from 'faker';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
@@ -44,7 +43,6 @@ describe('RegistrationController', () => {
         });
         await usersService.confirm(user);
 
-        assert.ok(user.confirmation_token);
         await request(app.getHttpServer())
           .get(`/registration/${user.confirmation_token}/confirm`)
           .expect(HttpStatus.NOT_FOUND);
@@ -59,7 +57,6 @@ describe('RegistrationController', () => {
           country_code: faker.address.countryCode('alpha-3'),
         });
 
-        assert.ok(user.confirmation_token);
         const { header } = await request(app.getHttpServer())
           .get(`/registration/${user.confirmation_token}/confirm`)
           .expect(HttpStatus.FOUND);

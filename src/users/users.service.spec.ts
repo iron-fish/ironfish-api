@@ -6,7 +6,6 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import assert from 'assert';
 import faker from 'faker';
 import { ulid } from 'ulid';
 import { v4 as uuid } from 'uuid';
@@ -175,7 +174,6 @@ describe('UsersService', () => {
           country_code: faker.address.countryCode('alpha-3'),
         });
 
-        assert.ok(user.confirmation_token);
         const record = await usersService.findByConfirmationToken(
           user.confirmation_token,
         );
