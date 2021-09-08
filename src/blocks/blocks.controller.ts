@@ -22,6 +22,12 @@ import { BlockQueryDto } from './dto/block-query.dto';
 import { BlocksQueryDto } from './dto/blocks-query.dto';
 import { DisconnectBlocksDto } from './dto/disconnect-blocks.dto';
 import { UpsertBlocksDto } from './dto/upsert-blocks.dto';
+import { SerializedBlock } from './interfaces/serialized-block';
+import { SerializedBlockWithTransactions } from './interfaces/serialized-block-with-transactions';
+import {
+  serializedBlockFromRecord,
+  serializedBlockFromRecordWithTransactions,
+} from './utils/block-translator';
 import { Block } from '.prisma/client';
 
 @Controller('blocks')
@@ -37,10 +43,11 @@ export class BlocksController {
         transform: true,
       }),
     )
-    blocks: UpsertBlocksDto,
-  ): Promise<List<Block>> {
+    upsertBlocksDto: UpsertBlocksDto,
+  ): Promise<List<SerializedBlock>> {
+    const blocks = await this.blocksService.bulkUpsert(upsertBlocksDto);
     return {
-      data: await this.blocksService.bulkUpsert(blocks),
+      data: blocks.map((block) => serializedBlockFromRecord(block)),
       object: 'list',
     };
   }
@@ -62,8 +69,9 @@ export class BlocksController {
       sequence_gte: sequenceGte,
       sequence_lt: sequenceLt,
       search,
+      with_transactions,
     }: BlocksQueryDto,
-  ): Promise<List<Block>> {
+  ): Promise<List<SerializedBlock | SerializedBlockWithTransactions>> {
     const maxBlocksToReturn = 1000;
     if (sequenceGte !== undefined && sequenceLt !== undefined) {
       if (sequenceGte >= sequenceLt) {
@@ -78,8 +86,20 @@ export class BlocksController {
       }
     }
 
+    const blocks = await this.blocksService.list({
+      sequenceGte,
+      sequenceLt,
+      search,
+      withTransactions: with_transactions,
+    });
     return {
-      data: await this.blocksService.list({ sequenceGte, sequenceLt, search }),
+      data: blocks.map((block) => {
+        if ('transactions' in block) {
+          return serializedBlockFromRecordWithTransactions(block);
+        } else {
+          return serializedBlockFromRecord(block);
+        }
+      }),
       object: 'list',
     };
   }
@@ -92,11 +112,17 @@ export class BlocksController {
         transform: true,
       }),
     )
-    { hash, sequence }: BlockQueryDto,
-  ): Promise<Block> {
-    const block = await this.blocksService.find({ hash, sequence });
-    if (block !== null) {
-      return block;
+    { hash, sequence, with_transactions }: BlockQueryDto,
+  ): Promise<SerializedBlock | SerializedBlockWithTransactions> {
+    const block = await this.blocksService.find({
+      hash,
+      sequence,
+      withTransactions: with_transactions,
+    });
+    if (block !== null && 'transactions' in block) {
+      return serializedBlockFromRecordWithTransactions(block);
+    } else if (block !== null) {
+      return serializedBlockFromRecord(block);
     } else {
       throw new NotFoundException();
     }
