@@ -113,7 +113,9 @@ export class BlocksService {
     return block;
   }
 
-  async list(options: ListBlocksOptions): Promise<Block[] | (Block & { transactions: Transaction[] })[]> {
+  async list(
+    options: ListBlocksOptions,
+  ): Promise<Block[] | (Block & { transactions: Transaction[] })[]> {
     const backwards = options.before !== undefined;
     const cursorId = options.before ?? options.after;
     const cursor = cursorId ? { id: cursorId } : undefined;
