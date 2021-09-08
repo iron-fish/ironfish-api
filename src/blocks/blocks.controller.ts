@@ -66,6 +66,9 @@ export class BlocksController {
       }),
     )
     {
+      after,
+      before,
+      limit,
       sequence_gte: sequenceGte,
       sequence_lt: sequenceLt,
       search,
@@ -87,6 +90,9 @@ export class BlocksController {
     }
 
     const blocks = await this.blocksService.list({
+      after,
+      before,
+      limit,
       sequenceGte,
       sequenceLt,
       search,

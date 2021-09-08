@@ -113,9 +113,12 @@ export class BlocksService {
     return block;
   }
 
-  async list(
-    options: ListBlocksOptions,
-  ): Promise<Block[] | (Block & { transactions: Transaction[] })[]> {
+  async list(options: ListBlocksOptions): Promise<Block[] | (Block & { transactions: Transaction[] })[]> {
+    const backwards = options.before !== undefined;
+    const cursorId = options.before ?? options.after;
+    const cursor = cursorId ? { id: cursorId } : undefined;
+    const order = backwards ? SortOrder.ASC : SortOrder.DESC;
+    const skip = cursor ? 1 : 0;
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
     const limit = Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
     if (options.withTransactions) {
@@ -178,9 +181,9 @@ export class BlocksService {
       });
     } else if (options.search !== undefined) {
       return this.prisma.block.findMany({
-        orderBy: {
-          id: SortOrder.DESC,
-        },
+        cursor,
+        orderBy: { id: order },
+        skip,
         take: limit,
         where: {
           searchable_text: {
@@ -192,10 +195,14 @@ export class BlocksService {
       });
     } else {
       return this.prisma.block.findMany({
-        orderBy: {
-          id: SortOrder.DESC,
-        },
+        cursor,
+        orderBy: { id: order },
+        skip,
         take: limit,
+        where: {
+          main: true,
+          network_version: networkVersion,
+        },
       });
     }
   }

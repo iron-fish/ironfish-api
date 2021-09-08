@@ -7,6 +7,7 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import faker from 'faker';
+import { ulid } from 'ulid';
 import { v4 as uuid } from 'uuid';
 import { SortOrder } from '../common/enums/sort-order';
 import { PrismaService } from '../prisma/prisma.service';
@@ -35,6 +36,7 @@ describe('UsersService', () => {
       it('returns the record', async () => {
         const user = await prisma.user.create({
           data: {
+            confirmation_token: ulid(),
             email: faker.internet.email(),
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
@@ -60,10 +62,11 @@ describe('UsersService', () => {
       it('returns the record', async () => {
         const user = await prisma.user.create({
           data: {
+            confirmation_token: ulid(),
             email: faker.internet.email(),
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
-            last_login_at: new Date(),
+            confirmed_at: new Date(),
           },
         });
         const record = await usersService.findByGraffiti(user.graffiti);
@@ -76,6 +79,7 @@ describe('UsersService', () => {
       it('returns null', async () => {
         const user = await prisma.user.create({
           data: {
+            confirmation_token: ulid(),
             email: faker.internet.email(),
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
@@ -107,6 +111,7 @@ describe('UsersService', () => {
         const email = faker.internet.email();
         await prisma.user.create({
           data: {
+            confirmation_token: ulid(),
             email,
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
@@ -114,6 +119,7 @@ describe('UsersService', () => {
         });
         const user = await prisma.user.create({
           data: {
+            confirmation_token: ulid(),
             email,
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
@@ -131,10 +137,11 @@ describe('UsersService', () => {
       it('returns the record', async () => {
         const user = await prisma.user.create({
           data: {
+            confirmation_token: ulid(),
             email: faker.internet.email(),
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
-            last_login_at: new Date(),
+            confirmed_at: new Date(),
           },
         });
         const record = await usersService.findOrThrowByGraffiti(user.graffiti);
@@ -148,6 +155,29 @@ describe('UsersService', () => {
         await expect(
           usersService.findOrThrowByGraffiti('1337'),
         ).rejects.toThrow(NotFoundException);
+      });
+    });
+  });
+
+  describe('findByConfirmationToken', () => {
+    describe('with an invalid token', () => {
+      it('returns null', async () => {
+        expect(await usersService.findByConfirmationToken('token')).toBeNull();
+      });
+    });
+
+    describe('with a valid token', () => {
+      it('returns the record', async () => {
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          country_code: faker.address.countryCode('alpha-3'),
+        });
+
+        const record = await usersService.findByConfirmationToken(
+          user.confirmation_token,
+        );
+        expect(record).toMatchObject(user);
       });
     });
   });
@@ -195,10 +225,11 @@ describe('UsersService', () => {
           const graffiti = uuid();
           await prisma.user.create({
             data: {
+              confirmation_token: ulid(),
               email: faker.internet.email(),
               graffiti,
               country_code: faker.address.countryCode('alpha-3'),
-              last_login_at: new Date(),
+              confirmed_at: new Date(),
             },
           });
 
@@ -217,6 +248,7 @@ describe('UsersService', () => {
           const graffiti = uuid();
           await prisma.user.create({
             data: {
+              confirmation_token: ulid(),
               email: faker.internet.email(),
               graffiti,
               country_code: faker.address.countryCode('alpha-3'),
@@ -245,10 +277,11 @@ describe('UsersService', () => {
           const email = faker.internet.email();
           await prisma.user.create({
             data: {
+              confirmation_token: ulid(),
               email,
               graffiti: uuid(),
               country_code: faker.address.countryCode('alpha-3'),
-              last_login_at: new Date(),
+              confirmed_at: new Date(),
             },
           });
 
@@ -267,6 +300,7 @@ describe('UsersService', () => {
           const email = faker.internet.email();
           await prisma.user.create({
             data: {
+              confirmation_token: ulid(),
               email,
               graffiti: uuid(),
               country_code: faker.address.countryCode('alpha-3'),
@@ -335,6 +369,7 @@ describe('UsersService', () => {
       const totalPoints = currentMaxPoints + 2;
       const firstUser = await prisma.user.create({
         data: {
+          confirmation_token: ulid(),
           email: faker.internet.email(),
           graffiti: uuid(),
           country_code: faker.address.countryCode('alpha-3'),
@@ -343,6 +378,7 @@ describe('UsersService', () => {
       });
       const secondUser = await prisma.user.create({
         data: {
+          confirmation_token: ulid(),
           email: faker.internet.email(),
           graffiti: uuid(),
           country_code: faker.address.countryCode('alpha-3'),
@@ -351,6 +387,7 @@ describe('UsersService', () => {
       });
       const thirdUser = await prisma.user.create({
         data: {
+          confirmation_token: ulid(),
           email: faker.internet.email(),
           graffiti: uuid(),
           country_code: faker.address.countryCode('alpha-3'),
@@ -377,6 +414,20 @@ describe('UsersService', () => {
       expect(await usersService.getRank(secondUser)).toBe(1);
       expect(await usersService.getRank(firstUser)).toBe(2);
       expect(await usersService.getRank(thirdUser)).toBe(3);
+    });
+  });
+
+  describe('confirm', () => {
+    it('updates the confirmation timestamp', async () => {
+      const user = await usersService.create({
+        email: faker.internet.email(),
+        graffiti: uuid(),
+        country_code: faker.address.countryCode('alpha-3'),
+      });
+      expect(user.confirmed_at).toBeNull();
+
+      const updatedUser = await usersService.confirm(user);
+      expect(updatedUser.confirmed_at).not.toBeNull();
     });
   });
 });

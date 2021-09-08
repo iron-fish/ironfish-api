@@ -45,6 +45,7 @@ export const REST_MODULES = [
         MAGIC_SECRET_KEY: joi.string().required(),
         NETWORK_VERSION: joi.number().required(),
         NODE_ENV: joi.string().required(),
+        POSTMARK_API_KEY: joi.string().required(),
       }),
     }),
     ...REST_MODULES,
