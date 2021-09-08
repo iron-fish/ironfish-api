@@ -58,6 +58,9 @@ export class BlocksController {
       }),
     )
     {
+      after,
+      before,
+      limit,
       sequence_gte: sequenceGte,
       sequence_lt: sequenceLt,
       search,
@@ -78,7 +81,14 @@ export class BlocksController {
     }
 
     return {
-      data: await this.blocksService.list({ sequenceGte, sequenceLt, search }),
+      data: await this.blocksService.list({
+        after,
+        before,
+        limit,
+        sequenceGte,
+        sequenceLt,
+        search,
+      }),
     };
   }
 

@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import assert from 'assert';
 import faker from 'faker';
+import { ulid } from 'ulid';
 import { v4 as uuid } from 'uuid';
 import { SortOrder } from '../common/enums/sort-order';
 import { PrismaService } from '../prisma/prisma.service';
@@ -36,6 +37,7 @@ describe('UsersService', () => {
       it('returns the record', async () => {
         const user = await prisma.user.create({
           data: {
+            confirmation_token: ulid(),
             email: faker.internet.email(),
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
@@ -61,10 +63,11 @@ describe('UsersService', () => {
       it('returns the record', async () => {
         const user = await prisma.user.create({
           data: {
+            confirmation_token: ulid(),
             email: faker.internet.email(),
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
-            last_login_at: new Date(),
+            confirmed_at: new Date(),
           },
         });
         const record = await usersService.findByGraffiti(user.graffiti);
@@ -77,6 +80,7 @@ describe('UsersService', () => {
       it('returns null', async () => {
         const user = await prisma.user.create({
           data: {
+            confirmation_token: ulid(),
             email: faker.internet.email(),
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
@@ -108,6 +112,7 @@ describe('UsersService', () => {
         const email = faker.internet.email();
         await prisma.user.create({
           data: {
+            confirmation_token: ulid(),
             email,
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
@@ -115,6 +120,7 @@ describe('UsersService', () => {
         });
         const user = await prisma.user.create({
           data: {
+            confirmation_token: ulid(),
             email,
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
@@ -132,10 +138,11 @@ describe('UsersService', () => {
       it('returns the record', async () => {
         const user = await prisma.user.create({
           data: {
+            confirmation_token: ulid(),
             email: faker.internet.email(),
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
-            last_login_at: new Date(),
+            confirmed_at: new Date(),
           },
         });
         const record = await usersService.findOrThrowByGraffiti(user.graffiti);
@@ -168,7 +175,6 @@ describe('UsersService', () => {
           country_code: faker.address.countryCode('alpha-3'),
         });
 
-        assert.ok(user.confirmation_token);
         const record = await usersService.findByConfirmationToken(
           user.confirmation_token,
         );
@@ -194,11 +200,15 @@ describe('UsersService', () => {
     });
   });
 
-  describe('listByRank', () => {
+  describe('listWithRank', () => {
     it('returns a chunk of users with rank', async () => {
       const limit = 10;
-      const records = await usersService.listByRank(SortOrder.ASC, limit);
-      expect(records).toHaveLength(limit);
+      const records = await usersService.listWithRank({
+        order: SortOrder.ASC,
+        limit,
+        search: '7',
+      });
+      expect(records.length).toBeLessThanOrEqual(limit);
       for (const record of records) {
         expect(record).toMatchObject({
           id: expect.any(Number),
@@ -216,10 +226,11 @@ describe('UsersService', () => {
           const graffiti = uuid();
           await prisma.user.create({
             data: {
+              confirmation_token: ulid(),
               email: faker.internet.email(),
               graffiti,
               country_code: faker.address.countryCode('alpha-3'),
-              last_login_at: new Date(),
+              confirmed_at: new Date(),
             },
           });
 
@@ -238,6 +249,7 @@ describe('UsersService', () => {
           const graffiti = uuid();
           await prisma.user.create({
             data: {
+              confirmation_token: ulid(),
               email: faker.internet.email(),
               graffiti,
               country_code: faker.address.countryCode('alpha-3'),
@@ -266,10 +278,11 @@ describe('UsersService', () => {
           const email = faker.internet.email();
           await prisma.user.create({
             data: {
+              confirmation_token: ulid(),
               email,
               graffiti: uuid(),
               country_code: faker.address.countryCode('alpha-3'),
-              last_login_at: new Date(),
+              confirmed_at: new Date(),
             },
           });
 
@@ -288,6 +301,7 @@ describe('UsersService', () => {
           const email = faker.internet.email();
           await prisma.user.create({
             data: {
+              confirmation_token: ulid(),
               email,
               graffiti: uuid(),
               country_code: faker.address.countryCode('alpha-3'),
@@ -356,6 +370,7 @@ describe('UsersService', () => {
       const totalPoints = currentMaxPoints + 2;
       const firstUser = await prisma.user.create({
         data: {
+          confirmation_token: ulid(),
           email: faker.internet.email(),
           graffiti: uuid(),
           country_code: faker.address.countryCode('alpha-3'),
@@ -364,6 +379,7 @@ describe('UsersService', () => {
       });
       const secondUser = await prisma.user.create({
         data: {
+          confirmation_token: ulid(),
           email: faker.internet.email(),
           graffiti: uuid(),
           country_code: faker.address.countryCode('alpha-3'),
@@ -372,6 +388,7 @@ describe('UsersService', () => {
       });
       const thirdUser = await prisma.user.create({
         data: {
+          confirmation_token: ulid(),
           email: faker.internet.email(),
           graffiti: uuid(),
           country_code: faker.address.countryCode('alpha-3'),
