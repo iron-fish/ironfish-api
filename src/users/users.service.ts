@@ -13,6 +13,7 @@ import { SortOrder } from '../common/enums/sort-order';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { CreateUserDto } from './dto/create-user.dto';
+import { ListUsersWithRankOptions } from './interfaces/list-by-rank-options';
 import { ListUsersOptions } from './interfaces/list-users-options';
 import { SerializedUserWithRank } from './interfaces/serialized-user-with-rank';
 import { User } from '.prisma/client';
@@ -110,6 +111,7 @@ export class UsersService {
     const [user] = await this.prisma.$transaction([
       this.prisma.user.create({
         data: {
+          confirmation_token: ulid(),
           email,
           graffiti,
           discord,
@@ -142,11 +144,12 @@ export class UsersService {
     });
   }
 
-  async listByRank(
-    order: SortOrder,
-    limit: number,
-    cursorId?: number,
-  ): Promise<SerializedUserWithRank[]> {
+  async listWithRank({
+    order,
+    limit,
+    cursorId,
+    search,
+  }: ListUsersWithRankOptions): Promise<SerializedUserWithRank[]> {
     let rankCursor: number;
     if (cursorId !== undefined) {
       rankCursor = await this.getRank(cursorId);
@@ -201,23 +204,26 @@ export class UsersService {
             ) user_latest_events
           ON
             user_latest_events.user_id = users.id
+          WHERE
+            graffiti ILIKE $1
         ) user_ranks
       WHERE
-        CASE WHEN $1
+        CASE WHEN $2
           THEN
-            rank > $2
+            rank > $3
           ELSE
-            rank < $2
+            rank < $3
         END
       ORDER BY
-        CASE WHEN $1
+        CASE WHEN $2
           THEN
             rank
           ELSE
             rank * -1
         END ASC
       LIMIT
-        $3`,
+        $4`,
+      `%${search ?? ''}%`,
       order === SortOrder.ASC,
       rankCursor,
       limit,
