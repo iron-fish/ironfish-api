@@ -41,7 +41,7 @@ export class BlocksController {
   ): Promise<List<Block>> {
     return {
       data: await this.blocksService.bulkUpsert(blocks),
-      object: 'list'
+      object: 'list',
     };
   }
 
