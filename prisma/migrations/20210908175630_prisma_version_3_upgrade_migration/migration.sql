@@ -7,9 +7,6 @@ ALTER TABLE "events" DROP CONSTRAINT "FK__events__user_id";
 -- DropForeignKey
 ALTER TABLE "transactions" DROP CONSTRAINT "transactions_block_id_fkey";
 
--- AlterTable
-ALTER TABLE "blocks" ALTER COLUMN "graffiti" DROP NOT NULL;
-
 -- AddForeignKey
 ALTER TABLE "events" ADD CONSTRAINT "events_block_id_fkey" FOREIGN KEY ("block_id") REFERENCES "blocks"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
