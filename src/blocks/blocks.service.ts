@@ -16,7 +16,7 @@ import { BlockDto, UpsertBlocksDto } from './dto/upsert-blocks.dto';
 import { BlockOperation } from './enums/block-operation';
 import { FindBlockOptions } from './interfaces/find-block-options';
 import { ListBlocksOptions } from './interfaces/list-block-options';
-import { Block } from '.prisma/client';
+import { Block, Transaction } from '.prisma/client';
 
 @Injectable()
 export class BlocksService {
@@ -113,9 +113,58 @@ export class BlocksService {
     return block;
   }
 
-  async list(options: ListBlocksOptions): Promise<Block[]> {
+  async list(
+    options: ListBlocksOptions,
+  ): Promise<Block[] | (Block & { transactions: Transaction[] })[]> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
     const limit = Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
+    if (options.withTransactions) {
+      if (
+        options.sequenceGte !== undefined &&
+        options.sequenceLt !== undefined
+      ) {
+        return this.prisma.block.findMany({
+          where: {
+            sequence: {
+              gte: options.sequenceGte,
+              lt: options.sequenceLt,
+            },
+            main: true,
+            network_version: networkVersion,
+          },
+          include: {
+            transactions: true,
+          },
+        });
+      } else if (options.search !== undefined) {
+        return this.prisma.block.findMany({
+          orderBy: {
+            id: SortOrder.DESC,
+          },
+          take: limit,
+          where: {
+            searchable_text: {
+              contains: options.search,
+            },
+            main: true,
+            network_version: networkVersion,
+          },
+          include: {
+            transactions: true,
+          },
+        });
+      } else {
+        return this.prisma.block.findMany({
+          orderBy: {
+            id: SortOrder.DESC,
+          },
+          take: limit,
+          include: {
+            transactions: true,
+          },
+        });
+      }
+    }
     if (options.sequenceGte !== undefined && options.sequenceLt !== undefined) {
       return this.prisma.block.findMany({
         where: {
@@ -151,10 +200,36 @@ export class BlocksService {
     }
   }
 
-  async find(options: FindBlockOptions): Promise<Block | null> {
+  async find(
+    options: FindBlockOptions,
+  ): Promise<Block | (Block & { transactions: Transaction[] }) | null> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
 
-    if (options.hash !== undefined) {
+    if (options.withTransactions) {
+      if (options.hash !== undefined) {
+        return this.prisma.block.findFirst({
+          where: {
+            hash: options.hash,
+            network_version: networkVersion,
+          },
+          include: {
+            transactions: true,
+          },
+        });
+      } else if (options.sequence !== undefined) {
+        return this.prisma.block.findFirst({
+          where: {
+            sequence: options.sequence,
+            network_version: networkVersion,
+          },
+          include: {
+            transactions: true,
+          },
+        });
+      } else {
+        throw new UnprocessableEntityException();
+      }
+    } else if (options.hash !== undefined) {
       return this.prisma.block.findFirst({
         where: {
           hash: options.hash,
