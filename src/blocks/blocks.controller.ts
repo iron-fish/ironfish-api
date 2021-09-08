@@ -41,6 +41,7 @@ export class BlocksController {
   ): Promise<List<Block>> {
     return {
       data: await this.blocksService.bulkUpsert(blocks),
+      object: 'list'
     };
   }
 
@@ -79,6 +80,7 @@ export class BlocksController {
 
     return {
       data: await this.blocksService.list({ sequenceGte, sequenceLt, search }),
+      object: 'list',
     };
   }
 

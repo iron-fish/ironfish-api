@@ -43,6 +43,7 @@ export class EventsController {
         before,
         limit,
       }),
+      object: 'list',
     };
   }
 

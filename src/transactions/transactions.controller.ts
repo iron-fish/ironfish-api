@@ -47,6 +47,7 @@ export class TransactionsController {
       data: transactions.map((transaction) =>
         serializedTransactionFromRecord(transaction),
       ),
+      object: 'list',
     };
   }
 
@@ -95,6 +96,7 @@ export class TransactionsController {
           return serializedTransactionFromRecord(transaction);
         }
       }),
+      object: 'list',
     };
   }
 }

@@ -171,6 +171,7 @@ export class UsersController {
           Math.min(MAX_LIMIT, limit || DEFAULT_LIMIT),
           cursorId,
         ),
+        object: 'list',
       };
     }
     const users = await this.usersService.list({
@@ -181,6 +182,7 @@ export class UsersController {
     });
     return {
       data: users.map((user) => serializedUserFromRecord(user)),
+      object: 'list',
     };
   }
 
