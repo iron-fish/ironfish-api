@@ -40,7 +40,7 @@ export class UsersService {
     return client.user.findFirst({
       where: {
         graffiti,
-        last_login_at: {
+        confirmed_at: {
           not: null,
         },
       },
@@ -80,7 +80,7 @@ export class UsersService {
   }: CreateUserDto): Promise<User> {
     const existingRecord = await this.prisma.user.findFirst({
       where: {
-        last_login_at: {
+        confirmed_at: {
           not: null,
         },
         OR: [
