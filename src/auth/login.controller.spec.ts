@@ -84,6 +84,7 @@ describe('LoginController', () => {
             email: faker.internet.email(),
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
+            confirmed_at: new Date().toISOString(),
           },
         });
 

@@ -7,6 +7,7 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import is from '@sindresorhus/is';
+import { ulid } from 'ulid';
 import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
 import { PrismaService } from '../prisma/prisma.service';
@@ -69,6 +70,14 @@ export class UsersService {
     return record;
   }
 
+  async findByConfirmationToken(token: string): Promise<User | null> {
+    return this.prisma.user.findUnique({
+      where: {
+        confirmation_token: token,
+      },
+    });
+  }
+
   async create({
     email,
     graffiti,
@@ -106,6 +115,7 @@ export class UsersService {
           discord,
           telegram,
           country_code: countryCode,
+          confirmation_token: ulid(),
         },
       }),
     ]);
@@ -286,5 +296,18 @@ export class UsersService {
       throw new Error('Unexpected database response');
     }
     return rankResponse[0].rank;
+  }
+
+  async confirm(user: User): Promise<User> {
+    return this.prisma.$transaction(async (prisma) => {
+      return prisma.user.update({
+        where: {
+          id: user.id,
+        },
+        data: {
+          confirmed_at: new Date().toISOString(),
+        },
+      });
+    });
   }
 }
