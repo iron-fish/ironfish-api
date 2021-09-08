@@ -4,6 +4,7 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import faker from 'faker';
 import request from 'supertest';
+import { ulid } from 'ulid';
 import { v4 as uuid } from 'uuid';
 import { MagicLinkService } from '../magic-link/magic-link.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -81,6 +82,7 @@ describe('LoginController', () => {
       it('updates the last login for a user', async () => {
         const user = await prisma.user.create({
           data: {
+            confirmation_token: ulid(),
             email: faker.internet.email(),
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
