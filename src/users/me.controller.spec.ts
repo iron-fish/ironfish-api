@@ -43,6 +43,7 @@ describe('MeController', () => {
           graffiti: uuid(),
           country_code: faker.address.countryCode('alpha-3'),
         });
+        await usersService.confirm(user);
 
         jest
           .spyOn(magicLinkService, 'validate')
