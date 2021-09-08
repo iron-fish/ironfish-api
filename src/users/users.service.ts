@@ -111,7 +111,6 @@ export class UsersService {
     const [user] = await this.prisma.$transaction([
       this.prisma.user.create({
         data: {
-          confirmation_token: ulid(),
           email,
           graffiti,
           discord,
