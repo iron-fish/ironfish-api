@@ -159,6 +159,29 @@ describe('UsersService', () => {
     });
   });
 
+  describe('findByConfirmationToken', () => {
+    describe('with an invalid token', () => {
+      it('returns null', async () => {
+        expect(await usersService.findByConfirmationToken('token')).toBeNull();
+      });
+    });
+
+    describe('with a valid token', () => {
+      it('returns the record', async () => {
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          country_code: faker.address.countryCode('alpha-3'),
+        });
+
+        const record = await usersService.findByConfirmationToken(
+          user.confirmation_token,
+        );
+        expect(record).toMatchObject(user);
+      });
+    });
+  });
+
   describe('list', () => {
     it('returns a chunk of users', async () => {
       const limit = 2;
@@ -391,6 +414,20 @@ describe('UsersService', () => {
       expect(await usersService.getRank(secondUser)).toBe(1);
       expect(await usersService.getRank(firstUser)).toBe(2);
       expect(await usersService.getRank(thirdUser)).toBe(3);
+    });
+  });
+
+  describe('confirm', () => {
+    it('updates the confirmation timestamp', async () => {
+      const user = await usersService.create({
+        email: faker.internet.email(),
+        graffiti: uuid(),
+        country_code: faker.address.countryCode('alpha-3'),
+      });
+      expect(user.confirmed_at).toBeNull();
+
+      const updatedUser = await usersService.confirm(user);
+      expect(updatedUser.confirmed_at).not.toBeNull();
     });
   });
 });
