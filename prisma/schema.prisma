@@ -62,7 +62,7 @@ model Block {
   network_version     Int
   transactions_count  Int
   timestamp           DateTime      @db.Timestamp(6)
-  graffiti            String        @db.VarChar
+  graffiti            String?       @db.VarChar
   searchable_text     String        @db.VarChar
   size                Int?
   event               Event?
