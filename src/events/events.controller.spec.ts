@@ -145,7 +145,7 @@ describe('EventsController', () => {
             email: faker.internet.email(),
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
-            last_login_at: new Date(),
+            confirmed_at: new Date(),
           },
         });
         const occurredAt = new Date().toISOString();

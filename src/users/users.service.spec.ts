@@ -63,7 +63,7 @@ describe('UsersService', () => {
             email: faker.internet.email(),
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
-            last_login_at: new Date(),
+            confirmed_at: new Date(),
           },
         });
         const record = await usersService.findByGraffiti(user.graffiti);
@@ -134,7 +134,7 @@ describe('UsersService', () => {
             email: faker.internet.email(),
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
-            last_login_at: new Date(),
+            confirmed_at: new Date(),
           },
         });
         const record = await usersService.findOrThrowByGraffiti(user.graffiti);
@@ -194,7 +194,7 @@ describe('UsersService', () => {
               email: faker.internet.email(),
               graffiti,
               country_code: faker.address.countryCode('alpha-3'),
-              last_login_at: new Date(),
+              confirmed_at: new Date(),
             },
           });
 
@@ -244,7 +244,7 @@ describe('UsersService', () => {
               email,
               graffiti: uuid(),
               country_code: faker.address.countryCode('alpha-3'),
-              last_login_at: new Date(),
+              confirmed_at: new Date(),
             },
           });
 
