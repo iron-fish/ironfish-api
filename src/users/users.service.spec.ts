@@ -6,7 +6,6 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import assert from 'assert';
 import faker from 'faker';
 import { ulid } from 'ulid';
 import { v4 as uuid } from 'uuid';
