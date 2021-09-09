@@ -10,8 +10,10 @@ import { REST_MODULES } from '../app.module';
 import { AuthModule } from '../auth/auth.module';
 import { BlocksModule } from '../blocks/blocks.module';
 import { EventsModule } from '../events/events.module';
+import { PostmarkService } from '../postmark/postmark.service';
 import { TransactionsModule } from '../transactions/transactions.module';
 import { UsersModule } from '../users/users.module';
+import { MockPostmarkService } from './mocks/mock-postmark.service';
 
 export async function bootstrapTestApp(): Promise<INestApplication> {
   const module = await Test.createTestingModule({
@@ -22,6 +24,7 @@ export async function bootstrapTestApp(): Promise<INestApplication> {
       ConfigModule.forRoot({
         isGlobal: true,
         validationSchema: joi.object({
+          API_URL: joi.string().required(),
           BLOCK_EXPLORER_URL: joi.string().required(),
           DATABASE_URL: joi.string().required(),
           INCENTIVIZED_TESTNET_URL: joi.string().required(),
@@ -36,7 +39,10 @@ export async function bootstrapTestApp(): Promise<INestApplication> {
       UsersModule,
       ...REST_MODULES,
     ],
-  }).compile();
+  })
+    .overrideProvider(PostmarkService)
+    .useClass(MockPostmarkService)
+    .compile();
 
   const app = module.createNestApplication();
   app.use(json({ limit: '10mb' }));

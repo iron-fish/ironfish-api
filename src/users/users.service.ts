@@ -8,8 +8,10 @@ import {
 } from '@nestjs/common';
 import is from '@sindresorhus/is';
 import { ulid } from 'ulid';
+import { ApiConfigService } from '../api-config/api-config.service';
 import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
+import { PostmarkService } from '../postmark/postmark.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -20,7 +22,11 @@ import { User } from '.prisma/client';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly config: ApiConfigService,
+    private readonly postmarkService: PostmarkService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   async findOrThrow(id: number): Promise<User> {
     const record = await this.prisma.user.findUnique({
@@ -120,6 +126,16 @@ export class UsersService {
         },
       }),
     ]);
+    await this.postmarkService.send({
+      alias: 'incentivized-testnet-confirmation',
+      templateModel: {
+        action_url: `${this.config.get<string>('API_URL')}/registration/${
+          user.confirmation_token
+        }/confirm`,
+        graffiti: user.graffiti,
+      },
+      to: user.email,
+    });
     return user;
   }
 

@@ -38,6 +38,7 @@ export const REST_MODULES = [
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: joi.object({
+        API_URL: joi.string().required(),
         BLOCK_EXPLORER_URL: joi.string().required(),
         DATABASE_URL: joi.string().required(),
         INCENTIVIZED_TESTNET_URL: joi.string().required(),

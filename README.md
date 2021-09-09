@@ -13,6 +13,7 @@
 
 You'll need a `.env` file with the following keys:
 
+* `API_URL`
 * `BLOCK_EXPLORER_URL`
 * `DATABASE_URL`
 * `INCENTIVIZED_TESTNET_URL`
