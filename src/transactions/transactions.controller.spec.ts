@@ -7,6 +7,7 @@ import faker from 'faker';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
 import { ApiConfigService } from '../api-config/api-config.service';
+import { serializedBlockFromRecord } from '../blocks/utils/block-translator';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UpsertTransactionsDto } from './dto/upsert-transactions.dto';
@@ -160,6 +161,7 @@ describe('TransactionsController', () => {
         it('returns the transaction with the correct hash and block', async () => {
           const testTransactionHash = uuid();
           const { block } = await seedBlock();
+          const serializedBlock = serializedBlockFromRecord(block);
           const notes = [{ commitment: uuid() }];
           const spends = [{ nullifier: uuid() }];
           await prisma.transaction.create({
@@ -189,10 +191,7 @@ describe('TransactionsController', () => {
             block_id: block.id,
             notes,
             spends,
-            block: expect.objectContaining({
-              hash: expect.any(String),
-              index: expect.any(Number),
-            }),
+            block: serializedBlock,
           });
         });
       });
@@ -350,6 +349,7 @@ describe('TransactionsController', () => {
       describe('with a valid partial hash search string', () => {
         it('retuns matching transactions with block info included', async () => {
           const { block } = await seedBlock();
+          const serializedBlock = serializedBlockFromRecord(block);
           const testTransactionHash = uuid();
           const notes = [{ commitment: uuid() }];
           const spends = [{ nullifier: uuid() }];
@@ -385,10 +385,7 @@ describe('TransactionsController', () => {
             block_id: transaction.block_id,
             notes,
             spends,
-            block: expect.objectContaining({
-              hash: expect.any(String),
-              index: expect.any(Number),
-            }),
+            block: serializedBlock,
           });
         });
       });
@@ -396,6 +393,7 @@ describe('TransactionsController', () => {
       describe('with only block info requested', () => {
         it('retuns transactions in descending order', async () => {
           const { block } = await seedBlock();
+          const serializedBlock = serializedBlockFromRecord(block);
           const notes = [{ commitment: uuid() }];
           const spends = [{ nullifier: uuid() }];
           for (let i = 0; i < 10; i++) {
@@ -429,10 +427,7 @@ describe('TransactionsController', () => {
             block_id: block.id,
             notes,
             spends,
-            block: expect.objectContaining({
-              hash: expect.any(String),
-              index: expect.any(Number),
-            }),
+            block: serializedBlock,
           });
           expect(((data as unknown[])[0] as Transaction).id).toBeGreaterThan(
             ((data as unknown[])[1] as Transaction).id,
