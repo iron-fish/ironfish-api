@@ -111,7 +111,7 @@ describe('UsersService', () => {
     });
 
     describe('with a valid email', () => {
-      it('returns the most recently created record', async () => {
+      it('returns the confirmed record', async () => {
         const email = faker.internet.email();
         await prisma.user.create({
           data: {
@@ -124,6 +124,7 @@ describe('UsersService', () => {
         const user = await prisma.user.create({
           data: {
             confirmation_token: ulid(),
+            confirmed_at: new Date().toISOString(),
             email,
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
@@ -142,10 +143,10 @@ describe('UsersService', () => {
         const user = await prisma.user.create({
           data: {
             confirmation_token: ulid(),
+            confirmed_at: new Date().toISOString(),
             email: faker.internet.email(),
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
-            confirmed_at: new Date(),
           },
         });
         const record = await usersService.findOrThrowByGraffiti(user.graffiti);
