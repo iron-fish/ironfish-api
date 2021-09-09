@@ -26,7 +26,7 @@ export class UsersService {
     const record = await this.prisma.user.findUnique({
       where: { id },
     });
-    if (record === null) {
+    if (record === null || record.confirmed_at === null) {
       throw new NotFoundException();
     }
     return record;
@@ -139,6 +139,9 @@ export class UsersService {
         graffiti: {
           contains: options.search,
         },
+        confirmed_at: {
+          not: null,
+        },
       },
     });
   }
@@ -203,6 +206,8 @@ export class UsersService {
             ) user_latest_events
           ON
             user_latest_events.user_id = users.id
+          WHERE
+            confirmed_at IS NOT NULL
         ) user_ranks
       WHERE
         graffiti ILIKE $1 AND
@@ -284,7 +289,9 @@ export class UsersService {
                 user_id
             ) user_latest_events
           ON
-          user_latest_events.user_id = users.id
+            user_latest_events.user_id = users.id
+          WHERE
+            users.confirmed_at IS NOT NULL
         ) user_ranks
       WHERE
         id = $1`,
