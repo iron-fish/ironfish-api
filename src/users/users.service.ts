@@ -65,10 +65,9 @@ export class UsersService {
     const record = await this.prisma.user.findFirst({
       where: {
         email,
-      },
-      orderBy: {
-        // This does not guarantee we choose the right user
-        created_at: SortOrder.DESC,
+        confirmed_at: {
+          not: null,
+        },
       },
     });
     if (!record) {
