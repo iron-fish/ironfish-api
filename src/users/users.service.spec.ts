@@ -40,6 +40,7 @@ describe('UsersService', () => {
         const user = await prisma.user.create({
           data: {
             confirmation_token: ulid(),
+            confirmed_at: new Date().toISOString(),
             email: faker.internet.email(),
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
@@ -388,6 +389,7 @@ describe('UsersService', () => {
       const firstUser = await prisma.user.create({
         data: {
           confirmation_token: ulid(),
+          confirmed_at: new Date().toISOString(),
           email: faker.internet.email(),
           graffiti: uuid(),
           country_code: faker.address.countryCode('alpha-3'),
@@ -397,6 +399,7 @@ describe('UsersService', () => {
       const secondUser = await prisma.user.create({
         data: {
           confirmation_token: ulid(),
+          confirmed_at: new Date().toISOString(),
           email: faker.internet.email(),
           graffiti: uuid(),
           country_code: faker.address.countryCode('alpha-3'),
@@ -406,6 +409,7 @@ describe('UsersService', () => {
       const thirdUser = await prisma.user.create({
         data: {
           confirmation_token: ulid(),
+          confirmed_at: new Date().toISOString(),
           email: faker.internet.email(),
           graffiti: uuid(),
           country_code: faker.address.countryCode('alpha-3'),
