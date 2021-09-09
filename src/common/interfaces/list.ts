@@ -3,4 +3,5 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 export interface List<T> {
   data: T[];
+  object: 'list';
 }

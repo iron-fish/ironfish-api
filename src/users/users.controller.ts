@@ -172,6 +172,7 @@ export class UsersController {
           cursorId,
           search,
         }),
+        object: 'list',
       };
     }
     const users = await this.usersService.list({
@@ -182,6 +183,7 @@ export class UsersController {
     });
     return {
       data: users.map((user) => serializedUserFromRecord(user)),
+      object: 'list',
     };
   }
 

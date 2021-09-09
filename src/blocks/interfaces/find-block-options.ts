@@ -5,4 +5,5 @@
 export interface FindBlockOptions {
   hash?: string;
   sequence?: number;
+  withTransactions?: boolean;
 }
