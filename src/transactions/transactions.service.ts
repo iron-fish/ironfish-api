@@ -74,24 +74,15 @@ export class TransactionsService {
     options: FindTransactionOptions,
   ): Promise<Transaction | (Transaction & { block: Block }) | null> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
-    if (options.withBlock) {
-      return this.prisma.transaction.findFirst({
-        where: {
-          hash: options.hash,
-          network_version: networkVersion,
-        },
-        include: {
-          block: true,
-        },
-      });
-    } else {
-      return this.prisma.transaction.findFirst({
-        where: {
-          hash: options.hash,
-          network_version: networkVersion,
-        },
-      });
-    }
+    const include = { block: options.withBlock };
+
+    return this.prisma.transaction.findFirst({
+      where: {
+        hash: options.hash,
+        network_version: networkVersion,
+      },
+      include,
+    });
   }
 
   async list(
@@ -99,36 +90,9 @@ export class TransactionsService {
   ): Promise<Transaction[] | (Transaction & { block: Block })[]> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
     const limit = Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
+    const include = { block: options.withBlock };
 
-    if (options.withBlock) {
-      if (options.search !== undefined) {
-        return this.prisma.transaction.findMany({
-          orderBy: {
-            id: SortOrder.DESC,
-          },
-          take: limit,
-          where: {
-            hash: {
-              contains: options.search,
-            },
-            network_version: networkVersion,
-          },
-          include: {
-            block: true,
-          },
-        });
-      } else {
-        return this.prisma.transaction.findMany({
-          orderBy: {
-            id: SortOrder.DESC,
-          },
-          take: limit,
-          include: {
-            block: true,
-          },
-        });
-      }
-    } else if (options.search !== undefined) {
+    if (options.search !== undefined) {
       return this.prisma.transaction.findMany({
         orderBy: {
           id: SortOrder.DESC,
@@ -140,6 +104,7 @@ export class TransactionsService {
           },
           network_version: networkVersion,
         },
+        include,
       });
     } else {
       return this.prisma.transaction.findMany({
@@ -147,6 +112,7 @@ export class TransactionsService {
           id: SortOrder.DESC,
         },
         take: limit,
+        include,
       });
     }
   }

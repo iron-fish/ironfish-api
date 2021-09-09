@@ -123,53 +123,7 @@ export class BlocksService {
     const skip = cursor ? 1 : 0;
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
     const limit = Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
-    if (options.withTransactions) {
-      if (
-        options.sequenceGte !== undefined &&
-        options.sequenceLt !== undefined
-      ) {
-        return this.prisma.block.findMany({
-          where: {
-            sequence: {
-              gte: options.sequenceGte,
-              lt: options.sequenceLt,
-            },
-            main: true,
-            network_version: networkVersion,
-          },
-          include: {
-            transactions: true,
-          },
-        });
-      } else if (options.search !== undefined) {
-        return this.prisma.block.findMany({
-          orderBy: {
-            id: SortOrder.DESC,
-          },
-          take: limit,
-          where: {
-            searchable_text: {
-              contains: options.search,
-            },
-            main: true,
-            network_version: networkVersion,
-          },
-          include: {
-            transactions: true,
-          },
-        });
-      } else {
-        return this.prisma.block.findMany({
-          orderBy: {
-            id: SortOrder.DESC,
-          },
-          take: limit,
-          include: {
-            transactions: true,
-          },
-        });
-      }
-    }
+    const include = { transactions: options.withTransactions };
     if (options.sequenceGte !== undefined && options.sequenceLt !== undefined) {
       return this.prisma.block.findMany({
         where: {
@@ -180,6 +134,7 @@ export class BlocksService {
           main: true,
           network_version: networkVersion,
         },
+        include,
       });
     } else if (options.search !== undefined) {
       return this.prisma.block.findMany({
@@ -194,6 +149,7 @@ export class BlocksService {
           main: true,
           network_version: networkVersion,
         },
+        include,
       });
     } else {
       return this.prisma.block.findMany({
@@ -205,6 +161,7 @@ export class BlocksService {
           main: true,
           network_version: networkVersion,
         },
+        include,
       });
     }
   }
@@ -213,37 +170,15 @@ export class BlocksService {
     options: FindBlockOptions,
   ): Promise<Block | (Block & { transactions: Transaction[] }) | null> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
+    const include = { transactions: options.withTransactions };
 
-    if (options.withTransactions) {
-      if (options.hash !== undefined) {
-        return this.prisma.block.findFirst({
-          where: {
-            hash: options.hash,
-            network_version: networkVersion,
-          },
-          include: {
-            transactions: true,
-          },
-        });
-      } else if (options.sequence !== undefined) {
-        return this.prisma.block.findFirst({
-          where: {
-            sequence: options.sequence,
-            network_version: networkVersion,
-          },
-          include: {
-            transactions: true,
-          },
-        });
-      } else {
-        throw new UnprocessableEntityException();
-      }
-    } else if (options.hash !== undefined) {
+    if (options.hash !== undefined) {
       return this.prisma.block.findFirst({
         where: {
           hash: options.hash,
           network_version: networkVersion,
         },
+        include,
       });
     } else if (options.sequence !== undefined) {
       return this.prisma.block.findFirst({
@@ -251,6 +186,7 @@ export class BlocksService {
           sequence: options.sequence,
           network_version: networkVersion,
         },
+        include,
       });
     } else {
       throw new UnprocessableEntityException();
