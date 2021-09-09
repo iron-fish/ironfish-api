@@ -24,7 +24,9 @@ export class RegistrationController {
     }
     await this.usersService.confirm(user);
     res.redirect(
-      `${this.config.get<string>('INCENTIVIZED_TESTNET_URL')}/login`,
+      `${this.config.get<string>(
+        'INCENTIVIZED_TESTNET_URL',
+      )}/login?confirmed=true`,
     );
   }
 }

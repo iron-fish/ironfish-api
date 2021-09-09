@@ -62,7 +62,9 @@ describe('RegistrationController', () => {
           .expect(HttpStatus.FOUND);
 
         expect((header as Record<string, unknown>).location).toBe(
-          `${config.get<string>('INCENTIVIZED_TESTNET_URL')}/login`,
+          `${config.get<string>(
+            'INCENTIVIZED_TESTNET_URL',
+          )}/login?confirmed=true`,
         );
       });
     });
