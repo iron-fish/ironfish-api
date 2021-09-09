@@ -17,6 +17,7 @@ export function serializedBlockFromRecord(block: Block): SerializedBlock {
     timestamp: block.timestamp,
     graffiti: block.graffiti,
     size: block.size,
+    object: 'block',
   };
 }
 
@@ -36,6 +37,7 @@ export function serializedBlockFromRecordWithTransactions(
     timestamp: block.timestamp,
     graffiti: block.graffiti,
     size: block.size,
+    object: 'block',
     transactions,
   };
 }

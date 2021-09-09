@@ -12,4 +12,5 @@ export interface SerializedTransaction {
   block_id: number;
   notes: JsonValue;
   spends: JsonValue;
+  object: string;
 }
