@@ -11,5 +11,5 @@ export interface SerializedBlock {
   timestamp: string;
   graffiti: string | null;
   size: number | null;
-  object: string;
+  object: 'block';
 }
