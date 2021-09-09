@@ -96,6 +96,7 @@ export class EventsService {
       where: {
         type,
         user_id: id,
+        deleted_at: null,
       },
     });
     return {
@@ -103,6 +104,7 @@ export class EventsService {
         where: {
           type,
           user_id: id,
+          deleted_at: null,
         },
       }),
       points: aggregate._sum.points || 0,
@@ -129,6 +131,7 @@ export class EventsService {
             lt: end,
           },
           user_id: user.id,
+          deleted_at: null,
         },
       });
       return {
@@ -194,6 +197,7 @@ export class EventsService {
       where: {
         type,
         user_id: id,
+        deleted_at: null,
         ...dateFilter,
       },
     });
@@ -202,6 +206,7 @@ export class EventsService {
         where: {
           type,
           user_id: id,
+          deleted_at: null,
           ...dateFilter,
         },
       }),
@@ -228,6 +233,7 @@ export class EventsService {
       where: {
         type,
         user_id: userId,
+        deleted_at: null,
         occurred_at: {
           gte: startOfWeek,
         },
@@ -357,7 +363,16 @@ export class EventsService {
                 type,
                 SUM(points) AS points
               FROM
-                events
+                (
+                  SELECT
+                    user_id,
+                    type,
+                    points
+                  FROM
+                    events
+                  WHERE
+                    deleted_at IS NULL
+                ) filtered_events
               GROUP BY
                 user_id,
                 type
