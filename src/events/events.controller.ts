@@ -17,7 +17,8 @@ import { EventsService } from '../events/events.service';
 import { UsersService } from '../users/users.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { EventsQueryDto } from './dto/events-query.dto';
-import { Event } from '.prisma/client';
+import { SerializedEvent } from './interfaces/serialized-event';
+import { serializedEventFromRecord } from './utils/event-translator';
 
 @Controller('events')
 export class EventsController {
@@ -35,14 +36,16 @@ export class EventsController {
       }),
     )
     { user_id, after, before, limit }: EventsQueryDto,
-  ): Promise<List<Event>> {
+  ): Promise<List<SerializedEvent>> {
     return {
-      data: await this.eventsService.list({
-        userId: user_id,
-        after,
-        before,
-        limit,
-      }),
+      data: (
+        await this.eventsService.list({
+          userId: user_id,
+          after,
+          before,
+          limit,
+        })
+      ).map((event) => serializedEventFromRecord(event)),
       object: 'list',
     };
   }
@@ -57,13 +60,15 @@ export class EventsController {
       }),
     )
     { graffiti, points, type, occurred_at: occurredAt }: CreateEventDto,
-  ): Promise<Event> {
+  ): Promise<SerializedEvent> {
     const user = await this.usersService.findOrThrowByGraffiti(graffiti);
-    return this.eventsService.create({
-      type,
-      points,
-      occurredAt,
-      userId: user.id,
-    });
+    return serializedEventFromRecord(
+      await this.eventsService.create({
+        type,
+        points,
+        occurredAt,
+        userId: user.id,
+      }),
+    );
   }
 }
