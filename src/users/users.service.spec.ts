@@ -10,6 +10,7 @@ import faker from 'faker';
 import { ulid } from 'ulid';
 import { v4 as uuid } from 'uuid';
 import { SortOrder } from '../common/enums/sort-order';
+import { PostmarkService } from '../postmark/postmark.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from './users.service';
@@ -18,11 +19,13 @@ import { EventType } from '.prisma/client';
 describe('UsersService', () => {
   let app: INestApplication;
   let usersService: UsersService;
+  let postmarkService: PostmarkService;
   let prisma: PrismaService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
     usersService = app.get(UsersService);
+    postmarkService = app.get(PostmarkService);
     prisma = app.get(PrismaService);
     await app.init();
   });
@@ -220,7 +223,7 @@ describe('UsersService', () => {
 
   describe('create', () => {
     describe('with a duplicate graffiti', () => {
-      describe('with a previously activated user', () => {
+      describe('with a previously confirmed user', () => {
         it('throws an exception', async () => {
           const graffiti = uuid();
           await prisma.user.create({
@@ -243,7 +246,7 @@ describe('UsersService', () => {
         });
       });
 
-      describe('with a user that has not been activated', () => {
+      describe('with a user that has not been confirmed', () => {
         it('creates a record', async () => {
           const graffiti = uuid();
           await prisma.user.create({
@@ -272,7 +275,7 @@ describe('UsersService', () => {
     });
 
     describe('with a duplicate email', () => {
-      describe('with a previously activated user', () => {
+      describe('with a previously confirmed user', () => {
         it('throws an exception', async () => {
           const email = faker.internet.email();
           await prisma.user.create({
@@ -295,7 +298,7 @@ describe('UsersService', () => {
         });
       });
 
-      describe('with a user that has not been activated', () => {
+      describe('with a user that has not been confirmed', () => {
         it('creates a record', async () => {
           const email = faker.internet.email();
           await prisma.user.create({
@@ -339,6 +342,21 @@ describe('UsersService', () => {
           graffiti,
         });
       });
+    });
+
+    it('sends a confirmation email', async () => {
+      const sendMail = jest.spyOn(postmarkService, 'send');
+      const user = await usersService.create({
+        email: faker.internet.email(),
+        graffiti: uuid(),
+        country_code: faker.address.countryCode('alpha-3'),
+      });
+      expect(sendMail).toHaveBeenCalledTimes(1);
+      expect(sendMail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: user.email,
+        }),
+      );
     });
   });
 
