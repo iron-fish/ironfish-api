@@ -22,6 +22,7 @@ export async function bootstrapTestApp(): Promise<INestApplication> {
       BlocksModule,
       TransactionsModule,
       ConfigModule.forRoot({
+        envFilePath: '.env.test',
         isGlobal: true,
         validationSchema: joi.object({
           API_URL: joi.string().required(),
