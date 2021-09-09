@@ -14,9 +14,10 @@ export function serializedBlockFromRecord(block: Block): SerializedBlock {
     previous_block_hash: block.previous_block_hash,
     difficulty: block.difficulty,
     transactions_count: block.transactions_count,
-    timestamp: block.timestamp,
+    timestamp: block.timestamp.toISOString(),
     graffiti: block.graffiti,
     size: block.size,
+    object: 'block',
   };
 }
 
@@ -33,9 +34,10 @@ export function serializedBlockFromRecordWithTransactions(
     previous_block_hash: block.previous_block_hash,
     difficulty: block.difficulty,
     transactions_count: block.transactions_count,
-    timestamp: block.timestamp,
+    timestamp: block.timestamp.toISOString(),
     graffiti: block.graffiti,
     size: block.size,
+    object: 'block',
     transactions,
   };
 }
