@@ -8,7 +8,7 @@ export interface SerializedBlock {
   previous_block_hash: string | null;
   difficulty: number;
   transactions_count: number;
-  timestamp: Date;
+  timestamp: string;
   graffiti: string | null;
   size: number | null;
   object: string;
