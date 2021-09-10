@@ -139,11 +139,10 @@ export class UsersService {
   }
 
   async list(options: ListUsersOptions): Promise<User[]> {
-    const backwards = options.before !== undefined;
     const cursorId = options.before ?? options.after;
     const cursor = cursorId ? { id: cursorId } : undefined;
     const limit = Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
-    const order = backwards ? SortOrder.ASC : SortOrder.DESC;
+    const order = SortOrder.DESC;
     const skip = cursor ? 1 : 0;
     return this.prisma.user.findMany({
       cursor,
@@ -162,17 +161,15 @@ export class UsersService {
   }
 
   async listWithRank({
-    order,
+    after,
+    before,
     limit,
-    cursorId,
     search,
   }: ListUsersWithRankOptions): Promise<SerializedUserWithRank[]> {
     let rankCursor: number;
+    const cursorId = before ?? after;
     if (cursorId !== undefined) {
       rankCursor = await this.getRank(cursorId);
-    } else if (order === SortOrder.DESC) {
-      // Ranks start at 1, so get everything before |users| + 1
-      rankCursor = (await this.prisma.user.count()) + 1;
     } else {
       // Ranks start at 1, so get everything after 0
       rankCursor = 0;
@@ -233,16 +230,11 @@ export class UsersService {
             rank < $3
         END
       ORDER BY
-        CASE WHEN $2
-          THEN
-            rank
-          ELSE
-            rank * -1
-        END ASC
+        rank ASC
       LIMIT
         $4`,
       `%${search ?? ''}%`,
-      order === SortOrder.ASC,
+      before === undefined,
       rankCursor,
       limit,
     );
