@@ -49,7 +49,7 @@
     "jest": "27.1.1",
     "nps": "5.10.0",
     "prettier": "2.4.0",
-    "prisma": "3.0.1",
+    "prisma": "3.0.2",
     "supertest": "6.1.6",
     "ts-jest": "27.0.5",
     "typescript": "4.4.2",
@@ -64,7 +64,7 @@
     "@nestjs/passport": "8.0.1",
     "@nestjs/platform-express": "8.0.6",
     "@prisma/client": "3.0.2",
-    "@sindresorhus/is": "4.0.1",
+    "@sindresorhus/is": "4.1.0",
     "class-transformer": "0.4.0",
     "class-validator": "0.13.1",
     "compression": "1.7.4",
@@ -76,7 +76,7 @@
     "postmark": "2.7.7",
     "reflect-metadata": "0.1.13",
     "rxjs": "7.3.0",
-    "type-fest": "2.2.0",
+    "type-fest": "2.3.2",
     "ulid": "2.3.0"
   }
 }
