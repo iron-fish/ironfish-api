@@ -79,4 +79,70 @@ describe('BlocksTransactionsService', () => {
       });
     });
   });
+
+  describe('find', () => {
+    describe('when given a block ID', () => {
+      it('returns BlockTransaction records with matching block IDs', async () => {
+        const { block } = await seedBlock();
+        const notes = [{ commitment: uuid() }];
+        const spends = [{ nullifier: uuid() }];
+
+        for (let i = 0; i < 10; i++) {
+          const transaction = await prisma.transaction.create({
+            data: {
+              hash: uuid(),
+              network_version: 0,
+              fee: faker.datatype.number(),
+              size: faker.datatype.number(),
+              timestamp: new Date(),
+              block_id: block.id,
+              notes,
+              spends,
+            },
+          });
+          await blocksTransactionsService.upsert(block, transaction);
+        }
+
+        const blocksTransactions = await blocksTransactionsService.list({
+          blockId: block.id,
+        });
+        for (const record of blocksTransactions) {
+          expect(record.block_id).toBe(block.id);
+        }
+      });
+    });
+
+    describe('when given a transaction ID', () => {
+      it('returns BlockTransaction records with matching transaction IDs', async () => {
+        const { block } = await seedBlock();
+        const notes = [{ commitment: uuid() }];
+        const spends = [{ nullifier: uuid() }];
+        const transaction = await prisma.transaction.create({
+          data: {
+            hash: uuid(),
+            network_version: 0,
+            fee: faker.datatype.number(),
+            size: faker.datatype.number(),
+            timestamp: new Date(),
+            block_id: block.id,
+            notes,
+            spends,
+          },
+        });
+
+        for (let i = 0; i < 10; i++) {
+          const { block } = await seedBlock();
+          await blocksTransactionsService.upsert(block, transaction);
+        }
+
+        const blocksTransactions = await blocksTransactionsService.list({
+          transactionId: transaction.id,
+        });
+
+        for (const record of blocksTransactions) {
+          expect(record.transaction_id).toBe(transaction.id);
+        }
+      });
+    });
+  });
 });
