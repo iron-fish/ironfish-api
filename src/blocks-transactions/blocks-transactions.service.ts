@@ -5,7 +5,7 @@ import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { Block, BlockTransaction, Transaction } from '@prisma/client';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { FindBlockTransactionOptions } from './interfaces/find-block-transactions-options';
+import { ListBlockTransactionOptions } from './interfaces/list-block-transactions-options';
 
 @Injectable()
 export class BlocksTransactionsService {
@@ -38,8 +38,8 @@ export class BlocksTransactionsService {
     });
   }
 
-  async find(
-    options: FindBlockTransactionOptions,
+  async list(
+    options: ListBlockTransactionOptions,
   ): Promise<BlockTransaction[]> {
     if (options.blockId) {
       return this.prisma.blockTransaction.findMany({

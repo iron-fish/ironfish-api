@@ -103,7 +103,7 @@ describe('BlocksTransactionsService', () => {
           await blocksTransactionsService.upsert(block, transaction);
         }
 
-        const blocksTransactions = await blocksTransactionsService.find({
+        const blocksTransactions = await blocksTransactionsService.list({
           blockId: block.id,
         });
         for (const record of blocksTransactions) {
@@ -135,7 +135,7 @@ describe('BlocksTransactionsService', () => {
           await blocksTransactionsService.upsert(block, transaction);
         }
 
-        const blocksTransactions = await blocksTransactionsService.find({
+        const blocksTransactions = await blocksTransactionsService.list({
           transactionId: transaction.id,
         });
 
