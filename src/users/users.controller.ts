@@ -14,7 +14,6 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { DEFAULT_LIMIT, MAX_LIMIT, MS_PER_DAY } from '../common/constants';
-import { SortOrder } from '../common/enums/sort-order';
 import { List } from '../common/interfaces/list';
 import { EventsService } from '../events/events.service';
 import { SerializedEventMetrics } from '../events/interfaces/serialized-event-metrics';
@@ -160,16 +159,11 @@ export class UsersController {
     { after, before, limit, order_by: orderBy, search }: UsersQueryDto,
   ): Promise<List<SerializedUser | SerializedUserWithRank>> {
     if (orderBy !== undefined) {
-      const backwards = before !== undefined;
-      const cursorId = before ?? after;
-      // This is the reverse order than most other endpoints since rank strictly
-      // increases and we sort by most recently created elsewhere by default
-      const order = backwards ? SortOrder.DESC : SortOrder.ASC;
       return {
         data: await this.usersService.listWithRank({
-          order,
+          after,
+          before,
           limit: Math.min(MAX_LIMIT, limit || DEFAULT_LIMIT),
-          cursorId,
           search,
         }),
         object: 'list',

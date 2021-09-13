@@ -116,10 +116,9 @@ export class BlocksService {
   async list(
     options: ListBlocksOptions,
   ): Promise<Block[] | (Block & { transactions: Transaction[] })[]> {
-    const backwards = options.before !== undefined;
     const cursorId = options.before ?? options.after;
     const cursor = cursorId ? { id: cursorId } : undefined;
-    const order = backwards ? SortOrder.ASC : SortOrder.DESC;
+    const order = SortOrder.DESC;
     const skip = cursor ? 1 : 0;
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
     const limit = Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);

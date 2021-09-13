@@ -9,7 +9,6 @@ import {
 import faker from 'faker';
 import { ulid } from 'ulid';
 import { v4 as uuid } from 'uuid';
-import { SortOrder } from '../common/enums/sort-order';
 import { PostmarkService } from '../postmark/postmark.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
@@ -208,7 +207,6 @@ describe('UsersService', () => {
     it('returns a chunk of users with rank', async () => {
       const limit = 10;
       const records = await usersService.listWithRank({
-        order: SortOrder.ASC,
         limit,
         search: '7',
       });

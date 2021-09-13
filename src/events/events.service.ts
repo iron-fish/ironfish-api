@@ -23,11 +23,10 @@ export class EventsService {
   constructor(private prisma: PrismaService) {}
 
   async list(options: ListEventsOptions): Promise<Event[]> {
-    const backwards = options.before !== undefined;
     const cursorId = options.before ?? options.after;
     const cursor = cursorId ? { id: cursorId } : undefined;
     const limit = Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
-    const order = backwards ? SortOrder.ASC : SortOrder.DESC;
+    const order = SortOrder.DESC;
     const skip = cursor ? 1 : 0;
     return this.prisma.event.findMany({
       cursor,
