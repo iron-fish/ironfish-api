@@ -82,7 +82,7 @@ describe('BlocksTransactionsService', () => {
 
   describe('find', () => {
     describe('when given a block ID', () => {
-      it('returns associated transactions in BlockTransaction records', async () => {
+      it('returns BlockTransaction records with matching block IDs', async () => {
         const { block } = await seedBlock();
         const notes = [{ commitment: uuid() }];
         const spends = [{ nullifier: uuid() }];
@@ -106,12 +106,14 @@ describe('BlocksTransactionsService', () => {
         const blocksTransactions = await blocksTransactionsService.find({
           blockId: block.id,
         });
-        expect(blocksTransactions).toHaveLength(10);
+        for (const record of blocksTransactions) {
+          expect(record.block_id).toBe(block.id);
+        }
       });
     });
 
     describe('when given a transaction ID', () => {
-      it('returns associated transactions in BlockTransaction records', async () => {
+      it('returns BlockTransaction records with matching transaction IDs', async () => {
         const { block } = await seedBlock();
         const notes = [{ commitment: uuid() }];
         const spends = [{ nullifier: uuid() }];
@@ -130,14 +132,16 @@ describe('BlocksTransactionsService', () => {
 
         for (let i = 0; i < 10; i++) {
           const { block } = await seedBlock();
-          transaction.block_id = block.id;
           await blocksTransactionsService.upsert(block, transaction);
         }
 
         const blocksTransactions = await blocksTransactionsService.find({
           transactionId: transaction.id,
         });
-        expect(blocksTransactions).toHaveLength(10);
+
+        for (const record of blocksTransactions) {
+          expect(record.transaction_id).toBe(transaction.id);
+        }
       });
     });
   });

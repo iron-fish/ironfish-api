@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { Block, BlockTransaction, Transaction } from '@prisma/client';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -40,7 +40,7 @@ export class BlocksTransactionsService {
 
   async find(
     options: FindBlockTransactionOptions,
-  ): Promise<BlockTransaction[] | null> {
+  ): Promise<BlockTransaction[]> {
     if (options.blockId) {
       return this.prisma.blockTransaction.findMany({
         where: {
@@ -54,17 +54,7 @@ export class BlocksTransactionsService {
         },
       });
     } else {
-      return null;
+      throw new UnprocessableEntityException();
     }
-  }
-
-  async findByTransactionId(
-    transaction: Transaction,
-  ): Promise<BlockTransaction[]> {
-    return this.prisma.blockTransaction.findMany({
-      where: {
-        transaction_id: transaction.id,
-      },
-    });
   }
 }
