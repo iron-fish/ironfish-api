@@ -189,7 +189,7 @@ describe('UsersService', () => {
   describe('list', () => {
     it('returns a chunk of users', async () => {
       const limit = 2;
-      const records = await usersService.list({
+      const { data: records } = await usersService.list({
         limit,
       });
       expect(records).toHaveLength(limit);
@@ -206,7 +206,7 @@ describe('UsersService', () => {
   describe('listWithRank', () => {
     it('returns a chunk of users with rank', async () => {
       const limit = 10;
-      const records = await usersService.listWithRank({
+      const { data: records } = await usersService.listWithRank({
         limit,
         search: '7',
       });

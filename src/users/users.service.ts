@@ -18,7 +18,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { ListUsersWithRankOptions } from './interfaces/list-by-rank-options';
 import { ListUsersOptions } from './interfaces/list-users-options';
 import { SerializedUserWithRank } from './interfaces/serialized-user-with-rank';
-import { User } from '.prisma/client';
+import { Prisma, User } from '.prisma/client';
 
 @Injectable()
 export class UsersService {
@@ -138,28 +138,69 @@ export class UsersService {
     return user;
   }
 
-  async list(options: ListUsersOptions): Promise<User[]> {
+  async list(options: ListUsersOptions): Promise<{
+    data: User[];
+    hasNext: boolean;
+    hasPrevious: boolean;
+  }> {
     const cursorId = options.before ?? options.after;
     const cursor = cursorId ? { id: cursorId } : undefined;
     const direction = options.before !== undefined ? -1 : 1;
     const limit =
       direction * Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
-    const order = SortOrder.DESC;
+    const orderBy = { id: SortOrder.DESC };
     const skip = cursor ? 1 : 0;
-    return this.prisma.user.findMany({
+    const where = {
+      graffiti: {
+        contains: options.search,
+      },
+      confirmed_at: {
+        not: null,
+      },
+    };
+    const data = await this.prisma.user.findMany({
       cursor,
-      orderBy: { id: order },
+      orderBy,
       skip,
       take: limit,
-      where: {
-        graffiti: {
-          contains: options.search,
-        },
-        confirmed_at: {
-          not: null,
-        },
-      },
+      where,
     });
+    return {
+      data,
+      ...(await this.getListMetadata(data, where, orderBy)),
+    };
+  }
+
+  private async getListMetadata(
+    data: User[],
+    where: Prisma.UserWhereInput,
+    orderBy: Prisma.Enumerable<Prisma.UserOrderByWithRelationInput>,
+  ): Promise<{ hasNext: boolean; hasPrevious: boolean }> {
+    const { length } = data;
+    if (length === 0) {
+      return {
+        hasNext: false,
+        hasPrevious: false,
+      };
+    }
+    const nextRecords = await this.prisma.user.findMany({
+      where,
+      orderBy,
+      cursor: { id: data[length - 1].id },
+      skip: 1,
+      take: 1,
+    });
+    const previousRecords = await this.prisma.user.findMany({
+      where,
+      orderBy,
+      cursor: { id: data[0].id },
+      skip: 1,
+      take: -1,
+    });
+    return {
+      hasNext: nextRecords.length > 0,
+      hasPrevious: previousRecords.length > 0,
+    };
   }
 
   async listWithRank({
@@ -167,7 +208,11 @@ export class UsersService {
     before,
     limit,
     search,
-  }: ListUsersWithRankOptions): Promise<SerializedUserWithRank[]> {
+  }: ListUsersWithRankOptions): Promise<{
+    data: SerializedUserWithRank[];
+    hasNext: boolean;
+    hasPrevious: boolean;
+  }> {
     let rankCursor: number;
     const cursorId = before ?? after;
     if (cursorId !== undefined) {
@@ -176,8 +221,9 @@ export class UsersService {
       // Ranks start at 1, so get everything after 0
       rankCursor = 0;
     }
-    return this.prisma.$queryRawUnsafe<SerializedUserWithRank[]>(
-      `SELECT
+    const searchFilter = `%${search ?? ''}%`;
+    const query = `
+      SELECT
         id,
         graffiti,
         total_points,
@@ -234,12 +280,42 @@ export class UsersService {
       ORDER BY
         rank ASC
       LIMIT
-        $4`,
-      `%${search ?? ''}%`,
+        $4`;
+    const data = await this.prisma.$queryRawUnsafe<SerializedUserWithRank[]>(
+      query,
+      searchFilter,
       before === undefined,
       rankCursor,
       limit,
     );
+    return {
+      data,
+      ...(await this.getListWithRankMetadata(data, query, searchFilter)),
+    };
+  }
+
+  private async getListWithRankMetadata(
+    data: SerializedUserWithRank[],
+    query: string,
+    searchFilter: string,
+  ): Promise<{ hasNext: boolean; hasPrevious: boolean }> {
+    const { length } = data;
+    if (length === 0) {
+      return {
+        hasNext: false,
+        hasPrevious: false,
+      };
+    }
+    const nextRecords = await this.prisma.$queryRawUnsafe<
+      SerializedUserWithRank[]
+    >(query, searchFilter, true, data[length - 1].rank, 1);
+    const previousRecords = await this.prisma.$queryRawUnsafe<
+      SerializedUserWithRank[]
+    >(query, searchFilter, false, data[0].rank, 1);
+    return {
+      hasNext: nextRecords.length > 0,
+      hasPrevious: previousRecords.length > 0,
+    };
   }
 
   async updateLastLoginAt(user: User): Promise<User> {

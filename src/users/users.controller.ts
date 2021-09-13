@@ -14,7 +14,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { DEFAULT_LIMIT, MAX_LIMIT, MS_PER_DAY } from '../common/constants';
-import { List } from '../common/interfaces/list';
+import { PaginatedList } from '../common/interfaces/paginated-list';
 import { EventsService } from '../events/events.service';
 import { SerializedEventMetrics } from '../events/interfaces/serialized-event-metrics';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -157,27 +157,37 @@ export class UsersController {
       }),
     )
     { after, before, limit, order_by: orderBy, search }: UsersQueryDto,
-  ): Promise<List<SerializedUser | SerializedUserWithRank>> {
+  ): Promise<PaginatedList<SerializedUser | SerializedUserWithRank>> {
     if (orderBy !== undefined) {
-      return {
-        data: await this.usersService.listWithRank({
+      const { data, hasNext, hasPrevious } =
+        await this.usersService.listWithRank({
           after,
           before,
           limit: Math.min(MAX_LIMIT, limit || DEFAULT_LIMIT),
           search,
-        }),
+        });
+      return {
         object: 'list',
+        data,
+        metadata: {
+          has_next: hasNext,
+          has_previous: hasPrevious,
+        },
       };
     }
-    const users = await this.usersService.list({
+    const { data, hasNext, hasPrevious } = await this.usersService.list({
       after,
       before,
       limit,
       search,
     });
     return {
-      data: users.map((user) => serializedUserFromRecord(user)),
       object: 'list',
+      data: data.map((user) => serializedUserFromRecord(user)),
+      metadata: {
+        has_next: hasNext,
+        has_previous: hasPrevious,
+      },
     };
   }
 
