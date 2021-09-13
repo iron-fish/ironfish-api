@@ -9,6 +9,7 @@ import joi from 'joi';
 import { REST_MODULES } from '../app.module';
 import { AuthModule } from '../auth/auth.module';
 import { BlocksModule } from '../blocks/blocks.module';
+import { BlocksTransactionsModule } from '../blocks-transactions/blocks-transactions.module';
 import { EventsModule } from '../events/events.module';
 import { PostmarkService } from '../postmark/postmark.service';
 import { TransactionsModule } from '../transactions/transactions.module';
@@ -20,6 +21,7 @@ export async function bootstrapTestApp(): Promise<INestApplication> {
     imports: [
       AuthModule,
       BlocksModule,
+      BlocksTransactionsModule,
       TransactionsModule,
       ConfigModule.forRoot({
         envFilePath: '.env.test',
