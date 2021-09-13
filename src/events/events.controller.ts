@@ -12,7 +12,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
-import { List } from '../common/interfaces/list';
+import { PaginatedList } from '../common/interfaces/paginated-list';
 import { EventsService } from '../events/events.service';
 import { UsersService } from '../users/users.service';
 import { CreateEventDto } from './dto/create-event.dto';
@@ -36,17 +36,20 @@ export class EventsController {
       }),
     )
     { user_id, after, before, limit }: EventsQueryDto,
-  ): Promise<List<SerializedEvent>> {
+  ): Promise<PaginatedList<SerializedEvent>> {
+    const { data, hasNext, hasPrevious } = await this.eventsService.list({
+      userId: user_id,
+      after,
+      before,
+      limit,
+    });
     return {
-      data: (
-        await this.eventsService.list({
-          userId: user_id,
-          after,
-          before,
-          limit,
-        })
-      ).map((event) => serializedEventFromRecord(event)),
       object: 'list',
+      data: data.map((event) => serializedEventFromRecord(event)),
+      metadata: {
+        has_next: hasNext,
+        has_previous: hasPrevious,
+      },
     };
   }
 

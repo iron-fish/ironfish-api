@@ -127,7 +127,7 @@ describe('EventsService', () => {
             country_code: faker.address.countryCode('alpha-3'),
           },
         });
-        const records = await eventsService.list({ userId: user.id });
+        const { data: records } = await eventsService.list({ userId: user.id });
         expect(records).toHaveLength(0);
       });
     });
@@ -136,7 +136,9 @@ describe('EventsService', () => {
       describe('with no limit', () => {
         it('returns all the available records', async () => {
           const { events, user } = await setup();
-          const records = await eventsService.list({ userId: user.id });
+          const { data: records } = await eventsService.list({
+            userId: user.id,
+          });
           const eventIds = new Set(events.map((event) => event.id));
           const recordIds = new Set(records.map((record) => record.id));
           expect(eventIds).toEqual(recordIds);
@@ -147,7 +149,7 @@ describe('EventsService', () => {
         it('returns a paginated chunk equal to the limit', async () => {
           const { user } = await setup();
           const limit = 2;
-          const records = await eventsService.list({
+          const { data: records } = await eventsService.list({
             userId: user.id,
             limit,
           });
@@ -163,7 +165,7 @@ describe('EventsService', () => {
           const { events, user } = await setup();
           events.reverse();
           const lastEventId = events[0].id;
-          const records = await eventsService.list({
+          const { data: records } = await eventsService.list({
             userId: user.id,
             before: lastEventId,
           });
@@ -178,7 +180,7 @@ describe('EventsService', () => {
         it('returns records after the cursor', async () => {
           const { events, user } = await setup();
           const firstEventId = events[0].id;
-          const records = await eventsService.list({
+          const { data: records } = await eventsService.list({
             userId: user.id,
             after: firstEventId,
           });

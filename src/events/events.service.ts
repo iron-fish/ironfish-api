@@ -16,32 +16,73 @@ import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { CreateEventOptions } from './interfaces/create-event-options';
 import { ListEventsOptions } from './interfaces/list-events-options';
 import { SerializedEventMetrics } from './interfaces/serialized-event-metrics';
-import { Block, Event, EventType, User } from '.prisma/client';
+import { Block, Event, EventType, Prisma, User } from '.prisma/client';
 
 @Injectable()
 export class EventsService {
   constructor(private prisma: PrismaService) {}
 
-  async list(options: ListEventsOptions): Promise<Event[]> {
+  async list(options: ListEventsOptions): Promise<{
+    data: Event[];
+    hasNext: boolean;
+    hasPrevious: boolean;
+  }> {
     const cursorId = options.before ?? options.after;
     const cursor = cursorId ? { id: cursorId } : undefined;
     const direction = options.before !== undefined ? -1 : 1;
     const limit =
       direction * Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
-    const order = SortOrder.DESC;
+    const orderBy = {
+      id: SortOrder.DESC,
+    };
     const skip = cursor ? 1 : 0;
-    return this.prisma.event.findMany({
+    const where = {
+      user_id: options.userId,
+      deleted_at: null,
+    };
+    const data = await this.prisma.event.findMany({
       cursor,
-      orderBy: {
-        id: order,
-      },
+      orderBy,
       skip,
       take: limit,
-      where: {
-        user_id: options.userId,
-        deleted_at: null,
-      },
+      where,
     });
+    return {
+      data,
+      ...(await this.getListMetadata(data, where, orderBy)),
+    };
+  }
+
+  private async getListMetadata(
+    data: Event[],
+    where: Prisma.EventWhereInput,
+    orderBy: Prisma.Enumerable<Prisma.EventOrderByWithRelationInput>,
+  ): Promise<{ hasNext: boolean; hasPrevious: boolean }> {
+    const { length } = data;
+    if (length === 0) {
+      return {
+        hasNext: false,
+        hasPrevious: false,
+      };
+    }
+    const nextRecords = await this.prisma.event.findMany({
+      where,
+      orderBy,
+      cursor: { id: data[length - 1].id },
+      skip: 1,
+      take: 1,
+    });
+    const previousRecords = await this.prisma.event.findMany({
+      where,
+      orderBy,
+      cursor: { id: data[0].id },
+      skip: 1,
+      take: -1,
+    });
+    return {
+      hasNext: nextRecords.length > 0,
+      hasPrevious: previousRecords.length > 0,
+    };
   }
 
   async getLifetimeEventMetricsForUser(
