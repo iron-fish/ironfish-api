@@ -52,7 +52,7 @@
     "prisma": "3.0.2",
     "supertest": "6.1.6",
     "ts-jest": "27.0.5",
-    "typescript": "4.4.2",
+    "typescript": "4.4.3",
     "uuid": "8.3.2"
   },
   "dependencies": {
