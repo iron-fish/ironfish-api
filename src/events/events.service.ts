@@ -25,7 +25,9 @@ export class EventsService {
   async list(options: ListEventsOptions): Promise<Event[]> {
     const cursorId = options.before ?? options.after;
     const cursor = cursorId ? { id: cursorId } : undefined;
-    const limit = Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
+    const direction = options.before !== undefined ? -1 : 1;
+    const limit =
+      direction * Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
     const order = SortOrder.DESC;
     const skip = cursor ? 1 : 0;
     return this.prisma.event.findMany({

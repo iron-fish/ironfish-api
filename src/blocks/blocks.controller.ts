@@ -17,6 +17,7 @@ import {
 import { Response } from 'express';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { List } from '../common/interfaces/list';
+import { PaginatedList } from '../common/interfaces/paginated-list';
 import { BlocksService } from './blocks.service';
 import { BlockQueryDto } from './dto/block-query.dto';
 import { BlocksQueryDto } from './dto/blocks-query.dto';
@@ -47,8 +48,8 @@ export class BlocksController {
   ): Promise<List<SerializedBlock>> {
     const blocks = await this.blocksService.bulkUpsert(upsertBlocksDto);
     return {
-      data: blocks.map((block) => serializedBlockFromRecord(block)),
       object: 'list',
+      data: blocks.map((block) => serializedBlockFromRecord(block)),
     };
   }
 
@@ -74,7 +75,7 @@ export class BlocksController {
       search,
       with_transactions,
     }: BlocksQueryDto,
-  ): Promise<List<SerializedBlock | SerializedBlockWithTransactions>> {
+  ): Promise<PaginatedList<SerializedBlock | SerializedBlockWithTransactions>> {
     const maxBlocksToReturn = 1000;
     if (sequenceGte !== undefined && sequenceLt !== undefined) {
       if (sequenceGte >= sequenceLt) {
@@ -89,7 +90,7 @@ export class BlocksController {
       }
     }
 
-    const blocks = await this.blocksService.list({
+    const { data, hasNext, hasPrevious } = await this.blocksService.list({
       after,
       before,
       limit,
@@ -99,14 +100,18 @@ export class BlocksController {
       withTransactions: with_transactions,
     });
     return {
-      data: blocks.map((block) => {
+      object: 'list',
+      data: data.map((block) => {
         if ('transactions' in block) {
           return serializedBlockFromRecordWithTransactions(block);
         } else {
           return serializedBlockFromRecord(block);
         }
       }),
-      object: 'list',
+      metadata: {
+        has_next: hasNext,
+        has_previous: hasPrevious,
+      },
     };
   }
 
