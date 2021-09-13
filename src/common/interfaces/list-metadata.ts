@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-export interface List<T> {
-  object: 'list';
-  data: T[];
+export interface ListMetadata {
+  has_previous: boolean;
+  has_next: boolean;
 }

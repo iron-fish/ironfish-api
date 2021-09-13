@@ -216,7 +216,7 @@ describe('BlocksService', () => {
       it('returns blocks within the range', async () => {
         const start = 1;
         const end = 100;
-        const blocks = await blocksService.list({
+        const { data: blocks } = await blocksService.list({
           sequenceGte: 2,
           sequenceLt: 4,
         });
@@ -230,7 +230,9 @@ describe('BlocksService', () => {
     describe('with a valid partial hash search string', () => {
       it('returns block(s) with matches', async () => {
         const searchHash = 'aa';
-        const blocks = await blocksService.list({ search: searchHash });
+        const { data: blocks } = await blocksService.list({
+          search: searchHash,
+        });
         expect(blocks.length).toBeGreaterThanOrEqual(0);
       });
     });
@@ -238,14 +240,16 @@ describe('BlocksService', () => {
     describe('with a valid sequence search string', () => {
       it('returns block(s) with matches', async () => {
         const searchSequence = '50';
-        const blocks = await blocksService.list({ search: searchSequence });
+        const { data: blocks } = await blocksService.list({
+          search: searchSequence,
+        });
         expect(blocks.length).toBeGreaterThanOrEqual(0);
       });
     });
 
     describe('with no query parameters', () => {
       it('returns block(s) in descending order', async () => {
-        const blocks = await blocksService.list({});
+        const { data: blocks } = await blocksService.list({});
         expect(blocks.length).toBeGreaterThanOrEqual(0);
         expect(blocks[0].id).toBeGreaterThan(blocks[1].id);
       });

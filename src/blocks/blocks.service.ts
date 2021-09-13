@@ -16,7 +16,7 @@ import { BlockDto, UpsertBlocksDto } from './dto/upsert-blocks.dto';
 import { BlockOperation } from './enums/block-operation';
 import { FindBlockOptions } from './interfaces/find-block-options';
 import { ListBlocksOptions } from './interfaces/list-block-options';
-import { Block, Transaction } from '.prisma/client';
+import { Block, Prisma, Transaction } from '.prisma/client';
 
 @Injectable()
 export class BlocksService {
@@ -113,56 +113,107 @@ export class BlocksService {
     return block;
   }
 
-  async list(
-    options: ListBlocksOptions,
-  ): Promise<Block[] | (Block & { transactions: Transaction[] })[]> {
+  async list(options: ListBlocksOptions): Promise<{
+    data: Block[] | (Block & { transactions: Transaction[] })[];
+    hasPrevious: boolean;
+    hasNext: boolean;
+  }> {
     const cursorId = options.before ?? options.after;
     const cursor = cursorId ? { id: cursorId } : undefined;
-    const order = SortOrder.DESC;
+    const orderBy = { id: SortOrder.DESC };
     const skip = cursor ? 1 : 0;
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
-    const limit = Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
+    const direction = options.before !== undefined ? -1 : 1;
+    const limit =
+      direction * Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
     const include = { transactions: options.withTransactions };
     if (options.sequenceGte !== undefined && options.sequenceLt !== undefined) {
-      return this.prisma.block.findMany({
-        where: {
-          sequence: {
-            gte: options.sequenceGte,
-            lt: options.sequenceLt,
+      return {
+        data: await this.prisma.block.findMany({
+          orderBy,
+          where: {
+            sequence: {
+              gte: options.sequenceGte,
+              lt: options.sequenceLt,
+            },
+            main: true,
+            network_version: networkVersion,
           },
-          main: true,
-          network_version: networkVersion,
-        },
-        include,
-      });
+          include,
+        }),
+        hasNext: false,
+        hasPrevious: false,
+      };
     } else if (options.search !== undefined) {
-      return this.prisma.block.findMany({
+      const where = {
+        searchable_text: {
+          contains: options.search,
+        },
+        main: true,
+        network_version: networkVersion,
+      };
+      const data = await this.prisma.block.findMany({
         cursor,
-        orderBy: { id: order },
+        orderBy,
         skip,
         take: limit,
-        where: {
-          searchable_text: {
-            contains: options.search,
-          },
-          main: true,
-          network_version: networkVersion,
-        },
+        where,
         include,
       });
+      return {
+        data,
+        ...(await this.getListMetadata(data, where, orderBy)),
+      };
     } else {
-      return this.prisma.block.findMany({
+      const where = {
+        main: true,
+        network_version: networkVersion,
+      };
+      const data = await this.prisma.block.findMany({
         cursor,
-        orderBy: { id: order },
+        orderBy,
         skip,
         take: limit,
-        where: {
-          main: true,
-          network_version: networkVersion,
-        },
+        where,
         include,
       });
+      return {
+        data,
+        ...(await this.getListMetadata(data, where, orderBy)),
+      };
     }
+  }
+
+  private async getListMetadata(
+    data: Block[],
+    where: Prisma.BlockWhereInput,
+    orderBy: Prisma.Enumerable<Prisma.BlockOrderByWithRelationInput>,
+  ): Promise<{ hasNext: boolean; hasPrevious: boolean }> {
+    const { length } = data;
+    if (length === 0) {
+      return {
+        hasNext: false,
+        hasPrevious: false,
+      };
+    }
+    const nextRecords = await this.prisma.block.findMany({
+      where,
+      orderBy,
+      cursor: { id: data[length - 1].id },
+      skip: 1,
+      take: 1,
+    });
+    const previousRecords = await this.prisma.block.findMany({
+      where,
+      orderBy,
+      cursor: { id: data[0].id },
+      skip: 1,
+      take: -1,
+    });
+    return {
+      hasNext: nextRecords.length > 0,
+      hasPrevious: previousRecords.length > 0,
+    };
   }
 
   async find(

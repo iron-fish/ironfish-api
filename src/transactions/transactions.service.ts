@@ -89,7 +89,9 @@ export class TransactionsService {
     options: ListTransactionOptions,
   ): Promise<Transaction[] | (Transaction & { block: Block })[]> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
-    const limit = Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
+    const direction = options.before !== undefined ? -1 : 1;
+    const limit =
+      direction * Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
     const include = { block: options.withBlock };
 
     if (options.search !== undefined) {
