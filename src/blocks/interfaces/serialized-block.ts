@@ -6,6 +6,7 @@ export interface SerializedBlock {
   hash: string;
   sequence: number;
   previous_block_hash: string | null;
+  main: boolean;
   difficulty: number;
   transactions_count: number;
   timestamp: string;

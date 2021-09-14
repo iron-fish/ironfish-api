@@ -3,16 +3,12 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { Block, BlockTransaction, Transaction } from '@prisma/client';
-import { ApiConfigService } from '../api-config/api-config.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ListBlockTransactionOptions } from './interfaces/list-block-transactions-options';
 
 @Injectable()
 export class BlocksTransactionsService {
-  constructor(
-    private readonly config: ApiConfigService,
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async upsert(
     block: Block,

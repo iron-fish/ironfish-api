@@ -7,6 +7,7 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { ApiConfigService } from '../api-config/api-config.service';
+import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
 import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
 import { EventsService } from '../events/events.service';
@@ -25,6 +26,7 @@ export class BlocksService {
     private readonly eventsService: EventsService,
     private readonly prisma: PrismaService,
     private readonly usersService: UsersService,
+    private readonly blocksTransactionsService: BlocksTransactionsService,
   ) {}
 
   async bulkUpsert({ blocks }: UpsertBlocksDto): Promise<Block[]> {
@@ -157,6 +159,28 @@ export class BlocksService {
         orderBy,
         skip,
         take: limit,
+        where,
+        include,
+      });
+      return {
+        data,
+        ...(await this.getListMetadata(data, where, orderBy)),
+      };
+    } else if (options.transactionId !== undefined) {
+      const blocksTransactions = await this.blocksTransactionsService.list({
+        transactionId: options.transactionId,
+      });
+      const blockIds = blocksTransactions.map(
+        (blockTransaction) => blockTransaction.block_id,
+      );
+      const where = {
+        // We are choosing not to include a constraint for main as we want
+        // to be able to return blocks that aren't a part of the main chain
+        id: { in: blockIds },
+        network_version: networkVersion,
+      };
+      const data = await this.prisma.block.findMany({
+        orderBy,
         where,
         include,
       });

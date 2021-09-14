@@ -6,6 +6,11 @@ import { IsBoolean, IsInt, IsOptional, IsString, Min } from 'class-validator';
 import { PaginationArgsDto } from '../../common/dto/pagination-args.dto';
 
 export class BlocksQueryDto extends PaginationArgsDto {
+  @IsOptional()
+  @IsInt()
+  @Type(() => Number)
+  readonly transaction_id?: number;
+
   @Min(1)
   @IsOptional()
   @IsInt()
