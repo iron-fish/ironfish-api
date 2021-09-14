@@ -5,6 +5,7 @@ import { Injectable } from '@nestjs/common';
 import { Block } from '@prisma/client';
 import { classToPlain } from 'class-transformer';
 import { ApiConfigService } from '../api-config/api-config.service';
+import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
 import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
 import { PrismaService } from '../prisma/prisma.service';
@@ -21,6 +22,7 @@ export class TransactionsService {
   constructor(
     private readonly config: ApiConfigService,
     private readonly prisma: PrismaService,
+    private readonly blocksTransactions: BlocksTransactionsService,
   ) {}
 
   async bulkUpsert({
@@ -105,6 +107,22 @@ export class TransactionsService {
             contains: options.search,
           },
           network_version: networkVersion,
+        },
+        include,
+      });
+    } else if (options.blockId !== undefined) {
+      const blocksTransactions = await this.blocksTransactions.list({
+        blockId: options.blockId,
+      });
+      const transactionsIds = blocksTransactions.map(
+        (blockTransaction) => blockTransaction.transaction_id,
+      );
+      return this.prisma.transaction.findMany({
+        orderBy: {
+          id: SortOrder.DESC,
+        },
+        where: {
+          id: { in: transactionsIds },
         },
         include,
       });
