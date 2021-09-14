@@ -2,10 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Type } from 'class-transformer';
-import { IsBoolean, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsInt, IsOptional, IsString } from 'class-validator';
 import { PaginationArgsDto } from '../../common/dto/pagination-args.dto';
 
 export class TransactionsQueryDto extends PaginationArgsDto {
+  @IsOptional()
+  @IsInt()
+  @Type(() => Number)
+  readonly block_id?: number;
+
   @IsOptional()
   @IsString()
   readonly search?: string;
