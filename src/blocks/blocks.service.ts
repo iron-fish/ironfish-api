@@ -17,6 +17,7 @@ import { BlockOperation } from './enums/block-operation';
 import { FindBlockOptions } from './interfaces/find-block-options';
 import { ListBlocksOptions } from './interfaces/list-block-options';
 import { Block, Prisma, Transaction } from '.prisma/client';
+import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
 
 @Injectable()
 export class BlocksService {
@@ -25,6 +26,7 @@ export class BlocksService {
     private readonly eventsService: EventsService,
     private readonly prisma: PrismaService,
     private readonly usersService: UsersService,
+    private readonly blocksTransactionsService: BlocksTransactionsService,
   ) {}
 
   async bulkUpsert({ blocks }: UpsertBlocksDto): Promise<Block[]> {
@@ -157,6 +159,25 @@ export class BlocksService {
         orderBy,
         skip,
         take: limit,
+        where,
+        include,
+      });
+      return {
+        data,
+        ...(await this.getListMetadata(data, where, orderBy)),
+      };
+    } else if (options.transactionId !== undefined) {
+      const blocksTransactions = await this.blocksTransactionsService.list({
+        transactionId: options.transactionId,
+      });
+      const blockIds = blocksTransactions.map(
+        (blockTransaction) => blockTransaction.block_id,
+      );
+      const where = {
+        id: { in: blockIds },
+      };
+      const data = await this.prisma.block.findMany({
+        orderBy,
         where,
         include,
       });
