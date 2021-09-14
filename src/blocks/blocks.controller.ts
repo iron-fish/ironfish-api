@@ -73,6 +73,7 @@ export class BlocksController {
       sequence_gte: sequenceGte,
       sequence_lt: sequenceLt,
       search,
+      transaction_id,
       with_transactions,
     }: BlocksQueryDto,
   ): Promise<PaginatedList<SerializedBlock | SerializedBlockWithTransactions>> {
@@ -97,6 +98,7 @@ export class BlocksController {
       sequenceGte,
       sequenceLt,
       search,
+      transactionId: transaction_id,
       withTransactions: with_transactions,
     });
     return {
