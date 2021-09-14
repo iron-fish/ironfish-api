@@ -7,6 +7,7 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { ApiConfigService } from '../api-config/api-config.service';
+import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
 import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
 import { EventsService } from '../events/events.service';
@@ -17,7 +18,6 @@ import { BlockOperation } from './enums/block-operation';
 import { FindBlockOptions } from './interfaces/find-block-options';
 import { ListBlocksOptions } from './interfaces/list-block-options';
 import { Block, Prisma, Transaction } from '.prisma/client';
-import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
 
 @Injectable()
 export class BlocksService {

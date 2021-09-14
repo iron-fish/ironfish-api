@@ -8,9 +8,7 @@ import { ListBlockTransactionOptions } from './interfaces/list-block-transaction
 
 @Injectable()
 export class BlocksTransactionsService {
-  constructor(
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async upsert(
     block: Block,

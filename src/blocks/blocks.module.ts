@@ -11,7 +11,13 @@ import { BlocksService } from './blocks.service';
 
 @Module({
   exports: [BlocksService],
-  imports: [ApiConfigModule, BlocksTransactionsModule, EventsModule, PrismaModule, UsersModule],
+  imports: [
+    ApiConfigModule,
+    BlocksTransactionsModule,
+    EventsModule,
+    PrismaModule,
+    UsersModule,
+  ],
   providers: [BlocksService],
 })
 export class BlocksModule {}
