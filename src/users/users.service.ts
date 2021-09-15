@@ -297,7 +297,12 @@ export class UsersService {
     );
     return {
       data,
-      ...(await this.getListWithRankMetadata(data, query, searchFilter)),
+      ...(await this.getListWithRankMetadata(
+        data,
+        query,
+        searchFilter,
+        countryCode,
+      )),
     };
   }
 
@@ -305,6 +310,7 @@ export class UsersService {
     data: SerializedUserWithRank[],
     query: string,
     searchFilter: string,
+    countryCode?: string,
   ): Promise<{ hasNext: boolean; hasPrevious: boolean }> {
     const { length } = data;
     if (length === 0) {
@@ -313,12 +319,20 @@ export class UsersService {
         hasPrevious: false,
       };
     }
+    // eslint-disable-next-line
+    console.log({
+      query,
+      searchFilter,
+      direction: true,
+      cursor: data[length - 1].rank,
+      limit: 1,
+    });
     const nextRecords = await this.prisma.$queryRawUnsafe<
       SerializedUserWithRank[]
-    >(query, searchFilter, true, data[length - 1].rank, 1);
+    >(query, searchFilter, true, data[length - 1].rank, 1, countryCode);
     const previousRecords = await this.prisma.$queryRawUnsafe<
       SerializedUserWithRank[]
-    >(query, searchFilter, false, data[0].rank, 1);
+    >(query, searchFilter, false, data[0].rank, 1, countryCode);
     return {
       hasNext: nextRecords.length > 0,
       hasPrevious: previousRecords.length > 0,
