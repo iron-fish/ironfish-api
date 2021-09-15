@@ -3,7 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { Block } from '@prisma/client';
-import faker from 'faker';
+import faker, { seed } from 'faker';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
 import { ApiConfigService } from '../api-config/api-config.service';
@@ -32,6 +32,30 @@ describe('BlocksController', () => {
   afterAll(async () => {
     await app.close();
   });
+
+  const seedBlock = async () => {
+    const hash = uuid();
+    const sequence = faker.datatype.number();
+    const searchable_text = hash + ' ' + String(sequence);
+
+    const block = await prisma.block.create({
+      data: {
+        hash,
+        difficulty: faker.datatype.number(),
+        main: true,
+        sequence,
+        timestamp: new Date(),
+        transactions_count: 0,
+        graffiti: uuid(),
+        previous_block_hash: uuid(),
+        network_version: 0,
+        searchable_text,
+        size: faker.datatype.number(),
+      },
+    });
+
+    return { block };
+  };
 
   describe('POST /blocks', () => {
     beforeEach(() => {
@@ -347,6 +371,45 @@ describe('BlocksController', () => {
             size: expect.any(Number),
           });
         });
+      });
+    });
+
+    describe('with a transaction ID', () => {
+      it('returns block(s) that contain said transaction', async () => {
+        const { block } = await seedBlock();
+        const notes = [{ commitment: uuid() }];
+        const spends = [{ nullifier: uuid() }];
+        const transaction = await prisma.transaction.create({
+          data: {
+            hash: uuid(),
+            network_version: 0,
+            fee: faker.datatype.number(),
+            size: faker.datatype.number(),
+            timestamp: new Date(),
+            block_id: block.id,
+            notes,
+            spends,
+          },
+        });
+        for (let i = 0; i < 9; i++) {
+          const { block } = await seedBlock();
+          await prisma.blockTransaction.create({
+            data: {
+              block_id: block.id,
+              transaction_id: transaction.id,
+            },
+          });
+        }
+
+        const { body } = await request(app.getHttpServer())
+          .get('/blocks')
+          .query({ transaction_id: transaction.id })
+          .expect(HttpStatus.OK)
+        
+        const { data } = body;
+        console.log(data);
+        expect((data as unknown[]).length).toBeGreaterThan(0);
+
       });
     });
   });
