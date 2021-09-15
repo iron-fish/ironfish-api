@@ -128,21 +128,26 @@ export class BlocksService {
     const direction = options.before !== undefined ? -1 : 1;
     const limit =
       direction * Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
-    const include = { transactions: options.withTransactions };
+    const include = { transactions: options.withTransactions } ? true : false;
     if (options.sequenceGte !== undefined && options.sequenceLt !== undefined) {
+      const where = {
+        sequence: {
+          gte: options.sequenceGte,
+          lt: options.sequenceLt,
+        },
+        main: true,
+        network_version: networkVersion,
+      };
       return {
-        data: await this.prisma.block.findMany({
+        data: await this.getBlocksData(
+          cursor,
           orderBy,
-          where: {
-            sequence: {
-              gte: options.sequenceGte,
-              lt: options.sequenceLt,
-            },
-            main: true,
-            network_version: networkVersion,
-          },
+          where,
+          skip,
+          limit,
+          networkVersion,
           include,
-        }),
+        ),
         hasNext: false,
         hasPrevious: false,
       };
@@ -154,14 +159,15 @@ export class BlocksService {
         main: true,
         network_version: networkVersion,
       };
-      const data = await this.prisma.block.findMany({
+      const data = await this.getBlocksData(
         cursor,
         orderBy,
-        skip,
-        take: limit,
         where,
+        skip,
+        limit,
+        networkVersion,
         include,
-      });
+      );
       return {
         data,
         ...(await this.getListMetadata(data, where, orderBy)),
@@ -179,11 +185,15 @@ export class BlocksService {
         id: { in: blockIds },
         network_version: networkVersion,
       };
-      const data = await this.prisma.block.findMany({
+      const data = await this.getBlocksData(
+        undefined,
         orderBy,
         where,
+        skip,
+        limit,
+        networkVersion,
         include,
-      });
+      );
       return {
         data,
         ...(await this.getListMetadata(data, where, orderBy)),
@@ -193,19 +203,60 @@ export class BlocksService {
         main: true,
         network_version: networkVersion,
       };
-      const data = await this.prisma.block.findMany({
+      const data = await this.getBlocksData(
         cursor,
         orderBy,
-        skip,
-        take: limit,
         where,
+        skip,
+        limit,
+        networkVersion,
         include,
-      });
+      );
       return {
         data,
         ...(await this.getListMetadata(data, where, orderBy)),
       };
     }
+  }
+
+  private async getBlocksData(
+    cursor: { id: number } | undefined,
+    orderBy: { id: SortOrder },
+    where: Record<string, unknown>,
+    skip: 1 | 0,
+    limit: number,
+    networkVersion: number,
+    includeTransactions: boolean,
+  ): Promise<Block[] | (Block & { transactions: Transaction[] })[]> {
+    const blocks = await this.prisma.block.findMany({
+      cursor,
+      orderBy,
+      where,
+      skip,
+      take: limit,
+    });
+
+    if (includeTransactions) {
+      return Promise.all(
+        blocks.map(async (block) => {
+          const blocksTransactions = await this.blocksTransactionsService.list({
+            blockId: block.id,
+          });
+          const transactionIds = blocksTransactions.map(
+            (blockTransaction) => blockTransaction.transaction_id,
+          );
+          const transactions = await this.prisma.transaction.findMany({
+            where: {
+              id: { in: transactionIds },
+              network_version: networkVersion,
+            },
+          });
+          return { ...block, transactions };
+        }),
+      );
+    }
+
+    return blocks;
   }
 
   private async getListMetadata(
