@@ -3,7 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { Block } from '@prisma/client';
-import faker, { seed } from 'faker';
+import faker from 'faker';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
 import { ApiConfigService } from '../api-config/api-config.service';
@@ -12,6 +12,7 @@ import { bootstrapTestApp } from '../test/test-app';
 import { BlocksService } from './blocks.service';
 import { UpsertBlocksDto } from './dto/upsert-blocks.dto';
 import { BlockOperation } from './enums/block-operation';
+import { SerializedBlockWithTransactions } from './interfaces/serialized-block-with-transactions';
 
 const API_KEY = 'test';
 
@@ -404,12 +405,15 @@ describe('BlocksController', () => {
         const { body } = await request(app.getHttpServer())
           .get('/blocks')
           .query({ transaction_id: transaction.id })
-          .expect(HttpStatus.OK)
-        
-        const { data } = body;
-        console.log(data);
-        expect((data as unknown[]).length).toBeGreaterThan(0);
+          .expect(HttpStatus.OK);
 
+        const { data } = body;
+        expect((data as unknown[]).length).toBeGreaterThan(0);
+        for (const serializedBlock of data as SerializedBlockWithTransactions[]) {
+          for (const tx of serializedBlock.transactions) {
+            expect(tx.id).toBe(transaction.id);
+          }
+        }
       });
     });
   });
