@@ -151,6 +151,7 @@ export class UsersService {
     const orderBy = { id: SortOrder.DESC };
     const skip = cursor ? 1 : 0;
     const where = {
+      country_code: options.country_code,
       graffiti: {
         contains: options.search,
       },
