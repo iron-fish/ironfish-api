@@ -5,6 +5,7 @@ import { Injectable } from '@nestjs/common';
 import { Block } from '@prisma/client';
 import { classToPlain } from 'class-transformer';
 import { ApiConfigService } from '../api-config/api-config.service';
+import { BlocksService } from '../blocks/blocks.service';
 import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
 import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
@@ -22,7 +23,8 @@ export class TransactionsService {
   constructor(
     private readonly config: ApiConfigService,
     private readonly prisma: PrismaService,
-    private readonly blocksTransactions: BlocksTransactionsService,
+    private readonly blocksTransactionsService: BlocksTransactionsService,
+    private readonly blocksService: BlocksService,
   ) {}
 
   async bulkUpsert({
@@ -89,51 +91,86 @@ export class TransactionsService {
 
   async list(
     options: ListTransactionOptions,
-  ): Promise<Transaction[] | (Transaction & { block: Block })[]> {
+  ): Promise<Transaction[] | (Transaction & { blocks: Block[] })[]> {
+    const orderBy = { id: SortOrder.DESC };
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
     const direction = options.before !== undefined ? -1 : 1;
     const limit =
       direction * Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
-    const include = { block: options.withBlock };
+    const { withBlock } = options;
 
     if (options.search !== undefined) {
-      return this.prisma.transaction.findMany({
-        orderBy: {
-          id: SortOrder.DESC,
+      const where = {
+        hash: {
+          contains: options.search,
         },
-        take: limit,
-        where: {
-          hash: {
-            contains: options.search,
-          },
-          network_version: networkVersion,
-        },
-        include,
-      });
+      };
+      return await this.getTransactionsData(
+        orderBy,
+        limit,
+        where,
+        networkVersion,
+        withBlock,
+      );
     } else if (options.blockId !== undefined) {
-      const blocksTransactions = await this.blocksTransactions.list({
+      const blocksTransactions = await this.blocksTransactionsService.list({
         blockId: options.blockId,
       });
       const transactionsIds = blocksTransactions.map(
         (blockTransaction) => blockTransaction.transaction_id,
       );
-      return this.prisma.transaction.findMany({
-        orderBy: {
-          id: SortOrder.DESC,
-        },
-        where: {
-          id: { in: transactionsIds },
-        },
-        include,
-      });
+      const where = {
+        id: { in: transactionsIds },
+      };
+      return await this.getTransactionsData(
+        orderBy,
+        limit,
+        where,
+        networkVersion,
+        withBlock,
+      );
     } else {
-      return this.prisma.transaction.findMany({
-        orderBy: {
-          id: SortOrder.DESC,
-        },
-        take: limit,
-        include,
-      });
+      return await this.getTransactionsData(
+        orderBy,
+        limit,
+        undefined,
+        networkVersion,
+        withBlock,
+      );
     }
+  }
+
+  private async getTransactionsData(
+    orderBy: { id: SortOrder },
+    limit: number,
+    where: Record<string, unknown> | undefined,
+    networkVersion: number,
+    includeBlock: boolean | undefined,
+  ): Promise<Transaction[] | (Transaction & { blocks: Block[] })[]> {
+    const transactions = await this.prisma.transaction.findMany({
+      orderBy,
+      take: limit,
+      where,
+    });
+
+    if (includeBlock) {
+      return Promise.all(
+        transactions.map(async (transaction) => {
+          const blocksTransctions = await this.blocksTransactionsService.list({
+            transactionId: transaction.id,
+          });
+          const blockIds = blocksTransctions.map(
+            (blockTransaction) => blockTransaction.block_id,
+          );
+          const blocks = await this.blocksService.findByIds(
+            blockIds,
+            networkVersion,
+          );
+          return { ...transaction, blocks };
+        }),
+      );
+    }
+
+    return transactions;
   }
 }

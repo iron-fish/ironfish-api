@@ -240,6 +240,18 @@ export class BlocksService {
     };
   }
 
+  async findByIds(
+    blockIds: number[],
+    networkVersion: number,
+  ): Promise<Block[]> {
+    return this.prisma.block.findMany({
+      where: {
+        id: { in: blockIds },
+        network_version: networkVersion,
+      },
+    });
+  }
+
   async find(
     options: FindBlockOptions,
   ): Promise<Block | (Block & { transactions: Transaction[] }) | null> {
