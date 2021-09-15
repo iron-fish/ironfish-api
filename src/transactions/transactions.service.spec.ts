@@ -7,15 +7,19 @@ import { v4 as uuid } from 'uuid';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { TransactionsService } from './transactions.service';
+import { Block, Transaction } from '.prisma/client';
+import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
 
 describe('TransactionsService', () => {
   let app: INestApplication;
   let transactionsService: TransactionsService;
   let prisma: PrismaService;
+  let blocksTransactionsService: BlocksTransactionsService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
     transactionsService = app.get(TransactionsService);
+    blocksTransactionsService = app.get(BlocksTransactionsService);
     prisma = app.get(PrismaService);
     await app.init();
   });
@@ -250,7 +254,7 @@ describe('TransactionsService', () => {
           const testTransactionHash = uuid();
           const notes = [{ commitment: uuid() }];
           const spends = [{ nullifier: uuid() }];
-          await transactionsService.bulkUpsert({
+          const transactions = await transactionsService.bulkUpsert({
             transactions: [
               {
                 hash: testTransactionHash,
@@ -273,12 +277,17 @@ describe('TransactionsService', () => {
             ],
           });
 
-          const transactions = await transactionsService.list({
+          for (const transaction of transactions) {
+            await blocksTransactionsService.upsert(block, transaction);
+          }
+
+          const receivedTransactions = await transactionsService.list({
             search: testTransactionHash.slice(0, 5),
             withBlock: true,
           });
-          expect(transactions.length).toBeGreaterThan(0);
-          expect(transactions[0]).toHaveProperty('block', block);
+          expect(receivedTransactions.length).toBeGreaterThan(0);
+          const testTransaction = receivedTransactions[0] as Transaction & {blocks: Block[]};
+          expect(testTransaction.blocks).toContainEqual(block);
         });
       });
 
@@ -288,7 +297,7 @@ describe('TransactionsService', () => {
           const testTransactionHash = uuid();
           const notes = [{ commitment: uuid() }];
           const spends = [{ nullifier: uuid() }];
-          await transactionsService.bulkUpsert({
+          const transactions = await transactionsService.bulkUpsert({
             transactions: [
               {
                 hash: testTransactionHash,
@@ -311,12 +320,18 @@ describe('TransactionsService', () => {
             ],
           });
 
-          const transactions = await transactionsService.list({
+          for (const transaction of transactions) {
+            await blocksTransactionsService.upsert(block, transaction);
+          }
+
+          const receivedTransactions = await transactionsService.list({
             withBlock: true,
           });
-          expect(transactions.length).toBeGreaterThan(0);
-          expect(transactions[0].id).toBeGreaterThan(transactions[1].id);
-          expect(transactions[0]).toHaveProperty('block', block);
+
+          expect(receivedTransactions.length).toBeGreaterThan(0);
+          expect(receivedTransactions[0].id).toBeGreaterThan(receivedTransactions[1].id);
+          const testTransaction = receivedTransactions[0] as Transaction & {blocks: Block[]};
+          expect(testTransaction.blocks).toContainEqual(block);
         });
       });
     });

@@ -6,10 +6,11 @@ import { ApiConfigModule } from '../api-config/api-config.module';
 import { BlocksTransactionsModule } from '../blocks-transactions/blocks-transactions.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { TransactionsService } from './transactions.service';
+import { BlocksModule } from '../blocks/blocks.module';
 
 @Module({
   exports: [TransactionsService],
-  imports: [ApiConfigModule, BlocksTransactionsModule, PrismaModule],
+  imports: [ApiConfigModule, BlocksModule, BlocksTransactionsModule, PrismaModule],
   providers: [TransactionsService],
 })
 export class TransactionsModule {}
