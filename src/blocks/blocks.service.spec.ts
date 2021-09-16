@@ -9,6 +9,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { BlocksService } from './blocks.service';
 import { BlockOperation } from './enums/block-operation';
+import { Block, Transaction } from '.prisma/client';
 
 describe('BlocksService', () => {
   let app: INestApplication;
@@ -294,6 +295,23 @@ describe('BlocksService', () => {
           search: searchSequence,
         });
         expect(blocks.length).toBeGreaterThanOrEqual(0);
+      });
+    });
+
+    describe('with a transaction ID', () => {
+      it('returns block(s) that contain said transaction', async () => {
+        const transactionId = 1;
+        const blocks = await blocksService.list({
+          transactionId,
+          withTransactions: true,
+        });
+
+        for (const record of blocks.data) {
+          const block = record as Block & { transactions: Transaction[] };
+          for (const tx of block.transactions) {
+            expect(tx.id).toBe(transactionId);
+          }
+        }
       });
     });
 

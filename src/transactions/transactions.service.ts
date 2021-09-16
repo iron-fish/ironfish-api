@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { Block } from '@prisma/client';
 import { classToPlain } from 'class-transformer';
 import { ApiConfigService } from '../api-config/api-config.service';
@@ -21,8 +21,9 @@ import { Transaction } from '.prisma/client';
 @Injectable()
 export class TransactionsService {
   constructor(
-    private readonly blocksTransactionsService: BlocksTransactionsService,
+    @Inject(forwardRef(() => BlocksService))
     private readonly blocksService: BlocksService,
+    private readonly blocksTransactionsService: BlocksTransactionsService,
     private readonly config: ApiConfigService,
     private readonly prisma: PrismaService,
   ) {}
@@ -95,6 +96,18 @@ export class TransactionsService {
     }
 
     return transaction;
+  }
+
+  async findByIds(
+    transactionIds: number[],
+    networkVersion: number,
+  ): Promise<Transaction[]> {
+    return this.prisma.transaction.findMany({
+      where: {
+        id: { in: transactionIds },
+        network_version: networkVersion,
+      },
+    });
   }
 
   async list(
