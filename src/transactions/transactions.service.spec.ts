@@ -290,9 +290,7 @@ describe('TransactionsService', () => {
           transactionIds,
           networkVersion,
         );
-        expect(receivedTransactions).toEqual(
-          expect.arrayContaining(transactions),
-        );
+        expect(receivedTransactions).toEqual(transactions);
       });
     });
   });
