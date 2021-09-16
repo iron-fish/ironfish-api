@@ -76,17 +76,16 @@ export class TransactionsService {
 
   async find(
     options: FindTransactionOptions,
-  ): Promise<Transaction | (Transaction & { block: Block }) | null> {
+  ): Promise<Transaction | (Transaction & { blocks: Block[] }) | null> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
-    const include = { block: options.withBlock };
+    const { withBlocks } = options;
 
-    return this.prisma.transaction.findFirst({
-      where: {
-        hash: options.hash,
-        network_version: networkVersion,
-      },
-      include,
-    });
+    const where = {
+      hash: options.hash,
+      network_version: networkVersion,
+    };
+
+    return await this.getTransactionData(where, networkVersion, withBlocks);
   }
 
   async list(
@@ -97,7 +96,7 @@ export class TransactionsService {
     const direction = options.before !== undefined ? -1 : 1;
     const limit =
       direction * Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
-    const { withBlock } = options;
+    const { withBlocks } = options;
 
     if (options.search !== undefined) {
       const where = {
@@ -110,7 +109,7 @@ export class TransactionsService {
         limit,
         where,
         networkVersion,
-        withBlock,
+        withBlocks,
       );
     } else if (options.blockId !== undefined) {
       const blocksTransactions = await this.blocksTransactionsService.list({
@@ -127,7 +126,7 @@ export class TransactionsService {
         limit,
         where,
         networkVersion,
-        withBlock,
+        withBlocks,
       );
     } else {
       return await this.getTransactionsData(
@@ -135,17 +134,17 @@ export class TransactionsService {
         limit,
         undefined,
         networkVersion,
-        withBlock,
+        withBlocks,
       );
     }
   }
 
   private async getTransactionsData(
-    orderBy: { id: SortOrder },
-    limit: number,
+    orderBy: { id: SortOrder } | undefined,
+    limit: number | undefined,
     where: Record<string, unknown> | undefined,
     networkVersion: number,
-    includeBlock: boolean | undefined,
+    includeBlocks: boolean | undefined,
   ): Promise<Transaction[] | (Transaction & { blocks: Block[] })[]> {
     const transactions = await this.prisma.transaction.findMany({
       orderBy,
@@ -153,7 +152,7 @@ export class TransactionsService {
       where,
     });
 
-    if (includeBlock) {
+    if (includeBlocks) {
       return Promise.all(
         transactions.map(async (transaction) => {
           const blocksTransctions = await this.blocksTransactionsService.list({
@@ -172,5 +171,31 @@ export class TransactionsService {
     }
 
     return transactions;
+  }
+
+  private async getTransactionData(
+    where: Record<string, unknown>,
+    networkVersion: number,
+    includeBlocks: boolean | undefined,
+  ): Promise<Transaction | ((Transaction & { blocks: Block[] }) | null)> {
+    const transaction = await this.prisma.transaction.findFirst({
+      where,
+    });
+
+    if (transaction !== null && includeBlocks) {
+      const blocksTransctions = await this.blocksTransactionsService.list({
+        transactionId: transaction.id,
+      });
+      const blockIds = blocksTransctions.map(
+        (blockTransaction) => blockTransaction.block_id,
+      );
+      const blocks = await this.blocksService.findByIds(
+        blockIds,
+        networkVersion,
+      );
+      return { ...transaction, blocks };
+    }
+
+    return transaction;
   }
 }
