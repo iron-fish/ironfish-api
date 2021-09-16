@@ -6,6 +6,7 @@ import { ApiConfigModule } from '../api-config/api-config.module';
 import { BlocksTransactionsModule } from '../blocks-transactions/blocks-transactions.module';
 import { EventsModule } from '../events/events.module';
 import { PrismaModule } from '../prisma/prisma.module';
+import { TransactionsModule } from '../transactions/transactions.module';
 import { UsersModule } from '../users/users.module';
 import { BlocksService } from './blocks.service';
 
@@ -16,6 +17,7 @@ import { BlocksService } from './blocks.service';
     BlocksTransactionsModule,
     EventsModule,
     PrismaModule,
+    TransactionsModule,
     UsersModule,
   ],
   providers: [BlocksService],

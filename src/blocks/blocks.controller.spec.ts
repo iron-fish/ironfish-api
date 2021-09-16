@@ -404,7 +404,7 @@ describe('BlocksController', () => {
 
         const { body } = await request(app.getHttpServer())
           .get('/blocks')
-          .query({ transaction_id: transaction.id })
+          .query({ transaction_id: transaction.id, with_transactions: true })
           .expect(HttpStatus.OK);
 
         const { data } = body;
