@@ -257,7 +257,7 @@ describe('BlocksService', () => {
           blockIds,
           networkVersion,
         );
-        expect(receivedBlocks).toEqual(expect.arrayContaining(blocks));
+        expect(receivedBlocks).toEqual(blocks);
       });
     });
   });
