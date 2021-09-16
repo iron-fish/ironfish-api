@@ -18,6 +18,7 @@ import { BlockOperation } from './enums/block-operation';
 import { FindBlockOptions } from './interfaces/find-block-options';
 import { ListBlocksOptions } from './interfaces/list-block-options';
 import { Block, Prisma, Transaction } from '.prisma/client';
+import { TransactionsService } from '../transactions/transactions.service';
 
 @Injectable()
 export class BlocksService {
@@ -26,6 +27,7 @@ export class BlocksService {
     private readonly config: ApiConfigService,
     private readonly eventsService: EventsService,
     private readonly prisma: PrismaService,
+    private readonly transactionsService: TransactionsService,
     private readonly usersService: UsersService,
   ) {}
 
@@ -245,12 +247,10 @@ export class BlocksService {
           const transactionIds = blocksTransactions.map(
             (blockTransaction) => blockTransaction.transaction_id,
           );
-          const transactions = await this.prisma.transaction.findMany({
-            where: {
-              id: { in: transactionIds },
-              network_version: networkVersion,
-            },
-          });
+          const transactions = await this.transactionsService.findByIds(
+            transactionIds,
+            networkVersion,
+          );
           return { ...block, transactions };
         }),
       );
