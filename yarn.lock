@@ -1192,7 +1192,7 @@ axios@0.21.1:
   dependencies:
     follow-redirects "^1.10.0"
 
-axios@^0.21.1:
+axios@^0.21.4:
   version "0.21.4"
   resolved "https://registry.yarnpkg.com/axios/-/axios-0.21.4.tgz#c67b90dc0568e5c1cf2b0b858c43ba28e2eda575"
   integrity sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==
@@ -4060,12 +4060,12 @@ postgres-interval@^1.1.0:
   dependencies:
     xtend "^4.0.0"
 
-postmark@2.7.7:
-  version "2.7.7"
-  resolved "https://registry.yarnpkg.com/postmark/-/postmark-2.7.7.tgz#ccbcfd713d76fe389e5c5c6c79e0fea9a86a5cae"
-  integrity sha512-X9zy6GQhezLRN5AAqeh4OXCh0Db1ET2zkNSFcNZW5m7Oho9UNCQYy9ZTXG/wbJ7WLCXCs983AS+dC3/22klOyA==
+postmark@2.7.8:
+  version "2.7.8"
+  resolved "https://registry.yarnpkg.com/postmark/-/postmark-2.7.8.tgz#4f490e544bf441c3a2134a6f4b2d4114f984ff60"
+  integrity sha512-DvOLcgYSM5+NEKrdQsrpnkX9tAP/apZRMEL9Z0UjY2Fh9kBBhLMCAKm9hANSUeTugrmOiKe3DWu/tSSUIu2CIw==
   dependencies:
-    axios "^0.21.1"
+    axios "^0.21.4"
 
 prefix-matches@^1.0.1:
   version "1.0.1"

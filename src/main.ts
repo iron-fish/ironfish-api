@@ -33,6 +33,7 @@ async function bootstrap() {
     process.env.NODE_ENV === 'staging'
       ? [
           ...defaultOrigins,
+          /localhost/,
           /block-explorer.*\.vercel\.app/,
           /website-testnet.*\.vercel\.app/,
         ]

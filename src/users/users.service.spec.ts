@@ -53,7 +53,7 @@ describe('UsersService', () => {
 
     describe('with a missing id', () => {
       it('returns null', async () => {
-        await expect(usersService.findOrThrow(1337)).rejects.toThrow(
+        await expect(usersService.findOrThrow(100000)).rejects.toThrow(
           NotFoundException,
         );
       });

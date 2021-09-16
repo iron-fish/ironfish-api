@@ -151,6 +151,7 @@ export class UsersService {
     const orderBy = { id: SortOrder.DESC };
     const skip = cursor ? 1 : 0;
     const where = {
+      country_code: options.countryCode,
       graffiti: {
         contains: options.search,
       },
@@ -208,6 +209,7 @@ export class UsersService {
     before,
     limit,
     search,
+    countryCode,
   }: ListUsersWithRankOptions): Promise<{
     data: SerializedUserWithRank[];
     hasNext: boolean;
@@ -276,6 +278,12 @@ export class UsersService {
             rank > $3
           ELSE
             rank < $3
+        END AND
+        CASE WHEN $5::text IS NOT NULL
+          THEN
+            country_code = $5
+          ELSE
+            TRUE
         END
       ORDER BY
         rank ASC
@@ -287,10 +295,16 @@ export class UsersService {
       before === undefined,
       rankCursor,
       limit,
+      countryCode,
     );
     return {
       data,
-      ...(await this.getListWithRankMetadata(data, query, searchFilter)),
+      ...(await this.getListWithRankMetadata(
+        data,
+        query,
+        searchFilter,
+        countryCode,
+      )),
     };
   }
 
@@ -298,6 +312,7 @@ export class UsersService {
     data: SerializedUserWithRank[],
     query: string,
     searchFilter: string,
+    countryCode?: string,
   ): Promise<{ hasNext: boolean; hasPrevious: boolean }> {
     const { length } = data;
     if (length === 0) {
@@ -308,10 +323,10 @@ export class UsersService {
     }
     const nextRecords = await this.prisma.$queryRawUnsafe<
       SerializedUserWithRank[]
-    >(query, searchFilter, true, data[length - 1].rank, 1);
+    >(query, searchFilter, true, data[length - 1].rank, 1, countryCode);
     const previousRecords = await this.prisma.$queryRawUnsafe<
       SerializedUserWithRank[]
-    >(query, searchFilter, false, data[0].rank, 1);
+    >(query, searchFilter, false, data[0].rank, 1, countryCode);
     return {
       hasNext: nextRecords.length > 0,
       hasPrevious: previousRecords.length > 0,

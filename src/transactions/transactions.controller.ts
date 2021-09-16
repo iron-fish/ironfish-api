@@ -82,9 +82,10 @@ export class TransactionsController {
         transform: true,
       }),
     )
-    { search, with_block }: TransactionsQueryDto,
+    { block_id, search, with_block }: TransactionsQueryDto,
   ): Promise<List<SerializedTransaction | SerializedTransactionWithBlock>> {
     const transactions = await this.transactionsService.list({
+      blockId: block_id,
       search,
       withBlock: with_block,
     });
