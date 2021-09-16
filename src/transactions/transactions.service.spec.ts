@@ -11,13 +11,13 @@ import { TransactionsService } from './transactions.service';
 
 describe('TransactionsService', () => {
   let app: INestApplication;
-  let apiConfigService: ApiConfigService;
+  let config: ApiConfigService;
   let transactionsService: TransactionsService;
   let prisma: PrismaService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
-    apiConfigService = app.get(ApiConfigService);
+    config = app.get(ApiConfigService);
     transactionsService = app.get(TransactionsService);
     prisma = app.get(PrismaService);
     await app.init();
@@ -248,7 +248,7 @@ describe('TransactionsService', () => {
   describe('findByIds', () => {
     describe('given a list of transaction IDs', () => {
       it('returns matching transactions', async () => {
-        const networkVersion = apiConfigService.get<number>('NETWORK_VERSION');
+        const networkVersion = config.get<number>('NETWORK_VERSION');
         const notes = [{ commitment: uuid() }];
         const spends = [{ nullifier: uuid() }];
         const { block } = await seedBlock();
