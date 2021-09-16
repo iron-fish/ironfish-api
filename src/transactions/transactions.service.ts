@@ -87,6 +87,18 @@ export class TransactionsService {
     });
   }
 
+  async findByIds(
+    transactionIds: number[],
+    networkVersion: number,
+  ): Promise<Transaction[]> {
+    return this.prisma.transaction.findMany({
+      where: {
+        id: { in: transactionIds },
+        network_version: networkVersion,
+      },
+    });
+  }
+
   async list(
     options: ListTransactionOptions,
   ): Promise<Transaction[] | (Transaction & { block: Block })[]> {

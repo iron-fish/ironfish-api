@@ -12,6 +12,7 @@ import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
 import { EventsService } from '../events/events.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { TransactionsService } from '../transactions/transactions.service';
 import { UsersService } from '../users/users.service';
 import { BlockDto, UpsertBlocksDto } from './dto/upsert-blocks.dto';
 import { BlockOperation } from './enums/block-operation';
@@ -22,11 +23,12 @@ import { Block, Prisma, Transaction } from '.prisma/client';
 @Injectable()
 export class BlocksService {
   constructor(
+    private readonly blocksTransactionsService: BlocksTransactionsService,
     private readonly config: ApiConfigService,
     private readonly eventsService: EventsService,
     private readonly prisma: PrismaService,
+    private readonly transactionsService: TransactionsService,
     private readonly usersService: UsersService,
-    private readonly blocksTransactionsService: BlocksTransactionsService,
   ) {}
 
   async bulkUpsert({ blocks }: UpsertBlocksDto): Promise<Block[]> {
@@ -128,21 +130,25 @@ export class BlocksService {
     const direction = options.before !== undefined ? -1 : 1;
     const limit =
       direction * Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
-    const include = { transactions: options.withTransactions };
+    const { withTransactions } = options;
     if (options.sequenceGte !== undefined && options.sequenceLt !== undefined) {
+      const where = {
+        sequence: {
+          gte: options.sequenceGte,
+          lt: options.sequenceLt,
+        },
+        main: true,
+        network_version: networkVersion,
+      };
       return {
-        data: await this.prisma.block.findMany({
+        data: await this.getBlocksData(
+          cursor,
           orderBy,
-          where: {
-            sequence: {
-              gte: options.sequenceGte,
-              lt: options.sequenceLt,
-            },
-            main: true,
-            network_version: networkVersion,
-          },
-          include,
-        }),
+          where,
+          skip,
+          limit,
+          withTransactions,
+        ),
         hasNext: false,
         hasPrevious: false,
       };
@@ -154,14 +160,14 @@ export class BlocksService {
         main: true,
         network_version: networkVersion,
       };
-      const data = await this.prisma.block.findMany({
+      const data = await this.getBlocksData(
         cursor,
         orderBy,
-        skip,
-        take: limit,
         where,
-        include,
-      });
+        skip,
+        limit,
+        withTransactions,
+      );
       return {
         data,
         ...(await this.getListMetadata(data, where, orderBy)),
@@ -179,11 +185,39 @@ export class BlocksService {
         id: { in: blockIds },
         network_version: networkVersion,
       };
-      const data = await this.prisma.block.findMany({
+      const data = await this.getBlocksData(
+        undefined,
         orderBy,
         where,
-        include,
+        skip,
+        limit,
+        withTransactions,
+      );
+      return {
+        data,
+        ...(await this.getListMetadata(data, where, orderBy)),
+      };
+    } else if (options.transactionId !== undefined) {
+      const blocksTransactions = await this.blocksTransactionsService.list({
+        transactionId: options.transactionId,
       });
+      const blockIds = blocksTransactions.map(
+        (blockTransaction) => blockTransaction.block_id,
+      );
+      const where = {
+        // We are choosing not to include a constraint for main as we want
+        // to be able to return blocks that aren't a part of the main chain
+        id: { in: blockIds },
+        network_version: networkVersion,
+      };
+      const data = await this.getBlocksData(
+        undefined,
+        orderBy,
+        where,
+        skip,
+        limit,
+        withTransactions,
+      );
       return {
         data,
         ...(await this.getListMetadata(data, where, orderBy)),
@@ -193,19 +227,64 @@ export class BlocksService {
         main: true,
         network_version: networkVersion,
       };
-      const data = await this.prisma.block.findMany({
+      const data = await this.getBlocksData(
         cursor,
         orderBy,
-        skip,
-        take: limit,
         where,
-        include,
-      });
+        skip,
+        limit,
+        withTransactions,
+      );
       return {
         data,
         ...(await this.getListMetadata(data, where, orderBy)),
       };
     }
+  }
+
+  private async getBlocksData(
+    cursor: { id: number } | undefined,
+    orderBy: { id: SortOrder },
+    where: Record<string, unknown>,
+    skip: 1 | 0,
+    limit: number,
+    includeTransactions: boolean | undefined,
+  ): Promise<Block[] | (Block & { transactions: Transaction[] })[]> {
+    const blocks = await this.prisma.block.findMany({
+      cursor,
+      orderBy,
+      where,
+      skip,
+      take: limit,
+    });
+
+    if (includeTransactions) {
+      return Promise.all(
+        blocks.map(async (block) => {
+          const transactions = await this.getAssociatedTransactions(block);
+          return { ...block, transactions };
+        }),
+      );
+    }
+
+    return blocks;
+  }
+
+  private async getAssociatedTransactions(
+    block: Block,
+  ): Promise<Transaction[]> {
+    const networkVersion = this.config.get<number>('NETWORK_VERSION');
+    const blocksTransactions = await this.blocksTransactionsService.list({
+      blockId: block.id,
+    });
+    const transactionIds = blocksTransactions.map(
+      (blockTransaction) => blockTransaction.transaction_id,
+    );
+    const transactions = await this.transactionsService.findByIds(
+      transactionIds,
+      networkVersion,
+    );
+    return transactions;
   }
 
   private async getListMetadata(
@@ -244,24 +323,36 @@ export class BlocksService {
     options: FindBlockOptions,
   ): Promise<Block | (Block & { transactions: Transaction[] }) | null> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
-    const include = { transactions: options.withTransactions };
+    const { withTransactions } = options;
 
     if (options.hash !== undefined) {
-      return this.prisma.block.findFirst({
+      const block = await this.prisma.block.findFirst({
         where: {
           hash: options.hash,
           network_version: networkVersion,
         },
-        include,
       });
+
+      if (block !== null && withTransactions) {
+        const transactions = await this.getAssociatedTransactions(block);
+        return { ...block, transactions };
+      }
+
+      return block;
     } else if (options.sequence !== undefined) {
-      return this.prisma.block.findFirst({
+      const block = await this.prisma.block.findFirst({
         where: {
           sequence: options.sequence,
           network_version: networkVersion,
         },
-        include,
       });
+
+      if (block !== null && withTransactions) {
+        const transactions = await this.getAssociatedTransactions(block);
+        return { ...block, transactions };
+      }
+
+      return block;
     } else {
       throw new UnprocessableEntityException();
     }
