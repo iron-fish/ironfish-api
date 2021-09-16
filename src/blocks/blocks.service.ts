@@ -29,7 +29,6 @@ export class BlocksService {
     private readonly prisma: PrismaService,
     private readonly transactionsService: TransactionsService,
     private readonly usersService: UsersService,
-    private readonly blocksTransactionsService: BlocksTransactionsService,
   ) {}
 
   async bulkUpsert({ blocks }: UpsertBlocksDto): Promise<Block[]> {
@@ -214,11 +213,15 @@ export class BlocksService {
         id: { in: blockIds },
         network_version: networkVersion,
       };
-      const data = await this.prisma.block.findMany({
+      const data = await this.getBlocksData(
+        undefined,
         orderBy,
         where,
-        include,
-      });
+        skip,
+        limit,
+        networkVersion,
+        withTransactions,
+      );
       return {
         data,
         ...(await this.getListMetadata(data, where, orderBy)),
