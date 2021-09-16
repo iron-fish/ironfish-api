@@ -3,7 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { serializedBlockFromRecord } from '../../blocks/utils/block-translator';
 import { SerializedTransaction } from '../interfaces/serialized-transaction';
-import { SerializedTransactionWithBlock } from '../interfaces/serialized-transaction-with-block';
+import { SerializedTransactionWithBlocks } from '../interfaces/serialized-transaction-with-blocks';
 import { Transaction } from '.prisma/client';
 import { Block } from '.prisma/client';
 
@@ -16,27 +16,27 @@ export function serializedTransactionFromRecord(
     fee: transaction.fee.toString(),
     size: transaction.size,
     timestamp: transaction.timestamp.toISOString(),
-    block_id: transaction.block_id,
     notes: transaction.notes,
     spends: transaction.spends,
     object: 'transaction',
   };
 }
 
-export function serializedTransactionFromRecordWithBlock(
-  transaction: Transaction & { block: Block },
-): SerializedTransactionWithBlock {
-  const block = serializedBlockFromRecord(transaction.block);
+export function serializedTransactionFromRecordWithBlocks(
+  transaction: Transaction & { blocks: Block[] },
+): SerializedTransactionWithBlocks {
+  const blocks = transaction.blocks.map((block) =>
+    serializedBlockFromRecord(block),
+  );
   return {
     id: transaction.id,
     hash: transaction.hash,
     fee: transaction.fee.toString(),
     size: transaction.size,
     timestamp: transaction.timestamp.toISOString(),
-    block_id: transaction.block_id,
     notes: transaction.notes,
     spends: transaction.spends,
     object: 'transaction',
-    block,
+    blocks,
   };
 }

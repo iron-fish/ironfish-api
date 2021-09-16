@@ -18,11 +18,11 @@ import { TransactionQueryDto } from './dto/transaction-query.dto';
 import { TransactionsQueryDto } from './dto/transactions-query.dto';
 import { UpsertTransactionsDto } from './dto/upsert-transactions.dto';
 import { SerializedTransaction } from './interfaces/serialized-transaction';
-import { SerializedTransactionWithBlock } from './interfaces/serialized-transaction-with-block';
+import { SerializedTransactionWithBlocks } from './interfaces/serialized-transaction-with-blocks';
 import { TransactionsService } from './transactions.service';
 import {
   serializedTransactionFromRecord,
-  serializedTransactionFromRecordWithBlock,
+  serializedTransactionFromRecordWithBlocks,
 } from './utils/transaction-translator';
 
 @Controller('transactions')
@@ -59,14 +59,14 @@ export class TransactionsController {
         transform: true,
       }),
     )
-    { hash, with_block }: TransactionQueryDto,
-  ): Promise<SerializedTransaction | SerializedTransactionWithBlock> {
+    { hash, with_blocks }: TransactionQueryDto,
+  ): Promise<SerializedTransaction | SerializedTransactionWithBlocks> {
     const transaction = await this.transactionsService.find({
       hash,
-      withBlock: with_block,
+      withBlocks: with_blocks,
     });
-    if (transaction !== null && 'block' in transaction) {
-      return serializedTransactionFromRecordWithBlock(transaction);
+    if (transaction !== null && 'blocks' in transaction) {
+      return serializedTransactionFromRecordWithBlocks(transaction);
     } else if (transaction !== null) {
       return serializedTransactionFromRecord(transaction);
     } else {
@@ -82,17 +82,17 @@ export class TransactionsController {
         transform: true,
       }),
     )
-    { block_id, search, with_block }: TransactionsQueryDto,
-  ): Promise<List<SerializedTransaction | SerializedTransactionWithBlock>> {
+    { block_id, search, with_blocks }: TransactionsQueryDto,
+  ): Promise<List<SerializedTransaction | SerializedTransactionWithBlocks>> {
     const transactions = await this.transactionsService.list({
       blockId: block_id,
       search,
-      withBlock: with_block,
+      withBlocks: with_blocks,
     });
     return {
       data: transactions.map((transaction) => {
-        if ('block' in transaction) {
-          return serializedTransactionFromRecordWithBlock(transaction);
+        if ('blocks' in transaction) {
+          return serializedTransactionFromRecordWithBlocks(transaction);
         } else {
           return serializedTransactionFromRecord(transaction);
         }

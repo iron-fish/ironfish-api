@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import {
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
   UnprocessableEntityException,
@@ -27,6 +29,7 @@ export class BlocksService {
     private readonly config: ApiConfigService,
     private readonly eventsService: EventsService,
     private readonly prisma: PrismaService,
+    @Inject(forwardRef(() => TransactionsService))
     private readonly transactionsService: TransactionsService,
     private readonly usersService: UsersService,
   ) {}
@@ -317,6 +320,18 @@ export class BlocksService {
       hasNext: nextRecords.length > 0,
       hasPrevious: previousRecords.length > 0,
     };
+  }
+
+  async findByIds(
+    blockIds: number[],
+    networkVersion: number,
+  ): Promise<Block[]> {
+    return this.prisma.block.findMany({
+      where: {
+        id: { in: blockIds },
+        network_version: networkVersion,
+      },
+    });
   }
 
   async find(

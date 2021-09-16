@@ -4,6 +4,6 @@
 import { SerializedBlock } from '../../blocks/interfaces/serialized-block';
 import { SerializedTransaction } from './serialized-transaction';
 
-export interface SerializedTransactionWithBlock extends SerializedTransaction {
-  block: SerializedBlock;
+export interface SerializedTransactionWithBlocks extends SerializedTransaction {
+  blocks: SerializedBlock[];
 }

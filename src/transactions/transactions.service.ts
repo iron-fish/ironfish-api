@@ -1,10 +1,11 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { Block } from '@prisma/client';
 import { classToPlain } from 'class-transformer';
 import { ApiConfigService } from '../api-config/api-config.service';
+import { BlocksService } from '../blocks/blocks.service';
 import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
 import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
@@ -20,9 +21,11 @@ import { Transaction } from '.prisma/client';
 @Injectable()
 export class TransactionsService {
   constructor(
+    @Inject(forwardRef(() => BlocksService))
+    private readonly blocksService: BlocksService,
+    private readonly blocksTransactionsService: BlocksTransactionsService,
     private readonly config: ApiConfigService,
     private readonly prisma: PrismaService,
-    private readonly blocksTransactions: BlocksTransactionsService,
   ) {}
 
   async bulkUpsert({
@@ -74,17 +77,25 @@ export class TransactionsService {
 
   async find(
     options: FindTransactionOptions,
-  ): Promise<Transaction | (Transaction & { block: Block }) | null> {
+  ): Promise<Transaction | (Transaction & { blocks: Block[] }) | null> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
-    const include = { block: options.withBlock };
+    const { withBlocks } = options;
 
-    return this.prisma.transaction.findFirst({
-      where: {
-        hash: options.hash,
-        network_version: networkVersion,
-      },
-      include,
+    const where = {
+      hash: options.hash,
+      network_version: networkVersion,
+    };
+
+    const transaction = await this.prisma.transaction.findFirst({
+      where,
     });
+
+    if (transaction !== null && withBlocks) {
+      const blocks = await this.getAssociatedBlocks(transaction);
+      return { ...transaction, blocks };
+    }
+
+    return transaction;
   }
 
   async findByIds(
@@ -101,51 +112,76 @@ export class TransactionsService {
 
   async list(
     options: ListTransactionOptions,
-  ): Promise<Transaction[] | (Transaction & { block: Block })[]> {
-    const networkVersion = this.config.get<number>('NETWORK_VERSION');
+  ): Promise<Transaction[] | (Transaction & { blocks: Block[] })[]> {
+    const orderBy = { id: SortOrder.DESC };
     const direction = options.before !== undefined ? -1 : 1;
     const limit =
       direction * Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
-    const include = { block: options.withBlock };
+    const { withBlocks } = options;
 
     if (options.search !== undefined) {
-      return this.prisma.transaction.findMany({
-        orderBy: {
-          id: SortOrder.DESC,
+      const where = {
+        hash: {
+          contains: options.search,
         },
-        take: limit,
-        where: {
-          hash: {
-            contains: options.search,
-          },
-          network_version: networkVersion,
-        },
-        include,
-      });
+      };
+      return await this.getTransactionsData(orderBy, limit, where, withBlocks);
     } else if (options.blockId !== undefined) {
-      const blocksTransactions = await this.blocksTransactions.list({
+      const blocksTransactions = await this.blocksTransactionsService.list({
         blockId: options.blockId,
       });
       const transactionsIds = blocksTransactions.map(
         (blockTransaction) => blockTransaction.transaction_id,
       );
-      return this.prisma.transaction.findMany({
-        orderBy: {
-          id: SortOrder.DESC,
-        },
-        where: {
-          id: { in: transactionsIds },
-        },
-        include,
-      });
+      const where = {
+        id: { in: transactionsIds },
+      };
+      return await this.getTransactionsData(orderBy, limit, where, withBlocks);
     } else {
-      return this.prisma.transaction.findMany({
-        orderBy: {
-          id: SortOrder.DESC,
-        },
-        take: limit,
-        include,
-      });
+      return await this.getTransactionsData(
+        orderBy,
+        limit,
+        undefined,
+        withBlocks,
+      );
     }
+  }
+
+  private async getTransactionsData(
+    orderBy: { id: SortOrder } | undefined,
+    limit: number | undefined,
+    where: Record<string, unknown> | undefined,
+    includeBlocks: boolean | undefined,
+  ): Promise<Transaction[] | (Transaction & { blocks: Block[] })[]> {
+    const transactions = await this.prisma.transaction.findMany({
+      orderBy,
+      take: limit,
+      where,
+    });
+
+    if (includeBlocks) {
+      return Promise.all(
+        transactions.map(async (transaction) => {
+          const blocks = await this.getAssociatedBlocks(transaction);
+          return { ...transaction, blocks };
+        }),
+      );
+    }
+
+    return transactions;
+  }
+
+  private async getAssociatedBlocks(
+    transaction: Transaction,
+  ): Promise<Block[]> {
+    const networkVersion = this.config.get<number>('NETWORK_VERSION');
+    const blocksTransctions = await this.blocksTransactionsService.list({
+      transactionId: transaction.id,
+    });
+    const blockIds = blocksTransctions.map(
+      (blockTransaction) => blockTransaction.block_id,
+    );
+    const blocks = await this.blocksService.findByIds(blockIds, networkVersion);
+    return blocks;
   }
 }

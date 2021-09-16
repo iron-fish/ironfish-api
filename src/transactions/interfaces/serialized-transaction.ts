@@ -9,7 +9,6 @@ export interface SerializedTransaction {
   fee: string;
   size: number;
   timestamp: string;
-  block_id: number;
   notes: JsonValue;
   spends: JsonValue;
   object: 'transaction';

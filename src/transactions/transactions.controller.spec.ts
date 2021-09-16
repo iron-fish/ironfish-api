@@ -11,6 +11,7 @@ import { serializedBlockFromRecord } from '../blocks/utils/block-translator';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UpsertTransactionsDto } from './dto/upsert-transactions.dto';
+import { SerializedTransactionWithBlocks } from './interfaces/serialized-transaction-with-blocks';
 import { Transaction } from '.prisma/client';
 
 const API_KEY = 'test';
@@ -147,7 +148,6 @@ describe('TransactionsController', () => {
           fee: transaction.fee.toString(),
           size: transaction.size,
           timestamp: transaction.timestamp.toISOString(),
-          block_id: transaction.block_id,
           notes,
           spends,
         });
@@ -164,7 +164,7 @@ describe('TransactionsController', () => {
           const serializedBlock = serializedBlockFromRecord(block);
           const notes = [{ commitment: uuid() }];
           const spends = [{ nullifier: uuid() }];
-          await prisma.transaction.create({
+          const transaction = await prisma.transaction.create({
             data: {
               hash: testTransactionHash,
               network_version: 0,
@@ -177,9 +177,16 @@ describe('TransactionsController', () => {
             },
           });
 
+          await prisma.blockTransaction.create({
+            data: {
+              block_id: block.id,
+              transaction_id: transaction.id,
+            },
+          });
+
           const { body } = await request(app.getHttpServer())
             .get('/transactions/find')
-            .query({ hash: testTransactionHash, with_block: true })
+            .query({ hash: testTransactionHash, with_blocks: true })
             .expect(HttpStatus.OK);
 
           expect(body).toMatchObject({
@@ -188,11 +195,14 @@ describe('TransactionsController', () => {
             fee: expect.any(String),
             size: expect.any(Number),
             timestamp: expect.any(String),
-            block_id: block.id,
             notes,
             spends,
-            block: serializedBlock,
           });
+
+          const serializedTransaction = body as SerializedTransactionWithBlocks;
+          for (const receivedBlock of serializedTransaction.blocks) {
+            expect(receivedBlock.id).toBe(serializedBlock.id);
+          }
         });
       });
 
@@ -201,7 +211,7 @@ describe('TransactionsController', () => {
           const { block } = await seedBlock();
           const notes = [{ commitment: uuid() }];
           const spends = [{ nullifier: uuid() }];
-          await prisma.transaction.create({
+          const transaction = await prisma.transaction.create({
             data: {
               hash: uuid(),
               network_version: 0,
@@ -214,9 +224,16 @@ describe('TransactionsController', () => {
             },
           });
 
+          await prisma.blockTransaction.create({
+            data: {
+              block_id: block.id,
+              transaction_id: transaction.id,
+            },
+          });
+
           const { body } = await request(app.getHttpServer())
             .get('/transactions/find')
-            .query({ hash: uuid(), with_block: true })
+            .query({ hash: uuid(), with_blocks: true })
             .expect(HttpStatus.NOT_FOUND);
 
           expect(body).toMatchSnapshot();
@@ -228,7 +245,7 @@ describe('TransactionsController', () => {
           const { block } = await seedBlock();
           const notes = [{ commitment: uuid() }];
           const spends = [{ nullifier: uuid() }];
-          await prisma.transaction.create({
+          const transaction = await prisma.transaction.create({
             data: {
               hash: uuid(),
               network_version: 0,
@@ -241,9 +258,16 @@ describe('TransactionsController', () => {
             },
           });
 
+          await prisma.blockTransaction.create({
+            data: {
+              block_id: block.id,
+              transaction_id: transaction.id,
+            },
+          });
+
           const { body } = await request(app.getHttpServer())
             .get('/transactions/find')
-            .query({ with_block: true })
+            .query({ with_blocks: true })
             .expect(HttpStatus.UNPROCESSABLE_ENTITY);
 
           expect(body).toMatchSnapshot();
@@ -258,7 +282,7 @@ describe('TransactionsController', () => {
           const { block } = await seedBlock();
           const notes = [{ commitment: uuid() }];
           const spends = [{ nullifier: uuid() }];
-          await prisma.transaction.create({
+          const transaction = await prisma.transaction.create({
             data: {
               hash: testTransactionHash,
               network_version: 0,
@@ -268,6 +292,13 @@ describe('TransactionsController', () => {
               block_id: block.id,
               notes,
               spends,
+            },
+          });
+
+          await prisma.blockTransaction.create({
+            data: {
+              block_id: block.id,
+              transaction_id: transaction.id,
             },
           });
 
@@ -282,7 +313,6 @@ describe('TransactionsController', () => {
             fee: expect.any(String),
             size: expect.any(Number),
             timestamp: expect.any(String),
-            block_id: block.id,
             notes: notes,
             spends: spends,
           });
@@ -294,7 +324,7 @@ describe('TransactionsController', () => {
           const { block } = await seedBlock();
           const notes = [{ commitment: uuid() }];
           const spends = [{ nullifier: uuid() }];
-          await prisma.transaction.create({
+          const transaction = await prisma.transaction.create({
             data: {
               hash: uuid(),
               network_version: 0,
@@ -304,6 +334,13 @@ describe('TransactionsController', () => {
               block_id: block.id,
               notes,
               spends,
+            },
+          });
+
+          await prisma.blockTransaction.create({
+            data: {
+              block_id: block.id,
+              transaction_id: transaction.id,
             },
           });
 
@@ -366,38 +403,40 @@ describe('TransactionsController', () => {
             },
           });
 
+          await prisma.blockTransaction.create({
+            data: {
+              block_id: block.id,
+              transaction_id: transaction.id,
+            },
+          });
+
           const { body } = await request(app.getHttpServer())
             .get('/transactions')
             .query({
               search: testTransactionHash.slice(0, 5),
-              with_block: true,
+              with_blocks: true,
             })
             .expect(HttpStatus.OK);
 
           const { data } = body;
           expect((data as unknown[]).length).toBeGreaterThan(0);
-          expect((data as unknown[])[0]).toMatchObject({
-            id: expect.any(Number),
-            hash: transaction.hash,
-            fee: transaction.fee.toString(),
-            size: transaction.size,
-            timestamp: transaction.timestamp.toISOString(),
-            block_id: transaction.block_id,
-            notes,
-            spends,
-            block: serializedBlock,
-          });
+          for (const serializedTransaction of data as SerializedTransactionWithBlocks[]) {
+            for (const block of serializedTransaction.blocks) {
+              expect(block.id).toBe(serializedBlock.id);
+            }
+          }
         });
       });
 
-      describe('with only block info requested', () => {
-        it('retuns transactions in descending order', async () => {
+      describe('with a block ID', () => {
+        it('returns transactions that are part of the block', async () => {
           const { block } = await seedBlock();
           const serializedBlock = serializedBlockFromRecord(block);
           const notes = [{ commitment: uuid() }];
           const spends = [{ nullifier: uuid() }];
+
           for (let i = 0; i < 10; i++) {
-            await prisma.transaction.create({
+            const transaction = await prisma.transaction.create({
               data: {
                 hash: uuid(),
                 network_version: 0,
@@ -409,29 +448,73 @@ describe('TransactionsController', () => {
                 spends,
               },
             });
+            await prisma.blockTransaction.create({
+              data: {
+                block_id: block.id,
+                transaction_id: transaction.id,
+              },
+            });
           }
 
           const { body } = await request(app.getHttpServer())
             .get('/transactions')
-            .query({ with_block: true })
+            .query({ block_id: block.id, with_blocks: true })
             .expect(HttpStatus.OK);
 
           const { data } = body;
-          expect((data as unknown[]).length).toBeGreaterThan(10);
-          expect((data as unknown[])[0]).toMatchObject({
-            id: expect.any(Number),
-            hash: expect.any(String),
-            fee: expect.any(String),
-            size: expect.any(Number),
-            timestamp: expect.any(String),
-            block_id: block.id,
-            notes,
-            spends,
-            block: serializedBlock,
-          });
+          expect((data as unknown[]).length).toBeGreaterThan(0);
+          for (const serializedTransaction of data as SerializedTransactionWithBlocks[]) {
+            for (const block of serializedTransaction.blocks) {
+              expect(block.id).toBe(serializedBlock.id);
+            }
+          }
+        });
+      });
+
+      describe('with only block info requested', () => {
+        it('retuns transactions in descending order', async () => {
+          const { block } = await seedBlock();
+          const serializedBlock = serializedBlockFromRecord(block);
+          const notes = [{ commitment: uuid() }];
+          const spends = [{ nullifier: uuid() }];
+          for (let i = 0; i < 20; i++) {
+            const transaction = await prisma.transaction.create({
+              data: {
+                hash: uuid(),
+                network_version: 0,
+                fee: faker.datatype.number(),
+                size: faker.datatype.number(),
+                timestamp: new Date(),
+                block_id: block.id,
+                notes,
+                spends,
+              },
+            });
+
+            await prisma.blockTransaction.create({
+              data: {
+                block_id: block.id,
+                transaction_id: transaction.id,
+              },
+            });
+          }
+
+          const { body } = await request(app.getHttpServer())
+            .get('/transactions')
+            .query({ with_blocks: true })
+            .expect(HttpStatus.OK);
+
+          const { data } = body;
+          expect((data as unknown[]).length).toBeGreaterThan(19);
           expect(((data as unknown[])[0] as Transaction).id).toBeGreaterThan(
             ((data as unknown[])[1] as Transaction).id,
           );
+
+          for (const serializedTransaction of data as SerializedTransactionWithBlocks[]) {
+            for (const receivedBlock of serializedTransaction.blocks) {
+              expect(receivedBlock.id).toBe(serializedBlock.id);
+            }
+          }
         });
       });
     });
@@ -469,7 +552,6 @@ describe('TransactionsController', () => {
             fee: transaction.fee.toString(),
             size: transaction.size,
             timestamp: transaction.timestamp.toISOString(),
-            block_id: transaction.block_id,
             notes,
             spends,
           });
@@ -508,7 +590,6 @@ describe('TransactionsController', () => {
             fee: expect.any(String),
             size: expect.any(Number),
             timestamp: expect.any(String),
-            block_id: block.id,
             notes,
             spends,
           });
