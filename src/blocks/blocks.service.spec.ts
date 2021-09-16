@@ -211,6 +211,56 @@ describe('BlocksService', () => {
     });
   });
 
+  describe('findByIds', () => {
+    describe('given a list of block IDs', () => {
+      it('returns matching blocks', async () => {
+        const networkVersion = config.get<number>('NETWORK_VERSION');
+        const blocks = await blocksService.bulkUpsert({
+          blocks: [
+            {
+              hash: uuid(),
+              sequence: faker.datatype.number(),
+              difficulty: faker.datatype.number(),
+              timestamp: new Date(),
+              transactions_count: 0,
+              type: BlockOperation.CONNECTED,
+              graffiti: uuid(),
+              previous_block_hash: uuid(),
+              size: faker.datatype.number(),
+            },
+            {
+              hash: uuid(),
+              sequence: faker.datatype.number(),
+              difficulty: faker.datatype.number(),
+              timestamp: new Date(),
+              transactions_count: 0,
+              type: BlockOperation.CONNECTED,
+              graffiti: uuid(),
+              previous_block_hash: uuid(),
+              size: faker.datatype.number(),
+            },
+            {
+              hash: uuid(),
+              sequence: faker.datatype.number(),
+              difficulty: faker.datatype.number(),
+              timestamp: new Date(),
+              transactions_count: 0,
+              type: BlockOperation.CONNECTED,
+              graffiti: uuid(),
+              previous_block_hash: uuid(),
+              size: faker.datatype.number(),
+            },
+          ],
+        });
+        const blockIds = blocks.map((block) => block.id);
+        const receivedBlocks = await blocksService.findByIds(
+          blockIds,
+          networkVersion,
+        );
+        expect(receivedBlocks).toEqual(expect.arrayContaining(blocks));
+      });
+    });
+  });
   describe('list', () => {
     describe('with a valid sequence range', () => {
       it('returns blocks within the range', async () => {
