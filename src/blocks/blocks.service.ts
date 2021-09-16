@@ -22,11 +22,11 @@ import { Block, Prisma, Transaction } from '.prisma/client';
 @Injectable()
 export class BlocksService {
   constructor(
+    private readonly blocksTransactionsService: BlocksTransactionsService,
     private readonly config: ApiConfigService,
     private readonly eventsService: EventsService,
     private readonly prisma: PrismaService,
     private readonly usersService: UsersService,
-    private readonly blocksTransactionsService: BlocksTransactionsService,
   ) {}
 
   async bulkUpsert({ blocks }: UpsertBlocksDto): Promise<Block[]> {
@@ -128,7 +128,7 @@ export class BlocksService {
     const direction = options.before !== undefined ? -1 : 1;
     const limit =
       direction * Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
-    const include = { transactions: options.withTransactions } ? true : false;
+    const { withTransactions } = options;
     if (options.sequenceGte !== undefined && options.sequenceLt !== undefined) {
       const where = {
         sequence: {
@@ -146,7 +146,7 @@ export class BlocksService {
           skip,
           limit,
           networkVersion,
-          include,
+          withTransactions,
         ),
         hasNext: false,
         hasPrevious: false,
@@ -166,7 +166,7 @@ export class BlocksService {
         skip,
         limit,
         networkVersion,
-        include,
+        withTransactions,
       );
       return {
         data,
@@ -192,7 +192,7 @@ export class BlocksService {
         skip,
         limit,
         networkVersion,
-        include,
+        withTransactions,
       );
       return {
         data,
@@ -210,7 +210,7 @@ export class BlocksService {
         skip,
         limit,
         networkVersion,
-        include,
+        withTransactions,
       );
       return {
         data,
@@ -226,7 +226,7 @@ export class BlocksService {
     skip: 1 | 0,
     limit: number,
     networkVersion: number,
-    includeTransactions: boolean,
+    includeTransactions: boolean | undefined,
   ): Promise<Block[] | (Block & { transactions: Transaction[] })[]> {
     const blocks = await this.prisma.block.findMany({
       cursor,
