@@ -151,7 +151,7 @@ export class UsersService {
     const orderBy = { id: SortOrder.DESC };
     const skip = cursor ? 1 : 0;
     const where = {
-      country_code: options.country_code,
+      country_code: options.countryCode,
       graffiti: {
         contains: options.search,
       },
@@ -209,7 +209,7 @@ export class UsersService {
     before,
     limit,
     search,
-    country_code: countryCode,
+    countryCode,
   }: ListUsersWithRankOptions): Promise<{
     data: SerializedUserWithRank[];
     hasNext: boolean;
@@ -283,7 +283,7 @@ export class UsersService {
           THEN
             country_code = $5
           ELSE
-            country_code = country_code
+            TRUE
         END
       ORDER BY
         rank ASC
@@ -321,14 +321,6 @@ export class UsersService {
         hasPrevious: false,
       };
     }
-    // eslint-disable-next-line
-    console.log({
-      query,
-      searchFilter,
-      direction: true,
-      cursor: data[length - 1].rank,
-      limit: 1,
-    });
     const nextRecords = await this.prisma.$queryRawUnsafe<
       SerializedUserWithRank[]
     >(query, searchFilter, true, data[length - 1].rank, 1, countryCode);

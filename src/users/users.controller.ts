@@ -172,7 +172,7 @@ export class UsersController {
           before,
           limit: Math.min(MAX_LIMIT, limit || DEFAULT_LIMIT),
           search,
-          country_code: countryCode,
+          countryCode,
         });
       return {
         object: 'list',
@@ -188,7 +188,7 @@ export class UsersController {
       before,
       limit,
       search,
-      country_code: countryCode,
+      countryCode,
     });
     return {
       object: 'list',
