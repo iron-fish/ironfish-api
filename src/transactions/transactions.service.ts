@@ -21,10 +21,10 @@ import { Transaction } from '.prisma/client';
 @Injectable()
 export class TransactionsService {
   constructor(
-    private readonly config: ApiConfigService,
-    private readonly prisma: PrismaService,
     private readonly blocksTransactionsService: BlocksTransactionsService,
     private readonly blocksService: BlocksService,
+    private readonly config: ApiConfigService,
+    private readonly prisma: PrismaService,
   ) {}
 
   async bulkUpsert({
@@ -85,14 +85,22 @@ export class TransactionsService {
       network_version: networkVersion,
     };
 
-    return await this.getTransactionData(where, networkVersion, withBlocks);
+    const transaction = await this.prisma.transaction.findFirst({
+      where,
+    });
+
+    if (transaction !== null && withBlocks) {
+      const blocks = await this.getAssociatedBlocks(transaction);
+      return { ...transaction, blocks };
+    }
+
+    return transaction;
   }
 
   async list(
     options: ListTransactionOptions,
   ): Promise<Transaction[] | (Transaction & { blocks: Block[] })[]> {
     const orderBy = { id: SortOrder.DESC };
-    const networkVersion = this.config.get<number>('NETWORK_VERSION');
     const direction = options.before !== undefined ? -1 : 1;
     const limit =
       direction * Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
@@ -104,13 +112,7 @@ export class TransactionsService {
           contains: options.search,
         },
       };
-      return await this.getTransactionsData(
-        orderBy,
-        limit,
-        where,
-        networkVersion,
-        withBlocks,
-      );
+      return await this.getTransactionsData(orderBy, limit, where, withBlocks);
     } else if (options.blockId !== undefined) {
       const blocksTransactions = await this.blocksTransactionsService.list({
         blockId: options.blockId,
@@ -121,19 +123,12 @@ export class TransactionsService {
       const where = {
         id: { in: transactionsIds },
       };
-      return await this.getTransactionsData(
-        orderBy,
-        limit,
-        where,
-        networkVersion,
-        withBlocks,
-      );
+      return await this.getTransactionsData(orderBy, limit, where, withBlocks);
     } else {
       return await this.getTransactionsData(
         orderBy,
         limit,
         undefined,
-        networkVersion,
         withBlocks,
       );
     }
@@ -143,7 +138,6 @@ export class TransactionsService {
     orderBy: { id: SortOrder } | undefined,
     limit: number | undefined,
     where: Record<string, unknown> | undefined,
-    networkVersion: number,
     includeBlocks: boolean | undefined,
   ): Promise<Transaction[] | (Transaction & { blocks: Block[] })[]> {
     const transactions = await this.prisma.transaction.findMany({
@@ -155,16 +149,7 @@ export class TransactionsService {
     if (includeBlocks) {
       return Promise.all(
         transactions.map(async (transaction) => {
-          const blocksTransctions = await this.blocksTransactionsService.list({
-            transactionId: transaction.id,
-          });
-          const blockIds = blocksTransctions.map(
-            (blockTransaction) => blockTransaction.block_id,
-          );
-          const blocks = await this.blocksService.findByIds(
-            blockIds,
-            networkVersion,
-          );
+          const blocks = await this.getAssociatedBlocks(transaction);
           return { ...transaction, blocks };
         }),
       );
@@ -173,29 +158,17 @@ export class TransactionsService {
     return transactions;
   }
 
-  private async getTransactionData(
-    where: Record<string, unknown>,
-    networkVersion: number,
-    includeBlocks: boolean | undefined,
-  ): Promise<Transaction | ((Transaction & { blocks: Block[] }) | null)> {
-    const transaction = await this.prisma.transaction.findFirst({
-      where,
+  private async getAssociatedBlocks(
+    transaction: Transaction,
+  ): Promise<Block[]> {
+    const networkVersion = this.config.get<number>('NETWORK_VERSION');
+    const blocksTransctions = await this.blocksTransactionsService.list({
+      transactionId: transaction.id,
     });
-
-    if (transaction !== null && includeBlocks) {
-      const blocksTransctions = await this.blocksTransactionsService.list({
-        transactionId: transaction.id,
-      });
-      const blockIds = blocksTransctions.map(
-        (blockTransaction) => blockTransaction.block_id,
-      );
-      const blocks = await this.blocksService.findByIds(
-        blockIds,
-        networkVersion,
-      );
-      return { ...transaction, blocks };
-    }
-
-    return transaction;
+    const blockIds = blocksTransctions.map(
+      (blockTransaction) => blockTransaction.block_id,
+    );
+    const blocks = await this.blocksService.findByIds(blockIds, networkVersion);
+    return blocks;
   }
 }
