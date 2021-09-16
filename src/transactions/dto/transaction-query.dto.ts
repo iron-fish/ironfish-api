@@ -11,5 +11,5 @@ export class TransactionQueryDto {
   @IsOptional()
   @IsBoolean()
   @Type(() => Boolean)
-  readonly with_block?: boolean;
+  readonly with_blocks?: boolean;
 }

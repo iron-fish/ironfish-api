@@ -3,14 +3,19 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Module } from '@nestjs/common';
 import { ApiConfigModule } from '../api-config/api-config.module';
+import { BlocksModule } from '../blocks/blocks.module';
 import { BlocksTransactionsModule } from '../blocks-transactions/blocks-transactions.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { TransactionsService } from './transactions.service';
-import { BlocksModule } from '../blocks/blocks.module';
 
 @Module({
   exports: [TransactionsService],
-  imports: [ApiConfigModule, BlocksModule, BlocksTransactionsModule, PrismaModule],
+  imports: [
+    ApiConfigModule,
+    BlocksModule,
+    BlocksTransactionsModule,
+    PrismaModule,
+  ],
   providers: [TransactionsService],
 })
 export class TransactionsModule {}
