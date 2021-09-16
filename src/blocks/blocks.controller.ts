@@ -73,8 +73,8 @@ export class BlocksController {
       sequence_gte: sequenceGte,
       sequence_lt: sequenceLt,
       search,
-      transaction_id,
-      with_transactions,
+      transaction_id: transactionId,
+      with_transactions: withTransactions,
     }: BlocksQueryDto,
   ): Promise<PaginatedList<SerializedBlock | SerializedBlockWithTransactions>> {
     const maxBlocksToReturn = 1000;
@@ -98,8 +98,8 @@ export class BlocksController {
       sequenceGte,
       sequenceLt,
       search,
-      transactionId: transaction_id,
-      withTransactions: with_transactions,
+      transactionId,
+      withTransactions,
     });
     return {
       object: 'list',
