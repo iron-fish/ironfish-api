@@ -282,8 +282,6 @@ export class UsersService {
         CASE WHEN $5::text IS NOT NULL
           THEN
             country_code = $5
-          ELSE
-            country_code = country_code
         END
       ORDER BY
         rank ASC
