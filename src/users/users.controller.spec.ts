@@ -277,6 +277,18 @@ describe('UsersController', () => {
   });
 
   describe('GET /users', () => {
+    const getLocation = async () => {
+      const { body } = await request(app.getHttpServer())
+        .get('/users')
+        .expect(HttpStatus.OK);
+
+      const { data } = body;
+      const places = (data as Record<string, unknown>[]).map(
+        ({ country_code: cc }) => cc,
+      );
+      return places[0] as string;
+    };
+
     describe('with an invalid order by option', () => {
       it('returns a 422', async () => {
         const { body } = await request(app.getHttpServer())
@@ -321,17 +333,7 @@ describe('UsersController', () => {
         });
       });
     });
-    const getLocation = async () => {
-      const { body } = await request(app.getHttpServer())
-        .get('/users')
-        .expect(HttpStatus.OK);
 
-      const { data } = body;
-      const places = (data as Record<string, unknown>[]).map(
-        ({ country_code: cc }) => cc,
-      );
-      return places[0] as string;
-    };
     describe('with `country_code` provided', () => {
       it('allows filtering by country_code', async () => {
         const someplace = await getLocation();

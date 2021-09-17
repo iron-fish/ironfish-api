@@ -48,6 +48,43 @@ describe('BlocksTransactionsService', () => {
     return { block };
   };
 
+  describe('find', () => {
+    describe('with an invalid block id and transaction id', () => {
+      it('returns null', async () => {
+        expect(await blocksTransactionsService.find(123, 321)).toBeNull();
+      });
+    });
+
+    describe('with a valid block id and transaction id', () => {
+      it('returns the join record', async () => {
+        const { block } = await seedBlock();
+        const transaction = await prisma.transaction.create({
+          data: {
+            hash: uuid(),
+            network_version: 0,
+            fee: faker.datatype.number(),
+            size: faker.datatype.number(),
+            timestamp: new Date(),
+            block_id: block.id,
+            notes: [{ commitment: uuid() }],
+            spends: [{ nullifier: uuid() }],
+          },
+        });
+        await blocksTransactionsService.upsert(block, transaction);
+
+        const record = await blocksTransactionsService.find(
+          block.id,
+          transaction.id,
+        );
+        expect(record).not.toBeNull();
+        expect(record).toMatchObject({
+          block_id: block.id,
+          transaction_id: transaction.id,
+        });
+      });
+    });
+  });
+
   describe('upsert', () => {
     describe('when given a block and transaction', () => {
       it('returns an association of said block and transaction', async () => {
@@ -68,11 +105,11 @@ describe('BlocksTransactionsService', () => {
           },
         });
 
-        const blocksTransaction = await blocksTransactionsService.upsert(
+        const blockTransaction = await blocksTransactionsService.upsert(
           block,
           transaction,
         );
-        expect(blocksTransaction).toMatchObject({
+        expect(blockTransaction).toMatchObject({
           block_id: block.id,
           transaction_id: transaction.id,
         });
@@ -80,7 +117,7 @@ describe('BlocksTransactionsService', () => {
     });
   });
 
-  describe('find', () => {
+  describe('list', () => {
     describe('when given a block ID', () => {
       it('returns BlockTransaction records with matching block IDs', async () => {
         const { block } = await seedBlock();
@@ -143,6 +180,67 @@ describe('BlocksTransactionsService', () => {
           expect(record.transaction_id).toBe(transaction.id);
         }
       });
+    });
+  });
+
+  describe('findBlocksByTransaction', () => {
+    it('returns the blocks associated with the transaction', async () => {
+      const { block } = await seedBlock();
+      const transaction = await prisma.transaction.create({
+        data: {
+          hash: uuid(),
+          network_version: 0,
+          fee: faker.datatype.number(),
+          size: faker.datatype.number(),
+          timestamp: new Date(),
+          block_id: block.id,
+          notes: [{ commitment: uuid() }],
+          spends: [{ nullifier: uuid() }],
+        },
+      });
+
+      for (let i = 0; i < 10; i++) {
+        const { block } = await seedBlock();
+        await blocksTransactionsService.upsert(block, transaction);
+      }
+
+      const blocks = await blocksTransactionsService.findBlocksByTransaction(
+        transaction,
+      );
+      for (const block of blocks) {
+        expect(
+          await blocksTransactionsService.find(block.id, transaction.id),
+        ).not.toBeNull();
+      }
+    });
+  });
+
+  describe('findTransactionsByBlock', () => {
+    it('returns the blocks associated with the transaction', async () => {
+      const { block } = await seedBlock();
+      for (let i = 0; i < 10; i++) {
+        const transaction = await prisma.transaction.create({
+          data: {
+            hash: uuid(),
+            network_version: 0,
+            fee: faker.datatype.number(),
+            size: faker.datatype.number(),
+            timestamp: new Date(),
+            block_id: block.id,
+            notes: [{ commitment: uuid() }],
+            spends: [{ nullifier: uuid() }],
+          },
+        });
+        await blocksTransactionsService.upsert(block, transaction);
+      }
+
+      const transactions =
+        await blocksTransactionsService.findTransactionsByBlock(block);
+      for (const transaction of transactions) {
+        expect(
+          await blocksTransactionsService.find(block.id, transaction.id),
+        ).not.toBeNull();
+      }
     });
   });
 });

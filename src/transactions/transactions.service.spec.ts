@@ -4,7 +4,6 @@
 import { INestApplication } from '@nestjs/common';
 import faker from 'faker';
 import { v4 as uuid } from 'uuid';
-import { ApiConfigService } from '../api-config/api-config.service';
 import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
@@ -13,14 +12,12 @@ import { Block, Transaction } from '.prisma/client';
 
 describe('TransactionsService', () => {
   let app: INestApplication;
-  let config: ApiConfigService;
   let transactionsService: TransactionsService;
   let prisma: PrismaService;
   let blocksTransactionsService: BlocksTransactionsService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
-    config = app.get(ApiConfigService);
     transactionsService = app.get(TransactionsService);
     blocksTransactionsService = app.get(BlocksTransactionsService);
     prisma = app.get(PrismaService);
@@ -252,56 +249,6 @@ describe('TransactionsService', () => {
           const transaction = await transactionsService.find({ hash: uuid() });
           expect(transaction).toBeNull();
         });
-      });
-    });
-  });
-
-  describe('findByIds', () => {
-    describe('given a list of transaction IDs', () => {
-      it('returns matching transactions', async () => {
-        const networkVersion = config.get<number>('NETWORK_VERSION');
-        const notes = [{ commitment: uuid() }];
-        const spends = [{ nullifier: uuid() }];
-        const { block } = await seedBlock();
-        const transactions = await transactionsService.bulkUpsert({
-          transactions: [
-            {
-              hash: uuid(),
-              fee: faker.datatype.number(),
-              size: faker.datatype.number(),
-              timestamp: new Date(),
-              block_id: block.id,
-              notes,
-              spends,
-            },
-            {
-              hash: uuid(),
-              fee: faker.datatype.number(),
-              size: faker.datatype.number(),
-              timestamp: new Date(),
-              block_id: block.id,
-              notes,
-              spends,
-            },
-            {
-              hash: uuid(),
-              fee: faker.datatype.number(),
-              size: faker.datatype.number(),
-              timestamp: new Date(),
-              block_id: block.id,
-              notes,
-              spends,
-            },
-          ],
-        });
-        const transactionIds = transactions.map(
-          (transaction) => transaction.id,
-        );
-        const receivedTransactions = await transactionsService.findByIds(
-          transactionIds,
-          networkVersion,
-        );
-        expect(receivedTransactions).toEqual(transactions);
       });
     });
   });
