@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import {
-  forwardRef,
-  Inject,
   Injectable,
   NotFoundException,
   UnprocessableEntityException,
@@ -14,7 +12,6 @@ import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
 import { EventsService } from '../events/events.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { TransactionsService } from '../transactions/transactions.service';
 import { UsersService } from '../users/users.service';
 import { BlockDto, UpsertBlocksDto } from './dto/upsert-blocks.dto';
 import { BlockOperation } from './enums/block-operation';
@@ -29,8 +26,6 @@ export class BlocksService {
     private readonly config: ApiConfigService,
     private readonly eventsService: EventsService,
     private readonly prisma: PrismaService,
-    @Inject(forwardRef(() => TransactionsService))
-    private readonly transactionsService: TransactionsService,
     private readonly usersService: UsersService,
   ) {}
 
@@ -262,32 +257,16 @@ export class BlocksService {
     });
 
     if (includeTransactions) {
-      return Promise.all(
-        blocks.map(async (block) => {
-          const transactions = await this.getAssociatedTransactions(block);
-          return { ...block, transactions };
-        }),
-      );
+      const blocksWithTransactions = [];
+      for (const block of blocks) {
+        const transactions =
+          await this.blocksTransactionsService.findTransactionsByBlock(block);
+        blocksWithTransactions.push({ ...block, transactions });
+      }
+      return blocksWithTransactions;
     }
 
     return blocks;
-  }
-
-  private async getAssociatedTransactions(
-    block: Block,
-  ): Promise<Transaction[]> {
-    const networkVersion = this.config.get<number>('NETWORK_VERSION');
-    const blocksTransactions = await this.blocksTransactionsService.list({
-      blockId: block.id,
-    });
-    const transactionIds = blocksTransactions.map(
-      (blockTransaction) => blockTransaction.transaction_id,
-    );
-    const transactions = await this.transactionsService.findByIds(
-      transactionIds,
-      networkVersion,
-    );
-    return transactions;
   }
 
   private async getListMetadata(
@@ -322,18 +301,6 @@ export class BlocksService {
     };
   }
 
-  async findByIds(
-    blockIds: number[],
-    networkVersion: number,
-  ): Promise<Block[]> {
-    return this.prisma.block.findMany({
-      where: {
-        id: { in: blockIds },
-        network_version: networkVersion,
-      },
-    });
-  }
-
   async find(
     options: FindBlockOptions,
   ): Promise<Block | (Block & { transactions: Transaction[] }) | null> {
@@ -349,7 +316,8 @@ export class BlocksService {
       });
 
       if (block !== null && withTransactions) {
-        const transactions = await this.getAssociatedTransactions(block);
+        const transactions =
+          await this.blocksTransactionsService.findTransactionsByBlock(block);
         return { ...block, transactions };
       }
 
@@ -363,7 +331,8 @@ export class BlocksService {
       });
 
       if (block !== null && withTransactions) {
-        const transactions = await this.getAssociatedTransactions(block);
+        const transactions =
+          await this.blocksTransactionsService.findTransactionsByBlock(block);
         return { ...block, transactions };
       }
 
