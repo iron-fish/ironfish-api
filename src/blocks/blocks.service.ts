@@ -37,7 +37,7 @@ export class BlocksService {
     return records;
   }
 
-  private async upsert({
+  async upsert({
     difficulty,
     graffiti,
     hash,
