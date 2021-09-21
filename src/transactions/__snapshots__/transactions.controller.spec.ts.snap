@@ -33,36 +33,3 @@ Object {
   "statusCode": 422,
 }
 `;
-
-exports[`TransactionsController POST /transactions with a missing API key returns a 401 1`] = `
-Object {
-  "message": "Unauthorized",
-  "statusCode": 401,
-}
-`;
-
-exports[`TransactionsController POST /transactions with missing arguments returns a 422 1`] = `
-Object {
-  "error": "Unprocessable Entity",
-  "message": Array [
-    "transactions.0.hash must be a string",
-    "transactions.0.fee must be an integer number",
-    "transactions.0.size must be an integer number",
-    "transactions.0.timestamp must be a Date instance",
-    "transactions.0.block_id must be an integer number",
-    "transactions.0.notes must be an array",
-    "transactions.0.spends must be an array",
-  ],
-  "statusCode": 422,
-}
-`;
-
-exports[`TransactionsController POST /transactions with too many transactions returns a 422 1`] = `
-Object {
-  "error": "Unprocessable Entity",
-  "message": Array [
-    "transactions must contain not more than 3000 elements",
-  ],
-  "statusCode": 422,
-}
-`;

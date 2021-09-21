@@ -6,24 +6,18 @@ import { HttpStatus, INestApplication } from '@nestjs/common';
 import faker from 'faker';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
-import { ApiConfigService } from '../api-config/api-config.service';
 import { serializedBlockFromRecord } from '../blocks/utils/block-translator';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
-import { UpsertTransactionsDto } from './dto/upsert-transactions.dto';
 import { SerializedTransactionWithBlocks } from './interfaces/serialized-transaction-with-blocks';
 import { Transaction } from '.prisma/client';
 
-const API_KEY = 'test';
-
 describe('TransactionsController', () => {
   let app: INestApplication;
-  let config: ApiConfigService;
   let prisma: PrismaService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
-    config = app.get(ApiConfigService);
     prisma = app.get(PrismaService);
     await app.init();
   });
@@ -55,105 +49,6 @@ describe('TransactionsController', () => {
 
     return { block };
   };
-
-  describe('POST /transactions', () => {
-    beforeEach(() => {
-      jest.spyOn(config, 'get').mockImplementationOnce(() => API_KEY);
-    });
-
-    describe('with a missing API key', () => {
-      it('returns a 401', async () => {
-        const { body } = await request(app.getHttpServer())
-          .post(`/transactions`)
-          .expect(HttpStatus.UNAUTHORIZED);
-
-        expect(body).toMatchSnapshot();
-      });
-    });
-
-    describe('with missing arguments', () => {
-      it('returns a 422', async () => {
-        const { body } = await request(app.getHttpServer())
-          .post(`/transactions`)
-          .set('Authorization', `Bearer ${API_KEY}`)
-          .send({ transactions: [{}] })
-          .expect(HttpStatus.UNPROCESSABLE_ENTITY);
-
-        expect(body).toMatchSnapshot();
-      });
-    });
-
-    describe('with too many transactions', () => {
-      it('returns a 422', async () => {
-        const transactions = [];
-        const { block } = await seedBlock();
-        const notes = [{ commitment: uuid() }];
-        const spends = [{ nullifier: uuid() }];
-
-        for (let i = 0; i < 3001; i++) {
-          transactions.push({
-            hash: uuid(),
-            fee: faker.datatype.number(),
-            size: faker.datatype.number(),
-            timestamp: new Date(),
-            block_id: block.id,
-            notes,
-            spends,
-          });
-        }
-
-        const payload: UpsertTransactionsDto = { transactions };
-
-        const { body } = await request(app.getHttpServer())
-          .post(`/transactions`)
-          .set('Authorization', `Bearer ${API_KEY}`)
-          .send(payload)
-          .expect(HttpStatus.UNPROCESSABLE_ENTITY);
-
-        expect(body).toMatchSnapshot();
-      });
-    });
-
-    describe('with a valid payload', () => {
-      it('upserts transactions', async () => {
-        const { block } = await seedBlock();
-        const notes = [{ commitment: uuid() }];
-        const spends = [{ nullifier: uuid() }];
-        const payload: UpsertTransactionsDto = {
-          transactions: [
-            {
-              hash: uuid(),
-              fee: faker.datatype.number(),
-              size: faker.datatype.number(),
-              timestamp: new Date(),
-              block_id: block.id,
-              notes,
-              spends,
-            },
-          ],
-        };
-
-        const transaction = payload.transactions[0];
-        const { body } = await request(app.getHttpServer())
-          .post(`/transactions`)
-          .set('Authorization', `Bearer ${API_KEY}`)
-          .send(payload)
-          .expect(HttpStatus.CREATED);
-
-        const { data } = body;
-        expect((data as unknown[]).length).toBeGreaterThan(0);
-        expect((data as unknown[])[0]).toMatchObject({
-          id: expect.any(Number),
-          hash: transaction.hash,
-          fee: transaction.fee.toString(),
-          size: transaction.size,
-          timestamp: transaction.timestamp.toISOString(),
-          notes,
-          spends,
-        });
-      });
-    });
-  });
 
   describe('GET /transactions/find', () => {
     describe('with block info requested', () => {
