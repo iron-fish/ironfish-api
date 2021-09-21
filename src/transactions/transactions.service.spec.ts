@@ -55,7 +55,6 @@ describe('TransactionsService', () => {
   describe('bulkUpsert', () => {
     describe('when a hash does not exist for the network version', () => {
       it('stores a transaction record', async () => {
-        const { block } = await seedBlock();
         const notes = [{ commitment: uuid() }];
         const spends = [{ nullifier: uuid() }];
         const transactions = await transactionsService.bulkUpsert({
@@ -64,8 +63,6 @@ describe('TransactionsService', () => {
               hash: uuid(),
               fee: faker.datatype.number(),
               size: faker.datatype.number(),
-              timestamp: new Date(),
-              block_id: block.id,
               notes,
               spends,
             },
@@ -76,8 +73,6 @@ describe('TransactionsService', () => {
           hash: expect.any(String),
           fee: expect.any(BigInt),
           size: expect.any(Number),
-          timestamp: expect.any(Date),
-          block_id: expect.any(Number),
           notes: notes,
           spends: spends,
         });
@@ -86,7 +81,6 @@ describe('TransactionsService', () => {
 
     describe('when a hash does exist for the the network version', () => {
       it('updates the transaction record', async () => {
-        const { block } = await seedBlock();
         const notes = [{ commitment: uuid() }];
         const spends = [{ nullifier: uuid() }];
         const transactions = await transactionsService.bulkUpsert({
@@ -95,8 +89,6 @@ describe('TransactionsService', () => {
               hash: uuid(),
               fee: faker.datatype.number(),
               size: faker.datatype.number(),
-              timestamp: new Date(),
-              block_id: block.id,
               notes,
               spends,
             },
@@ -104,7 +96,6 @@ describe('TransactionsService', () => {
         });
         const newFee = faker.datatype.number();
         const newSize = faker.datatype.number();
-        const newTime = new Date();
         const newNotes = [{ commitment: uuid() }];
         const newSpends = [{ nullifier: uuid() }];
         const transaction = transactions[0];
@@ -114,8 +105,6 @@ describe('TransactionsService', () => {
               hash: transaction.hash,
               fee: newFee,
               size: newSize,
-              timestamp: newTime,
-              block_id: block.id,
               notes: newNotes,
               spends: newSpends,
             },
@@ -147,8 +136,6 @@ describe('TransactionsService', () => {
                 hash: testTransactionHash,
                 fee: faker.datatype.number(),
                 size: faker.datatype.number(),
-                timestamp: new Date(),
-                block_id: block.id,
                 notes,
                 spends,
               },
@@ -173,7 +160,6 @@ describe('TransactionsService', () => {
 
       describe('with an invalid hash', () => {
         it('returns null', async () => {
-          const { block } = await seedBlock();
           const notes = [{ commitment: uuid() }];
           const spends = [{ nullifier: uuid() }];
           await transactionsService.bulkUpsert({
@@ -182,8 +168,6 @@ describe('TransactionsService', () => {
                 hash: uuid(),
                 fee: faker.datatype.number(),
                 size: faker.datatype.number(),
-                timestamp: new Date(),
-                block_id: block.id,
                 notes,
                 spends,
               },
@@ -202,7 +186,6 @@ describe('TransactionsService', () => {
     describe('with block info not requested', () => {
       describe('with a valid hash', () => {
         it('returns the transaction with the correct hash', async () => {
-          const { block } = await seedBlock();
           const notes = [{ commitment: uuid() }];
           const spends = [{ nullifier: uuid() }];
           const testTransactionHash = uuid();
@@ -212,8 +195,6 @@ describe('TransactionsService', () => {
                 hash: testTransactionHash,
                 fee: faker.datatype.number(),
                 size: faker.datatype.number(),
-                timestamp: new Date(),
-                block_id: block.id,
                 notes,
                 spends,
               },
@@ -229,7 +210,6 @@ describe('TransactionsService', () => {
 
       describe('with an invalid hash', () => {
         it('returns null', async () => {
-          const { block } = await seedBlock();
           const notes = [{ commitment: uuid() }];
           const spends = [{ nullifier: uuid() }];
           await transactionsService.bulkUpsert({
@@ -238,8 +218,6 @@ describe('TransactionsService', () => {
                 hash: uuid(),
                 fee: faker.datatype.number(),
                 size: faker.datatype.number(),
-                timestamp: new Date(),
-                block_id: block.id,
                 notes,
                 spends,
               },
@@ -267,8 +245,6 @@ describe('TransactionsService', () => {
                 hash: testTransactionHash,
                 fee: faker.datatype.number(),
                 size: faker.datatype.number(),
-                timestamp: new Date(),
-                block_id: block.id,
                 notes,
                 spends,
               },
@@ -276,8 +252,6 @@ describe('TransactionsService', () => {
                 hash: uuid(),
                 fee: faker.datatype.number(),
                 size: faker.datatype.number(),
-                timestamp: new Date(),
-                block_id: block.id,
                 notes,
                 spends,
               },
@@ -312,8 +286,6 @@ describe('TransactionsService', () => {
                 hash: testTransactionHash,
                 fee: faker.datatype.number(),
                 size: faker.datatype.number(),
-                timestamp: new Date(),
-                block_id: block.id,
                 notes,
                 spends,
               },
@@ -321,8 +293,6 @@ describe('TransactionsService', () => {
                 hash: uuid(),
                 fee: faker.datatype.number(),
                 size: faker.datatype.number(),
-                timestamp: new Date(),
-                block_id: block.id,
                 notes,
                 spends,
               },
@@ -352,7 +322,6 @@ describe('TransactionsService', () => {
     describe('with block info not requested', () => {
       describe('with a valid partial hash search string', () => {
         it('returns transactions with match(es)', async () => {
-          const { block } = await seedBlock();
           const testTransactionHash = uuid();
           const notes = [{ commitment: uuid() }];
           const spends = [{ nullifier: uuid() }];
@@ -362,8 +331,6 @@ describe('TransactionsService', () => {
                 hash: testTransactionHash,
                 fee: faker.datatype.number(),
                 size: faker.datatype.number(),
-                timestamp: new Date(),
-                block_id: block.id,
                 notes,
                 spends,
               },
@@ -371,8 +338,6 @@ describe('TransactionsService', () => {
                 hash: uuid(),
                 fee: faker.datatype.number(),
                 size: faker.datatype.number(),
-                timestamp: new Date(),
-                block_id: block.id,
                 notes,
                 spends,
               },
@@ -388,7 +353,6 @@ describe('TransactionsService', () => {
 
       describe('with no query parameters', () => {
         it('returns transactions in descending order', async () => {
-          const { block } = await seedBlock();
           const testTransactionHash = uuid();
           const notes = [{ commitment: uuid() }];
           const spends = [{ nullifier: uuid() }];
@@ -398,8 +362,6 @@ describe('TransactionsService', () => {
                 hash: testTransactionHash,
                 fee: faker.datatype.number(),
                 size: faker.datatype.number(),
-                timestamp: new Date(),
-                block_id: block.id,
                 notes,
                 spends,
               },
@@ -407,8 +369,6 @@ describe('TransactionsService', () => {
                 hash: uuid(),
                 fee: faker.datatype.number(),
                 size: faker.datatype.number(),
-                timestamp: new Date(),
-                block_id: block.id,
                 notes,
                 spends,
               },
