@@ -66,7 +66,6 @@ model Block {
   searchable_text     String             @db.VarChar
   size                Int?
   event               Event?
-  transactions        Transaction[]
   blocks_transactions BlockTransaction[]
 
   @@unique([hash, network_version], name: "uq_blocks_on_hash_and_network_version")
@@ -85,9 +84,6 @@ model Transaction {
   network_version     Int
   fee                 BigInt
   size                Int
-  timestamp           DateTime           @db.Timestamp(6)
-  block_id            Int
-  block               Block              @relation(fields: [block_id], references: [id])
   notes               Json
   spends              Json
   blocks_transactions BlockTransaction[]
@@ -95,7 +91,6 @@ model Transaction {
   @@unique([hash, network_version], name: "uq_transactions_on_hash_and_network_version")
   @@index([hash], name: "index_transactions_on_hash")
   @@index([hash, network_version], name: "index_transactions_on_hash_and_network_version")
-  @@index([block_id], name: "index_transactions_on_block_id")
   @@map("transactions")
 }
 
