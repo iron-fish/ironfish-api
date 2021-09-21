@@ -386,8 +386,6 @@ describe('BlocksController', () => {
             network_version: 0,
             fee: faker.datatype.number(),
             size: faker.datatype.number(),
-            timestamp: new Date(),
-            block_id: block.id,
             notes,
             spends,
           },
