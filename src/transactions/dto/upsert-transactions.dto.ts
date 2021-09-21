@@ -7,7 +7,6 @@ import {
   ArrayMaxSize,
   ArrayMinSize,
   IsArray,
-  IsDate,
   IsInt,
   IsString,
   ValidateNested,
@@ -26,14 +25,6 @@ export class TransactionDto {
   @IsInt()
   @Type(() => Number)
   readonly size!: number;
-
-  @IsDate()
-  @Type(() => Date)
-  readonly timestamp!: Date;
-
-  @IsInt()
-  @Type(() => Number)
-  readonly block_id!: number;
 
   @IsArray()
   @ValidateNested({ each: true })
