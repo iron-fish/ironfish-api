@@ -39,11 +39,20 @@ describe('BlocksService', () => {
               sequence: faker.datatype.number(),
               difficulty: faker.datatype.number(),
               timestamp: new Date(),
-              transactions_count: 0,
+              transactions_count: 1,
               type: BlockOperation.CONNECTED,
               graffiti: uuid(),
               previous_block_hash: uuid(),
               size: faker.datatype.number(),
+              transactions: [
+                {
+                  hash: uuid(),
+                  fee: faker.datatype.number(),
+                  size: faker.datatype.number(),
+                  notes: [{ commitment: uuid() }],
+                  spends: [{ nullifier: uuid() }],
+                },
+              ],
             },
           ],
         });
@@ -72,11 +81,20 @@ describe('BlocksService', () => {
               sequence: faker.datatype.number(),
               difficulty: faker.datatype.number(),
               timestamp: new Date(),
-              transactions_count: 0,
+              transactions_count: 1,
               type: BlockOperation.CONNECTED,
               graffiti: uuid(),
               previous_block_hash: uuid(),
               size: faker.datatype.number(),
+              transactions: [
+                {
+                  hash: uuid(),
+                  fee: faker.datatype.number(),
+                  size: faker.datatype.number(),
+                  notes: [{ commitment: uuid() }],
+                  spends: [{ nullifier: uuid() }],
+                },
+              ],
             },
           ],
         });
@@ -92,11 +110,20 @@ describe('BlocksService', () => {
               sequence: newSequence,
               difficulty: newDifficulty,
               timestamp: new Date(),
-              transactions_count: 0,
+              transactions_count: 1,
               type: BlockOperation.CONNECTED,
               graffiti: newGraffiti,
               previous_block_hash: previousBlockHash,
               size: newSize,
+              transactions: [
+                {
+                  hash: uuid(),
+                  fee: faker.datatype.number(),
+                  size: faker.datatype.number(),
+                  notes: [{ commitment: uuid() }],
+                  spends: [{ nullifier: uuid() }],
+                },
+              ],
             },
           ],
         });
@@ -146,11 +173,20 @@ describe('BlocksService', () => {
               sequence: faker.datatype.number(),
               difficulty: faker.datatype.number(),
               timestamp: new Date(),
-              transactions_count: 0,
+              transactions_count: 1,
               type: BlockOperation.CONNECTED,
               graffiti: uuid(),
               previous_block_hash: uuid(),
               size: faker.datatype.number(),
+              transactions: [
+                {
+                  hash: uuid(),
+                  fee: faker.datatype.number(),
+                  size: faker.datatype.number(),
+                  notes: [{ commitment: uuid() }],
+                  spends: [{ nullifier: uuid() }],
+                },
+              ],
             },
           ],
         });
@@ -170,11 +206,20 @@ describe('BlocksService', () => {
               sequence: testBlockSequence,
               difficulty: faker.datatype.number(),
               timestamp: new Date(),
-              transactions_count: 0,
+              transactions_count: 1,
               type: BlockOperation.CONNECTED,
               graffiti: uuid(),
               previous_block_hash: uuid(),
               size: faker.datatype.number(),
+              transactions: [
+                {
+                  hash: uuid(),
+                  fee: faker.datatype.number(),
+                  size: faker.datatype.number(),
+                  notes: [{ commitment: uuid() }],
+                  spends: [{ nullifier: uuid() }],
+                },
+              ],
             },
           ],
         });
@@ -195,11 +240,20 @@ describe('BlocksService', () => {
               sequence: faker.datatype.number(),
               difficulty: faker.datatype.number(),
               timestamp: new Date(),
-              transactions_count: 0,
+              transactions_count: 1,
               type: BlockOperation.CONNECTED,
               graffiti: uuid(),
               previous_block_hash: uuid(),
               size: faker.datatype.number(),
+              transactions: [
+                {
+                  hash: uuid(),
+                  fee: faker.datatype.number(),
+                  size: faker.datatype.number(),
+                  notes: [{ commitment: uuid() }],
+                  spends: [{ nullifier: uuid() }],
+                },
+              ],
             },
           ],
         });
@@ -250,7 +304,7 @@ describe('BlocksService', () => {
 
     describe('with a transaction ID', () => {
       it('returns block(s) that contain said transaction', async () => {
-        const transactionId = 1;
+        const transactionId = 5;
         const blocks = await blocksService.list({
           transactionId,
           withTransactions: true,
