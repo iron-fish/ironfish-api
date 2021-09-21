@@ -65,8 +65,6 @@ describe('TransactionsController', () => {
               network_version: 0,
               fee: faker.datatype.number(),
               size: faker.datatype.number(),
-              timestamp: new Date(),
-              block_id: block.id,
               notes,
               spends,
             },
@@ -89,7 +87,6 @@ describe('TransactionsController', () => {
             hash: testTransactionHash,
             fee: expect.any(String),
             size: expect.any(Number),
-            timestamp: expect.any(String),
             notes,
             spends,
           });
@@ -112,8 +109,6 @@ describe('TransactionsController', () => {
               network_version: 0,
               fee: faker.datatype.number(),
               size: faker.datatype.number(),
-              timestamp: new Date(),
-              block_id: block.id,
               notes,
               spends,
             },
@@ -146,8 +141,6 @@ describe('TransactionsController', () => {
               network_version: 0,
               fee: faker.datatype.number(),
               size: faker.datatype.number(),
-              timestamp: new Date(),
-              block_id: block.id,
               notes,
               spends,
             },
@@ -183,8 +176,6 @@ describe('TransactionsController', () => {
               network_version: 0,
               fee: faker.datatype.number(),
               size: faker.datatype.number(),
-              timestamp: new Date(),
-              block_id: block.id,
               notes,
               spends,
             },
@@ -207,7 +198,6 @@ describe('TransactionsController', () => {
             hash: testTransactionHash,
             fee: expect.any(String),
             size: expect.any(Number),
-            timestamp: expect.any(String),
             notes: notes,
             spends: spends,
           });
@@ -225,8 +215,6 @@ describe('TransactionsController', () => {
               network_version: 0,
               fee: faker.datatype.number(),
               size: faker.datatype.number(),
-              timestamp: new Date(),
-              block_id: block.id,
               notes,
               spends,
             },
@@ -250,7 +238,6 @@ describe('TransactionsController', () => {
 
       describe('with an undefined hash', () => {
         it('returns a 422', async () => {
-          const { block } = await seedBlock();
           const notes = [{ commitment: uuid() }];
           const spends = [{ nullifier: uuid() }];
           await prisma.transaction.create({
@@ -259,8 +246,6 @@ describe('TransactionsController', () => {
               network_version: 0,
               fee: faker.datatype.number(),
               size: faker.datatype.number(),
-              timestamp: new Date(),
-              block_id: block.id,
               notes,
               spends,
             },
@@ -291,8 +276,6 @@ describe('TransactionsController', () => {
               network_version: 0,
               fee: faker.datatype.number(),
               size: faker.datatype.number(),
-              timestamp: new Date(),
-              block_id: block.id,
               notes,
               spends,
             },
@@ -337,8 +320,6 @@ describe('TransactionsController', () => {
                 network_version: 0,
                 fee: faker.datatype.number(),
                 size: faker.datatype.number(),
-                timestamp: new Date(),
-                block_id: block.id,
                 notes,
                 spends,
               },
@@ -379,8 +360,6 @@ describe('TransactionsController', () => {
                 network_version: 0,
                 fee: faker.datatype.number(),
                 size: faker.datatype.number(),
-                timestamp: new Date(),
-                block_id: block.id,
                 notes,
                 spends,
               },
@@ -417,7 +396,6 @@ describe('TransactionsController', () => {
     describe('with block info not reqeusted', () => {
       describe('with a valid partial hash search string', () => {
         it('retuns matching transactions', async () => {
-          const { block } = await seedBlock();
           const testTransactionHash = uuid();
           const notes = [{ commitment: uuid() }];
           const spends = [{ nullifier: uuid() }];
@@ -427,8 +405,6 @@ describe('TransactionsController', () => {
               network_version: 0,
               fee: faker.datatype.number(),
               size: faker.datatype.number(),
-              timestamp: new Date(),
-              block_id: block.id,
               notes,
               spends,
             },
@@ -446,7 +422,6 @@ describe('TransactionsController', () => {
             hash: transaction.hash,
             fee: transaction.fee.toString(),
             size: transaction.size,
-            timestamp: transaction.timestamp.toISOString(),
             notes,
             spends,
           });
@@ -455,7 +430,6 @@ describe('TransactionsController', () => {
 
       describe('with no query parameters', () => {
         it('retuns transactions in descending order', async () => {
-          const { block } = await seedBlock();
           const notes = [{ commitment: uuid() }];
           const spends = [{ nullifier: uuid() }];
           for (let i = 0; i < 10; i++) {
@@ -465,8 +439,6 @@ describe('TransactionsController', () => {
                 network_version: 0,
                 fee: faker.datatype.number(),
                 size: faker.datatype.number(),
-                timestamp: new Date(),
-                block_id: block.id,
                 notes,
                 spends,
               },
@@ -484,7 +456,6 @@ describe('TransactionsController', () => {
             hash: expect.any(String),
             fee: expect.any(String),
             size: expect.any(Number),
-            timestamp: expect.any(String),
             notes,
             spends,
           });

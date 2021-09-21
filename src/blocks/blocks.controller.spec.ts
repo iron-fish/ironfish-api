@@ -377,7 +377,6 @@ describe('BlocksController', () => {
 
     describe('with a transaction ID', () => {
       it('returns block(s) that contain said transaction', async () => {
-        const { block } = await seedBlock();
         const notes = [{ commitment: uuid() }];
         const spends = [{ nullifier: uuid() }];
         const transaction = await prisma.transaction.create({
@@ -386,8 +385,6 @@ describe('BlocksController', () => {
             network_version: 0,
             fee: faker.datatype.number(),
             size: faker.datatype.number(),
-            timestamp: new Date(),
-            block_id: block.id,
             notes,
             spends,
           },
