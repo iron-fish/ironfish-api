@@ -113,8 +113,8 @@ describe('TransactionsService', () => {
         expect(newTransactions[0]).toMatchObject({
           id: transaction.id,
           hash: transaction.hash,
-          timestamp: newTime,
-          block_id: block.id,
+          fee: BigInt(newFee),
+          size: newSize,
           notes: newNotes,
           spends: newSpends,
         });
