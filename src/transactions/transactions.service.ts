@@ -9,10 +9,7 @@ import { BlocksTransactionsService } from '../blocks-transactions/blocks-transac
 import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
 import { PrismaService } from '../prisma/prisma.service';
-import {
-  TransactionDto,
-  UpsertTransactionsDto,
-} from './dto/upsert-transactions.dto';
+import { TransactionDto } from './dto/upsert-transactions.dto';
 import { FindTransactionOptions } from './interfaces/find-transactions-options';
 import { ListTransactionOptions } from './interfaces/list-transactions-options';
 import { Transaction } from '.prisma/client';
