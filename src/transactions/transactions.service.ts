@@ -25,9 +25,7 @@ export class TransactionsService {
     private readonly prisma: PrismaService,
   ) {}
 
-  async bulkUpsert({
-    transactions,
-  }: UpsertTransactionsDto): Promise<Transaction[]> {
+  async bulkUpsert(transactions: TransactionDto[]): Promise<Transaction[]> {
     const records = [];
     for (const transaction of transactions) {
       records.push(await this.upsert(transaction));

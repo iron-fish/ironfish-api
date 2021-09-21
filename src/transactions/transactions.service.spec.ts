@@ -57,17 +57,15 @@ describe('TransactionsService', () => {
       it('stores a transaction record', async () => {
         const notes = [{ commitment: uuid() }];
         const spends = [{ nullifier: uuid() }];
-        const transactions = await transactionsService.bulkUpsert({
-          transactions: [
-            {
-              hash: uuid(),
-              fee: faker.datatype.number(),
-              size: faker.datatype.number(),
-              notes,
-              spends,
-            },
-          ],
-        });
+        const transactions = await transactionsService.bulkUpsert([
+          {
+            hash: uuid(),
+            fee: faker.datatype.number(),
+            size: faker.datatype.number(),
+            notes,
+            spends,
+          },
+        ]);
         expect(transactions[0]).toMatchObject({
           id: expect.any(Number),
           hash: expect.any(String),
@@ -83,33 +81,29 @@ describe('TransactionsService', () => {
       it('updates the transaction record', async () => {
         const notes = [{ commitment: uuid() }];
         const spends = [{ nullifier: uuid() }];
-        const transactions = await transactionsService.bulkUpsert({
-          transactions: [
-            {
-              hash: uuid(),
-              fee: faker.datatype.number(),
-              size: faker.datatype.number(),
-              notes,
-              spends,
-            },
-          ],
-        });
+        const transactions = await transactionsService.bulkUpsert([
+          {
+            hash: uuid(),
+            fee: faker.datatype.number(),
+            size: faker.datatype.number(),
+            notes,
+            spends,
+          },
+        ]);
         const newFee = faker.datatype.number();
         const newSize = faker.datatype.number();
         const newNotes = [{ commitment: uuid() }];
         const newSpends = [{ nullifier: uuid() }];
         const transaction = transactions[0];
-        const newTransactions = await transactionsService.bulkUpsert({
-          transactions: [
-            {
-              hash: transaction.hash,
-              fee: newFee,
-              size: newSize,
-              notes: newNotes,
-              spends: newSpends,
-            },
-          ],
-        });
+        const newTransactions = await transactionsService.bulkUpsert([
+          {
+            hash: transaction.hash,
+            fee: newFee,
+            size: newSize,
+            notes: newNotes,
+            spends: newSpends,
+          },
+        ]);
         expect(newTransactions[0]).toMatchObject({
           id: transaction.id,
           hash: transaction.hash,
@@ -130,17 +124,15 @@ describe('TransactionsService', () => {
           const notes = [{ commitment: uuid() }];
           const spends = [{ nullifier: uuid() }];
           const testTransactionHash = uuid();
-          const transactions = await transactionsService.bulkUpsert({
-            transactions: [
-              {
-                hash: testTransactionHash,
-                fee: faker.datatype.number(),
-                size: faker.datatype.number(),
-                notes,
-                spends,
-              },
-            ],
-          });
+          const transactions = await transactionsService.bulkUpsert([
+            {
+              hash: testTransactionHash,
+              fee: faker.datatype.number(),
+              size: faker.datatype.number(),
+              notes,
+              spends,
+            },
+          ]);
           const testTransaction = transactions[0];
 
           await blocksTransactionsService.upsert(block, testTransaction);
@@ -162,17 +154,15 @@ describe('TransactionsService', () => {
         it('returns null', async () => {
           const notes = [{ commitment: uuid() }];
           const spends = [{ nullifier: uuid() }];
-          await transactionsService.bulkUpsert({
-            transactions: [
-              {
-                hash: uuid(),
-                fee: faker.datatype.number(),
-                size: faker.datatype.number(),
-                notes,
-                spends,
-              },
-            ],
-          });
+          await transactionsService.bulkUpsert([
+            {
+              hash: uuid(),
+              fee: faker.datatype.number(),
+              size: faker.datatype.number(),
+              notes,
+              spends,
+            },
+          ]);
 
           const transaction = await transactionsService.find({
             hash: uuid(),
@@ -189,17 +179,15 @@ describe('TransactionsService', () => {
           const notes = [{ commitment: uuid() }];
           const spends = [{ nullifier: uuid() }];
           const testTransactionHash = uuid();
-          const transactions = await transactionsService.bulkUpsert({
-            transactions: [
-              {
-                hash: testTransactionHash,
-                fee: faker.datatype.number(),
-                size: faker.datatype.number(),
-                notes,
-                spends,
-              },
-            ],
-          });
+          const transactions = await transactionsService.bulkUpsert([
+            {
+              hash: testTransactionHash,
+              fee: faker.datatype.number(),
+              size: faker.datatype.number(),
+              notes,
+              spends,
+            },
+          ]);
           const testTransaction = transactions[0];
           const transaction = await transactionsService.find({
             hash: testTransactionHash,
@@ -212,17 +200,15 @@ describe('TransactionsService', () => {
         it('returns null', async () => {
           const notes = [{ commitment: uuid() }];
           const spends = [{ nullifier: uuid() }];
-          await transactionsService.bulkUpsert({
-            transactions: [
-              {
-                hash: uuid(),
-                fee: faker.datatype.number(),
-                size: faker.datatype.number(),
-                notes,
-                spends,
-              },
-            ],
-          });
+          await transactionsService.bulkUpsert([
+            {
+              hash: uuid(),
+              fee: faker.datatype.number(),
+              size: faker.datatype.number(),
+              notes,
+              spends,
+            },
+          ]);
 
           const transaction = await transactionsService.find({ hash: uuid() });
           expect(transaction).toBeNull();
@@ -239,24 +225,22 @@ describe('TransactionsService', () => {
           const testTransactionHash = uuid();
           const notes = [{ commitment: uuid() }];
           const spends = [{ nullifier: uuid() }];
-          const transactions = await transactionsService.bulkUpsert({
-            transactions: [
-              {
-                hash: testTransactionHash,
-                fee: faker.datatype.number(),
-                size: faker.datatype.number(),
-                notes,
-                spends,
-              },
-              {
-                hash: uuid(),
-                fee: faker.datatype.number(),
-                size: faker.datatype.number(),
-                notes,
-                spends,
-              },
-            ],
-          });
+          const transactions = await transactionsService.bulkUpsert([
+            {
+              hash: testTransactionHash,
+              fee: faker.datatype.number(),
+              size: faker.datatype.number(),
+              notes,
+              spends,
+            },
+            {
+              hash: uuid(),
+              fee: faker.datatype.number(),
+              size: faker.datatype.number(),
+              notes,
+              spends,
+            },
+          ]);
 
           for (const transaction of transactions) {
             await blocksTransactionsService.upsert(block, transaction);
@@ -280,24 +264,22 @@ describe('TransactionsService', () => {
           const testTransactionHash = uuid();
           const notes = [{ commitment: uuid() }];
           const spends = [{ nullifier: uuid() }];
-          const transactions = await transactionsService.bulkUpsert({
-            transactions: [
-              {
-                hash: testTransactionHash,
-                fee: faker.datatype.number(),
-                size: faker.datatype.number(),
-                notes,
-                spends,
-              },
-              {
-                hash: uuid(),
-                fee: faker.datatype.number(),
-                size: faker.datatype.number(),
-                notes,
-                spends,
-              },
-            ],
-          });
+          const transactions = await transactionsService.bulkUpsert([
+            {
+              hash: testTransactionHash,
+              fee: faker.datatype.number(),
+              size: faker.datatype.number(),
+              notes,
+              spends,
+            },
+            {
+              hash: uuid(),
+              fee: faker.datatype.number(),
+              size: faker.datatype.number(),
+              notes,
+              spends,
+            },
+          ]);
 
           for (const transaction of transactions) {
             await blocksTransactionsService.upsert(block, transaction);
@@ -325,24 +307,22 @@ describe('TransactionsService', () => {
           const testTransactionHash = uuid();
           const notes = [{ commitment: uuid() }];
           const spends = [{ nullifier: uuid() }];
-          await transactionsService.bulkUpsert({
-            transactions: [
-              {
-                hash: testTransactionHash,
-                fee: faker.datatype.number(),
-                size: faker.datatype.number(),
-                notes,
-                spends,
-              },
-              {
-                hash: uuid(),
-                fee: faker.datatype.number(),
-                size: faker.datatype.number(),
-                notes,
-                spends,
-              },
-            ],
-          });
+          await transactionsService.bulkUpsert([
+            {
+              hash: testTransactionHash,
+              fee: faker.datatype.number(),
+              size: faker.datatype.number(),
+              notes,
+              spends,
+            },
+            {
+              hash: uuid(),
+              fee: faker.datatype.number(),
+              size: faker.datatype.number(),
+              notes,
+              spends,
+            },
+          ]);
 
           const transactions = await transactionsService.list({
             search: testTransactionHash.slice(0, 5),
@@ -356,24 +336,22 @@ describe('TransactionsService', () => {
           const testTransactionHash = uuid();
           const notes = [{ commitment: uuid() }];
           const spends = [{ nullifier: uuid() }];
-          await transactionsService.bulkUpsert({
-            transactions: [
-              {
-                hash: testTransactionHash,
-                fee: faker.datatype.number(),
-                size: faker.datatype.number(),
-                notes,
-                spends,
-              },
-              {
-                hash: uuid(),
-                fee: faker.datatype.number(),
-                size: faker.datatype.number(),
-                notes,
-                spends,
-              },
-            ],
-          });
+          await transactionsService.bulkUpsert([
+            {
+              hash: testTransactionHash,
+              fee: faker.datatype.number(),
+              size: faker.datatype.number(),
+              notes,
+              spends,
+            },
+            {
+              hash: uuid(),
+              fee: faker.datatype.number(),
+              size: faker.datatype.number(),
+              notes,
+              spends,
+            },
+          ]);
 
           const transactions = await transactionsService.list({});
           expect(transactions.length).toBeGreaterThan(0);
