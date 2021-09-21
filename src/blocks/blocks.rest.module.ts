@@ -2,12 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Module } from '@nestjs/common';
+import { BlocksTransactionsLoaderModule } from '../blocks-transactions-loader/blocks-transactions-loader.module';
 import { UsersModule } from '../users/users.module';
 import { BlocksController } from './blocks.controller';
 import { BlocksModule } from './blocks.module';
 
 @Module({
   controllers: [BlocksController],
-  imports: [BlocksModule, UsersModule],
+  imports: [BlocksModule, BlocksTransactionsLoaderModule, UsersModule],
 })
 export class BlocksRestModule {}

@@ -99,6 +99,15 @@ describe('BlocksController', () => {
             graffiti: uuid(),
             previous_block_hash: uuid(),
             size: faker.datatype.number(),
+            transactions: [
+              {
+                hash: uuid(),
+                fee: faker.datatype.number(),
+                size: faker.datatype.number(),
+                notes: [{ commitment: uuid() }],
+                spends: [{ nullifier: uuid() }],
+              },
+            ],
           });
         }
         const payload: UpsertBlocksDto = { blocks };
@@ -127,6 +136,15 @@ describe('BlocksController', () => {
               graffiti: uuid(),
               previous_block_hash: uuid(),
               size: faker.datatype.number(),
+              transactions: [
+                {
+                  hash: uuid(),
+                  fee: faker.datatype.number(),
+                  size: faker.datatype.number(),
+                  notes: [{ commitment: uuid() }],
+                  spends: [{ nullifier: uuid() }],
+                },
+              ],
             },
           ],
         };
