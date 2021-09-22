@@ -16,6 +16,7 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
+import { BlocksTransactionsLoader } from '../blocks-transactions-loader/block-transactions-loader';
 import { List } from '../common/interfaces/list';
 import { PaginatedList } from '../common/interfaces/paginated-list';
 import { BlocksService } from './blocks.service';
@@ -33,7 +34,10 @@ import { Block } from '.prisma/client';
 
 @Controller('blocks')
 export class BlocksController {
-  constructor(private readonly blocksService: BlocksService) {}
+  constructor(
+    private readonly blocksService: BlocksService,
+    private readonly blocksTransactionsLoader: BlocksTransactionsLoader,
+  ) {}
 
   @Post()
   @UseGuards(ApiKeyGuard)
@@ -46,10 +50,14 @@ export class BlocksController {
     )
     upsertBlocksDto: UpsertBlocksDto,
   ): Promise<List<SerializedBlock>> {
-    const blocks = await this.blocksService.bulkUpsert(upsertBlocksDto);
+    const blocks = await this.blocksTransactionsLoader.bulkUpsert(
+      upsertBlocksDto,
+    );
     return {
       object: 'list',
-      data: blocks.map((block) => serializedBlockFromRecord(block)),
+      data: blocks.map((block) =>
+        serializedBlockFromRecordWithTransactions(block),
+      ),
     };
   }
 

@@ -4,6 +4,7 @@
 import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { Block, BlockTransaction, Transaction } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { ListBlockTransactionOptions } from './interfaces/list-block-transactions-options';
 
 @Injectable()
@@ -25,26 +26,25 @@ export class BlocksTransactionsService {
   }
 
   async upsert(
+    prisma: BasePrismaClient,
     block: Block,
     transaction: Transaction,
   ): Promise<BlockTransaction> {
-    return this.prisma.$transaction(async (prisma) => {
-      return prisma.blockTransaction.upsert({
-        create: {
+    return prisma.blockTransaction.upsert({
+      create: {
+        block_id: block.id,
+        transaction_id: transaction.id,
+      },
+      update: {
+        block_id: block.id,
+        transaction_id: transaction.id,
+      },
+      where: {
+        block_id_transaction_id: {
           block_id: block.id,
           transaction_id: transaction.id,
         },
-        update: {
-          block_id: block.id,
-          transaction_id: transaction.id,
-        },
-        where: {
-          block_id_transaction_id: {
-            block_id: block.id,
-            transaction_id: transaction.id,
-          },
-        },
-      });
+      },
     });
   }
 

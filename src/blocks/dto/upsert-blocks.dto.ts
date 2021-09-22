@@ -13,6 +13,7 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
+import { TransactionDto } from '../../transactions/dto/upsert-transactions.dto';
 import { BlockOperation } from '../enums/block-operation';
 
 export class BlockDto {
@@ -49,6 +50,12 @@ export class BlockDto {
   @IsInt()
   @Type(() => Number)
   readonly size?: number;
+
+  @IsArray()
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => TransactionDto)
+  readonly transactions!: TransactionDto[];
 }
 
 export class UpsertBlocksDto {

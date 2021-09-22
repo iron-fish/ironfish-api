@@ -2,19 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable } from '@nestjs/common';
-import { Block } from '@prisma/client';
+import { Block, Prisma } from '@prisma/client';
 import { classToPlain } from 'class-transformer';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
 import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
 import { PrismaService } from '../prisma/prisma.service';
-import {
-  TransactionDto,
-  UpsertTransactionsDto,
-} from './dto/upsert-transactions.dto';
+import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { FindTransactionOptions } from './interfaces/find-transactions-options';
 import { ListTransactionOptions } from './interfaces/list-transactions-options';
+import { UpsertTransactionOptions } from './interfaces/upsert-transaction-options';
 import { Transaction } from '.prisma/client';
 
 @Injectable()
@@ -25,25 +23,23 @@ export class TransactionsService {
     private readonly prisma: PrismaService,
   ) {}
 
-  async bulkUpsert({
-    transactions,
-  }: UpsertTransactionsDto): Promise<Transaction[]> {
+  async bulkUpsert(
+    prisma: BasePrismaClient,
+    transactions: UpsertTransactionOptions[],
+  ): Promise<Transaction[]> {
     const records = [];
     for (const transaction of transactions) {
-      records.push(await this.upsert(transaction));
+      records.push(await this.upsert(prisma, transaction));
     }
     return records;
   }
 
-  private async upsert({
-    hash,
-    fee,
-    size,
-    notes,
-    spends,
-  }: TransactionDto): Promise<Transaction> {
+  private async upsert(
+    prisma: BasePrismaClient,
+    { hash, fee, size, notes, spends }: UpsertTransactionOptions,
+  ): Promise<Transaction> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
-    return this.prisma.transaction.upsert({
+    return prisma.transaction.upsert({
       create: {
         hash,
         network_version: networkVersion,
@@ -100,12 +96,13 @@ export class TransactionsService {
     const direction = options.before !== undefined ? -1 : 1;
     const limit =
       direction * Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
-    const { withBlocks } = options;
+    const withBlocks = options.withBlocks ?? false;
 
     if (options.search !== undefined) {
       const where = {
         hash: {
           contains: options.search,
+          mode: Prisma.QueryMode.insensitive,
         },
       };
       return this.getTransactionsData(orderBy, limit, where, withBlocks);
@@ -121,15 +118,15 @@ export class TransactionsService {
       };
       return this.getTransactionsData(orderBy, limit, where, withBlocks);
     } else {
-      return this.getTransactionsData(orderBy, limit, undefined, withBlocks);
+      return this.getTransactionsData(orderBy, limit, {}, withBlocks);
     }
   }
 
   private async getTransactionsData(
-    orderBy: { id: SortOrder } | undefined,
-    limit: number | undefined,
-    where: Record<string, unknown> | undefined,
-    includeBlocks: boolean | undefined,
+    orderBy: { id: SortOrder },
+    limit: number,
+    where: Prisma.TransactionWhereInput,
+    includeBlocks: boolean,
   ): Promise<Transaction[] | (Transaction & { blocks: Block[] })[]> {
     const transactions = await this.prisma.transaction.findMany({
       orderBy,

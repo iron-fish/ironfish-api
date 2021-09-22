@@ -6,7 +6,6 @@ import { Block } from '@prisma/client';
 import faker from 'faker';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
-import { ApiConfigService } from '../api-config/api-config.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { BlocksService } from './blocks.service';
@@ -19,13 +18,11 @@ const API_KEY = 'test';
 describe('BlocksController', () => {
   let app: INestApplication;
   let blocksService: BlocksService;
-  let config: ApiConfigService;
   let prisma: PrismaService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
     blocksService = app.get(BlocksService);
-    config = app.get(ApiConfigService);
     prisma = app.get(PrismaService);
     await app.init();
   });
@@ -59,10 +56,6 @@ describe('BlocksController', () => {
   };
 
   describe('POST /blocks', () => {
-    beforeEach(() => {
-      jest.spyOn(config, 'get').mockImplementationOnce(() => API_KEY);
-    });
-
     describe('with a missing api key', () => {
       it('returns a 401', async () => {
         const { body } = await request(app.getHttpServer())
@@ -99,6 +92,15 @@ describe('BlocksController', () => {
             graffiti: uuid(),
             previous_block_hash: uuid(),
             size: faker.datatype.number(),
+            transactions: [
+              {
+                hash: uuid(),
+                fee: faker.datatype.number(),
+                size: faker.datatype.number(),
+                notes: [{ commitment: uuid() }],
+                spends: [{ nullifier: uuid() }],
+              },
+            ],
           });
         }
         const payload: UpsertBlocksDto = { blocks };
@@ -127,6 +129,15 @@ describe('BlocksController', () => {
               graffiti: uuid(),
               previous_block_hash: uuid(),
               size: faker.datatype.number(),
+              transactions: [
+                {
+                  hash: uuid(),
+                  fee: faker.datatype.number(),
+                  size: faker.datatype.number(),
+                  notes: [{ commitment: uuid() }],
+                  spends: [{ nullifier: uuid() }],
+                },
+              ],
             },
           ],
         };
@@ -155,7 +166,6 @@ describe('BlocksController', () => {
 
   describe('GET /blocks/head', () => {
     it('returns the heaviest block', async () => {
-      jest.spyOn(config, 'get').mockImplementationOnce(() => 0);
       const { body } = await request(app.getHttpServer())
         .get('/blocks/head')
         .expect(HttpStatus.OK);
@@ -556,10 +566,6 @@ describe('BlocksController', () => {
   });
 
   describe('POST /blocks/disconnect', () => {
-    beforeEach(() => {
-      jest.spyOn(config, 'get').mockImplementationOnce(() => API_KEY);
-    });
-
     describe('with a missing api key', () => {
       it('returns a 401', async () => {
         const { body } = await request(app.getHttpServer())

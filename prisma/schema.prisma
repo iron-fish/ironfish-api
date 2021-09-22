@@ -82,7 +82,7 @@ model Transaction {
   updated_at          DateTime           @default(now()) @updatedAt @db.Timestamp(6)
   hash                String             @db.VarChar
   network_version     Int
-  fee                 BigInt
+  fee                 Int
   size                Int
   notes               Json
   spends              Json

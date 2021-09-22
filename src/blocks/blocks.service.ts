@@ -12,11 +12,12 @@ import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
 import { EventsService } from '../events/events.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { UsersService } from '../users/users.service';
-import { BlockDto, UpsertBlocksDto } from './dto/upsert-blocks.dto';
 import { BlockOperation } from './enums/block-operation';
 import { FindBlockOptions } from './interfaces/find-block-options';
 import { ListBlocksOptions } from './interfaces/list-block-options';
+import { UpsertBlockOptions } from './interfaces/upsert-block-options';
 import { Block, Prisma, Transaction } from '.prisma/client';
 
 @Injectable()
@@ -29,73 +30,66 @@ export class BlocksService {
     private readonly usersService: UsersService,
   ) {}
 
-  async bulkUpsert({ blocks }: UpsertBlocksDto): Promise<Block[]> {
-    const records = [];
-    for (const block of blocks) {
-      records.push(await this.upsert(block));
-    }
-    return records;
-  }
-
-  private async upsert({
-    difficulty,
-    graffiti,
-    hash,
-    previous_block_hash,
-    sequence,
-    timestamp,
-    transactions_count,
-    type,
-    size,
-  }: BlockDto): Promise<Block> {
+  async upsert(
+    prisma: BasePrismaClient,
+    {
+      difficulty,
+      graffiti,
+      hash,
+      previous_block_hash,
+      sequence,
+      timestamp,
+      transactionsCount,
+      type,
+      size,
+    }: UpsertBlockOptions,
+  ): Promise<Block> {
     const main = type === BlockOperation.CONNECTED;
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
     const searchable_text = hash + ' ' + String(sequence);
 
-    return this.prisma.$transaction(async (prisma) => {
-      const block = await prisma.block.upsert({
-        create: {
+    const block = await prisma.block.upsert({
+      create: {
+        hash,
+        sequence,
+        difficulty,
+        main,
+        timestamp,
+        graffiti,
+        transactions_count: transactionsCount,
+        network_version: networkVersion,
+        previous_block_hash,
+        searchable_text,
+        size,
+      },
+      update: {
+        sequence,
+        difficulty,
+        main,
+        timestamp,
+        graffiti,
+        transactions_count: transactionsCount,
+        previous_block_hash,
+        size,
+      },
+      where: {
+        uq_blocks_on_hash_and_network_version: {
           hash,
-          sequence,
-          difficulty,
-          main,
-          timestamp,
-          graffiti,
-          transactions_count,
           network_version: networkVersion,
-          previous_block_hash,
-          searchable_text,
-          size,
         },
-        update: {
-          sequence,
-          difficulty,
-          main,
-          timestamp,
-          graffiti,
-          transactions_count,
-          previous_block_hash,
-          size,
-        },
-        where: {
-          uq_blocks_on_hash_and_network_version: {
-            hash,
-            network_version: networkVersion,
-          },
-        },
-      });
-
-      const user = await this.usersService.findByGraffiti(graffiti, prisma);
-      if (user && timestamp > user.created_at) {
-        if (main) {
-          await this.eventsService.upsertBlockMined(block, user, prisma);
-        } else {
-          await this.eventsService.deleteBlockMined(block, user, prisma);
-        }
-      }
-
-      return block;
+      },
     });
+
+    const user = await this.usersService.findByGraffiti(graffiti, prisma);
+    if (user && timestamp > user.created_at) {
+      if (main) {
+        await this.eventsService.upsertBlockMined(block, user, prisma);
+      } else {
+        await this.eventsService.deleteBlockMined(block, user, prisma);
+      }
+    }
+
+    return block;
   }
 
   async head(): Promise<Block> {
@@ -128,7 +122,7 @@ export class BlocksService {
     const direction = options.before !== undefined ? -1 : 1;
     const limit =
       direction * Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
-    const { withTransactions } = options;
+    const withTransactions = options.withTransactions ?? false;
     if (options.sequenceGte !== undefined && options.sequenceLt !== undefined) {
       const where = {
         sequence: {
@@ -154,6 +148,7 @@ export class BlocksService {
       const where = {
         searchable_text: {
           contains: options.search,
+          mode: Prisma.QueryMode.insensitive,
         },
         main: true,
         network_version: networkVersion,
@@ -243,10 +238,10 @@ export class BlocksService {
   private async getBlocksData(
     cursor: { id: number } | undefined,
     orderBy: { id: SortOrder },
-    where: Record<string, unknown>,
+    where: Prisma.BlockWhereInput,
     skip: 1 | 0,
     limit: number,
-    includeTransactions: boolean | undefined,
+    includeTransactions: boolean,
   ): Promise<Block[] | (Block & { transactions: Transaction[] })[]> {
     const blocks = await this.prisma.block.findMany({
       cursor,
