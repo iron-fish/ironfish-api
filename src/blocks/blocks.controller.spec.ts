@@ -59,9 +59,6 @@ describe('BlocksController', () => {
   };
 
   describe('POST /blocks', () => {
-    beforeEach(() => {
-      jest.spyOn(config, 'get').mockImplementationOnce(() => API_KEY);
-    });
 
     describe('with a missing api key', () => {
       it('returns a 401', async () => {
@@ -173,7 +170,6 @@ describe('BlocksController', () => {
 
   describe('GET /blocks/head', () => {
     it('returns the heaviest block', async () => {
-      jest.spyOn(config, 'get').mockImplementationOnce(() => 0);
       const { body } = await request(app.getHttpServer())
         .get('/blocks/head')
         .expect(HttpStatus.OK);
@@ -574,9 +570,6 @@ describe('BlocksController', () => {
   });
 
   describe('POST /blocks/disconnect', () => {
-    beforeEach(() => {
-      jest.spyOn(config, 'get').mockImplementationOnce(() => API_KEY);
-    });
 
     describe('with a missing api key', () => {
       it('returns a 401', async () => {
