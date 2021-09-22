@@ -6,4 +6,5 @@ import { PaginationOptions } from '../../common/interfaces/pagination-options';
 export interface ListUsersWithRankOptions extends PaginationOptions {
   search?: string;
   countryCode?: string;
+  view?: string;
 }

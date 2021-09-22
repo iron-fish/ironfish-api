@@ -21,4 +21,8 @@ export class UsersQueryDto extends PaginationArgsDto {
   @IsOptional()
   @IsAlphanumeric()
   readonly search?: string;
+
+  @IsOptional()
+  @IsAlphanumeric()
+  readonly view?: string;
 }

@@ -210,6 +210,7 @@ export class UsersService {
     limit,
     search,
     countryCode,
+    view = 'total_points',
   }: ListUsersWithRankOptions): Promise<{
     data: SerializedUserWithRank[];
     hasNext: boolean;
@@ -228,7 +229,7 @@ export class UsersService {
       SELECT
         id,
         graffiti,
-        total_points,
+        ${view},
         country_code,
         last_login_at,
         rank
@@ -237,7 +238,7 @@ export class UsersService {
           SELECT
             id,
             graffiti,
-            total_points,
+            ${view},
             country_code,
             last_login_at,
             RANK () OVER ( 
