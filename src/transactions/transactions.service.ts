@@ -43,13 +43,13 @@ export class TransactionsService {
       create: {
         hash,
         network_version: networkVersion,
-        fee: fee.valueOf(),
+        fee,
         size,
         notes: classToPlain(notes),
         spends: classToPlain(spends),
       },
       update: {
-        fee: fee.valueOf(),
+        fee,
         size,
         notes: classToPlain(notes),
         spends: classToPlain(spends),

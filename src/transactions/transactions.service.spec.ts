@@ -60,7 +60,7 @@ describe('TransactionsService', () => {
         const transactions = await transactionsService.bulkUpsert(prisma, [
           {
             hash: uuid(),
-            fee: BigInt(9999),
+            fee: faker.datatype.number(),
             size: faker.datatype.number(),
             notes,
             spends,
@@ -69,7 +69,7 @@ describe('TransactionsService', () => {
         expect(transactions[0]).toMatchObject({
           id: expect.any(Number),
           hash: expect.any(String),
-          fee: expect.any(BigInt),
+          fee: expect.any(Number),
           size: expect.any(Number),
           notes: notes,
           spends: spends,
@@ -84,13 +84,13 @@ describe('TransactionsService', () => {
         const transactions = await transactionsService.bulkUpsert(prisma, [
           {
             hash: uuid(),
-            fee: BigInt(9999),
+            fee: faker.datatype.number(),
             size: faker.datatype.number(),
             notes,
             spends,
           },
         ]);
-        const newFee = BigInt(9999);
+        const newFee = faker.datatype.number();
         const newSize = faker.datatype.number();
         const newNotes = [{ commitment: uuid() }];
         const newSpends = [{ nullifier: uuid() }];
@@ -107,7 +107,7 @@ describe('TransactionsService', () => {
         expect(newTransactions[0]).toMatchObject({
           id: transaction.id,
           hash: transaction.hash,
-          fee: BigInt(newFee),
+          fee: newFee,
           size: newSize,
           notes: newNotes,
           spends: newSpends,
@@ -127,7 +127,7 @@ describe('TransactionsService', () => {
           const transactions = await transactionsService.bulkUpsert(prisma, [
             {
               hash: testTransactionHash,
-              fee: BigInt(9999),
+              fee: faker.datatype.number(),
               size: faker.datatype.number(),
               notes,
               spends,
@@ -161,7 +161,7 @@ describe('TransactionsService', () => {
           await transactionsService.bulkUpsert(prisma, [
             {
               hash: uuid(),
-              fee: BigInt(9999),
+              fee: faker.datatype.number(),
               size: faker.datatype.number(),
               notes,
               spends,
@@ -186,7 +186,7 @@ describe('TransactionsService', () => {
           const transactions = await transactionsService.bulkUpsert(prisma, [
             {
               hash: testTransactionHash,
-              fee: BigInt(9999),
+              fee: faker.datatype.number(),
               size: faker.datatype.number(),
               notes,
               spends,
@@ -207,7 +207,7 @@ describe('TransactionsService', () => {
           await transactionsService.bulkUpsert(prisma, [
             {
               hash: uuid(),
-              fee: BigInt(9999),
+              fee: faker.datatype.number(),
               size: faker.datatype.number(),
               notes,
               spends,
@@ -232,14 +232,14 @@ describe('TransactionsService', () => {
           const transactions = await transactionsService.bulkUpsert(prisma, [
             {
               hash: testTransactionHash,
-              fee: BigInt(9999),
+              fee: faker.datatype.number(),
               size: faker.datatype.number(),
               notes,
               spends,
             },
             {
               hash: uuid(),
-              fee: BigInt(9999),
+              fee: faker.datatype.number(),
               size: faker.datatype.number(),
               notes,
               spends,
@@ -271,14 +271,14 @@ describe('TransactionsService', () => {
           const transactions = await transactionsService.bulkUpsert(prisma, [
             {
               hash: testTransactionHash,
-              fee: BigInt(9999),
+              fee: faker.datatype.number(),
               size: faker.datatype.number(),
               notes,
               spends,
             },
             {
               hash: uuid(),
-              fee: BigInt(9999),
+              fee: faker.datatype.number(),
               size: faker.datatype.number(),
               notes,
               spends,
@@ -314,14 +314,14 @@ describe('TransactionsService', () => {
           await transactionsService.bulkUpsert(prisma, [
             {
               hash: testTransactionHash,
-              fee: BigInt(9999),
+              fee: faker.datatype.number(),
               size: faker.datatype.number(),
               notes,
               spends,
             },
             {
               hash: uuid(),
-              fee: BigInt(9999),
+              fee: faker.datatype.number(),
               size: faker.datatype.number(),
               notes,
               spends,
@@ -343,14 +343,14 @@ describe('TransactionsService', () => {
           await transactionsService.bulkUpsert(prisma, [
             {
               hash: testTransactionHash,
-              fee: BigInt(9999),
+              fee: faker.datatype.number(),
               size: faker.datatype.number(),
               notes,
               spends,
             },
             {
               hash: uuid(),
-              fee: BigInt(9999),
+              fee: faker.datatype.number(),
               size: faker.datatype.number(),
               notes,
               spends,

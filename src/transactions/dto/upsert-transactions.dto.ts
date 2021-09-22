@@ -19,8 +19,8 @@ export class TransactionDto {
   readonly hash!: string;
 
   @IsInt()
-  @Type(() => BigInt)
-  readonly fee!: BigInt;
+  @Type(() => Number)
+  readonly fee!: number;
 
   @IsInt()
   @Type(() => Number)

@@ -102,7 +102,7 @@ describe('BlocksController', () => {
             transactions: [
               {
                 hash: uuid(),
-                fee: BigInt(9999),
+                fee: faker.datatype.number(),
                 size: faker.datatype.number(),
                 notes: [{ commitment: uuid() }],
                 spends: [{ nullifier: uuid() }],
@@ -139,7 +139,7 @@ describe('BlocksController', () => {
               transactions: [
                 {
                   hash: uuid(),
-                  fee: BigInt(9999),
+                  fee: faker.datatype.number(),
                   size: faker.datatype.number(),
                   notes: [{ commitment: uuid() }],
                   spends: [{ nullifier: uuid() }],
