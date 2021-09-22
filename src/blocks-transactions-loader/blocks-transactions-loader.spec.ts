@@ -4,6 +4,7 @@
 import { INestApplication } from '@nestjs/common';
 import faker from 'faker';
 import { v4 as uuid } from 'uuid';
+import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
 import { BlockOperation } from '../blocks/enums/block-operation';
 import { bootstrapTestApp } from '../test/test-app';
 import { BlocksTransactionsLoader } from './block-transactions-loader';
@@ -11,10 +12,12 @@ import { BlocksTransactionsLoader } from './block-transactions-loader';
 describe('BlocksTransactionsLoader', () => {
   let app: INestApplication;
   let blocksTransactionsLoader: BlocksTransactionsLoader;
+  let blocksTransactionsService: BlocksTransactionsService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
     blocksTransactionsLoader = app.get(BlocksTransactionsLoader);
+    blocksTransactionsService = app.get(BlocksTransactionsService);
     await app.init();
   });
 
@@ -63,7 +66,19 @@ describe('BlocksTransactionsLoader', () => {
           size: expect.any(Number),
         });
 
-        expect(blocks[0].transactions).toContainEqual(transaction);
+        expect(blocks[0].transactions[0]).toMatchObject({
+          hash: transaction.hash,
+          fee: transaction.fee,
+          size: transaction.size,
+          notes: transaction.notes,
+          spends: transaction.spends,
+        });
+
+        const blockTransaction = await blocksTransactionsService.find(blocks[0].id, blocks[0].transactions[0].id);
+        expect(blockTransaction).toMatchObject({
+          block_id: blocks[0].id,
+          transaction_id: blocks[0].transactions[0].id,
+        });
       });
     });
   });
