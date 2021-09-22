@@ -13,12 +13,12 @@ import { SortOrder } from '../common/enums/sort-order';
 import { EventsService } from '../events/events.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
-import { BlockDto, UpsertBlocksDto } from './dto/upsert-blocks.dto';
 import { BlockOperation } from './enums/block-operation';
 import { FindBlockOptions } from './interfaces/find-block-options';
 import { ListBlocksOptions } from './interfaces/list-block-options';
 import { Block, Prisma, Transaction } from '.prisma/client';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
+import { UpsertBlockOptions } from './interfaces/upsert-block-options';
 
 @Injectable()
 export class BlocksService {
@@ -47,10 +47,10 @@ export class BlocksService {
       previous_block_hash,
       sequence,
       timestamp,
-      transactions_count,
+      transactionsCount,
       type,
       size,
-    }: BlockDto,
+    }: UpsertBlockOptions,
   ): Promise<Block> {
     const main = type === BlockOperation.CONNECTED;
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
@@ -64,7 +64,7 @@ export class BlocksService {
         main,
         timestamp,
         graffiti,
-        transactions_count,
+        transactions_count: transactionsCount,
         network_version: networkVersion,
         previous_block_hash,
         searchable_text,
@@ -76,7 +76,7 @@ export class BlocksService {
         main,
         timestamp,
         graffiti,
-        transactions_count,
+        transactions_count: transactionsCount,
         previous_block_hash,
         size,
       },

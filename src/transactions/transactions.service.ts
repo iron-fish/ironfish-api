@@ -9,11 +9,11 @@ import { BlocksTransactionsService } from '../blocks-transactions/blocks-transac
 import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
 import { PrismaService } from '../prisma/prisma.service';
-import { TransactionDto } from './dto/upsert-transactions.dto';
 import { FindTransactionOptions } from './interfaces/find-transactions-options';
 import { ListTransactionOptions } from './interfaces/list-transactions-options';
 import { Transaction } from '.prisma/client';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
+import { UpsertTransactionOptions } from './interfaces/upsert-transaction-options';
 
 @Injectable()
 export class TransactionsService {
@@ -23,7 +23,7 @@ export class TransactionsService {
     private readonly prisma: PrismaService,
   ) {}
 
-  async bulkUpsert(prisma: BasePrismaClient, transactions: TransactionDto[]): Promise<Transaction[]> {
+  async bulkUpsert(prisma: BasePrismaClient, transactions: UpsertTransactionOptions[]): Promise<Transaction[]> {
     const records = [];
     for (const transaction of transactions) {
       records.push(await this.upsert(prisma, transaction));
@@ -37,7 +37,7 @@ export class TransactionsService {
     size,
     notes,
     spends,
-  }: TransactionDto): Promise<Transaction> {
+  }: UpsertTransactionOptions): Promise<Transaction> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
     return prisma.transaction.upsert({
       create: {
