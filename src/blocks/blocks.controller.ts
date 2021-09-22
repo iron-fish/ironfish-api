@@ -16,7 +16,7 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
-import { BlocksTransactionsLoader } from '../blocks-transactions-loader/block-transactions-loader.service';
+import { BlocksTransactionsLoader } from '../blocks-transactions-loader/block-transactions-loader';
 import { List } from '../common/interfaces/list';
 import { PaginatedList } from '../common/interfaces/paginated-list';
 import { BlocksService } from './blocks.service';

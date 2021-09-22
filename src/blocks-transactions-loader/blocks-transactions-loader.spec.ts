@@ -6,9 +6,9 @@ import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { BlockOperation } from '../blocks/enums/block-operation';
 import { bootstrapTestApp } from '../test/test-app';
-import { BlocksTransactionsLoader } from './block-transactions-loader.service';
+import { BlocksTransactionsLoader } from './block-transactions-loader';
 
-describe('BlocksTransactionsLoaderService', () => {
+describe('BlocksTransactionsLoader', () => {
   let app: INestApplication;
   let blocksTransactionsLoader: BlocksTransactionsLoader;
 
