@@ -16,7 +16,7 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
-import { BlocksTransactionsLoaderService } from '../blocks-transactions-loader/block-transactions-loader.service';
+import { BlocksTransactionsLoader } from '../blocks-transactions-loader/block-transactions-loader.service';
 import { List } from '../common/interfaces/list';
 import { PaginatedList } from '../common/interfaces/paginated-list';
 import { BlocksService } from './blocks.service';
@@ -36,7 +36,7 @@ import { Block } from '.prisma/client';
 export class BlocksController {
   constructor(
     private readonly blocksService: BlocksService,
-    private readonly blocksTransactionsLoaderService: BlocksTransactionsLoaderService,
+    private readonly blocksTransactionsLoader: BlocksTransactionsLoader,
   ) {}
 
   @Post()
@@ -50,7 +50,7 @@ export class BlocksController {
     )
     upsertBlocksDto: UpsertBlocksDto,
   ): Promise<List<SerializedBlock>> {
-    const blocks = await this.blocksTransactionsLoaderService.bulkUpsert(
+    const blocks = await this.blocksTransactionsLoader.bulkUpsert(
       upsertBlocksDto,
     );
     return {

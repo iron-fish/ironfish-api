@@ -13,6 +13,7 @@ import { TransactionDto } from './dto/upsert-transactions.dto';
 import { FindTransactionOptions } from './interfaces/find-transactions-options';
 import { ListTransactionOptions } from './interfaces/list-transactions-options';
 import { Transaction } from '.prisma/client';
+import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 
 @Injectable()
 export class TransactionsService {
@@ -22,15 +23,15 @@ export class TransactionsService {
     private readonly prisma: PrismaService,
   ) {}
 
-  async bulkUpsert(transactions: TransactionDto[]): Promise<Transaction[]> {
+  async bulkUpsert(prisma: BasePrismaClient, transactions: TransactionDto[]): Promise<Transaction[]> {
     const records = [];
     for (const transaction of transactions) {
-      records.push(await this.upsert(transaction));
+      records.push(await this.upsert(prisma, transaction));
     }
     return records;
   }
 
-  private async upsert({
+  private async upsert(prisma: BasePrismaClient, {
     hash,
     fee,
     size,
@@ -38,7 +39,7 @@ export class TransactionsService {
     spends,
   }: TransactionDto): Promise<Transaction> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
-    return this.prisma.transaction.upsert({
+    return prisma.transaction.upsert({
       create: {
         hash,
         network_version: networkVersion,

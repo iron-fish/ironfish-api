@@ -10,7 +10,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { TransactionsService } from '../transactions/transactions.service';
 
 @Injectable()
-export class BlocksTransactionsLoaderService {
+export class BlocksTransactionsLoader {
   constructor(
     private readonly blocksTransactionsService: BlocksTransactionsService,
     private readonly blocksService: BlocksService,
@@ -21,15 +21,17 @@ export class BlocksTransactionsLoaderService {
   async bulkUpsert({
     blocks,
   }: UpsertBlocksDto): Promise<(Block & { transactions: Transaction[] })[]> {
+    return this.prisma.$transaction(async (prisma) => {
     const records: (Block & { transactions: Transaction[] })[] = [];
-    return this.prisma.$transaction(async () => {
       for (const block of blocks) {
-        const createdBlock = await this.blocksService.upsert(block);
+        const createdBlock = await this.blocksService.upsert(prisma, block);
         const transactions = await this.transactionsService.bulkUpsert(
+          prisma,
           block.transactions,
         );
         for (const transaction of transactions) {
           await this.blocksTransactionsService.upsert(
+            prisma,
             createdBlock,
             transaction,
           );

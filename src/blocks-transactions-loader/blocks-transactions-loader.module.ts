@@ -6,16 +6,16 @@ import { BlocksModule } from '../blocks/blocks.module';
 import { BlocksTransactionsModule } from '../blocks-transactions/blocks-transactions.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { TransactionsModule } from '../transactions/transactions.module';
-import { BlocksTransactionsLoaderService } from './block-transactions-loader.service';
+import { BlocksTransactionsLoader } from './block-transactions-loader';
 
 @Module({
-  exports: [BlocksTransactionsLoaderService],
+  exports: [BlocksTransactionsLoader],
   imports: [
     BlocksModule,
     BlocksTransactionsModule,
     PrismaModule,
     TransactionsModule,
   ],
-  providers: [BlocksTransactionsLoaderService],
+  providers: [BlocksTransactionsLoader],
 })
 export class BlocksTransactionsLoaderModule {}

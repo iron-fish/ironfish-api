@@ -18,6 +18,7 @@ import { BlockOperation } from './enums/block-operation';
 import { FindBlockOptions } from './interfaces/find-block-options';
 import { ListBlocksOptions } from './interfaces/list-block-options';
 import { Block, Prisma, Transaction } from '.prisma/client';
+import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 
 @Injectable()
 export class BlocksService {
@@ -32,70 +33,71 @@ export class BlocksService {
   async bulkUpsert({ blocks }: UpsertBlocksDto): Promise<Block[]> {
     const records = [];
     for (const block of blocks) {
-      records.push(await this.upsert(block));
+      records.push(await this.upsert(this.prisma, block));
     }
     return records;
   }
 
-  async upsert({
-    difficulty,
-    graffiti,
-    hash,
-    previous_block_hash,
-    sequence,
-    timestamp,
-    transactions_count,
-    type,
-    size,
-  }: BlockDto): Promise<Block> {
+  async upsert(
+    prisma: BasePrismaClient,
+    {
+      difficulty,
+      graffiti,
+      hash,
+      previous_block_hash,
+      sequence,
+      timestamp,
+      transactions_count,
+      type,
+      size,
+    }: BlockDto,
+  ): Promise<Block> {
     const main = type === BlockOperation.CONNECTED;
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
     const searchable_text = hash + ' ' + String(sequence);
 
-    return this.prisma.$transaction(async (prisma) => {
-      const block = await prisma.block.upsert({
-        create: {
+    const block = await prisma.block.upsert({
+      create: {
+        hash,
+        sequence,
+        difficulty,
+        main,
+        timestamp,
+        graffiti,
+        transactions_count,
+        network_version: networkVersion,
+        previous_block_hash,
+        searchable_text,
+        size,
+      },
+      update: {
+        sequence,
+        difficulty,
+        main,
+        timestamp,
+        graffiti,
+        transactions_count,
+        previous_block_hash,
+        size,
+      },
+      where: {
+        uq_blocks_on_hash_and_network_version: {
           hash,
-          sequence,
-          difficulty,
-          main,
-          timestamp,
-          graffiti,
-          transactions_count,
           network_version: networkVersion,
-          previous_block_hash,
-          searchable_text,
-          size,
         },
-        update: {
-          sequence,
-          difficulty,
-          main,
-          timestamp,
-          graffiti,
-          transactions_count,
-          previous_block_hash,
-          size,
-        },
-        where: {
-          uq_blocks_on_hash_and_network_version: {
-            hash,
-            network_version: networkVersion,
-          },
-        },
-      });
-
-      const user = await this.usersService.findByGraffiti(graffiti, prisma);
-      if (user && timestamp > user.created_at) {
-        if (main) {
-          await this.eventsService.upsertBlockMined(block, user, prisma);
-        } else {
-          await this.eventsService.deleteBlockMined(block, user, prisma);
-        }
-      }
-
-      return block;
+      },
     });
+
+    const user = await this.usersService.findByGraffiti(graffiti, prisma);
+    if (user && timestamp > user.created_at) {
+      if (main) {
+        await this.eventsService.upsertBlockMined(block, user, prisma);
+      } else {
+        await this.eventsService.deleteBlockMined(block, user, prisma);
+      }
+    }
+
+    return block;
   }
 
   async head(): Promise<Block> {
