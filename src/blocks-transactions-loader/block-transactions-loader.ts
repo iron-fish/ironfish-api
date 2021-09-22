@@ -22,9 +22,12 @@ export class BlocksTransactionsLoader {
     blocks,
   }: UpsertBlocksDto): Promise<(Block & { transactions: Transaction[] })[]> {
     return this.prisma.$transaction(async (prisma) => {
-    const records: (Block & { transactions: Transaction[] })[] = [];
+      const records: (Block & { transactions: Transaction[] })[] = [];
       for (const block of blocks) {
-        const createdBlock = await this.blocksService.upsert(prisma, block);
+        const createdBlock = await this.blocksService.upsert(prisma, {
+          ...block,
+          transactionsCount: block.transactions_count,
+        });
         const transactions = await this.transactionsService.bulkUpsert(
           prisma,
           block.transactions,
