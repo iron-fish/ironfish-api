@@ -30,14 +30,6 @@ export class BlocksService {
     private readonly usersService: UsersService,
   ) {}
 
-  async bulkUpsert({ blocks }: UpsertBlocksDto): Promise<Block[]> {
-    const records = [];
-    for (const block of blocks) {
-      records.push(await this.upsert(this.prisma, block));
-    }
-    return records;
-  }
-
   async upsert(
     prisma: BasePrismaClient,
     {

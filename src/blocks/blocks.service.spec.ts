@@ -29,120 +29,6 @@ describe('BlocksService', () => {
     await app.close();
   });
 
-  describe('bulkUpsert', () => {
-    describe('when a hash does not exist for the network version', () => {
-      it('stores a block record', async () => {
-        const blocks = await blocksService.bulkUpsert({
-          blocks: [
-            {
-              hash: uuid(),
-              sequence: faker.datatype.number(),
-              difficulty: faker.datatype.number(),
-              timestamp: new Date(),
-              transactions_count: 1,
-              type: BlockOperation.CONNECTED,
-              graffiti: uuid(),
-              previous_block_hash: uuid(),
-              size: faker.datatype.number(),
-              transactions: [
-                {
-                  hash: uuid(),
-                  fee: faker.datatype.number(),
-                  size: faker.datatype.number(),
-                  notes: [{ commitment: uuid() }],
-                  spends: [{ nullifier: uuid() }],
-                },
-              ],
-            },
-          ],
-        });
-        expect(blocks[0]).toMatchObject({
-          id: expect.any(Number),
-          hash: expect.any(String),
-          sequence: expect.any(Number),
-          difficulty: expect.any(Number),
-          main: true,
-          timestamp: expect.any(Date),
-          transactions_count: expect.any(Number),
-          graffiti: expect.any(String),
-          previous_block_hash: expect.any(String),
-          size: expect.any(Number),
-        });
-      });
-    });
-
-    describe('when a hash exists for the network version', () => {
-      it('updates the block record', async () => {
-        const previousBlockHash = uuid();
-        const blocks = await blocksService.bulkUpsert({
-          blocks: [
-            {
-              hash: uuid(),
-              sequence: faker.datatype.number(),
-              difficulty: faker.datatype.number(),
-              timestamp: new Date(),
-              transactions_count: 1,
-              type: BlockOperation.CONNECTED,
-              graffiti: uuid(),
-              previous_block_hash: uuid(),
-              size: faker.datatype.number(),
-              transactions: [
-                {
-                  hash: uuid(),
-                  fee: faker.datatype.number(),
-                  size: faker.datatype.number(),
-                  notes: [{ commitment: uuid() }],
-                  spends: [{ nullifier: uuid() }],
-                },
-              ],
-            },
-          ],
-        });
-        const newSequence = faker.datatype.number();
-        const newDifficulty = faker.datatype.number();
-        const newSize = faker.datatype.number();
-        const newGraffiti = uuid();
-        const block = blocks[0];
-        const newBlocks = await blocksService.bulkUpsert({
-          blocks: [
-            {
-              hash: block.hash,
-              sequence: newSequence,
-              difficulty: newDifficulty,
-              timestamp: new Date(),
-              transactions_count: 1,
-              type: BlockOperation.CONNECTED,
-              graffiti: newGraffiti,
-              previous_block_hash: previousBlockHash,
-              size: newSize,
-              transactions: [
-                {
-                  hash: uuid(),
-                  fee: faker.datatype.number(),
-                  size: faker.datatype.number(),
-                  notes: [{ commitment: uuid() }],
-                  spends: [{ nullifier: uuid() }],
-                },
-              ],
-            },
-          ],
-        });
-        expect(newBlocks[0]).toMatchObject({
-          id: block.id,
-          hash: block.hash,
-          sequence: newSequence,
-          difficulty: newDifficulty,
-          main: true,
-          timestamp: expect.any(Date),
-          transactions_count: block.transactions_count,
-          graffiti: newGraffiti,
-          previous_block_hash: previousBlockHash,
-          size: newSize,
-        });
-      });
-    });
-  });
-
   describe('head', () => {
     describe('with no block for the current version and main chain', () => {
       it('throws a NotFoundException', async () => {
@@ -166,31 +52,18 @@ describe('BlocksService', () => {
     describe('with a valid hash', () => {
       it('returns the block with the correct hash', async () => {
         const testBlockHash = uuid();
-        const blocks = await blocksService.bulkUpsert({
-          blocks: [
-            {
-              hash: testBlockHash,
-              sequence: faker.datatype.number(),
-              difficulty: faker.datatype.number(),
-              timestamp: new Date(),
-              transactions_count: 1,
-              type: BlockOperation.CONNECTED,
-              graffiti: uuid(),
-              previous_block_hash: uuid(),
-              size: faker.datatype.number(),
-              transactions: [
-                {
-                  hash: uuid(),
-                  fee: faker.datatype.number(),
-                  size: faker.datatype.number(),
-                  notes: [{ commitment: uuid() }],
-                  spends: [{ nullifier: uuid() }],
-                },
-              ],
-            },
-          ],
+        const blocks = await blocksService.upsert(prisma, {
+          hash: testBlockHash,
+          sequence: faker.datatype.number(),
+          difficulty: faker.datatype.number(),
+          timestamp: new Date(),
+          transactionsCount: 1,
+          type: BlockOperation.CONNECTED,
+          graffiti: uuid(),
+          previous_block_hash: uuid(),
+          size: faker.datatype.number(),
         });
-        const testBlock = blocks[0];
+        const testBlock = blocks;
         const block = await blocksService.find({ hash: testBlockHash });
         expect(block).toMatchObject(testBlock);
       });
@@ -199,31 +72,18 @@ describe('BlocksService', () => {
     describe('with a valid sequence index', () => {
       it('returns the block with the correct sequence index', async () => {
         const testBlockSequence = faker.datatype.number();
-        const blocks = await blocksService.bulkUpsert({
-          blocks: [
-            {
-              hash: uuid(),
-              sequence: testBlockSequence,
-              difficulty: faker.datatype.number(),
-              timestamp: new Date(),
-              transactions_count: 1,
-              type: BlockOperation.CONNECTED,
-              graffiti: uuid(),
-              previous_block_hash: uuid(),
-              size: faker.datatype.number(),
-              transactions: [
-                {
-                  hash: uuid(),
-                  fee: faker.datatype.number(),
-                  size: faker.datatype.number(),
-                  notes: [{ commitment: uuid() }],
-                  spends: [{ nullifier: uuid() }],
-                },
-              ],
-            },
-          ],
+        const blocks = await blocksService.upsert(prisma, {
+          hash: uuid(),
+          sequence: testBlockSequence,
+          difficulty: faker.datatype.number(),
+          timestamp: new Date(),
+          transactionsCount: 1,
+          type: BlockOperation.CONNECTED,
+          graffiti: uuid(),
+          previous_block_hash: uuid(),
+          size: faker.datatype.number(),
         });
-        const testBlock = blocks[0];
+        const testBlock = blocks;
         const block = await blocksService.find({
           sequence: testBlockSequence,
         });
@@ -233,29 +93,16 @@ describe('BlocksService', () => {
 
     describe('with neither a valid hash nor sequence', () => {
       it('returns null', async () => {
-        await blocksService.bulkUpsert({
-          blocks: [
-            {
-              hash: uuid(),
-              sequence: faker.datatype.number(),
-              difficulty: faker.datatype.number(),
-              timestamp: new Date(),
-              transactions_count: 1,
-              type: BlockOperation.CONNECTED,
-              graffiti: uuid(),
-              previous_block_hash: uuid(),
-              size: faker.datatype.number(),
-              transactions: [
-                {
-                  hash: uuid(),
-                  fee: faker.datatype.number(),
-                  size: faker.datatype.number(),
-                  notes: [{ commitment: uuid() }],
-                  spends: [{ nullifier: uuid() }],
-                },
-              ],
-            },
-          ],
+        await blocksService.upsert(prisma, {
+          hash: uuid(),
+          sequence: faker.datatype.number(),
+          difficulty: faker.datatype.number(),
+          timestamp: new Date(),
+          transactionsCount: 1,
+          type: BlockOperation.CONNECTED,
+          graffiti: uuid(),
+          previous_block_hash: uuid(),
+          size: faker.datatype.number(),
         });
         const block = await blocksService.find({
           hash: uuid(),
