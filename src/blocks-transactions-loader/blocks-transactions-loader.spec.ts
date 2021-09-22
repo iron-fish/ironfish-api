@@ -31,7 +31,7 @@ describe('BlocksTransactionsLoader', () => {
         const blockHash = uuid();
         const transaction = {
           hash: uuid(),
-          fee: faker.datatype.number(),
+          fee: BigInt(9999),
           size: faker.datatype.number(),
           notes: [{ commitment: uuid() }],
           spends: [{ nullifier: uuid() }],
