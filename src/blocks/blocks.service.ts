@@ -122,7 +122,7 @@ export class BlocksService {
     const direction = options.before !== undefined ? -1 : 1;
     const limit =
       direction * Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
-    const { withTransactions } = options;
+    const withTransactions = options.withTransactions ?? false;
     if (options.sequenceGte !== undefined && options.sequenceLt !== undefined) {
       const where = {
         sequence: {
@@ -148,6 +148,7 @@ export class BlocksService {
       const where = {
         searchable_text: {
           contains: options.search,
+          mode: Prisma.QueryMode.insensitive,
         },
         main: true,
         network_version: networkVersion,
@@ -237,10 +238,10 @@ export class BlocksService {
   private async getBlocksData(
     cursor: { id: number } | undefined,
     orderBy: { id: SortOrder },
-    where: Record<string, unknown>,
+    where: Prisma.BlockWhereInput,
     skip: 1 | 0,
     limit: number,
-    includeTransactions: boolean | undefined,
+    includeTransactions: boolean,
   ): Promise<Block[] | (Block & { transactions: Transaction[] })[]> {
     const blocks = await this.prisma.block.findMany({
       cursor,

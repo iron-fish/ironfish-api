@@ -96,12 +96,13 @@ export class TransactionsService {
     const direction = options.before !== undefined ? -1 : 1;
     const limit =
       direction * Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
-    const { withBlocks } = options;
+    const withBlocks = options.withBlocks ?? false;
 
     if (options.search !== undefined) {
       const where = {
         hash: {
           contains: options.search,
+          mode: Prisma.QueryMode.insensitive,
         },
       };
       return this.getTransactionsData(orderBy, limit, where, withBlocks);
@@ -117,15 +118,15 @@ export class TransactionsService {
       };
       return this.getTransactionsData(orderBy, limit, where, withBlocks);
     } else {
-      return this.getTransactionsData(orderBy, limit, undefined, withBlocks);
+      return this.getTransactionsData(orderBy, limit, {}, withBlocks);
     }
   }
 
   private async getTransactionsData(
-    orderBy: { id: SortOrder } | undefined,
-    limit: number | undefined,
-    where: Record<string, unknown> | undefined,
-    includeBlocks: boolean | undefined,
+    orderBy: { id: SortOrder },
+    limit: number,
+    where: Prisma.TransactionWhereInput,
+    includeBlocks: boolean,
   ): Promise<Transaction[] | (Transaction & { blocks: Block[] })[]> {
     const transactions = await this.prisma.transaction.findMany({
       orderBy,
