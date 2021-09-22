@@ -4,8 +4,8 @@
 import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { Block, BlockTransaction, Transaction } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import { ListBlockTransactionOptions } from './interfaces/list-block-transactions-options';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
+import { ListBlockTransactionOptions } from './interfaces/list-block-transactions-options';
 
 @Injectable()
 export class BlocksTransactionsService {

@@ -12,13 +12,13 @@ import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
 import { EventsService } from '../events/events.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { UsersService } from '../users/users.service';
 import { BlockOperation } from './enums/block-operation';
 import { FindBlockOptions } from './interfaces/find-block-options';
 import { ListBlocksOptions } from './interfaces/list-block-options';
-import { Block, Prisma, Transaction } from '.prisma/client';
-import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { UpsertBlockOptions } from './interfaces/upsert-block-options';
+import { Block, Prisma, Transaction } from '.prisma/client';
 
 @Injectable()
 export class BlocksService {

@@ -4,8 +4,8 @@
 import { INestApplication } from '@nestjs/common';
 import faker from 'faker';
 import { v4 as uuid } from 'uuid';
-import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
 import { BlockOperation } from '../blocks/enums/block-operation';
+import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { BlocksTransactionsLoader } from './block-transactions-loader';
 
@@ -74,7 +74,10 @@ describe('BlocksTransactionsLoader', () => {
           spends: transaction.spends,
         });
 
-        const blockTransaction = await blocksTransactionsService.find(blocks[0].id, blocks[0].transactions[0].id);
+        const blockTransaction = await blocksTransactionsService.find(
+          blocks[0].id,
+          blocks[0].transactions[0].id,
+        );
         expect(blockTransaction).toMatchObject({
           block_id: blocks[0].id,
           transaction_id: blocks[0].transactions[0].id,

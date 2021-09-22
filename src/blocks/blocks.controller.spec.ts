@@ -6,7 +6,6 @@ import { Block } from '@prisma/client';
 import faker from 'faker';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
-import { ApiConfigService } from '../api-config/api-config.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { BlocksService } from './blocks.service';
@@ -19,13 +18,11 @@ const API_KEY = 'test';
 describe('BlocksController', () => {
   let app: INestApplication;
   let blocksService: BlocksService;
-  let config: ApiConfigService;
   let prisma: PrismaService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
     blocksService = app.get(BlocksService);
-    config = app.get(ApiConfigService);
     prisma = app.get(PrismaService);
     await app.init();
   });
@@ -59,7 +56,6 @@ describe('BlocksController', () => {
   };
 
   describe('POST /blocks', () => {
-
     describe('with a missing api key', () => {
       it('returns a 401', async () => {
         const { body } = await request(app.getHttpServer())
@@ -570,7 +566,6 @@ describe('BlocksController', () => {
   });
 
   describe('POST /blocks/disconnect', () => {
-
     describe('with a missing api key', () => {
       it('returns a 401', async () => {
         const { body } = await request(app.getHttpServer())
