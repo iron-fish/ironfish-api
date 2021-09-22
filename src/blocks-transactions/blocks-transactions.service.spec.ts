@@ -68,7 +68,7 @@ describe('BlocksTransactionsService', () => {
             spends: [{ nullifier: uuid() }],
           },
         });
-        await blocksTransactionsService.upsert(block, transaction);
+        await blocksTransactionsService.upsert(prisma, block, transaction);
 
         const record = await blocksTransactionsService.find(
           block.id,
@@ -102,9 +102,11 @@ describe('BlocksTransactionsService', () => {
         });
 
         const blockTransaction = await blocksTransactionsService.upsert(
+          prisma,
           block,
           transaction,
         );
+
         expect(blockTransaction).toMatchObject({
           block_id: block.id,
           transaction_id: transaction.id,
@@ -131,7 +133,7 @@ describe('BlocksTransactionsService', () => {
               spends,
             },
           });
-          await blocksTransactionsService.upsert(block, transaction);
+          await blocksTransactionsService.upsert(prisma, block, transaction);
         }
 
         const blocksTransactions = await blocksTransactionsService.list({
@@ -160,7 +162,7 @@ describe('BlocksTransactionsService', () => {
 
         for (let i = 0; i < 10; i++) {
           const { block } = await seedBlock();
-          await blocksTransactionsService.upsert(block, transaction);
+          await blocksTransactionsService.upsert(prisma, block, transaction);
         }
 
         const blocksTransactions = await blocksTransactionsService.list({
@@ -189,7 +191,7 @@ describe('BlocksTransactionsService', () => {
 
       for (let i = 0; i < 10; i++) {
         const { block } = await seedBlock();
-        await blocksTransactionsService.upsert(block, transaction);
+        await blocksTransactionsService.upsert(prisma, block, transaction);
       }
 
       const blocks = await blocksTransactionsService.findBlocksByTransaction(
@@ -217,7 +219,7 @@ describe('BlocksTransactionsService', () => {
             spends: [{ nullifier: uuid() }],
           },
         });
-        await blocksTransactionsService.upsert(block, transaction);
+        await blocksTransactionsService.upsert(prisma, block, transaction);
       }
 
       const transactions =

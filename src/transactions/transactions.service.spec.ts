@@ -57,7 +57,7 @@ describe('TransactionsService', () => {
       it('stores a transaction record', async () => {
         const notes = [{ commitment: uuid() }];
         const spends = [{ nullifier: uuid() }];
-        const transactions = await transactionsService.bulkUpsert([
+        const transactions = await transactionsService.bulkUpsert(prisma, [
           {
             hash: uuid(),
             fee: faker.datatype.number(),
@@ -81,7 +81,7 @@ describe('TransactionsService', () => {
       it('updates the transaction record', async () => {
         const notes = [{ commitment: uuid() }];
         const spends = [{ nullifier: uuid() }];
-        const transactions = await transactionsService.bulkUpsert([
+        const transactions = await transactionsService.bulkUpsert(prisma, [
           {
             hash: uuid(),
             fee: faker.datatype.number(),
@@ -95,7 +95,7 @@ describe('TransactionsService', () => {
         const newNotes = [{ commitment: uuid() }];
         const newSpends = [{ nullifier: uuid() }];
         const transaction = transactions[0];
-        const newTransactions = await transactionsService.bulkUpsert([
+        const newTransactions = await transactionsService.bulkUpsert(prisma, [
           {
             hash: transaction.hash,
             fee: newFee,
@@ -124,7 +124,7 @@ describe('TransactionsService', () => {
           const notes = [{ commitment: uuid() }];
           const spends = [{ nullifier: uuid() }];
           const testTransactionHash = uuid();
-          const transactions = await transactionsService.bulkUpsert([
+          const transactions = await transactionsService.bulkUpsert(prisma, [
             {
               hash: testTransactionHash,
               fee: faker.datatype.number(),
@@ -135,7 +135,11 @@ describe('TransactionsService', () => {
           ]);
           const testTransaction = transactions[0];
 
-          await blocksTransactionsService.upsert(block, testTransaction);
+          await blocksTransactionsService.upsert(
+            prisma,
+            block,
+            testTransaction,
+          );
 
           const receivedTransaction = await transactionsService.find({
             hash: testTransactionHash,
@@ -154,7 +158,7 @@ describe('TransactionsService', () => {
         it('returns null', async () => {
           const notes = [{ commitment: uuid() }];
           const spends = [{ nullifier: uuid() }];
-          await transactionsService.bulkUpsert([
+          await transactionsService.bulkUpsert(prisma, [
             {
               hash: uuid(),
               fee: faker.datatype.number(),
@@ -179,7 +183,7 @@ describe('TransactionsService', () => {
           const notes = [{ commitment: uuid() }];
           const spends = [{ nullifier: uuid() }];
           const testTransactionHash = uuid();
-          const transactions = await transactionsService.bulkUpsert([
+          const transactions = await transactionsService.bulkUpsert(prisma, [
             {
               hash: testTransactionHash,
               fee: faker.datatype.number(),
@@ -200,7 +204,7 @@ describe('TransactionsService', () => {
         it('returns null', async () => {
           const notes = [{ commitment: uuid() }];
           const spends = [{ nullifier: uuid() }];
-          await transactionsService.bulkUpsert([
+          await transactionsService.bulkUpsert(prisma, [
             {
               hash: uuid(),
               fee: faker.datatype.number(),
@@ -225,7 +229,7 @@ describe('TransactionsService', () => {
           const testTransactionHash = uuid();
           const notes = [{ commitment: uuid() }];
           const spends = [{ nullifier: uuid() }];
-          const transactions = await transactionsService.bulkUpsert([
+          const transactions = await transactionsService.bulkUpsert(prisma, [
             {
               hash: testTransactionHash,
               fee: faker.datatype.number(),
@@ -243,7 +247,7 @@ describe('TransactionsService', () => {
           ]);
 
           for (const transaction of transactions) {
-            await blocksTransactionsService.upsert(block, transaction);
+            await blocksTransactionsService.upsert(prisma, block, transaction);
           }
 
           const receivedTransactions = await transactionsService.list({
@@ -264,7 +268,7 @@ describe('TransactionsService', () => {
           const testTransactionHash = uuid();
           const notes = [{ commitment: uuid() }];
           const spends = [{ nullifier: uuid() }];
-          const transactions = await transactionsService.bulkUpsert([
+          const transactions = await transactionsService.bulkUpsert(prisma, [
             {
               hash: testTransactionHash,
               fee: faker.datatype.number(),
@@ -282,7 +286,7 @@ describe('TransactionsService', () => {
           ]);
 
           for (const transaction of transactions) {
-            await blocksTransactionsService.upsert(block, transaction);
+            await blocksTransactionsService.upsert(prisma, block, transaction);
           }
 
           const receivedTransactions = await transactionsService.list({
@@ -307,7 +311,7 @@ describe('TransactionsService', () => {
           const testTransactionHash = uuid();
           const notes = [{ commitment: uuid() }];
           const spends = [{ nullifier: uuid() }];
-          await transactionsService.bulkUpsert([
+          await transactionsService.bulkUpsert(prisma, [
             {
               hash: testTransactionHash,
               fee: faker.datatype.number(),
@@ -336,7 +340,7 @@ describe('TransactionsService', () => {
           const testTransactionHash = uuid();
           const notes = [{ commitment: uuid() }];
           const spends = [{ nullifier: uuid() }];
-          await transactionsService.bulkUpsert([
+          await transactionsService.bulkUpsert(prisma, [
             {
               hash: testTransactionHash,
               fee: faker.datatype.number(),
