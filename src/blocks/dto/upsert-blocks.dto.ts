@@ -35,10 +35,6 @@ export class BlockDto {
   @Type(() => Date)
   readonly timestamp!: Date;
 
-  @IsInt()
-  @Type(() => Number)
-  readonly transactions_count!: number;
-
   @IsString()
   readonly graffiti!: string;
 

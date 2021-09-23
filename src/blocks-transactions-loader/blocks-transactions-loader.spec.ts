@@ -43,7 +43,6 @@ describe('BlocksTransactionsLoader', () => {
               sequence: faker.datatype.number(),
               difficulty: faker.datatype.number(),
               timestamp: new Date(),
-              transactions_count: 1,
               type: BlockOperation.CONNECTED,
               graffiti: uuid(),
               previous_block_hash: uuid(),
