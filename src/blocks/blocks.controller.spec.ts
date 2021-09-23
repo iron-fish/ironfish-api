@@ -125,7 +125,6 @@ describe('BlocksController', () => {
               type: BlockOperation.CONNECTED,
               sequence: faker.datatype.number(),
               timestamp: new Date(),
-              transactions_count: 0,
               graffiti: uuid(),
               previous_block_hash: uuid(),
               size: faker.datatype.number(),
@@ -156,7 +155,7 @@ describe('BlocksController', () => {
           difficulty: block.difficulty,
           sequence: block.sequence,
           timestamp: block.timestamp.toISOString(),
-          transactions_count: block.transactions_count,
+          transactions_count: 1,
           previous_block_hash: block.previous_block_hash,
           size: block.size,
         });

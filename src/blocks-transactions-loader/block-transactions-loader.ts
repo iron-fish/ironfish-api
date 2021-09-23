@@ -26,7 +26,7 @@ export class BlocksTransactionsLoader {
       for (const block of blocks) {
         const createdBlock = await this.blocksService.upsert(prisma, {
           ...block,
-          transactionsCount: block.transactions_count,
+          transactionsCount: block.transactions.length,
         });
         const transactions = await this.transactionsService.bulkUpsert(
           prisma,
