@@ -18,7 +18,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { ListUsersWithRankOptions } from './interfaces/list-by-rank-options';
 import { ListUsersOptions } from './interfaces/list-users-options';
 import { SerializedUserWithRank } from './interfaces/serialized-user-with-rank';
-import { Prisma, User } from '.prisma/client';
+import { EventType, Prisma, User } from '.prisma/client';
 
 @Injectable()
 export class UsersService {
@@ -210,7 +210,8 @@ export class UsersService {
     limit,
     search,
     countryCode,
-  }: ListUsersWithRankOptions): Promise<{
+  }: // eventType,
+  ListUsersWithRankOptions): Promise<{
     data: SerializedUserWithRank[];
     hasNext: boolean;
     hasPrevious: boolean;
@@ -296,7 +297,9 @@ export class UsersService {
       rankCursor,
       limit,
       countryCode,
+      // eventType,
     );
+    console.log({ data });
     return {
       data,
       ...(await this.getListWithRankMetadata(
@@ -306,6 +309,103 @@ export class UsersService {
         countryCode,
       )),
     };
+  }
+
+  async listByEventType({
+    // after,
+    // before,
+    // limit,
+    // search,
+    eventType,
+  }: {
+    eventType: EventType;
+  }): Promise<SerializedUserWithRank[]> {
+    // let rankCursor: number;
+    // const searchFilter = `%${search ?? ''}%`;
+    // const cursorId = before ?? after;
+    // if (cursorId !== undefined) {
+    //   rankCursor = await this.getRank(cursorId);
+    // } else {
+    //   // Ranks start at 1, so get everything after 0
+    //   rankCursor = 0;
+    // }
+    const userRanks = await this.prisma.$queryRawUnsafe<
+      SerializedUserWithRank[]
+    >(
+      `SELECT * FROM (
+  SELECT
+    users.id,
+    users.graffiti,
+    users.total_points,
+    users.country_code,
+    users.last_login_at,
+    event_types.type,
+    RANK () OVER ( 
+      ORDER BY COALESCE(user_event_points.points, 0) DESC, users.created_at ASC
+    ) AS rank 
+  FROM
+    users
+  CROSS JOIN
+    (
+      SELECT
+        UNNEST(ENUM_RANGE(NULL::event_type)) AS type
+    ) event_types
+  LEFT JOIN
+    (
+      SELECT
+        user_id,
+        type,
+        SUM(points) AS points
+      FROM
+        (
+          SELECT
+            user_id,
+            type,
+            points
+          FROM
+            events
+          WHERE
+            deleted_at IS NULL
+        ) filtered_events
+      GROUP BY
+        user_id,
+        type
+    ) user_event_points
+  ON
+    user_event_points.type = event_types.type AND
+    user_event_points.user_id = users.id
+) user_ranks
+WHERE
+  type = $1
+`,
+      /*
+    AND
+  CASE WHEN $2
+    THEN
+      rank > $3
+    ELSE
+      rank < $3
+    END
+  ORDER BY
+    rank ASC
+  LIMIT
+    $4`,
+*/
+      eventType,
+      // searchFilter,
+      // before === undefined,
+      // rankCursor,
+      // limit,
+    );
+    if (
+      !is.array(userRanks) ||
+      !is.object(userRanks[0]) ||
+      !('type' in userRanks[0]) ||
+      !('rank' in userRanks[0])
+    ) {
+      throw new Error('Unexpected database response');
+    }
+    return userRanks;
   }
 
   private async getListWithRankMetadata(

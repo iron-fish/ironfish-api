@@ -221,6 +221,32 @@ describe('UsersService', () => {
     });
   });
 
+  describe('listByEventType', () => {
+    describe('with good inputs', () => {
+      it("doesn't break", async () => {
+        const records = await usersService.listByEventType({
+          eventType: 'BUG_CAUGHT',
+        });
+        console.log('records', records);
+        for (const record of records) {
+          expect(record).toMatchObject({
+            id: expect.any(Number),
+            graffiti: expect.any(String),
+            total_points: expect.any(Number),
+            country_code: expect.any(String),
+            type: expect.any(String),
+            rank: expect.any(Number),
+          });
+          if (record.last_login_at) {
+            expect(record).toMatchObject({
+              last_login_at: expect.any(String),
+            });
+          }
+        }
+      });
+    });
+  });
+
   describe('create', () => {
     describe('with a duplicate graffiti', () => {
       describe('with a previously confirmed user', () => {
