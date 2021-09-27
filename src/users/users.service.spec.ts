@@ -225,6 +225,9 @@ describe('UsersService', () => {
     describe('with good inputs', () => {
       it("doesn't break", async () => {
         const records = await usersService.listByEventType({
+          limit: 10,
+          after: 10,
+          countryCode: 'USA',
           eventType: 'BUG_CAUGHT',
         });
         console.log('records', records);
@@ -237,6 +240,7 @@ describe('UsersService', () => {
             type: expect.any(String),
             rank: expect.any(Number),
           });
+          // there's gotta be a better way to do this
           if (record.last_login_at) {
             expect(record).toMatchObject({
               last_login_at: expect.any(String),

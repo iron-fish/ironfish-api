@@ -299,7 +299,6 @@ export class UsersService {
       countryCode,
       // eventType,
     );
-    console.log({ data });
     return {
       data,
       ...(await this.getListWithRankMetadata(
@@ -312,23 +311,29 @@ export class UsersService {
   }
 
   async listByEventType({
-    // after,
-    // before,
-    // limit,
-    // search,
+    after,
+    before,
+    limit,
+    search,
     eventType,
+    countryCode,
   }: {
     eventType: EventType;
+    search?: string;
+    after?: number;
+    before?: number;
+    limit?: number;
+    countryCode?: string;
   }): Promise<SerializedUserWithRank[]> {
-    // let rankCursor: number;
-    // const searchFilter = `%${search ?? ''}%`;
-    // const cursorId = before ?? after;
-    // if (cursorId !== undefined) {
-    //   rankCursor = await this.getRank(cursorId);
-    // } else {
-    //   // Ranks start at 1, so get everything after 0
-    //   rankCursor = 0;
-    // }
+    let rankCursor: number;
+    const searchFilter = `%${search ?? ''}%`;
+    const cursorId = before ?? after;
+    if (cursorId !== undefined) {
+      rankCursor = await this.getRank(cursorId);
+    } else {
+      // Ranks start at 1, so get everything after 0
+      rankCursor = 0;
+    }
     const userRanks = await this.prisma.$queryRawUnsafe<
       SerializedUserWithRank[]
     >(
@@ -376,26 +381,30 @@ export class UsersService {
     user_event_points.user_id = users.id
 ) user_ranks
 WHERE
-  type = $1
-`,
-      /*
-    AND
-  CASE WHEN $2
+  type = $5
+AND
+  CASE WHEN $1
     THEN
-      rank > $3
+      rank > $2
     ELSE
-      rank < $3
+      rank < $2
+  END
+  AND
+    CASE WHEN $4::text IS NOT NULL
+      THEN
+        country_code = $4
+      ELSE
+        TRUE
     END
   ORDER BY
     rank ASC
   LIMIT
-    $4`,
-*/
+    $3`,
+      before === undefined,
+      rankCursor,
+      limit,
+      countryCode,
       eventType,
-      // searchFilter,
-      // before === undefined,
-      // rankCursor,
-      // limit,
     );
     if (
       !is.array(userRanks) ||
