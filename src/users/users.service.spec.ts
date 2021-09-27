@@ -230,7 +230,8 @@ describe('UsersService', () => {
           countryCode: 'USA',
           eventType: 'BUG_CAUGHT',
         });
-        console.log('records', records);
+        // eslint-disable-next-line
+        console.log({ records });
         for (const record of records) {
           expect(record).toMatchObject({
             id: expect.any(Number),
@@ -242,6 +243,7 @@ describe('UsersService', () => {
           });
           // there's gotta be a better way to do this
           if (record.last_login_at) {
+            // eslint-disable-next-line
             expect(record).toMatchObject({
               last_login_at: expect.any(String),
             });

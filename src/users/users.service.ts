@@ -326,7 +326,9 @@ export class UsersService {
     countryCode?: string;
   }): Promise<SerializedUserWithRank[]> {
     let rankCursor: number;
-    const searchFilter = `%${search ?? ''}%`;
+    //eslint-disable-next-line
+    console.log(`what is search for? %${search ?? ''}%`);
+    // const searchFilter = `%${search ?? ''}%`;
     const cursorId = before ?? after;
     if (cursorId !== undefined) {
       rankCursor = await this.getRank(cursorId);
