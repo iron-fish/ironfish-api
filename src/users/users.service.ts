@@ -324,7 +324,11 @@ export class UsersService {
     before?: number;
     limit?: number;
     countryCode?: string;
-  }): Promise<SerializedUserWithRank[]> {
+  }): Promise<{
+    data: SerializedUserWithRank[];
+    hasNext: boolean;
+    hasPrevious: boolean;
+  }> {
     let rankCursor: number;
     const searchFilter = `%${search ?? ''}%`;
     //eslint-disable-next-line
@@ -336,10 +340,7 @@ export class UsersService {
       // Ranks start at 1, so get everything after 0
       rankCursor = 0;
     }
-    const userRanks = await this.prisma.$queryRawUnsafe<
-      SerializedUserWithRank[]
-    >(
-      `SELECT * FROM (
+    const query = `SELECT * FROM (
   SELECT
     users.id,
     users.graffiti,
@@ -407,7 +408,9 @@ AND
   ORDER BY
     rank ASC
   LIMIT
-    $4`,
+    $4`;
+    const data = await this.prisma.$queryRawUnsafe<SerializedUserWithRank[]>(
+      query,
       searchFilter,
       before === undefined,
       rankCursor,
@@ -416,14 +419,37 @@ AND
       eventType,
     );
     if (
-      !is.array(userRanks) ||
-      !is.object(userRanks[0]) ||
-      !('type' in userRanks[0]) ||
-      !('rank' in userRanks[0])
+      !is.array(data) ||
+      !is.object(data[0]) ||
+      !('type' in data[0]) ||
+      !('rank' in data[0])
     ) {
       throw new Error('Unexpected database response');
     }
-    return userRanks;
+    const { length } = data;
+    const metadata = { hasNext: false, hasPrevious: false };
+    if (length > 0) {
+      const previousRecords = await this.prisma.$queryRawUnsafe<
+        SerializedUserWithRank[]
+      >(
+        query,
+        searchFilter,
+        true,
+        data[length - 1].rank,
+        1,
+        countryCode,
+        eventType,
+      );
+      const nextRecords = await this.prisma.$queryRawUnsafe<
+        SerializedUserWithRank[]
+      >(query, searchFilter, false, data[0].rank, 1, countryCode, eventType);
+      metadata.hasNext = nextRecords.length > 0;
+      metadata.hasPrevious = previousRecords.length > 0;
+    }
+    return {
+      data,
+      ...metadata,
+    };
   }
 
   private async getListWithRankMetadata(

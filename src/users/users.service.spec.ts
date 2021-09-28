@@ -224,7 +224,7 @@ describe('UsersService', () => {
   describe('listByEventType', () => {
     describe('with good inputs', () => {
       it("doesn't break", async () => {
-        const records = await usersService.listByEventType({
+        const { data: records } = await usersService.listByEventType({
           limit: 10,
           after: 10,
           countryCode: 'USA',

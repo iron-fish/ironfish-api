@@ -163,6 +163,7 @@ export class UsersController {
       order_by: orderBy,
       country_code: countryCode,
       search,
+      event_type: eventType,
     }: UsersQueryDto,
   ): Promise<PaginatedList<SerializedUser | SerializedUserWithRank>> {
     if (orderBy !== undefined) {
@@ -183,16 +184,24 @@ export class UsersController {
         },
       };
     }
-    const { data, hasNext, hasPrevious } = await this.usersService.list({
+    const props = {
       after,
       before,
       limit,
       search,
       countryCode,
-    });
+    };
+    const { data, hasNext, hasPrevious } = eventType
+      ? await this.usersService.listByEventType({
+          ...props,
+          eventType,
+        })
+      : await this.usersService.list(props);
     return {
       object: 'list',
-      data: data.map((user) => serializedUserFromRecord(user)),
+      data: eventType
+        ? data
+        : data.map((user) => serializedUserFromRecord(user)),
       metadata: {
         has_next: hasNext,
         has_previous: hasPrevious,
