@@ -340,9 +340,24 @@ export class UsersService {
       // Ranks start at 1, so get everything after 0
       rankCursor = 0;
     }
-    const query = `SELECT * FROM (
+    const query = `SELECT
+    id,
+    created_at,
+    updated_at,
+    email,
+    email_notifications,
+    country_code,
+    graffiti,
+    total_points,
+    type AS event_type,
+    rank
+  FROM (
   SELECT
     users.id,
+    users.created_at,
+    users.updated_at,
+    users.email,
+    users.email_notifications,
     users.graffiti,
     users.total_points,
     users.country_code,
@@ -421,7 +436,7 @@ AND
     if (
       !is.array(data) ||
       !is.object(data[0]) ||
-      !('type' in data[0]) ||
+      !('event_type' in data[0]) ||
       !('rank' in data[0])
     ) {
       throw new Error('Unexpected database response');

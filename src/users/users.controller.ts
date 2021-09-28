@@ -23,7 +23,10 @@ import { UsersQueryDto } from './dto/users-query.dto';
 import { MetricsGranularity } from './enums/metrics-granularity';
 import { SerializedUser } from './interfaces/serialized-user';
 import { SerializedUserMetrics } from './interfaces/serialized-user-metrics';
-import { SerializedUserWithRank } from './interfaces/serialized-user-with-rank';
+import {
+  SerializedUserWithRankAndType,
+  SerializedUserWithRank,
+} from './interfaces/serialized-user-with-rank';
 import { UsersService } from './users.service';
 import {
   serializedUserFromRecord,
@@ -165,16 +168,25 @@ export class UsersController {
       search,
       event_type: eventType,
     }: UsersQueryDto,
-  ): Promise<PaginatedList<SerializedUser | SerializedUserWithRank>> {
+  ): Promise<
+    PaginatedList<
+      SerializedUser | SerializedUserWithRank | SerializedUserWithRankAndType
+    >
+  > {
     if (orderBy !== undefined) {
-      const { data, hasNext, hasPrevious } =
-        await this.usersService.listWithRank({
-          after,
-          before,
-          limit: Math.min(MAX_LIMIT, limit || DEFAULT_LIMIT),
-          search,
-          countryCode,
-        });
+      const props = {
+        after,
+        before,
+        limit: Math.min(MAX_LIMIT, limit || DEFAULT_LIMIT),
+        search,
+        countryCode,
+      };
+      const { data, hasNext, hasPrevious } = eventType
+        ? await this.usersService.listByEventType({
+            ...props,
+            eventType,
+          })
+        : await this.usersService.listWithRank(props);
       return {
         object: 'list',
         data,
@@ -184,24 +196,16 @@ export class UsersController {
         },
       };
     }
-    const props = {
+    const { data, hasNext, hasPrevious } = await this.usersService.list({
       after,
       before,
       limit,
       search,
       countryCode,
-    };
-    const { data, hasNext, hasPrevious } = eventType
-      ? await this.usersService.listByEventType({
-          ...props,
-          eventType,
-        })
-      : await this.usersService.list(props);
+    });
     return {
       object: 'list',
-      data: eventType
-        ? data
-        : data.map((user) => serializedUserFromRecord(user)),
+      data: data.map((user) => serializedUserFromRecord(user)),
       metadata: {
         has_next: hasNext,
         has_previous: hasPrevious,

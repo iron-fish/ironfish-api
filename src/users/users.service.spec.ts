@@ -230,15 +230,13 @@ describe('UsersService', () => {
           countryCode: 'USA',
           eventType: 'BUG_CAUGHT',
         });
-        // eslint-disable-next-line
-        console.log({ records });
         for (const record of records) {
           expect(record).toMatchObject({
             id: expect.any(Number),
             graffiti: expect.any(String),
             total_points: expect.any(Number),
             country_code: expect.any(String),
-            type: expect.any(String),
+            event_type: expect.any(String),
             rank: expect.any(Number),
           });
           // there's gotta be a better way to do this
