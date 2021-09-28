@@ -24,8 +24,8 @@ import { MetricsGranularity } from './enums/metrics-granularity';
 import { SerializedUser } from './interfaces/serialized-user';
 import { SerializedUserMetrics } from './interfaces/serialized-user-metrics';
 import {
-  SerializedUserWithRankAndType,
   SerializedUserWithRank,
+  SerializedUserWithRankAndType,
 } from './interfaces/serialized-user-with-rank';
 import { UsersService } from './users.service';
 import {
