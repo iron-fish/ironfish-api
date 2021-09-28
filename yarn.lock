@@ -607,10 +607,10 @@
     tslib "2.3.1"
     uuid "8.3.2"
 
-"@nestjs/microservices@8.0.7":
-  version "8.0.7"
-  resolved "https://registry.yarnpkg.com/@nestjs/microservices/-/microservices-8.0.7.tgz#2fecb24492238d28ac5ac00aa2f1828a6d8dc56f"
-  integrity sha512-Hi+6sKS0/PRZXXnV6j/bjPvs4nHaz0DYwV9DQFzmOfIE7mgkLYgFXIRZdYQpyjGhW7rShfLnFsgZE8ivYLi6cA==
+"@nestjs/microservices@8.0.8":
+  version "8.0.8"
+  resolved "https://registry.yarnpkg.com/@nestjs/microservices/-/microservices-8.0.8.tgz#7657dbafc9f248f3687652c8f747bf4832ac0068"
+  integrity sha512-ep4q0qZ3U4m2D+weXjeTEGg9dMmtLQRgOgVXcCkByZ1qy8ozElbUCBCaS3fzwt2i9+fd3E3DjD8v+t11vqWL2A==
   dependencies:
     iterare "1.2.1"
     json-socket "0.3.0"
