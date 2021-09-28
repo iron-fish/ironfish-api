@@ -36,6 +36,7 @@ async function bootstrap() {
           /localhost/,
           /block-explorer.*\.vercel\.app/,
           /website-testnet.*\.vercel\.app/,
+          /explorer.ironfish.network/,
         ]
       : defaultOrigins;
 
