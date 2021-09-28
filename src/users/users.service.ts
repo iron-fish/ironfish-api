@@ -326,9 +326,9 @@ export class UsersService {
     countryCode?: string;
   }): Promise<SerializedUserWithRank[]> {
     let rankCursor: number;
+    const searchFilter = `%${search ?? ''}%`;
     //eslint-disable-next-line
-    console.log(`what is search for? %${search ?? ''}%`);
-    // const searchFilter = `%${search ?? ''}%`;
+    console.log(`what is search for? ${searchFilter}`);
     const cursorId = before ?? after;
     if (cursorId !== undefined) {
       rankCursor = await this.getRank(cursorId);
@@ -348,7 +348,10 @@ export class UsersService {
     users.last_login_at,
     event_types.type,
     RANK () OVER ( 
-      ORDER BY COALESCE(user_event_points.points, 0) DESC, users.created_at ASC
+      ORDER BY
+        COALESCE(latest_event_occurred_at, NOW()) ASC,
+        COALESCE(user_event_points.points, 0) DESC,
+        users.created_at ASC
     ) AS rank 
   FROM
     users
@@ -362,13 +365,15 @@ export class UsersService {
       SELECT
         user_id,
         type,
-        SUM(points) AS points
+        SUM(points) AS points,
+        MAX(occurred_at) AS latest_event_occurred_at
       FROM
         (
           SELECT
             user_id,
             type,
-            points
+            points,
+            occurred_at
           FROM
             events
           WHERE
@@ -383,25 +388,27 @@ export class UsersService {
     user_event_points.user_id = users.id
 ) user_ranks
 WHERE
-  type = $5
+  type = $6
 AND
-  CASE WHEN $1
+  graffiti ILIKE $1 AND
+  CASE WHEN $2
     THEN
-      rank > $2
+      rank > $3
     ELSE
-      rank < $2
+      rank < $3
   END
   AND
-    CASE WHEN $4::text IS NOT NULL
+    CASE WHEN $5::text IS NOT NULL
       THEN
-        country_code = $4
+        country_code = $5
       ELSE
         TRUE
     END
   ORDER BY
     rank ASC
   LIMIT
-    $3`,
+    $4`,
+      searchFilter,
       before === undefined,
       rankCursor,
       limit,
