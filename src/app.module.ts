@@ -37,6 +37,7 @@ export const REST_MODULES = [
     AuthModule,
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: process.env.NODE_ENV === 'production' ? [] : '.env',
       validationSchema: joi.object({
         API_URL: joi.string().required(),
         BLOCK_EXPLORER_URL: joi.string().required(),
