@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateFaucetTransactionOptions } from './interfaces/create-faucet-transaction-options';
 import { FaucetTransaction, Prisma } from '.prisma/client';
@@ -45,6 +45,24 @@ export class FaucetTransactionsService {
         },
         orderBy: {
           created_at: Prisma.SortOrder.asc,
+        },
+      });
+    });
+  }
+
+  async start(
+    faucetTransaction: FaucetTransaction,
+  ): Promise<FaucetTransaction> {
+    if (faucetTransaction.started_at || faucetTransaction.completed_at) {
+      throw new UnprocessableEntityException();
+    }
+    return this.prisma.$transaction(async (prisma) => {
+      return prisma.faucetTransaction.update({
+        data: {
+          started_at: new Date().toISOString(),
+        },
+        where: {
+          id: faucetTransaction.id,
         },
       });
     });
