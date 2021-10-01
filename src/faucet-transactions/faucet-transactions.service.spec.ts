@@ -69,7 +69,7 @@ describe('FaucetTransactionService', () => {
           public_key: 'mock-key',
           email: null,
           completed_at: null,
-          started_at: new Date(),
+          started_at: null,
         };
         jest
           .spyOn(prisma.faucetTransaction, 'findFirst')
