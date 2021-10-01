@@ -157,4 +157,49 @@ describe('FaucetTransactionsController', () => {
       });
     });
   });
+
+  describe('POST /faucet_transactions/:id/complete', () => {
+    describe('with a missing api key', () => {
+      it('returns a 401', async () => {
+        const { body } = await request(app.getHttpServer())
+          .post('/faucet_transactions/0/complete')
+          .expect(HttpStatus.UNAUTHORIZED);
+
+        expect(body).toMatchSnapshot();
+      });
+    });
+
+    describe('with an invalid id', () => {
+      it('returns a 404', async () => {
+        await request(app.getHttpServer())
+          .get('/faucet_transactions/100000/complete')
+          .set('Authorization', `Bearer ${API_KEY}`)
+          .expect(HttpStatus.NOT_FOUND);
+      });
+    });
+
+    describe('with a valid id', () => {
+      it('starts the FaucetTransaction', async () => {
+        const email = faker.internet.email();
+        const publicKey = ulid();
+        const faucetTransaction = await faucetTransactionsService.create({
+          email,
+          publicKey,
+        });
+        await faucetTransactionsService.start(faucetTransaction);
+
+        const { body } = await request(app.getHttpServer())
+          .post(`/faucet_transactions/${faucetTransaction.id}/complete`)
+          .set('Authorization', `Bearer ${API_KEY}`)
+          .expect(HttpStatus.OK);
+
+        expect(body).toMatchObject({
+          object: 'faucet_transaction',
+          id: faucetTransaction.id,
+          completed_at: expect.any(String),
+          started_at: expect.any(String),
+        });
+      });
+    });
+  });
 });
