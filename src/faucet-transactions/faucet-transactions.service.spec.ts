@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, UnprocessableEntityException } from '@nestjs/common';
 import faker from 'faker';
 import { ulid } from 'ulid';
 import { PrismaService } from '../prisma/prisma.service';
@@ -81,6 +81,62 @@ describe('FaucetTransactionService', () => {
         expect(await faucetTransactionsService.next()).toMatchObject(
           pendingFaucetTransaction,
         );
+      });
+    });
+  });
+
+  describe('start', () => {
+    describe('if the FaucetTransaction has been started', () => {
+      it('throws an UnprocessableEntityException', async () => {
+        const faucetTransaction = {
+          id: 0,
+          created_at: new Date(),
+          updated_at: new Date(),
+          public_key: 'mock-key',
+          email: null,
+          completed_at: null,
+          started_at: new Date(),
+        };
+        await expect(
+          faucetTransactionsService.start(faucetTransaction),
+        ).rejects.toThrow(UnprocessableEntityException);
+      });
+    });
+
+    describe('if the FaucetTransaction has completed', () => {
+      it('throws an UnprocessableEntityException', async () => {
+        const faucetTransaction = {
+          id: 0,
+          created_at: new Date(),
+          updated_at: new Date(),
+          public_key: 'mock-key',
+          email: null,
+          completed_at: new Date(),
+          started_at: new Date(),
+        };
+        await expect(
+          faucetTransactionsService.start(faucetTransaction),
+        ).rejects.toThrow(UnprocessableEntityException);
+      });
+    });
+
+    describe('with a valid FaucetTransaction', () => {
+      it('updates the `started_at` column for the record', async () => {
+        const email = faker.internet.email();
+        const publicKey = ulid();
+        const faucetTransaction = await faucetTransactionsService.create({
+          email,
+          publicKey,
+        });
+
+        const updatedRecord = await faucetTransactionsService.start(
+          faucetTransaction,
+        );
+        expect(updatedRecord).toMatchObject({
+          id: faucetTransaction.id,
+          public_key: faucetTransaction.public_key,
+          started_at: expect.any(Date),
+        });
       });
     });
   });
