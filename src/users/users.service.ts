@@ -210,6 +210,7 @@ export class UsersService {
     limit,
     search,
     countryCode,
+    eventType,
   }: ListUsersWithRankOptions): Promise<{
     data: SerializedUserWithRank[];
     hasNext: boolean;
@@ -226,20 +227,17 @@ export class UsersService {
     const searchFilter = `%${search ?? ''}%`;
     const query = `
       SELECT
-        id,
-        graffiti,
-        total_points,
-        country_code,
-        last_login_at,
-        rank
+        *
       FROM
         (
           SELECT
             id,
             graffiti,
             total_points,
+            sum_points,
             country_code,
             last_login_at,
+            type,
             RANK () OVER ( 
               ORDER BY 
                 total_points DESC,
@@ -252,24 +250,39 @@ export class UsersService {
             (
               SELECT
                 user_id,
-                MAX(occurred_at) AS latest_event_occurred_at
+                MAX(occurred_at) AS latest_event_occurred_at,
+                SUM(points) as sum_points,
+                type
               FROM
                 (
                   SELECT
                     user_id,
-                    occurred_at
+                    occurred_at,
+                    points,
+                    type
                   FROM
                     events
                   WHERE
                     deleted_at IS NULL
+                    AND
+                    CASE WHEN $6::event_type IS NOT NULL
+                      THEN
+                        type = $6
+                      ELSE
+                        TRUE
+                    END
                 ) filtered_events
               GROUP BY
-                user_id
+                user_id,
+                points,
+                type
             ) user_latest_events
           ON
             user_latest_events.user_id = users.id
           WHERE
             confirmed_at IS NOT NULL
+            AND
+            sum_points > 0
         ) user_ranks
       WHERE
         graffiti ILIKE $1 AND
@@ -289,6 +302,9 @@ export class UsersService {
         rank ASC
       LIMIT
         $4`;
+    if (eventType) {
+      console.log({ query });
+    }
     const data = await this.prisma.$queryRawUnsafe<SerializedUserWithRank[]>(
       query,
       searchFilter,
@@ -296,6 +312,7 @@ export class UsersService {
       rankCursor,
       limit,
       countryCode,
+      eventType,
     );
     return {
       data,
@@ -304,6 +321,7 @@ export class UsersService {
         query,
         searchFilter,
         countryCode,
+        eventType,
       )),
     };
   }
@@ -313,6 +331,7 @@ export class UsersService {
     query: string,
     searchFilter: string,
     countryCode?: string,
+    eventType?: string,
   ): Promise<{ hasNext: boolean; hasPrevious: boolean }> {
     const { length } = data;
     if (length === 0) {
@@ -323,10 +342,18 @@ export class UsersService {
     }
     const nextRecords = await this.prisma.$queryRawUnsafe<
       SerializedUserWithRank[]
-    >(query, searchFilter, true, data[length - 1].rank, 1, countryCode);
+    >(
+      query,
+      searchFilter,
+      true,
+      data[length - 1].rank,
+      1,
+      countryCode,
+      eventType,
+    );
     const previousRecords = await this.prisma.$queryRawUnsafe<
       SerializedUserWithRank[]
-    >(query, searchFilter, false, data[0].rank, 1, countryCode);
+    >(query, searchFilter, false, data[0].rank, 1, countryCode, eventType);
     return {
       hasNext: nextRecords.length > 0,
       hasPrevious: previousRecords.length > 0,
