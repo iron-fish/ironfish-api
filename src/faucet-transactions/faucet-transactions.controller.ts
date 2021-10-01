@@ -4,10 +4,14 @@
 import {
   Body,
   Controller,
+  Get,
   HttpStatus,
+  NotFoundException,
   Post,
+  UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
+import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { CreateFaucetTransactionDto } from './dto/create-faucet-transaction.dto';
 import { FaucetTransactionsService } from './faucet-transactions.service';
 import { SerializedFaucetTransaction } from './interfaces/serialized-faucet-transaction';
@@ -31,5 +35,15 @@ export class FaucetTransactionsController {
     return serializedFaucetTransactionFromRecord(
       await this.faucetTransactionsService.create({ email, publicKey }),
     );
+  }
+
+  @Get('next')
+  @UseGuards(ApiKeyGuard)
+  async next(): Promise<SerializedFaucetTransaction> {
+    const nextFaucetTransaction = await this.faucetTransactionsService.next();
+    if (!nextFaucetTransaction) {
+      throw new NotFoundException();
+    }
+    return serializedFaucetTransactionFromRecord(nextFaucetTransaction);
   }
 }
