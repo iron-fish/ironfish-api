@@ -303,6 +303,7 @@ export class UsersService {
       LIMIT
         $4`;
     if (eventType) {
+      // eslint-disable-next-line
       console.log({ query });
     }
     const data = await this.prisma.$queryRawUnsafe<SerializedUserWithRank[]>(
