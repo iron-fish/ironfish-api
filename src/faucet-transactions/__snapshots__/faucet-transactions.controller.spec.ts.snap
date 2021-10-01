@@ -29,6 +29,13 @@ Object {
 }
 `;
 
+exports[`FaucetTransactionsController POST /faucet_transactions/:id/complete with a missing api key returns a 401 1`] = `
+Object {
+  "message": "Unauthorized",
+  "statusCode": 401,
+}
+`;
+
 exports[`FaucetTransactionsController POST /faucet_transactions/:id/start with a missing api key returns a 401 1`] = `
 Object {
   "message": "Unauthorized",
