@@ -4,16 +4,19 @@
 import { INestApplication } from '@nestjs/common';
 import faker from 'faker';
 import { ulid } from 'ulid';
+import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { FaucetTransactionsService } from './faucet-transactions.service';
 
 describe('FaucetTransactionService', () => {
   let app: INestApplication;
   let faucetTransactionsService: FaucetTransactionsService;
+  let prisma: PrismaService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
     faucetTransactionsService = app.get(FaucetTransactionsService);
+    prisma = app.get(PrismaService);
     await app.init();
   });
 
@@ -34,6 +37,50 @@ describe('FaucetTransactionService', () => {
         id: expect.any(Number),
         email,
         public_key: publicKey,
+      });
+    });
+  });
+
+  describe('next', () => {
+    describe('when a FaucetTransaction is already running', () => {
+      it('returns null', async () => {
+        jest
+          .spyOn(prisma.faucetTransaction, 'findFirst')
+          .mockResolvedValueOnce({
+            id: 0,
+            created_at: new Date(),
+            updated_at: new Date(),
+            public_key: 'mock-key',
+            email: null,
+            completed_at: null,
+            started_at: new Date(),
+          });
+
+        expect(await faucetTransactionsService.next()).toBeNull();
+      });
+    });
+
+    describe('when no FaucetTransactions are running', () => {
+      it('returns the next available FaucetTransaction', async () => {
+        const pendingFaucetTransaction = {
+          id: 0,
+          created_at: new Date(),
+          updated_at: new Date(),
+          public_key: 'mock-key',
+          email: null,
+          completed_at: null,
+          started_at: new Date(),
+        };
+        jest
+          .spyOn(prisma.faucetTransaction, 'findFirst')
+          // No currently running FaucetTransaction
+          .mockResolvedValueOnce(null)
+          // Waiting to run FaucetTransaction
+          .mockResolvedValueOnce(pendingFaucetTransaction);
+
+        expect(await faucetTransactionsService.next()).toMatchObject(
+          pendingFaucetTransaction,
+        );
       });
     });
   });

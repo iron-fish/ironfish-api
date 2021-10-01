@@ -4,7 +4,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateFaucetTransactionOptions } from './interfaces/create-faucet-transaction-options';
-import { FaucetTransaction } from '.prisma/client';
+import { FaucetTransaction, Prisma } from '.prisma/client';
 
 @Injectable()
 export class FaucetTransactionsService {
@@ -19,6 +19,32 @@ export class FaucetTransactionsService {
         data: {
           email,
           public_key: publicKey,
+        },
+      });
+    });
+  }
+
+  async next(): Promise<FaucetTransaction | null> {
+    return this.prisma.$transaction(async (prisma) => {
+      const currentlyRunningFaucetTransaction =
+        await prisma.faucetTransaction.findFirst({
+          where: {
+            started_at: {
+              not: null,
+            },
+            completed_at: null,
+          },
+        });
+      if (currentlyRunningFaucetTransaction) {
+        return null;
+      }
+      return prisma.faucetTransaction.findFirst({
+        where: {
+          started_at: null,
+          completed_at: null,
+        },
+        orderBy: {
+          created_at: Prisma.SortOrder.asc,
         },
       });
     });
