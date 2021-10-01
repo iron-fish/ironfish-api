@@ -11,15 +11,8 @@ import express from 'express';
 import { json } from 'express';
 import helmet from 'helmet';
 import http from 'http';
+import { ApiConfigService } from './api-config/api-config.service';
 import { AppModule } from './app.module';
-
-// TODO(rohanjadvani): Move these into a custom config service
-// https://linear.app/ironfish/issue/IRO-1015/create-custom-config-service-to-wrap-default-nestjs
-const BLOCK_EXPLORER_URL =
-  process.env.BLOCK_EXPLORER_URL || 'http://localhost:3000';
-const INCENTIVIZED_TESTNET_URL =
-  process.env.INCENTIVIZED_TESTNET_URL || 'http://localhost:3001';
-const PORT = process.env.PORT || 8003;
 
 async function bootstrap() {
   const server = express();
@@ -27,17 +20,20 @@ async function bootstrap() {
     AppModule,
     new ExpressAdapter(server),
   );
+  const config = app.get(ApiConfigService);
 
-  const defaultOrigins = [BLOCK_EXPLORER_URL, INCENTIVIZED_TESTNET_URL];
-  const enabledOrigins =
-    process.env.NODE_ENV === 'staging'
-      ? [
-          ...defaultOrigins,
-          /localhost/,
-          /block-explorer.*\.vercel\.app/,
-          /website-testnet.*\.vercel\.app/,
-        ]
-      : defaultOrigins;
+  const defaultOrigins = [
+    config.get<string>('BLOCK_EXPLORER_URL'),
+    config.get<string>('INCENTIVIZED_TESTNET_URL'),
+  ];
+  const enabledOrigins = config.isStaging()
+    ? [
+        ...defaultOrigins,
+        /localhost/,
+        /block-explorer.*\.vercel\.app/,
+        /website-testnet.*\.vercel\.app/,
+      ]
+    : defaultOrigins;
 
   app.enableCors({
     origin: enabledOrigins,
@@ -51,7 +47,9 @@ async function bootstrap() {
   app.use(json({ limit: '10mb' }));
 
   await app.init();
-  http.createServer(server).listen(PORT);
+
+  const port = config.get<number>('PORT');
+  http.createServer(server).listen(port);
 }
 
 // eslint-disable-next-line no-console
