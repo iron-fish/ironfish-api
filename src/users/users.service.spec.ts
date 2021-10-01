@@ -220,14 +220,14 @@ describe('UsersService', () => {
       }
     });
     it('returns a chunk of users by event when specified', async () => {
-      const limit = 10;
+      const limit = 100;
       const { data: records } = await usersService.listWithRank({
         limit,
         eventType: 'BUG_CAUGHT',
       });
       // eslint-disable-next-line
       console.log({ records });
-      expect(records).toHaveLength(limit);
+      expect(records).toBeLessThanOrEqual(limit);
       records.map((record) =>
         expect(record).toMatchObject({
           id: expect.any(Number),
