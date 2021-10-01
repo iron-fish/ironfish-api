@@ -140,4 +140,46 @@ describe('FaucetTransactionService', () => {
       });
     });
   });
+
+  describe('complete', () => {
+    describe('if the FaucetTransaction has completed', () => {
+      it('throws an UnprocessableEntityException', async () => {
+        const faucetTransaction = {
+          id: 0,
+          created_at: new Date(),
+          updated_at: new Date(),
+          public_key: 'mock-key',
+          email: null,
+          completed_at: new Date(),
+          started_at: new Date(),
+        };
+        await expect(
+          faucetTransactionsService.complete(faucetTransaction),
+        ).rejects.toThrow(UnprocessableEntityException);
+      });
+    });
+
+    describe('with a valid FaucetTransaction', () => {
+      it('updates the `completed_at` column for the record', async () => {
+        const email = faker.internet.email();
+        const publicKey = ulid();
+        const faucetTransaction = await faucetTransactionsService.create({
+          email,
+          publicKey,
+        });
+        const startedFaucetTransaction = await faucetTransactionsService.start(
+          faucetTransaction,
+        );
+
+        const updatedRecord = await faucetTransactionsService.complete(
+          startedFaucetTransaction,
+        );
+        expect(updatedRecord).toMatchObject({
+          id: faucetTransaction.id,
+          public_key: faucetTransaction.public_key,
+          completed_at: expect.any(Date),
+        });
+      });
+    });
+  });
 });
