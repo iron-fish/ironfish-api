@@ -11,7 +11,6 @@ import { AuthModule } from '../auth/auth.module';
 import { BlocksModule } from '../blocks/blocks.module';
 import { BlocksTransactionsModule } from '../blocks-transactions/blocks-transactions.module';
 import { EventsModule } from '../events/events.module';
-import { FaucetTransactionsModule } from '../faucet-transactions/faucet-transactions.module';
 import { PostmarkService } from '../postmark/postmark.service';
 import { TransactionsModule } from '../transactions/transactions.module';
 import { UsersModule } from '../users/users.module';
@@ -39,7 +38,6 @@ export async function bootstrapTestApp(): Promise<INestApplication> {
         }),
       }),
       EventsModule,
-      FaucetTransactionsModule,
       TransactionsModule,
       UsersModule,
       ...REST_MODULES,

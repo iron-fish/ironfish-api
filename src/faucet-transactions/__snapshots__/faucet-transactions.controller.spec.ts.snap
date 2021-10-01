@@ -1,0 +1,23 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`FaucetTransactionsController POST /faucet_transactions with empty arguments returns a 422 1`] = `
+Object {
+  "error": "Unprocessable Entity",
+  "message": Array [
+    "email must be an email",
+    "public_key should not be empty",
+  ],
+  "statusCode": 422,
+}
+`;
+
+exports[`FaucetTransactionsController POST /faucet_transactions with missing arguments returns a 422 1`] = `
+Object {
+  "error": "Unprocessable Entity",
+  "message": Array [
+    "public_key must be a string",
+    "public_key should not be empty",
+  ],
+  "statusCode": 422,
+}
+`;
