@@ -227,7 +227,15 @@ export class UsersService {
     const searchFilter = `%${search ?? ''}%`;
     const query = `
       SELECT
-        *
+        id,
+        graffiti,
+        CASE WHEN $6::event_type IS NOT NULL
+             THEN sum_points
+             ELSE total_points
+             END AS total_points,
+        country_code,
+        last_login_at,
+        rank
       FROM
         (
           SELECT

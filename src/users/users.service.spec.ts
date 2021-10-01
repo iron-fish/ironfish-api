@@ -219,6 +219,22 @@ describe('UsersService', () => {
         });
       }
     });
+    it('returns a chunk of users by event when specified', async () => {
+      const limit = 10;
+      const { data: records } = await usersService.listWithRank({
+        limit,
+        eventType: 'BUG_CAUGHT',
+      });
+      console.log({ records });
+      expect(records).toHaveLength(limit);
+      records.map((record) =>
+        expect(record).toMatchObject({
+          id: expect.any(Number),
+          graffiti: expect.any(String),
+          rank: expect.any(Number),
+        }),
+      );
+    });
   });
 
   describe('create', () => {
