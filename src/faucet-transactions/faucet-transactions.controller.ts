@@ -5,8 +5,11 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
   HttpStatus,
   NotFoundException,
+  Param,
+  ParseIntPipe,
   Post,
   UseGuards,
   ValidationPipe,
@@ -45,5 +48,23 @@ export class FaucetTransactionsController {
       throw new NotFoundException();
     }
     return serializedFaucetTransactionFromRecord(nextFaucetTransaction);
+  }
+
+  @Post(':id/start')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(ApiKeyGuard)
+  async start(
+    @Param(
+      'id',
+      new ParseIntPipe({
+        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+      }),
+    )
+    id: number,
+  ): Promise<SerializedFaucetTransaction> {
+    const record = await this.faucetTransactionsService.findOrThrow(id);
+    return serializedFaucetTransactionFromRecord(
+      await this.faucetTransactionsService.start(record),
+    );
   }
 }
