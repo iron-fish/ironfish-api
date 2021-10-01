@@ -1,7 +1,11 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { INestApplication, UnprocessableEntityException } from '@nestjs/common';
+import {
+  INestApplication,
+  NotFoundException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import faker from 'faker';
 import { ulid } from 'ulid';
 import { PrismaService } from '../prisma/prisma.service';
@@ -22,6 +26,32 @@ describe('FaucetTransactionService', () => {
 
   afterAll(async () => {
     await app.close();
+  });
+
+  describe('findOrThrow', () => {
+    describe('with a valid id', () => {
+      it('returns the record', async () => {
+        const email = faker.internet.email();
+        const publicKey = ulid();
+        const faucetTransaction = await faucetTransactionsService.create({
+          email,
+          publicKey,
+        });
+        const record = await faucetTransactionsService.findOrThrow(
+          faucetTransaction.id,
+        );
+        expect(record).not.toBeNull();
+        expect(record).toMatchObject(faucetTransaction);
+      });
+    });
+
+    describe('with a missing id', () => {
+      it('returns null', async () => {
+        await expect(
+          faucetTransactionsService.findOrThrow(100000),
+        ).rejects.toThrow(NotFoundException);
+      });
+    });
   });
 
   describe('create', () => {
