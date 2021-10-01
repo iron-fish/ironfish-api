@@ -67,4 +67,22 @@ export class FaucetTransactionsService {
       });
     });
   }
+
+  async complete(
+    faucetTransaction: FaucetTransaction,
+  ): Promise<FaucetTransaction> {
+    if (faucetTransaction.completed_at) {
+      throw new UnprocessableEntityException();
+    }
+    return this.prisma.$transaction(async (prisma) => {
+      return prisma.faucetTransaction.update({
+        data: {
+          completed_at: new Date().toISOString(),
+        },
+        where: {
+          id: faucetTransaction.id,
+        },
+      });
+    });
+  }
 }
