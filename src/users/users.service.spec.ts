@@ -225,6 +225,7 @@ describe('UsersService', () => {
         limit,
         eventType: 'BUG_CAUGHT',
       });
+      // eslint-disable-next-line
       console.log({ records });
       expect(records).toHaveLength(limit);
       records.map((record) =>
