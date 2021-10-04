@@ -229,7 +229,7 @@ export class UsersService {
       SELECT
         id,
         graffiti,
-        sum_points as total_points,
+        total_points
         country_code,
         last_login_at,
         rank
@@ -240,7 +240,7 @@ export class UsersService {
             graffiti,
             country_code,
             last_login_at,
-            sum_points,
+            user_latest_events.total_points,
             RANK () OVER ( 
               ORDER BY 
                 COALESCE(latest_event_occurred_at, NOW()) ASC,
@@ -252,19 +252,17 @@ export class UsersService {
             (
               SELECT
                 user_id,
-                sum_points,
+                SUM(points) as total_points,
                 MAX(occurred_at) AS latest_event_occurred_at
               FROM
                 (
                   SELECT
                     user_id,
                     occurred_at,
-                    SUM(points) as sum_points
+                    points
                   FROM
                     events
                   WHERE
-                    points > 0
-                  AND
                     deleted_at IS NULL
                   AND
                     CASE WHEN $6::event_type IS NOT NULL
@@ -273,20 +271,14 @@ export class UsersService {
                       ELSE
                         TRUE
                     END
-                  GROUP BY
-                    user_id,
-                    occurred_at
                 ) filtered_events
               GROUP BY
-                user_id,
-                sum_points
+                user_id
             ) user_latest_events
           ON
             user_latest_events.user_id = users.id
           WHERE
             confirmed_at IS NOT NULL
-            AND
-            sum_points > 0
         ) user_ranks
       WHERE
         graffiti ILIKE $1 AND
