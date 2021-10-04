@@ -263,8 +263,7 @@ export class UsersService {
                   FROM
                     events
                   WHERE
-                    deleted_at IS NULL
-                  AND
+                    deleted_at IS NULL AND
                     CASE WHEN $6::event_type IS NOT NULL
                       THEN
                         type = $6
