@@ -229,10 +229,7 @@ export class UsersService {
       SELECT
         id,
         graffiti,
-        CASE WHEN $6::event_type IS NOT NULL
-             THEN sum_points
-             ELSE total_points
-             END AS total_points,
+        sum_points as total_points,
         country_code,
         last_login_at,
         rank
@@ -241,14 +238,11 @@ export class UsersService {
           SELECT
             id,
             graffiti,
-            total_points,
-            sum_points,
             country_code,
             last_login_at,
-            type,
+            sum_points,
             RANK () OVER ( 
               ORDER BY 
-                total_points DESC,
                 COALESCE(latest_event_occurred_at, NOW()) ASC,
                 created_at ASC
             ) AS rank 
@@ -258,32 +252,34 @@ export class UsersService {
             (
               SELECT
                 user_id,
-                MAX(occurred_at) AS latest_event_occurred_at,
-                SUM(points) as sum_points,
-                type
+                sum_points,
+                MAX(occurred_at) AS latest_event_occurred_at
               FROM
                 (
                   SELECT
                     user_id,
                     occurred_at,
-                    points,
-                    type
+                    SUM(points) as sum_points
                   FROM
                     events
                   WHERE
+                    points > 0
+                  AND
                     deleted_at IS NULL
-                    AND
+                  AND
                     CASE WHEN $6::event_type IS NOT NULL
                       THEN
                         type = $6
                       ELSE
                         TRUE
                     END
+                  GROUP BY
+                    user_id,
+                    occurred_at
                 ) filtered_events
               GROUP BY
                 user_id,
-                points,
-                type
+                sum_points
             ) user_latest_events
           ON
             user_latest_events.user_id = users.id
