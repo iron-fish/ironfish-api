@@ -19,7 +19,6 @@ import { ListUsersWithRankOptions } from './interfaces/list-by-rank-options';
 import { ListUsersOptions } from './interfaces/list-users-options';
 import { SerializedUserWithRank } from './interfaces/serialized-user-with-rank';
 import { Prisma, User } from '.prisma/client';
-import { formatForUseInPSQL } from '../debug';
 
 @Injectable()
 export class UsersService {
@@ -208,7 +207,7 @@ export class UsersService {
   async listWithRank({
     after,
     before,
-    limit = 10,
+    limit,
     search,
     countryCode,
     eventType,
@@ -230,7 +229,7 @@ export class UsersService {
       SELECT
         id,
         graffiti,
-        total_points
+        total_points,
         country_code,
         last_login_at,
         rank
@@ -299,23 +298,7 @@ export class UsersService {
         rank ASC
       LIMIT
         $4`;
-    const parameterized = [
-      searchFilter,
-      before === undefined,
-      rankCursor,
-      limit,
-      countryCode,
-      eventType,
-    ];
-    // eslint-disable-next-line
-    console.log(
-      // '============= raw ======================\n\n',
-      parameterized,
-      { search },
-      // query,
-      `@@@@@@@@@@@@@ FP'd @@@@@@@@@@@@@@@@@@@@\n\n`,
-      formatForUseInPSQL(query, parameterized),
-    );
+
     const data = await this.prisma.$queryRawUnsafe<SerializedUserWithRank[]>(
       query,
       searchFilter,

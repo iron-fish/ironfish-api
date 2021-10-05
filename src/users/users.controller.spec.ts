@@ -356,7 +356,6 @@ describe('UsersController', () => {
           .query({ country_code: someplace, order_by: 'rank' })
           .expect(HttpStatus.OK);
         const { data } = body;
-        console.log({ data });
         (data as Record<string, unknown>[]).map(({ country_code }) =>
           expect(country_code).toEqual(someplace),
         );
