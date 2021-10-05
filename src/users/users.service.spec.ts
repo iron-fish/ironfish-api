@@ -223,8 +223,6 @@ describe('UsersService', () => {
       const { data: records } = await usersService.listWithRank({
         eventType: 'BUG_CAUGHT',
       });
-      // eslint-disable-next-line
-      console.log({ records });
       records.map((record) =>
         expect(record).toMatchObject({
           id: expect.any(Number),
