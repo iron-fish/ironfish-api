@@ -4,10 +4,12 @@
 import {
   Equals,
   IsAlphanumeric,
+  IsEnum,
   IsISO31661Alpha3,
   IsOptional,
 } from 'class-validator';
 import { PaginationArgsDto } from '../../common/dto/pagination-args.dto';
+import { EventType } from '.prisma/client';
 
 export class UsersQueryDto extends PaginationArgsDto {
   @IsOptional()
@@ -21,4 +23,8 @@ export class UsersQueryDto extends PaginationArgsDto {
   @IsOptional()
   @IsAlphanumeric()
   readonly search?: string;
+
+  @IsOptional()
+  @IsEnum(EventType)
+  readonly event_type?: EventType;
 }
