@@ -238,12 +238,12 @@ export class UsersService {
           SELECT
             id,
             graffiti,
-            user_latest_events.total_points,
+            COALESCE(user_latest_events.total_points, 0) as total_points,
             country_code,
             last_login_at,
             RANK () OVER ( 
               ORDER BY 
-                user_latest_events.total_points DESC,
+                COALESCE(user_latest_events.total_points, 0) DESC,
                 COALESCE(latest_event_occurred_at, NOW()) ASC,
                 created_at ASC
             ) AS rank 
