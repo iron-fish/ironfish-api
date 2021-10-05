@@ -7,5 +7,4 @@ export interface ListUsersOptions extends PaginationOptions {
   orderBy?: 'rank';
   search?: string;
   countryCode?: string;
-  eventType?: string;
 }
