@@ -219,17 +219,19 @@ describe('UsersService', () => {
         });
       }
     });
-    it('returns a chunk of users by event when specified', async () => {
-      const { data: records } = await usersService.listWithRank({
-        eventType: 'BUG_CAUGHT',
+    describe(`when 'event_type' is provided`, () => {
+      it('returns a chunk of users by event when specified', async () => {
+        const { data: records } = await usersService.listWithRank({
+          eventType: 'BUG_CAUGHT',
+        });
+        records.map((record) =>
+          expect(record).toMatchObject({
+            id: expect.any(Number),
+            graffiti: expect.any(String),
+            rank: expect.any(Number),
+          }),
+        );
       });
-      records.map((record) =>
-        expect(record).toMatchObject({
-          id: expect.any(Number),
-          graffiti: expect.any(String),
-          rank: expect.any(Number),
-        }),
-      );
     });
   });
 
