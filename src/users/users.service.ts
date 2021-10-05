@@ -38,7 +38,7 @@ export class UsersService {
     return record;
   }
 
-  async findByGraffiti(
+  async findConfirmedByGraffiti(
     graffiti: string,
     prisma?: BasePrismaClient,
   ): Promise<User | null> {
@@ -53,16 +53,24 @@ export class UsersService {
     });
   }
 
-  async findOrThrowByGraffiti(graffiti: string): Promise<User> {
-    const record = await this.findByGraffiti(graffiti);
+  async findConfirmedOrThrowByGraffiti(graffiti: string): Promise<User> {
+    const record = await this.findConfirmedByGraffiti(graffiti);
     if (!record) {
       throw new NotFoundException();
     }
     return record;
   }
 
-  async findOrThrowByEmail(email: string): Promise<User> {
-    const record = await this.prisma.user.findFirst({
+  async findConfirmedOrThrowByEmail(email: string): Promise<User> {
+    const record = await this.findConfirmedByEmail(email);
+    if (!record) {
+      throw new NotFoundException();
+    }
+    return record;
+  }
+
+  async findConfirmedByEmail(email: string): Promise<User | null> {
+    return this.prisma.user.findFirst({
       where: {
         email,
         confirmed_at: {
@@ -70,10 +78,14 @@ export class UsersService {
         },
       },
     });
-    if (!record) {
-      throw new NotFoundException();
-    }
-    return record;
+  }
+
+  async listByEmail(email: string): Promise<User[]> {
+    return this.prisma.user.findMany({
+      where: {
+        email,
+      },
+    });
   }
 
   async findByConfirmationToken(token: string): Promise<User | null> {

@@ -60,7 +60,7 @@ describe('UsersService', () => {
     });
   });
 
-  describe('findByGraffiti', () => {
+  describe('findConfirmedByGraffiti', () => {
     describe('with a valid graffiti', () => {
       it('returns the record', async () => {
         const user = await prisma.user.create({
@@ -72,7 +72,9 @@ describe('UsersService', () => {
             confirmed_at: new Date(),
           },
         });
-        const record = await usersService.findByGraffiti(user.graffiti);
+        const record = await usersService.findConfirmedByGraffiti(
+          user.graffiti,
+        );
         expect(record).not.toBeNull();
         expect(record).toMatchObject(user);
       });
@@ -88,23 +90,54 @@ describe('UsersService', () => {
             country_code: faker.address.countryCode('alpha-3'),
           },
         });
-        const record = await usersService.findByGraffiti(user.graffiti);
+        const record = await usersService.findConfirmedByGraffiti(
+          user.graffiti,
+        );
         expect(record).toBeNull();
       });
     });
 
     describe('with a missing id', () => {
       it('returns null', async () => {
-        expect(await usersService.findByGraffiti('1337')).toBeNull();
+        expect(await usersService.findConfirmedByGraffiti('1337')).toBeNull();
       });
     });
   });
 
-  describe('findOrThrowByEmail', () => {
+  describe('findConfirmedOrThrowByGraffiti', () => {
+    describe('with a valid graffiti', () => {
+      it('returns the record', async () => {
+        const user = await prisma.user.create({
+          data: {
+            confirmation_token: ulid(),
+            confirmed_at: new Date().toISOString(),
+            email: faker.internet.email(),
+            graffiti: uuid(),
+            country_code: faker.address.countryCode('alpha-3'),
+          },
+        });
+        const record = await usersService.findConfirmedOrThrowByGraffiti(
+          user.graffiti,
+        );
+        expect(record).not.toBeNull();
+        expect(record).toMatchObject(user);
+      });
+    });
+
+    describe('with a missing graffiti', () => {
+      it('throws an exception', async () => {
+        await expect(
+          usersService.findConfirmedOrThrowByGraffiti('1337'),
+        ).rejects.toThrow(NotFoundException);
+      });
+    });
+  });
+
+  describe('findConfirmedOrThrowByEmail', () => {
     describe('with a missing email', () => {
       it('throws an exception', async () => {
         await expect(
-          usersService.findOrThrowByEmail('howdy@partner.com'),
+          usersService.findConfirmedOrThrowByEmail('howdy@partner.com'),
         ).rejects.toThrow(NotFoundException);
       });
     });
@@ -130,35 +163,44 @@ describe('UsersService', () => {
           },
         });
 
-        const record = await usersService.findOrThrowByEmail(email);
+        const record = await usersService.findConfirmedOrThrowByEmail(email);
         expect(record).toMatchObject(user);
       });
     });
   });
 
-  describe('findOrThrowByGraffiti', () => {
-    describe('with a valid graffiti', () => {
-      it('returns the record', async () => {
-        const user = await prisma.user.create({
+  describe('findConfirmedByEmail', () => {
+    describe('with a missing email', () => {
+      it('returns null', async () => {
+        expect(
+          await usersService.findConfirmedByEmail('howdy@partner.com'),
+        ).toBeNull();
+      });
+    });
+
+    describe('with a valid email', () => {
+      it('returns the confirmed record', async () => {
+        const email = faker.internet.email();
+        await prisma.user.create({
           data: {
             confirmation_token: ulid(),
-            confirmed_at: new Date().toISOString(),
-            email: faker.internet.email(),
+            email,
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
           },
         });
-        const record = await usersService.findOrThrowByGraffiti(user.graffiti);
-        expect(record).not.toBeNull();
-        expect(record).toMatchObject(user);
-      });
-    });
+        const user = await prisma.user.create({
+          data: {
+            confirmation_token: ulid(),
+            confirmed_at: new Date().toISOString(),
+            email,
+            graffiti: uuid(),
+            country_code: faker.address.countryCode('alpha-3'),
+          },
+        });
 
-    describe('with a missing id', () => {
-      it('throws an exception', async () => {
-        await expect(
-          usersService.findOrThrowByGraffiti('1337'),
-        ).rejects.toThrow(NotFoundException);
+        const record = await usersService.findConfirmedByEmail(email);
+        expect(record).toMatchObject(user);
       });
     });
   });
@@ -183,6 +225,26 @@ describe('UsersService', () => {
         );
         expect(record).toMatchObject(user);
       });
+    });
+  });
+
+  describe('listByEmail', () => {
+    it('returns a list of matching users by email', async () => {
+      const email = faker.internet.email();
+      const numRecords = 10;
+      for (let i = 0; i < numRecords; i++) {
+        await usersService.create({
+          email,
+          graffiti: uuid(),
+          country_code: faker.address.countryCode('alpha-3'),
+        });
+      }
+
+      const records = await usersService.listByEmail(email);
+      expect(records).toHaveLength(numRecords);
+      for (const record of records) {
+        expect(record.email).toBe(email);
+      }
     });
   });
 

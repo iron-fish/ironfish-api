@@ -13,15 +13,23 @@ export class MagicLinkService {
     this.magic = new Magic(this.config.get('MAGIC_SECRET_KEY'));
   }
 
-  validate(header: string): void {
-    this.magic.token.validate(
-      this.magic.utils.parseAuthorizationHeader(header),
-    );
+  async getEmailFromHeader(header: string): Promise<string> {
+    const didToken = this.magic.utils.parseAuthorizationHeader(header);
+    return this.getEmailFromToken(didToken);
   }
 
-  async getMetadataByHeader(header: string): Promise<MagicUserMetadata> {
-    return this.magic.users.getMetadataByToken(
-      this.magic.utils.parseAuthorizationHeader(header),
-    );
+  async getEmailFromToken(didToken: string): Promise<string> {
+    this.magic.token.validate(didToken);
+    const { email } = await this.getMetadataFromToken(didToken);
+    if (!email) {
+      throw new Error('No email found for token');
+    }
+    return email;
+  }
+
+  private async getMetadataFromToken(
+    didToken: string,
+  ): Promise<MagicUserMetadata> {
+    return this.magic.users.getMetadataByToken(didToken);
   }
 }

@@ -46,17 +46,8 @@ describe('MeController', () => {
         await usersService.confirm(user);
 
         jest
-          .spyOn(magicLinkService, 'validate')
-          .mockImplementationOnce(jest.fn());
-        jest
-          .spyOn(magicLinkService, 'getMetadataByHeader')
-          .mockImplementationOnce(async () =>
-            Promise.resolve({
-              issuer: null,
-              email: user.email,
-              publicAddress: null,
-            }),
-          );
+          .spyOn(magicLinkService, 'getEmailFromHeader')
+          .mockImplementationOnce(() => Promise.resolve(user.email));
 
         const { body } = await request(app.getHttpServer())
           .get('/me')
