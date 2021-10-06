@@ -27,14 +27,10 @@ export class MagicLinkStrategy extends PassportStrategy(
       return this.fail();
     }
     try {
-      this.magicLinkService.validate(authorization);
-      const { email } = await this.magicLinkService.getMetadataByHeader(
+      const email = await this.magicLinkService.getEmailFromHeader(
         authorization,
       );
-      if (!email) {
-        throw new Error('No email found for token');
-      }
-      const user = await this.usersService.findOrThrowByEmail(email);
+      const user = await this.usersService.findConfirmedByEmailOrThrow(email);
       req.context = {
         ...req.context,
         user,
