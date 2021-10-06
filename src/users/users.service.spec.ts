@@ -104,7 +104,7 @@ describe('UsersService', () => {
     });
   });
 
-  describe('findConfirmedOrThrowByGraffiti', () => {
+  describe('findConfirmedByGraffitiOrThrow', () => {
     describe('with a valid graffiti', () => {
       it('returns the record', async () => {
         const user = await prisma.user.create({
@@ -116,7 +116,7 @@ describe('UsersService', () => {
             country_code: faker.address.countryCode('alpha-3'),
           },
         });
-        const record = await usersService.findConfirmedOrThrowByGraffiti(
+        const record = await usersService.findConfirmedByGraffitiOrThrow(
           user.graffiti,
         );
         expect(record).not.toBeNull();
@@ -127,17 +127,17 @@ describe('UsersService', () => {
     describe('with a missing graffiti', () => {
       it('throws an exception', async () => {
         await expect(
-          usersService.findConfirmedOrThrowByGraffiti('1337'),
+          usersService.findConfirmedByGraffitiOrThrow('1337'),
         ).rejects.toThrow(NotFoundException);
       });
     });
   });
 
-  describe('findConfirmedOrThrowByEmail', () => {
+  describe('findConfirmedByEmailOrThrow', () => {
     describe('with a missing email', () => {
       it('throws an exception', async () => {
         await expect(
-          usersService.findConfirmedOrThrowByEmail('howdy@partner.com'),
+          usersService.findConfirmedByEmailOrThrow('howdy@partner.com'),
         ).rejects.toThrow(NotFoundException);
       });
     });
@@ -163,7 +163,7 @@ describe('UsersService', () => {
           },
         });
 
-        const record = await usersService.findConfirmedOrThrowByEmail(email);
+        const record = await usersService.findConfirmedByEmailOrThrow(email);
         expect(record).toMatchObject(user);
       });
     });

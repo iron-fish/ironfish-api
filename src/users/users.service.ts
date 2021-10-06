@@ -53,7 +53,7 @@ export class UsersService {
     });
   }
 
-  async findConfirmedOrThrowByGraffiti(graffiti: string): Promise<User> {
+  async findConfirmedByGraffitiOrThrow(graffiti: string): Promise<User> {
     const record = await this.findConfirmedByGraffiti(graffiti);
     if (!record) {
       throw new NotFoundException();
@@ -61,7 +61,7 @@ export class UsersService {
     return record;
   }
 
-  async findConfirmedOrThrowByEmail(email: string): Promise<User> {
+  async findConfirmedByEmailOrThrow(email: string): Promise<User> {
     const record = await this.findConfirmedByEmail(email);
     if (!record) {
       throw new NotFoundException();
