@@ -210,6 +210,7 @@ export class UsersService {
     limit,
     search,
     countryCode,
+    eventType,
   }: ListUsersWithRankOptions): Promise<{
     data: SerializedUserWithRank[];
     hasNext: boolean;
@@ -237,12 +238,12 @@ export class UsersService {
           SELECT
             id,
             graffiti,
-            total_points,
+            COALESCE(user_latest_events.total_points, 0) as total_points,
             country_code,
             last_login_at,
             RANK () OVER ( 
               ORDER BY 
-                total_points DESC,
+                COALESCE(user_latest_events.total_points, 0) DESC,
                 COALESCE(latest_event_occurred_at, NOW()) ASC,
                 created_at ASC
             ) AS rank 
@@ -252,16 +253,24 @@ export class UsersService {
             (
               SELECT
                 user_id,
+                SUM(points) as total_points,
                 MAX(occurred_at) AS latest_event_occurred_at
               FROM
                 (
                   SELECT
                     user_id,
-                    occurred_at
+                    occurred_at,
+                    points
                   FROM
                     events
                   WHERE
-                    deleted_at IS NULL
+                    deleted_at IS NULL AND
+                    CASE WHEN $6::event_type IS NOT NULL
+                      THEN
+                        type = $6
+                      ELSE
+                        TRUE
+                    END
                 ) filtered_events
               GROUP BY
                 user_id
@@ -289,6 +298,7 @@ export class UsersService {
         rank ASC
       LIMIT
         $4`;
+
     const data = await this.prisma.$queryRawUnsafe<SerializedUserWithRank[]>(
       query,
       searchFilter,
@@ -296,6 +306,7 @@ export class UsersService {
       rankCursor,
       limit,
       countryCode,
+      eventType,
     );
     return {
       data,
@@ -304,6 +315,7 @@ export class UsersService {
         query,
         searchFilter,
         countryCode,
+        eventType,
       )),
     };
   }
@@ -313,6 +325,7 @@ export class UsersService {
     query: string,
     searchFilter: string,
     countryCode?: string,
+    eventType?: string,
   ): Promise<{ hasNext: boolean; hasPrevious: boolean }> {
     const { length } = data;
     if (length === 0) {
@@ -323,10 +336,18 @@ export class UsersService {
     }
     const nextRecords = await this.prisma.$queryRawUnsafe<
       SerializedUserWithRank[]
-    >(query, searchFilter, true, data[length - 1].rank, 1, countryCode);
+    >(
+      query,
+      searchFilter,
+      true,
+      data[length - 1].rank,
+      1,
+      countryCode,
+      eventType,
+    );
     const previousRecords = await this.prisma.$queryRawUnsafe<
       SerializedUserWithRank[]
-    >(query, searchFilter, false, data[0].rank, 1, countryCode);
+    >(query, searchFilter, false, data[0].rank, 1, countryCode, eventType);
     return {
       hasNext: nextRecords.length > 0,
       hasPrevious: previousRecords.length > 0,
