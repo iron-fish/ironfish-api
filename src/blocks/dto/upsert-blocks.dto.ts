@@ -10,6 +10,7 @@ import {
   IsEnum,
   IsInt,
   IsOptional,
+  IsPositive,
   IsString,
   ValidateNested,
 } from 'class-validator';
@@ -42,10 +43,10 @@ export class BlockDto {
   @IsString()
   readonly previous_block_hash?: string;
 
-  @IsOptional()
   @IsInt()
+  @IsPositive()
   @Type(() => Number)
-  readonly size?: number;
+  readonly size!: number;
 
   @IsArray()
   @ArrayMinSize(1)

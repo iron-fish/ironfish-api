@@ -11,6 +11,6 @@ export interface UpsertBlockOptions {
   timestamp: Date;
   transactionsCount: number;
   graffiti: string;
+  size: number;
   previous_block_hash?: string;
-  size?: number;
 }
