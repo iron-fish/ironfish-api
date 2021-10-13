@@ -212,4 +212,29 @@ describe('FaucetTransactionService', () => {
       });
     });
   });
+
+  describe('getGlobalStatus', () => {
+    it('returns the number of completed, pending, and running Faucet Transactions', async () => {
+      const status = await faucetTransactionsService.getGlobalStatus();
+      expect(status).toEqual({
+        completed: await prisma.faucetTransaction.count({
+          where: {
+            completed_at: { not: null },
+          },
+        }),
+        running: await prisma.faucetTransaction.count({
+          where: {
+            started_at: { not: null },
+            completed_at: null,
+          },
+        }),
+        pending: await prisma.faucetTransaction.count({
+          where: {
+            started_at: null,
+            completed_at: null,
+          },
+        }),
+      });
+    });
+  });
 });
