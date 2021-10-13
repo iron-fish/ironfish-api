@@ -115,6 +115,20 @@ describe('FaucetTransactionsController', () => {
     });
   });
 
+  describe('GET /faucet_transactions/status', () => {
+    it('returns the counts of states of Faucet Transactions', async () => {
+      const { body } = await request(app.getHttpServer())
+        .get('/faucet_transactions/status')
+        .expect(HttpStatus.OK);
+
+      expect(body).toMatchObject({
+        completed: expect.any(Number),
+        running: expect.any(Number),
+        pending: expect.any(Number),
+      });
+    });
+  });
+
   describe('GET /faucet_transactions/:id', () => {
     describe('with an invalid id', () => {
       it('returns a 404', async () => {

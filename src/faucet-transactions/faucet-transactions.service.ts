@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateFaucetTransactionOptions } from './interfaces/create-faucet-transaction-options';
+import { FaucetTransactionsStatus } from './interfaces/faucet-transactions-status';
 import { FaucetTransaction, Prisma } from '.prisma/client';
 
 @Injectable()
@@ -100,5 +101,36 @@ export class FaucetTransactionsService {
         },
       });
     });
+  }
+
+  async getGlobalStatus(): Promise<FaucetTransactionsStatus> {
+    const [pending, running, completed] = await this.prisma.$transaction([
+      this.prisma.faucetTransaction.count({
+        where: {
+          started_at: null,
+          completed_at: null,
+        },
+      }),
+      this.prisma.faucetTransaction.count({
+        where: {
+          started_at: {
+            not: null,
+          },
+          completed_at: null,
+        },
+      }),
+      this.prisma.faucetTransaction.count({
+        where: {
+          completed_at: {
+            not: null,
+          },
+        },
+      }),
+    ]);
+    return {
+      completed,
+      running,
+      pending,
+    };
   }
 }

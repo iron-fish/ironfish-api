@@ -17,6 +17,7 @@ import {
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { CreateFaucetTransactionDto } from './dto/create-faucet-transaction.dto';
 import { FaucetTransactionsService } from './faucet-transactions.service';
+import { FaucetTransactionsStatus } from './interfaces/faucet-transactions-status';
 import { SerializedFaucetTransaction } from './interfaces/serialized-faucet-transaction';
 import { serializedFaucetTransactionFromRecord } from './utils/faucet-transactions.translator';
 
@@ -48,6 +49,11 @@ export class FaucetTransactionsController {
       throw new NotFoundException();
     }
     return serializedFaucetTransactionFromRecord(nextFaucetTransaction);
+  }
+
+  @Get('status')
+  async status(): Promise<FaucetTransactionsStatus> {
+    return this.faucetTransactionsService.getGlobalStatus();
   }
 
   @Get(':id')
