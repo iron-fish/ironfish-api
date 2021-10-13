@@ -115,6 +115,37 @@ describe('FaucetTransactionsController', () => {
     });
   });
 
+  describe('GET /faucet_transactions/:id', () => {
+    describe('with an invalid id', () => {
+      it('returns a 404', async () => {
+        await request(app.getHttpServer())
+          .get('/faucet_transactions/100000')
+          .expect(HttpStatus.NOT_FOUND);
+      });
+    });
+
+    describe('with a valid id', () => {
+      it('returns the record', async () => {
+        const email = faker.internet.email();
+        const publicKey = ulid();
+        const faucetTransaction = await faucetTransactionsService.create({
+          email,
+          publicKey,
+        });
+
+        const { body } = await request(app.getHttpServer())
+          .get(`/faucet_transactions/${faucetTransaction.id}`)
+          .expect(HttpStatus.OK);
+
+        expect(body).toMatchObject({
+          object: 'faucet_transaction',
+          id: faucetTransaction.id,
+          public_key: publicKey,
+        });
+      });
+    });
+  });
+
   describe('POST /faucet_transactions/:id/start', () => {
     describe('with a missing api key', () => {
       it('returns a 401', async () => {
@@ -129,7 +160,7 @@ describe('FaucetTransactionsController', () => {
     describe('with an invalid id', () => {
       it('returns a 404', async () => {
         await request(app.getHttpServer())
-          .get('/faucet_transactions/100000/start')
+          .post('/faucet_transactions/100000/start')
           .set('Authorization', `Bearer ${API_KEY}`)
           .expect(HttpStatus.NOT_FOUND);
       });
@@ -172,7 +203,7 @@ describe('FaucetTransactionsController', () => {
     describe('with an invalid id', () => {
       it('returns a 404', async () => {
         await request(app.getHttpServer())
-          .get('/faucet_transactions/100000/complete')
+          .post('/faucet_transactions/100000/complete')
           .set('Authorization', `Bearer ${API_KEY}`)
           .expect(HttpStatus.NOT_FOUND);
       });

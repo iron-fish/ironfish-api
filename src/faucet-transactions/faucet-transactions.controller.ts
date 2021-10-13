@@ -50,6 +50,20 @@ export class FaucetTransactionsController {
     return serializedFaucetTransactionFromRecord(nextFaucetTransaction);
   }
 
+  @Get(':id')
+  async find(
+    @Param(
+      'id',
+      new ParseIntPipe({
+        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+      }),
+    )
+    id: number,
+  ): Promise<SerializedFaucetTransaction> {
+    const record = await this.faucetTransactionsService.findOrThrow(id);
+    return serializedFaucetTransactionFromRecord(record);
+  }
+
   @Post(':id/start')
   @HttpCode(HttpStatus.OK)
   @UseGuards(ApiKeyGuard)
