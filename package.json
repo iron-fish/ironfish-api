@@ -76,7 +76,7 @@
     "postmark": "2.7.8",
     "reflect-metadata": "0.1.13",
     "rxjs": "7.4.0",
-    "type-fest": "2.5.0",
+    "type-fest": "2.5.1",
     "ulid": "2.3.0"
   }
 }
