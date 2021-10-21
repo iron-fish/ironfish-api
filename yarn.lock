@@ -2596,10 +2596,10 @@ graceful-fs@^4.2.4:
   resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-4.2.6.tgz#ff040b2b0853b23c3d31027523706f1885d76bee"
   integrity sha512-nTnJ528pbqxYanhpDYsi4Rd8MAeaBA67+RZ10CM1m3bTAVFEDcd5AuA4a6W5YkGZ1iNXHzZz8T6TBKLeBuNriQ==
 
-graphile-worker@0.11.4:
-  version "0.11.4"
-  resolved "https://registry.yarnpkg.com/graphile-worker/-/graphile-worker-0.11.4.tgz#96fce7ed35ca307c5b2651f83d9dd73bda72242e"
-  integrity sha512-9YwDZ9+Qv8jYsyhr4jKx4QgEPkcQ4ha/LVwjWX62q/uBoJBNPLaWjGmvqj0vgwrEOQipNyj/NKNCS2Gv3qWQvw==
+graphile-worker@0.12.0:
+  version "0.12.0"
+  resolved "https://registry.yarnpkg.com/graphile-worker/-/graphile-worker-0.12.0.tgz#eba250f0d34f9af17b4f7ebdcfcc9fa68501eaac"
+  integrity sha512-E1Z3F9vAPzgrZiiStUZqCimuNtTsC0P1CItDKkTY07ob6aCl/SPlWT8OI+/1qxR0ElhUgN+GixGfvxWx3a0c0A==
   dependencies:
     "@graphile/logger" "^0.2.0"
     "@types/debug" "^4.1.2"
