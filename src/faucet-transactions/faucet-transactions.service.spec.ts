@@ -74,19 +74,22 @@ describe('FaucetTransactionService', () => {
   describe('next', () => {
     describe('when a FaucetTransaction is already running', () => {
       it('returns null', async () => {
+        const runningFaucetTransaction = {
+          id: 0,
+          created_at: new Date(),
+          updated_at: new Date(),
+          public_key: 'mock-key',
+          email: null,
+          completed_at: null,
+          started_at: new Date(),
+        };
         jest
           .spyOn(prisma.faucetTransaction, 'findFirst')
-          .mockResolvedValueOnce({
-            id: 0,
-            created_at: new Date(),
-            updated_at: new Date(),
-            public_key: 'mock-key',
-            email: null,
-            completed_at: null,
-            started_at: new Date(),
-          });
+          .mockResolvedValueOnce(runningFaucetTransaction);
 
-        expect(await faucetTransactionsService.next()).toBeNull();
+        expect(await faucetTransactionsService.next()).toMatchObject(
+          runningFaucetTransaction,
+        );
       });
     });
 

@@ -51,9 +51,12 @@ export class FaucetTransactionsService {
             },
             completed_at: null,
           },
+          orderBy: {
+            created_at: Prisma.SortOrder.asc,
+          },
         });
       if (currentlyRunningFaucetTransaction) {
-        return null;
+        return currentlyRunningFaucetTransaction;
       }
       return prisma.faucetTransaction.findFirst({
         where: {
