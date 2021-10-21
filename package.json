@@ -69,7 +69,7 @@
     "class-validator": "0.13.1",
     "compression": "1.7.4",
     "express": "4.17.1",
-    "graphile-worker": "0.11.4",
+    "graphile-worker": "0.12.0",
     "helmet": "4.6.0",
     "joi": "17.4.2",
     "passport": "0.4.1",
