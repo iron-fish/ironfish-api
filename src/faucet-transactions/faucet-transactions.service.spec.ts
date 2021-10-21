@@ -119,23 +119,6 @@ describe('FaucetTransactionService', () => {
   });
 
   describe('start', () => {
-    describe('if the FaucetTransaction has been started', () => {
-      it('throws an UnprocessableEntityException', async () => {
-        const faucetTransaction = {
-          id: 0,
-          created_at: new Date(),
-          updated_at: new Date(),
-          public_key: 'mock-key',
-          email: null,
-          completed_at: null,
-          started_at: new Date(),
-        };
-        await expect(
-          faucetTransactionsService.start(faucetTransaction),
-        ).rejects.toThrow(UnprocessableEntityException);
-      });
-    });
-
     describe('if the FaucetTransaction has completed', () => {
       it('throws an UnprocessableEntityException', async () => {
         const faucetTransaction = {
