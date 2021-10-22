@@ -1,0 +1,1 @@
+ALTER TABLE faucet_transactions ADD COLUMN tries INTEGER NOT NULL DEFAULT 0;
