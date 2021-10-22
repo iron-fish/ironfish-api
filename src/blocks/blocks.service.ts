@@ -19,6 +19,7 @@ import { FindBlockOptions } from './interfaces/find-block-options';
 import { ListBlocksOptions } from './interfaces/list-block-options';
 import { UpsertBlockOptions } from './interfaces/upsert-block-options';
 import { Block, Prisma, Transaction } from '.prisma/client';
+import { BlocksStatus } from './interfaces/block-status';
 
 @Injectable()
 export class BlocksService {
@@ -236,6 +237,37 @@ export class BlocksService {
         ...(await this.getListMetadata(data, where, orderBy)),
       };
     }
+  }
+
+  async getStatus(): Promise<BlocksStatus> {
+    const [chainHeight, markedBlocks, uniqueGraffiti] =
+      await this.prisma.$transaction([
+        this.prisma.block.count({
+          where: {
+            main: true,
+          },
+        }),
+        this.prisma.block.count({
+          where: {
+            main: true,
+            graffiti: {
+              not: '',
+            },
+          },
+        }),
+        this.prisma.block.count({
+          where: {
+            main: true,
+          },
+          distinct: ['graffiti'],
+        }),
+      ]);
+    const percentageMarked = markedBlocks / chainHeight;
+    return {
+      chainHeight,
+      percentageMarked,
+      uniqueGraffiti,
+    };
   }
 
   private async getBlocksData(
