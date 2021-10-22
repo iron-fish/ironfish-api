@@ -73,7 +73,7 @@ export class FaucetTransactionsService {
   async start(
     faucetTransaction: FaucetTransaction,
   ): Promise<FaucetTransaction> {
-    if (faucetTransaction.started_at || faucetTransaction.completed_at) {
+    if (faucetTransaction.completed_at) {
       throw new UnprocessableEntityException();
     }
     return this.prisma.$transaction(async (prisma) => {
