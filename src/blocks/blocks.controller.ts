@@ -24,6 +24,7 @@ import { BlockQueryDto } from './dto/block-query.dto';
 import { BlocksQueryDto } from './dto/blocks-query.dto';
 import { DisconnectBlocksDto } from './dto/disconnect-blocks.dto';
 import { UpsertBlocksDto } from './dto/upsert-blocks.dto';
+import { BlocksStatus } from './interfaces/block-status';
 import { SerializedBlock } from './interfaces/serialized-block';
 import { SerializedBlockWithTransactions } from './interfaces/serialized-block-with-transactions';
 import {
@@ -123,6 +124,11 @@ export class BlocksController {
         has_previous: hasPrevious,
       },
     };
+  }
+
+  @Get('status')
+  async status(): Promise<BlocksStatus> {
+    return this.blocksService.getStatus();
   }
 
   @Get('find')

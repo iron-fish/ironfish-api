@@ -176,6 +176,20 @@ describe('BlocksController', () => {
     });
   });
 
+  describe('GET /blocks/status', () => {
+    it('returns information about the main chain', async () => {
+      const { body } = await request(app.getHttpServer())
+        .get('/blocks/status')
+        .expect(HttpStatus.OK);
+
+      expect(body).toMatchObject({
+        chainHeight: expect.any(Number),
+        percentageMarked: expect.any(Number),
+        uniqueGraffiti: expect.any(Number),
+      });
+    });
+  });
+
   describe('GET /blocks', () => {
     describe('with no query parameters', () => {
       it('returns a list of blocks in descending order', async () => {
