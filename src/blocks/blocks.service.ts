@@ -240,28 +240,30 @@ export class BlocksService {
   }
 
   async getStatus(): Promise<BlocksStatus> {
-    const [chainHeight, markedBlocks, uniqueGraffiti] =
-      await this.prisma.$transaction([
-        this.prisma.block.count({
-          where: {
-            main: true,
+    const [chainHeight, markedBlocks] = await this.prisma.$transaction([
+      this.prisma.block.count({
+        where: {
+          main: true,
+        },
+      }),
+      this.prisma.block.count({
+        where: {
+          main: true,
+          graffiti: {
+            not: '',
           },
-        }),
-        this.prisma.block.count({
-          where: {
-            main: true,
-            graffiti: {
-              not: '',
-            },
-          },
-        }),
-        this.prisma.block.count({
-          where: {
-            main: true,
-          },
-          distinct: ['graffiti'],
-        }),
-      ]);
+        },
+      }),
+    ]);
+
+    // There's currently a bug in Prisma in which 'distinct' is not actually supported
+    // in count despite it being included in the documentation.
+    // See more: https://github.com/prisma/prisma/issues/4228
+    const uniqueGraffiti = (
+      (await this.prisma.$queryRawUnsafe(
+        'SELECT COUNT(*) from (SELECT DISTINCT graffiti from blocks where main=true) AS temp;',
+      )) as [{ count: number }]
+    )[0].count;
     const percentageMarked = markedBlocks / chainHeight;
     return {
       chainHeight,
