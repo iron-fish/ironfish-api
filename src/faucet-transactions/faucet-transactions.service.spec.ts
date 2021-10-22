@@ -82,6 +82,7 @@ describe('FaucetTransactionService', () => {
           email: null,
           completed_at: null,
           started_at: new Date(),
+          tries: 1,
         };
         jest
           .spyOn(prisma.faucetTransaction, 'findFirst')
@@ -103,6 +104,7 @@ describe('FaucetTransactionService', () => {
           email: null,
           completed_at: null,
           started_at: null,
+          tries: 0,
         };
         jest
           .spyOn(prisma.faucetTransaction, 'findFirst')
@@ -129,6 +131,7 @@ describe('FaucetTransactionService', () => {
           email: null,
           completed_at: null,
           started_at: new Date(),
+          tries: 0,
         };
         await expect(
           faucetTransactionsService.start(faucetTransaction),
@@ -146,6 +149,7 @@ describe('FaucetTransactionService', () => {
           email: null,
           completed_at: new Date(),
           started_at: new Date(),
+          tries: 0,
         };
         await expect(
           faucetTransactionsService.start(faucetTransaction),
@@ -185,6 +189,7 @@ describe('FaucetTransactionService', () => {
           email: null,
           completed_at: new Date(),
           started_at: new Date(),
+          tries: 0,
         };
         await expect(
           faucetTransactionsService.complete(faucetTransaction),
