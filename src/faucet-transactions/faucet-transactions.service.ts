@@ -80,6 +80,9 @@ export class FaucetTransactionsService {
       return prisma.faucetTransaction.update({
         data: {
           started_at: new Date().toISOString(),
+          tries: {
+            increment: 1,
+          },
         },
         where: {
           id: faucetTransaction.id,

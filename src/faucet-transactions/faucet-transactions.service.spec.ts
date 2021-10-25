@@ -140,7 +140,7 @@ describe('FaucetTransactionService', () => {
     });
 
     describe('with a valid FaucetTransaction', () => {
-      it('updates the `started_at` column for the record', async () => {
+      it('updates the `started_at` and tries column for the record', async () => {
         const email = faker.internet.email();
         const publicKey = ulid();
         const faucetTransaction = await faucetTransactionsService.create({
@@ -155,6 +155,7 @@ describe('FaucetTransactionService', () => {
           id: faucetTransaction.id,
           public_key: faucetTransaction.public_key,
           started_at: expect.any(Date),
+          tries: faucetTransaction.tries + 1,
         });
       });
     });
