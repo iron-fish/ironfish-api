@@ -183,9 +183,9 @@ describe('BlocksController', () => {
         .expect(HttpStatus.OK);
 
       expect(body).toMatchObject({
-        chainHeight: expect.any(Number),
-        percentageMarked: expect.any(Number),
-        uniqueGraffiti: expect.any(Number),
+        chain_height: expect.any(Number),
+        percentage_marked: expect.any(Number),
+        unique_graffiti: expect.any(Number),
       });
     });
   });

@@ -15,7 +15,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { UsersService } from '../users/users.service';
 import { BlockOperation } from './enums/block-operation';
-import { BlocksStatus } from './interfaces/block-status';
+import { BlocksStatus } from './interfaces/blocks-status';
 import { FindBlockOptions } from './interfaces/find-block-options';
 import { ListBlocksOptions } from './interfaces/list-block-options';
 import { UpsertBlockOptions } from './interfaces/upsert-block-options';
@@ -260,9 +260,9 @@ export class BlocksService {
     // in count despite it being included in the documentation.
     // See more: https://github.com/prisma/prisma/issues/4228
     const uniqueGraffiti = (
-      (await this.prisma.$queryRawUnsafe(
-        'SELECT COUNT(*) from (SELECT DISTINCT graffiti from blocks where main=true) AS temp;',
-      )) as [{ count: number }]
+      await this.prisma.$queryRawUnsafe<{ count: number }[]>(
+        'SELECT COUNT(*) FROM (SELECT DISTINCT graffiti FROM blocks WHERE main = true) AS main_blocks;',
+      )
     )[0].count;
     const percentageMarked = markedBlocks / chainHeight;
     return {
