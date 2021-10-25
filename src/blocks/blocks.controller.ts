@@ -26,10 +26,12 @@ import { DisconnectBlocksDto } from './dto/disconnect-blocks.dto';
 import { UpsertBlocksDto } from './dto/upsert-blocks.dto';
 import { SerializedBlock } from './interfaces/serialized-block';
 import { SerializedBlockWithTransactions } from './interfaces/serialized-block-with-transactions';
+import { SerializedBlocksStatus } from './interfaces/serialized-blocks-status';
 import {
   serializedBlockFromRecord,
   serializedBlockFromRecordWithTransactions,
 } from './utils/block-translator';
+import { serializedBlocksStatusFromRecord } from './utils/blocks-status-translator';
 import { Block } from '.prisma/client';
 
 @Controller('blocks')
@@ -123,6 +125,12 @@ export class BlocksController {
         has_previous: hasPrevious,
       },
     };
+  }
+
+  @Get('status')
+  async status(): Promise<SerializedBlocksStatus> {
+    const blocksStatus = await this.blocksService.getStatus();
+    return serializedBlocksStatusFromRecord(blocksStatus);
   }
 
   @Get('find')

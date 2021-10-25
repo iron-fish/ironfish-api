@@ -15,6 +15,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { UsersService } from '../users/users.service';
 import { BlockOperation } from './enums/block-operation';
+import { BlocksStatus } from './interfaces/blocks-status';
 import { FindBlockOptions } from './interfaces/find-block-options';
 import { ListBlocksOptions } from './interfaces/list-block-options';
 import { UpsertBlockOptions } from './interfaces/upsert-block-options';
@@ -236,6 +237,39 @@ export class BlocksService {
         ...(await this.getListMetadata(data, where, orderBy)),
       };
     }
+  }
+
+  async getStatus(): Promise<BlocksStatus> {
+    const [chainHeight, markedBlocks] = await this.prisma.$transaction([
+      this.prisma.block.count({
+        where: {
+          main: true,
+        },
+      }),
+      this.prisma.block.count({
+        where: {
+          main: true,
+          graffiti: {
+            not: '',
+          },
+        },
+      }),
+    ]);
+
+    // There's currently a bug in Prisma in which 'distinct' is not actually supported
+    // in count despite it being included in the documentation.
+    // See more: https://github.com/prisma/prisma/issues/4228
+    const uniqueGraffiti = (
+      await this.prisma.$queryRawUnsafe<{ count: number }[]>(
+        'SELECT COUNT(*) FROM (SELECT DISTINCT graffiti FROM blocks WHERE main = true) AS main_blocks;',
+      )
+    )[0].count;
+    const percentageMarked = markedBlocks / chainHeight;
+    return {
+      chainHeight,
+      percentageMarked,
+      uniqueGraffiti,
+    };
   }
 
   private async getBlocksData(
