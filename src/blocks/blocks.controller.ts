@@ -24,16 +24,15 @@ import { BlockQueryDto } from './dto/block-query.dto';
 import { BlocksQueryDto } from './dto/blocks-query.dto';
 import { DisconnectBlocksDto } from './dto/disconnect-blocks.dto';
 import { UpsertBlocksDto } from './dto/upsert-blocks.dto';
-import { BlocksStatus } from './interfaces/blocks-status';
 import { SerializedBlock } from './interfaces/serialized-block';
 import { SerializedBlockWithTransactions } from './interfaces/serialized-block-with-transactions';
+import { SerializedBlocksStatus } from './interfaces/serialized-blocks-status';
 import {
   serializedBlockFromRecord,
   serializedBlockFromRecordWithTransactions,
 } from './utils/block-translator';
-import { Block } from '.prisma/client';
 import { serializedBlocksStatusFromRecord } from './utils/blocks-status-translator';
-import { SerializedBlocksStatus } from './interfaces/serialized-blocks-status';
+import { Block } from '.prisma/client';
 
 @Controller('blocks')
 export class BlocksController {
