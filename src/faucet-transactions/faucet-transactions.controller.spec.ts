@@ -100,6 +100,7 @@ describe('FaucetTransactionsController', () => {
           completed_at: null,
           started_at: null,
           tries: 0,
+          hash: null,
         });
 
         const { body } = await request(app.getHttpServer())
