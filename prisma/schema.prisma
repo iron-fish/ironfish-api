@@ -115,6 +115,7 @@ model FaucetTransaction {
   started_at   DateTime? @db.Timestamp(6)
   completed_at DateTime? @db.Timestamp(6)
   tries        Int       @default(0)
+  hash         String?   @db.VarChar
 
   @@index([email], map: "index_faucet_transactions_on_email")
   @@index([public_key], map: "index_faucet_transactions_on_public_key")
