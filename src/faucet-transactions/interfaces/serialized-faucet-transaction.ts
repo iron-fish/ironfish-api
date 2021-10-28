@@ -7,4 +7,5 @@ export interface SerializedFaucetTransaction {
   public_key: string;
   started_at: string | null;
   completed_at: string | null;
+  hash: string | null;
 }
