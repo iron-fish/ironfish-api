@@ -235,14 +235,17 @@ describe('FaucetTransactionsController', () => {
         });
         await faucetTransactionsService.start(faucetTransaction);
 
+        const hash = ulid();
         const { body } = await request(app.getHttpServer())
           .post(`/faucet_transactions/${faucetTransaction.id}/complete`)
           .set('Authorization', `Bearer ${API_KEY}`)
+          .send({ hash })
           .expect(HttpStatus.OK);
 
         expect(body).toMatchObject({
           object: 'faucet_transaction',
           id: faucetTransaction.id,
+          hash,
           completed_at: expect.any(String),
           started_at: expect.any(String),
         });

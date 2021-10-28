@@ -7,6 +7,7 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { CompleteFaucetTransactionOptions } from './interfaces/complete-faucet-transaction-options';
 import { CreateFaucetTransactionOptions } from './interfaces/create-faucet-transaction-options';
 import { FaucetTransactionsStatus } from './interfaces/faucet-transactions-status';
 import { FaucetTransaction, Prisma } from '.prisma/client';
@@ -93,6 +94,7 @@ export class FaucetTransactionsService {
 
   async complete(
     faucetTransaction: FaucetTransaction,
+    options?: CompleteFaucetTransactionOptions,
   ): Promise<FaucetTransaction> {
     if (faucetTransaction.completed_at) {
       throw new UnprocessableEntityException();
@@ -101,6 +103,7 @@ export class FaucetTransactionsService {
       return prisma.faucetTransaction.update({
         data: {
           completed_at: new Date().toISOString(),
+          hash: options?.hash,
         },
         where: {
           id: faucetTransaction.id,

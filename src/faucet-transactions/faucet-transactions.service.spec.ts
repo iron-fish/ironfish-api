@@ -185,7 +185,7 @@ describe('FaucetTransactionService', () => {
     });
 
     describe('with a valid FaucetTransaction', () => {
-      it('updates the `completed_at` column for the record', async () => {
+      it('updates the `completed_at` and `hash` columns for the record', async () => {
         const email = faker.internet.email();
         const publicKey = ulid();
         const faucetTransaction = await faucetTransactionsService.create({
@@ -196,12 +196,15 @@ describe('FaucetTransactionService', () => {
           faucetTransaction,
         );
 
+        const hash = ulid();
         const updatedRecord = await faucetTransactionsService.complete(
           startedFaucetTransaction,
+          { hash },
         );
         expect(updatedRecord).toMatchObject({
           id: faucetTransaction.id,
           public_key: faucetTransaction.public_key,
+          hash,
           completed_at: expect.any(Date),
         });
       });

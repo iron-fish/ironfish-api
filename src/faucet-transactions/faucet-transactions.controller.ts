@@ -15,6 +15,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
+import { CompleteFaucetTransactionDto } from './dto/complete-faucet-transaction.dto';
 import { CreateFaucetTransactionDto } from './dto/create-faucet-transaction.dto';
 import { FaucetTransactionsService } from './faucet-transactions.service';
 import { FaucetTransactionsStatus } from './interfaces/faucet-transactions-status';
@@ -99,10 +100,16 @@ export class FaucetTransactionsController {
       }),
     )
     id: number,
+    @Body(
+      new ValidationPipe({
+        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+      }),
+    )
+    dto: CompleteFaucetTransactionDto,
   ): Promise<SerializedFaucetTransaction> {
     const record = await this.faucetTransactionsService.findOrThrow(id);
     return serializedFaucetTransactionFromRecord(
-      await this.faucetTransactionsService.complete(record),
+      await this.faucetTransactionsService.complete(record, dto),
     );
   }
 }
