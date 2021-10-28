@@ -7,11 +7,12 @@ import { FaucetTransaction } from '.prisma/client';
 export function serializedFaucetTransactionFromRecord(
   faucetTransaction: FaucetTransaction,
 ): SerializedFaucetTransaction {
-  const { id, public_key, completed_at, started_at } = faucetTransaction;
+  const { id, public_key, completed_at, started_at, hash } = faucetTransaction;
   return {
     object: 'faucet_transaction',
     id,
     public_key,
+    hash,
     completed_at: completed_at ? completed_at.toISOString() : null,
     started_at: started_at ? started_at.toISOString() : null,
   };
