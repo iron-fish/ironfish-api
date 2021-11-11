@@ -6,6 +6,7 @@ import {
   ExpressAdapter,
   NestExpressApplication,
 } from '@nestjs/platform-express';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import compression from 'compression';
 import express from 'express';
 import { json } from 'express';
@@ -45,6 +46,16 @@ async function bootstrap() {
   app.use(compression());
   app.use(helmet());
   app.use(json({ limit: '10mb' }));
+
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('Iron Fish API')
+    .setDescription('The Rest API to enable public access to Iron Fish data')
+    .setVersion('')
+    .build();
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('docs', app, document, {
+    customSiteTitle: 'Iron Fish API Documentation',
+  });
 
   await app.init();
 

@@ -9,6 +9,7 @@ import {
   Query,
   ValidationPipe,
 } from '@nestjs/common';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { List } from '../common/interfaces/list';
 import { TransactionQueryDto } from './dto/transaction-query.dto';
 import { TransactionsQueryDto } from './dto/transactions-query.dto';
@@ -20,10 +21,12 @@ import {
   serializedTransactionFromRecordWithBlocks,
 } from './utils/transaction-translator';
 
+@ApiTags('Transactions')
 @Controller('transactions')
 export class TransactionsController {
   constructor(private readonly transactionsService: TransactionsService) {}
 
+  @ApiOperation({ summary: `Gets a specific transaction by 'hash'` })
   @Get('find')
   async find(
     @Query(
@@ -47,6 +50,9 @@ export class TransactionsController {
     }
   }
 
+  @ApiOperation({
+    summary: 'Returns a paginated list of transactions from the chain',
+  })
   @Get()
   async list(
     @Query(

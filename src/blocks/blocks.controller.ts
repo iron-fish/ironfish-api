@@ -14,6 +14,7 @@ import {
   UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
+import { ApiExcludeEndpoint, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { BlocksTransactionsLoader } from '../blocks-transactions-loader/block-transactions-loader';
@@ -32,8 +33,8 @@ import {
   serializedBlockFromRecordWithTransactions,
 } from './utils/block-translator';
 import { serializedBlocksStatusFromRecord } from './utils/blocks-status-translator';
-import { Block } from '.prisma/client';
 
+@ApiTags('Blocks')
 @Controller('blocks')
 export class BlocksController {
   constructor(
@@ -41,6 +42,7 @@ export class BlocksController {
     private readonly blocksTransactionsLoader: BlocksTransactionsLoader,
   ) {}
 
+  @ApiExcludeEndpoint()
   @Post()
   @UseGuards(ApiKeyGuard)
   async bulkUpsert(
@@ -63,11 +65,15 @@ export class BlocksController {
     };
   }
 
+  @ApiOperation({ summary: 'Gets the head of the chain' })
   @Get('head')
-  async head(): Promise<Block> {
-    return this.blocksService.head();
+  async head(): Promise<SerializedBlock> {
+    return serializedBlockFromRecord(await this.blocksService.head());
   }
 
+  @ApiOperation({
+    summary: 'Returns a paginated list of blocks from the chain',
+  })
   @Get()
   async list(
     @Query(
@@ -127,12 +133,14 @@ export class BlocksController {
     };
   }
 
+  @ApiOperation({ summary: 'Returns the global status of the chain' })
   @Get('status')
   async status(): Promise<SerializedBlocksStatus> {
     const blocksStatus = await this.blocksService.getStatus();
     return serializedBlocksStatusFromRecord(blocksStatus);
   }
 
+  @ApiOperation({ summary: `Gets a specific block by 'hash' or 'sequence'` })
   @Get('find')
   async find(
     @Query(
@@ -157,6 +165,7 @@ export class BlocksController {
     }
   }
 
+  @ApiExcludeEndpoint()
   @Post('disconnect')
   @UseGuards(ApiKeyGuard)
   async disconnect(

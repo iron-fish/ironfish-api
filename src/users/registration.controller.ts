@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Controller, Get, NotFoundException, Param, Res } from '@nestjs/common';
+import { ApiExcludeEndpoint } from '@nestjs/swagger';
 import { Response } from 'express';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { UsersService } from './users.service';
@@ -13,6 +14,7 @@ export class RegistrationController {
     private readonly usersService: UsersService,
   ) {}
 
+  @ApiExcludeEndpoint()
   @Get(':token/confirm')
   async confirm(
     @Param('token') token: string,

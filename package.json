@@ -63,6 +63,7 @@
     "@nestjs/microservices": "8.2.0",
     "@nestjs/passport": "8.0.1",
     "@nestjs/platform-express": "8.2.0",
+    "@nestjs/swagger": "5.1.4",
     "@prisma/client": "3.4.1",
     "@sindresorhus/is": "4.2.0",
     "class-transformer": "0.4.0",
@@ -76,6 +77,7 @@
     "postmark": "2.7.8",
     "reflect-metadata": "0.1.13",
     "rxjs": "7.4.0",
+    "swagger-ui-express": "4.1.6",
     "type-fest": "2.5.2",
     "ulid": "2.3.0"
   }
