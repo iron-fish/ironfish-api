@@ -9,6 +9,7 @@ import {
   Res,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ApiExcludeEndpoint } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { MagicLinkService } from '../magic-link/magic-link.service';
 import { UsersService } from '../users/users.service';
@@ -20,6 +21,7 @@ export class AuthController {
     private readonly usersService: UsersService,
   ) {}
 
+  @ApiExcludeEndpoint()
   @Post('login')
   async login(@Req() req: Request, @Res() res: Response): Promise<void> {
     let email;

@@ -13,6 +13,12 @@ import {
   UnprocessableEntityException,
   ValidationPipe,
 } from '@nestjs/common';
+import {
+  ApiExcludeEndpoint,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+} from '@nestjs/swagger';
 import { DEFAULT_LIMIT, MAX_LIMIT, MS_PER_DAY } from '../common/constants';
 import { PaginatedList } from '../common/interfaces/paginated-list';
 import { EventsService } from '../events/events.service';
@@ -33,6 +39,7 @@ import { EventType, User } from '.prisma/client';
 
 const MAX_SUPPORTED_TIME_RANGE_IN_DAYS = 30;
 
+@ApiTags('Users')
 @Controller('users')
 export class UsersController {
   constructor(
@@ -40,6 +47,8 @@ export class UsersController {
     private readonly usersService: UsersService,
   ) {}
 
+  @ApiOperation({ summary: 'Gets a specific User' })
+  @ApiParam({ description: 'Unique User identifier', name: 'id' })
   @Get(':id')
   async find(
     @Param(
@@ -57,6 +66,8 @@ export class UsersController {
     );
   }
 
+  @ApiOperation({ summary: 'Gets metrics for a specific User' })
+  @ApiParam({ description: 'Unique User identifier', name: 'id' })
   @Get(':id/metrics')
   async metrics(
     @Param(
@@ -148,6 +159,7 @@ export class UsersController {
     return { isValid: true };
   }
 
+  @ApiOperation({ summary: 'Returns a paginated list of users' })
   @Get()
   async list(
     @Query(
@@ -203,6 +215,7 @@ export class UsersController {
     };
   }
 
+  @ApiExcludeEndpoint()
   @Post()
   async create(
     @Body(

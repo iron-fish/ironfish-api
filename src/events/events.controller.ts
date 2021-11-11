@@ -11,6 +11,7 @@ import {
   UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
+import { ApiExcludeEndpoint, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { PaginatedList } from '../common/interfaces/paginated-list';
 import { EventsService } from '../events/events.service';
@@ -20,6 +21,7 @@ import { EventsQueryDto } from './dto/events-query.dto';
 import { SerializedEvent } from './interfaces/serialized-event';
 import { serializedEventFromRecord } from './utils/event-translator';
 
+@ApiTags('Events')
 @Controller('events')
 export class EventsController {
   constructor(
@@ -27,6 +29,7 @@ export class EventsController {
     private readonly usersService: UsersService,
   ) {}
 
+  @ApiOperation({ summary: 'Returns a paginated list of events' })
   @Get()
   async list(
     @Query(
@@ -53,6 +56,7 @@ export class EventsController {
     };
   }
 
+  @ApiExcludeEndpoint()
   @Post()
   @UseGuards(ApiKeyGuard)
   async create(

@@ -14,6 +14,12 @@ import {
   UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
+import {
+  ApiExcludeEndpoint,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+} from '@nestjs/swagger';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { CompleteFaucetTransactionDto } from './dto/complete-faucet-transaction.dto';
 import { CreateFaucetTransactionDto } from './dto/create-faucet-transaction.dto';
@@ -22,12 +28,14 @@ import { FaucetTransactionsStatus } from './interfaces/faucet-transactions-statu
 import { SerializedFaucetTransaction } from './interfaces/serialized-faucet-transaction';
 import { serializedFaucetTransactionFromRecord } from './utils/faucet-transactions.translator';
 
+@ApiTags('Faucet Transactions')
 @Controller('faucet_transactions')
 export class FaucetTransactionsController {
   constructor(
     private readonly faucetTransactionsService: FaucetTransactionsService,
   ) {}
 
+  @ApiExcludeEndpoint()
   @Post()
   async create(
     @Body(
@@ -42,6 +50,7 @@ export class FaucetTransactionsController {
     );
   }
 
+  @ApiExcludeEndpoint()
   @Get('next')
   @UseGuards(ApiKeyGuard)
   async next(): Promise<SerializedFaucetTransaction> {
@@ -52,11 +61,14 @@ export class FaucetTransactionsController {
     return serializedFaucetTransactionFromRecord(nextFaucetTransaction);
   }
 
+  @ApiOperation({ summary: 'Returns the global status of faucet transactions' })
   @Get('status')
   async status(): Promise<FaucetTransactionsStatus> {
     return this.faucetTransactionsService.getGlobalStatus();
   }
 
+  @ApiOperation({ summary: 'Gets a specific Faucet Transaction' })
+  @ApiParam({ description: 'Unique Faucet Transaction identifier', name: 'id' })
   @Get(':id')
   async find(
     @Param(
@@ -71,6 +83,7 @@ export class FaucetTransactionsController {
     return serializedFaucetTransactionFromRecord(record);
   }
 
+  @ApiExcludeEndpoint()
   @Post(':id/start')
   @HttpCode(HttpStatus.OK)
   @UseGuards(ApiKeyGuard)
@@ -89,6 +102,7 @@ export class FaucetTransactionsController {
     );
   }
 
+  @ApiExcludeEndpoint()
   @Post(':id/complete')
   @HttpCode(HttpStatus.OK)
   @UseGuards(ApiKeyGuard)
