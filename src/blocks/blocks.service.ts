@@ -20,6 +20,7 @@ import { FindBlockOptions } from './interfaces/find-block-options';
 import { ListBlocksOptions } from './interfaces/list-block-options';
 import { UpsertBlockOptions } from './interfaces/upsert-block-options';
 import { Block, Prisma, Transaction } from '.prisma/client';
+import { getNextDate } from '../common/utils/date';
 
 @Injectable()
 export class BlocksService {
@@ -237,6 +238,11 @@ export class BlocksService {
         ...(await this.getListMetadata(data, where, orderBy)),
       };
     }
+  }
+
+  async getMetricsForDate(date: Date): Promise<any> {
+    const end = getNextDate(date)
+    
   }
 
   async getStatus(): Promise<BlocksStatus> {
