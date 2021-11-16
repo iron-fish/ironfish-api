@@ -13,6 +13,7 @@ import { ApiConfigModule } from './api-config/api-config.module';
 import { AuthModule } from './auth/auth.module';
 import { AuthRestModule } from './auth/auth.rest.module';
 import { BlocksRestModule } from './blocks/blocks.rest.module';
+import { BlocksDailyRestModule } from './blocks-daily/blocks-daily.rest.module';
 import { ContextMiddleware } from './common/middlewares/context.middleware';
 import { RequireSslMiddleware } from './common/middlewares/require-ssl.middleware';
 import { EventsRestModule } from './events/events.rest.module';
@@ -24,6 +25,7 @@ import { UsersRestModule } from './users/users.rest.module';
 
 export const REST_MODULES = [
   AuthRestModule,
+  BlocksDailyRestModule,
   BlocksRestModule,
   EventsRestModule,
   FaucetTransactionsRestModule,
