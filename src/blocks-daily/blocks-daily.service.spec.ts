@@ -27,10 +27,10 @@ describe('BlocksDailyService', () => {
       await prisma.blockDaily.create({
         data: {
           average_block_time_ms: 1,
-          average_difficulty: 1,
+          average_difficulty_millis: 1000,
           blocks_count: 1,
           blocks_with_graffiti_count: 1,
-          chain_height: 1,
+          chain_sequence: 1,
           cumulative_unique_graffiti: 1,
           date: new Date('2021-11-16T00:00:00Z'),
           transactions_count: 1,
@@ -40,10 +40,10 @@ describe('BlocksDailyService', () => {
       await prisma.blockDaily.create({
         data: {
           average_block_time_ms: 1,
-          average_difficulty: 1,
+          average_difficulty_millis: 1000,
           blocks_count: 1,
           blocks_with_graffiti_count: 1,
-          chain_height: 1,
+          chain_sequence: 1,
           cumulative_unique_graffiti: 1,
           date: new Date('2021-11-17T00:00:00Z'),
           transactions_count: 1,
@@ -53,10 +53,10 @@ describe('BlocksDailyService', () => {
       await prisma.blockDaily.create({
         data: {
           average_block_time_ms: 1,
-          average_difficulty: 1,
+          average_difficulty_millis: 1000,
           blocks_count: 1,
           blocks_with_graffiti_count: 1,
-          chain_height: 1,
+          chain_sequence: 1,
           cumulative_unique_graffiti: 1,
           date: new Date('2021-11-18T00:00:00Z'),
           transactions_count: 1,
