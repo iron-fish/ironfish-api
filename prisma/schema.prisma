@@ -124,13 +124,18 @@ model FaucetTransaction {
 }
 
 model BlockDaily {
-  id              Int      @id @default(autoincrement())
-  created_at      DateTime @default(now()) @db.Timestamp(6)
-  updated_at      DateTime @default(now()) @updatedAt @db.Timestamp(6)
-  date            DateTime @db.Timestamp(6)
-  unique_graffiti Int
-  marked_blocks   Int
-  chain_height    Int
+  id                         Int      @id @default(autoincrement())
+  created_at                 DateTime @default(now()) @db.Timestamp(6)
+  updated_at                 DateTime @default(now()) @updatedAt @db.Timestamp(6)
+  date                       DateTime @db.Timestamp(6)
+  unique_graffiti            Int
+  chain_height               Int
+  average_block_time_ms      Int
+  average_difficulty         Int
+  blocks_count               Int
+  blocks_with_graffiti_count Int
+  cumulative_unique_graffiti Int
+  transactions_count         Int
 
   @@index([date], map: "index_blocks_daily_on_date")
   @@map("blocks_daily")
