@@ -13,6 +13,7 @@ import { ApiConfigModule } from './api-config/api-config.module';
 import { AuthModule } from './auth/auth.module';
 import { AuthRestModule } from './auth/auth.rest.module';
 import { BlocksRestModule } from './blocks/blocks.rest.module';
+import { BlocksDailyJobsModule } from './blocks-daily/blocks-daily.jobs.module';
 import { BlocksDailyRestModule } from './blocks-daily/blocks-daily.rest.module';
 import { ContextMiddleware } from './common/middlewares/context.middleware';
 import { RequireSslMiddleware } from './common/middlewares/require-ssl.middleware';
@@ -22,6 +23,8 @@ import { HealthRestModule } from './health/health.rest.module';
 import { MetricsRestModule } from './metrics/metrics.rest.module';
 import { TransactionsRestModule } from './transactions/transactions.rest.module';
 import { UsersRestModule } from './users/users.rest.module';
+
+export const JOBS_MODULES = [BlocksDailyJobsModule];
 
 export const REST_MODULES = [
   AuthRestModule,
@@ -54,6 +57,7 @@ export const REST_MODULES = [
         POSTMARK_API_KEY: joi.string().required(),
       }),
     }),
+    ...JOBS_MODULES,
     ...REST_MODULES,
   ],
 })

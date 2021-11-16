@@ -3,6 +3,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { BasePrismaClient } from '../prisma/types/base-prisma-client';
+import { CreateBlocksDailyOptions } from './interfaces/create-blocks-daily-options';
 import { BlockDaily } from '.prisma/client';
 
 @Injectable()
@@ -16,6 +18,25 @@ export class BlocksDailyService {
           gte: start,
           lt: end,
         },
+      },
+    });
+  }
+
+  async create(
+    prisma: BasePrismaClient,
+    options: CreateBlocksDailyOptions,
+  ): Promise<BlockDaily> {
+    return prisma.blockDaily.create({
+      data: {
+        average_block_time_ms: options.averageBlockTimeMs,
+        average_difficulty_millis: options.averageDifficultyMillis,
+        blocks_count: options.blocksCount,
+        blocks_with_graffiti_count: options.blocksWithGraffitiCount,
+        chain_sequence: options.chainSequence,
+        cumulative_unique_graffiti: options.cumulativeUniqueGraffiti,
+        date: options.date,
+        transactions_count: options.transactionsCount,
+        unique_graffiti: options.uniqueGraffiti,
       },
     });
   }

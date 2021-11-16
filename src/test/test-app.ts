@@ -6,14 +6,11 @@ import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import { json } from 'express';
 import joi from 'joi';
-import { REST_MODULES } from '../app.module';
+import { JOBS_MODULES, REST_MODULES } from '../app.module';
 import { AuthModule } from '../auth/auth.module';
 import { BlocksModule } from '../blocks/blocks.module';
 import { BlocksTransactionsModule } from '../blocks-transactions/blocks-transactions.module';
-import { EventsModule } from '../events/events.module';
 import { PostmarkService } from '../postmark/postmark.service';
-import { TransactionsModule } from '../transactions/transactions.module';
-import { UsersModule } from '../users/users.module';
 import { MockPostmarkService } from './mocks/mock-postmark.service';
 
 export async function bootstrapTestApp(): Promise<INestApplication> {
@@ -38,9 +35,7 @@ export async function bootstrapTestApp(): Promise<INestApplication> {
           POSTMARK_API_KEY: joi.string().required(),
         }),
       }),
-      EventsModule,
-      TransactionsModule,
-      UsersModule,
+      ...JOBS_MODULES,
       ...REST_MODULES,
     ],
   })
