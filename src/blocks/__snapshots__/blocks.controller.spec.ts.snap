@@ -48,6 +48,42 @@ Object {
 }
 `;
 
+exports[`BlocksController GET /blocks/metrics with a time range longer than the supported range returns a 422 1`] = `
+Object {
+  "error": "Unprocessable Entity",
+  "message": "Time range too long",
+  "statusCode": 422,
+}
+`;
+
+exports[`BlocksController GET /blocks/metrics with invalid granularity returns a 422 1`] = `
+Object {
+  "error": "Unprocessable Entity",
+  "message": "\\"granularity\\" must be \\"day\\"",
+  "statusCode": 422,
+}
+`;
+
+exports[`BlocksController GET /blocks/metrics with missing arguments returns a 422 1`] = `
+Object {
+  "error": "Unprocessable Entity",
+  "message": Array [
+    "start must be a Date instance",
+    "end must be a Date instance",
+    "granularity must be a valid enum value",
+  ],
+  "statusCode": 422,
+}
+`;
+
+exports[`BlocksController GET /blocks/metrics with start after end returns a 422 1`] = `
+Object {
+  "error": "Unprocessable Entity",
+  "message": "\\"start\\" must be stricly less than \\"end\\"",
+  "statusCode": 422,
+}
+`;
+
 exports[`BlocksController POST /blocks with a missing api key returns a 401 1`] = `
 Object {
   "message": "Unauthorized",

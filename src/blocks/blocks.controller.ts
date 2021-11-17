@@ -17,27 +17,36 @@ import {
 import { ApiExcludeEndpoint, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
+import { BlocksDailyService } from '../blocks-daily/blocks-daily.service';
 import { BlocksTransactionsLoader } from '../blocks-transactions-loader/block-transactions-loader';
+import { MS_PER_DAY } from '../common/constants';
+import { MetricsGranularity } from '../common/enums/metrics-granularity';
 import { List } from '../common/interfaces/list';
 import { PaginatedList } from '../common/interfaces/paginated-list';
 import { BlocksService } from './blocks.service';
 import { BlockQueryDto } from './dto/block-query.dto';
+import { BlocksMetricsQueryDto } from './dto/blocks-metrics-query.dto';
 import { BlocksQueryDto } from './dto/blocks-query.dto';
 import { DisconnectBlocksDto } from './dto/disconnect-blocks.dto';
 import { UpsertBlocksDto } from './dto/upsert-blocks.dto';
 import { SerializedBlock } from './interfaces/serialized-block';
+import { SerializedBlockMetrics } from './interfaces/serialized-block-metrics';
 import { SerializedBlockWithTransactions } from './interfaces/serialized-block-with-transactions';
 import { SerializedBlocksStatus } from './interfaces/serialized-blocks-status';
 import {
   serializedBlockFromRecord,
   serializedBlockFromRecordWithTransactions,
 } from './utils/block-translator';
+import { serializedBlockMetricsFromRecord } from './utils/blocks-metrics-translator';
 import { serializedBlocksStatusFromRecord } from './utils/blocks-status-translator';
+
+const MAX_SUPPORTED_TIME_RANGE_IN_DAYS = 90;
 
 @ApiTags('Blocks')
 @Controller('blocks')
 export class BlocksController {
   constructor(
+    private readonly blocksDailyService: BlocksDailyService,
     private readonly blocksService: BlocksService,
     private readonly blocksTransactionsLoader: BlocksTransactionsLoader,
   ) {}
@@ -180,5 +189,60 @@ export class BlocksController {
   ): Promise<void> {
     await this.blocksService.disconnectAfter(sequenceGt);
     res.sendStatus(HttpStatus.OK);
+  }
+
+  @ApiOperation({ summary: 'Gets metrics for blocks' })
+  @Get('metrics')
+  async metrics(
+    @Query(
+      new ValidationPipe({
+        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        transform: true,
+      }),
+    )
+    query: BlocksMetricsQueryDto,
+  ): Promise<List<SerializedBlockMetrics>> {
+    const { isValid, error } = this.isValidMetricsQuery(query);
+    if (!isValid) {
+      throw new UnprocessableEntityException(error);
+    }
+
+    const records = await this.blocksDailyService.list(query.start, query.end);
+    return {
+      object: 'list',
+      data: records.map((record) => serializedBlockMetricsFromRecord(record)),
+    };
+  }
+
+  private isValidMetricsQuery({
+    start,
+    end,
+    granularity,
+  }: BlocksMetricsQueryDto): {
+    isValid: boolean;
+    error?: string;
+  } {
+    if (granularity !== MetricsGranularity.DAY) {
+      return {
+        isValid: false,
+        error: '"granularity" must be "day"',
+      };
+    }
+    if (start >= end) {
+      return {
+        isValid: false,
+        error: '"start" must be stricly less than "end"',
+      };
+    }
+
+    const diffInMs = end.getTime() - start.getTime();
+    const diffInDays = diffInMs / MS_PER_DAY;
+    if (diffInDays > MAX_SUPPORTED_TIME_RANGE_IN_DAYS) {
+      return {
+        isValid: false,
+        error: 'Time range too long',
+      };
+    }
+    return { isValid: true };
   }
 }

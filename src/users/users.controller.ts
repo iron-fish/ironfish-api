@@ -20,13 +20,13 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { DEFAULT_LIMIT, MAX_LIMIT, MS_PER_DAY } from '../common/constants';
+import { MetricsGranularity } from '../common/enums/metrics-granularity';
 import { PaginatedList } from '../common/interfaces/paginated-list';
 import { EventsService } from '../events/events.service';
 import { SerializedEventMetrics } from '../events/interfaces/serialized-event-metrics';
 import { CreateUserDto } from './dto/create-user.dto';
-import { MetricsQueryDto } from './dto/metrics-query.dto';
+import { UserMetricsQueryDto } from './dto/user-metrics-query.dto';
 import { UsersQueryDto } from './dto/users-query.dto';
-import { MetricsGranularity } from './enums/metrics-granularity';
 import { SerializedUser } from './interfaces/serialized-user';
 import { SerializedUserMetrics } from './interfaces/serialized-user-metrics';
 import { SerializedUserWithRank } from './interfaces/serialized-user-with-rank';
@@ -83,7 +83,7 @@ export class UsersController {
         transform: true,
       }),
     )
-    query: MetricsQueryDto,
+    query: UserMetricsQueryDto,
   ): Promise<SerializedUserMetrics> {
     const { isValid, error } = this.isValidMetricsQuery(query);
     if (!isValid) {
@@ -129,10 +129,24 @@ export class UsersController {
     };
   }
 
-  private isValidMetricsQuery({ start, end, granularity }: MetricsQueryDto): {
+  private isValidMetricsQuery({
+    start,
+    end,
+    granularity,
+  }: UserMetricsQueryDto): {
     isValid: boolean;
     error?: string;
   } {
+    if (
+      granularity !== MetricsGranularity.LIFETIME &&
+      granularity !== MetricsGranularity.TOTAL
+    ) {
+      return {
+        isValid: false,
+        error: '"granularity" must be "lifetime" or "total"',
+      };
+    }
+
     if (start !== undefined && end !== undefined) {
       if (granularity === MetricsGranularity.LIFETIME) {
         return {
