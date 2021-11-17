@@ -77,4 +77,34 @@ describe('BlocksDailyService', () => {
       }
     });
   });
+
+  describe('create', () => {
+    it('creates a BlockDaily record', async () => {
+      const options = {
+        averageBlockTimeMs: 0,
+        averageDifficultyMillis: 0,
+        blocksCount: 0,
+        blocksWithGraffitiCount: 0,
+        chainSequence: 0,
+        cumulativeUniqueGraffiti: 0,
+        date: new Date(),
+        transactionsCount: 0,
+        uniqueGraffiti: 0,
+      };
+
+      const blockDaily = await blocksDailyService.create(prisma, options);
+      expect(blockDaily).toMatchObject({
+        id: expect.any(Number),
+        average_block_time_ms: options.averageBlockTimeMs,
+        average_difficulty_millis: options.averageDifficultyMillis,
+        blocks_count: options.blocksCount,
+        blocks_with_graffiti_count: options.blocksWithGraffitiCount,
+        chain_sequence: options.chainSequence,
+        cumulative_unique_graffiti: options.cumulativeUniqueGraffiti,
+        date: options.date,
+        transactions_count: options.transactionsCount,
+        unique_graffiti: options.uniqueGraffiti,
+      });
+    });
+  });
 });
