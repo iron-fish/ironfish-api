@@ -210,7 +210,7 @@ export class BlocksController {
     const records = await this.blocksDailyService.list(query.start, query.end);
     return {
       object: 'list',
-      data: records.map((record) => serializedBlockMetricsFromRecord(record)),
+      data: records.map(serializedBlockMetricsFromRecord),
     };
   }
 
