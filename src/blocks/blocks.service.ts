@@ -6,15 +6,18 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
+import is from '@sindresorhus/is';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
 import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
+import { getNextDate } from '../common/utils/date';
 import { EventsService } from '../events/events.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { UsersService } from '../users/users.service';
 import { BlockOperation } from './enums/block-operation';
+import { BlocksDateMetrics } from './interfaces/blocks-date-metrics';
 import { BlocksStatus } from './interfaces/blocks-status';
 import { FindBlockOptions } from './interfaces/find-block-options';
 import { ListBlocksOptions } from './interfaces/list-block-options';
@@ -237,6 +240,81 @@ export class BlocksService {
         ...(await this.getListMetadata(data, where, orderBy)),
       };
     }
+  }
+
+  async getDateMetrics(
+    prisma: BasePrismaClient,
+    date: Date,
+  ): Promise<BlocksDateMetrics> {
+    const end = getNextDate(date);
+    const dateMetricsResponse = await prisma.$queryRawUnsafe<
+      {
+        average_block_time_ms: number;
+        average_difficulty_millis: number;
+        blocks_count: number;
+        block_with_graffiti_count: number;
+        chain_sequence: number;
+        transactions_count: number;
+        unique_graffiti: number;
+      }[]
+    >(`
+      SELECT
+        EXTRACT(EPOCH FROM MAX(timestamp) - MIN(timestamp)) * 1000 AS average_block_time_ms,
+        FLOOR(AVG(difficulty) * 1000) AS average_difficulty_millis,
+        COUNT(*) AS blocks_count,
+        COUNT(CASE WHEN graffiti IS NOT NULL THEN 1 END) AS blocks_with_graffiti_count,
+        MAX(sequence) AS chain_sequence,
+        SUM(transactions_count) AS transactions_count,
+        COUNT(DISTINCT graffiti) AS unique_graffiti
+      FROM
+        blocks
+      WHERE
+        '${date.toISOString()}' <= timestamp AND
+        timestamp < '${end.toISOString()}' AND
+        main = TRUE
+    `);
+    if (
+      !is.array(dateMetricsResponse) ||
+      dateMetricsResponse.length !== 1 ||
+      !is.object(dateMetricsResponse[0])
+    ) {
+      throw new Error('Unexpected database response');
+    }
+
+    const cumulativeMetricsResponse = await this.prisma.$queryRawUnsafe<
+      { cumulative_unique_graffiti: number }[]
+    >(`
+      SELECT
+        COUNT(*) AS cumulative_unique_graffiti
+      FROM (
+        SELECT 
+          DISTINCT graffiti 
+        FROM 
+          blocks 
+        WHERE 
+          timestamp < '${end.toISOString()}' AND
+          main = true
+      ) AS main_blocks
+    `);
+    if (
+      !is.array(cumulativeMetricsResponse) ||
+      cumulativeMetricsResponse.length !== 1 ||
+      !is.object(cumulativeMetricsResponse[0])
+    ) {
+      throw new Error('Unexpected database response');
+    }
+
+    return {
+      averageBlockTimeMs: dateMetricsResponse[0].average_block_time_ms,
+      averageDifficultyMillis: dateMetricsResponse[0].average_difficulty_millis,
+      blocksCount: dateMetricsResponse[0].blocks_count,
+      blocksWithGraffitiCount: dateMetricsResponse[0].block_with_graffiti_count,
+      chainSequence: dateMetricsResponse[0].chain_sequence,
+      cumulativeUniqueGraffiti:
+        cumulativeMetricsResponse[0].cumulative_unique_graffiti,
+      transactionsCount: dateMetricsResponse[0].transactions_count,
+      uniqueGraffiti: dateMetricsResponse[0].unique_graffiti,
+    };
   }
 
   async getStatus(): Promise<BlocksStatus> {

@@ -8,3 +8,7 @@ export function getMondayFromDate(date: Date = new Date()): Date {
   monday.setUTCHours(0, 0, 0, 0);
   return monday;
 }
+
+export function getNextDate(date: Date): Date {
+  return new Date(new Date(date).setDate(date.getDate() + 1));
+}
