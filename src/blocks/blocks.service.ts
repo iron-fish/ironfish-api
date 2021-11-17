@@ -252,7 +252,7 @@ export class BlocksService {
         average_block_time_ms: number;
         average_difficulty_millis: number;
         blocks_count: number;
-        block_with_graffiti_count: number;
+        blocks_with_graffiti_count: number;
         chain_sequence: number;
         transactions_count: number;
         unique_graffiti: number;
@@ -308,7 +308,8 @@ export class BlocksService {
       averageBlockTimeMs: dateMetricsResponse[0].average_block_time_ms,
       averageDifficultyMillis: dateMetricsResponse[0].average_difficulty_millis,
       blocksCount: dateMetricsResponse[0].blocks_count,
-      blocksWithGraffitiCount: dateMetricsResponse[0].block_with_graffiti_count,
+      blocksWithGraffitiCount:
+        dateMetricsResponse[0].blocks_with_graffiti_count,
       chainSequence: dateMetricsResponse[0].chain_sequence,
       cumulativeUniqueGraffiti:
         cumulativeMetricsResponse[0].cumulative_unique_graffiti,
