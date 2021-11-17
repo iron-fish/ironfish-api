@@ -232,6 +232,49 @@ describe('BlocksController', () => {
           ((data as unknown[])[1] as Block).id,
         );
       });
+
+      describe.only('with main chain parameter set to false', () => {
+        it('returns only non-main chain blocks', async () => {
+          for (let i = 0; i < 10; i++) {
+            const hash = uuid();
+            const searchableText = hash + ' ' + String(i);
+            await prisma.block.create({
+              data: {
+                hash,
+                difficulty: faker.datatype.number(),
+                main: i < 5,
+                sequence: i,
+                timestamp: new Date(),
+                transactions_count: 0,
+                graffiti: uuid(),
+                previous_block_hash: uuid(),
+                network_version: 0,
+                searchable_text: searchableText,
+                size: faker.datatype.number(),
+              },
+            });
+          }
+
+          const { body } = await request(app.getHttpServer())
+            .get('/blocks?main=beepboop')
+            // .query({ main: false })
+            .expect(HttpStatus.OK);
+
+          const { data } = body;
+          expect((data as unknown[]).length).toBeGreaterThanOrEqual(5);
+          expect((data as unknown[])[0]).toMatchObject({
+            id: expect.any(Number),
+            hash: expect.any(String),
+            difficulty: expect.any(Number),
+            main: false,
+            sequence: expect.any(Number),
+            timestamp: expect.any(String),
+            transactions_count: expect.any(Number),
+            previous_block_hash: expect.any(String),
+            size: expect.any(Number),
+          });
+        });
+      });
     });
 
     describe('with invalid sequence_gte and sequence_lt parameters', () => {

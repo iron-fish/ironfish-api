@@ -95,6 +95,7 @@ export class BlocksController {
     }: BlocksQueryDto,
   ): Promise<PaginatedList<SerializedBlock | SerializedBlockWithTransactions>> {
     const maxBlocksToReturn = 1000;
+    console.log(main);
     if (sequenceGte !== undefined && sequenceLt !== undefined) {
       if (sequenceGte >= sequenceLt) {
         throw new UnprocessableEntityException(
