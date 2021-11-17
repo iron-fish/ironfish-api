@@ -177,7 +177,20 @@ describe('BlocksService', () => {
 
   describe('getDateMetrics', () => {
     it('returns metrics for the day', async () => {
-      const metrics = await blocksService.getDateMetrics(prisma, new Date());
+      const date = new Date();
+      await blocksService.upsert(prisma, {
+        hash: uuid(),
+        sequence: faker.datatype.number(),
+        difficulty: faker.datatype.number(),
+        timestamp: date,
+        transactionsCount: 1,
+        type: BlockOperation.CONNECTED,
+        graffiti: uuid(),
+        previous_block_hash: uuid(),
+        size: faker.datatype.number(),
+      });
+
+      const metrics = await blocksService.getDateMetrics(prisma, date);
       expect(metrics).toMatchObject({
         averageBlockTimeMs: expect.any(Number),
         averageDifficultyMillis: expect.any(Number),
