@@ -166,6 +166,18 @@ describe('BlocksService', () => {
       });
     });
 
+    describe('with main chain query parameter set to false', () => {
+      it('returns block(s) that are not on the main chain', async () => {
+        const blocks = await blocksService.list({
+          main: false,
+        });
+
+        for (const block of blocks.data) {
+          expect(block.main).toBeFalsy();
+        }
+      });
+    });
+
     describe('with no query parameters', () => {
       it('returns block(s) in descending order', async () => {
         const { data: blocks } = await blocksService.list({});

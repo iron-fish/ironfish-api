@@ -130,13 +130,14 @@ export class BlocksService {
     const limit =
       direction * Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
     const withTransactions = options.withTransactions ?? false;
+    const main = options.main ?? undefined;
     if (options.sequenceGte !== undefined && options.sequenceLt !== undefined) {
       const where = {
         sequence: {
           gte: options.sequenceGte,
           lt: options.sequenceLt,
         },
-        main: true,
+        main,
         network_version: networkVersion,
       };
       return {
@@ -157,7 +158,7 @@ export class BlocksService {
           contains: options.search,
           mode: Prisma.QueryMode.insensitive,
         },
-        main: true,
+        main,
         network_version: networkVersion,
       };
       const data = await this.getBlocksData(
@@ -224,7 +225,7 @@ export class BlocksService {
       };
     } else {
       const where = {
-        main: true,
+        main,
         network_version: networkVersion,
       };
       const data = await this.getBlocksData(
