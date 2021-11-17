@@ -6,6 +6,8 @@ import { Block } from '@prisma/client';
 import faker from 'faker';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
+import { BlocksDailyService } from '../blocks-daily/blocks-daily.service';
+import { MetricsGranularity } from '../common/enums/metrics-granularity';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { BlocksService } from './blocks.service';
@@ -17,11 +19,13 @@ const API_KEY = 'test';
 
 describe('BlocksController', () => {
   let app: INestApplication;
+  let blocksDailyService: BlocksDailyService;
   let blocksService: BlocksService;
   let prisma: PrismaService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
+    blocksDailyService = app.get(BlocksDailyService);
     blocksService = app.get(BlocksService);
     prisma = app.get(PrismaService);
     await app.init();
@@ -611,6 +615,107 @@ describe('BlocksController', () => {
           .expect(HttpStatus.OK);
 
         expect(disconnectAfter).toHaveBeenCalledWith(sequenceGt);
+      });
+    });
+  });
+
+  describe('GET /blocks/metrics', () => {
+    describe('with missing arguments', () => {
+      it('returns a 422', async () => {
+        const { body } = await request(app.getHttpServer())
+          .get('/blocks/metrics')
+          .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+
+        expect(body).toMatchSnapshot();
+      });
+    });
+
+    describe('with invalid granularity', () => {
+      it('returns a 422', async () => {
+        const start = '2021-06-01T00:00:00.000Z';
+        const end = '2021-07-01T00:00:00.000Z';
+        const { body } = await request(app.getHttpServer())
+          .get('/blocks/metrics')
+          .query({ start, end, granularity: MetricsGranularity.LIFETIME })
+          .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+
+        expect(body).toMatchSnapshot();
+      });
+    });
+
+    describe('with start after end', () => {
+      it('returns a 422', async () => {
+        const start = new Date().toISOString();
+        const end = new Date(Date.now() - 1).toISOString();
+        const { body } = await request(app.getHttpServer())
+          .get('/blocks/metrics')
+          .query({
+            start,
+            end,
+            granularity: MetricsGranularity.DAY,
+          })
+          .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+
+        expect(body).toMatchSnapshot();
+      });
+    });
+
+    describe('with a time range longer than the supported range', () => {
+      it('returns a 422', async () => {
+        const start = '2021-06-01T00:00:00.000Z';
+        const end = '2021-10-01T00:00:00.000Z';
+        const { body } = await request(app.getHttpServer())
+          .get('/blocks/metrics')
+          .query({
+            start,
+            end,
+            granularity: MetricsGranularity.DAY,
+          })
+          .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+
+        expect(body).toMatchSnapshot();
+      });
+    });
+
+    describe('with a valid request', () => {
+      it('returns daily snapshots', async () => {
+        const start = '2021-06-01T00:00:00.000Z';
+        const end = '2021-07-01T00:00:00.000Z';
+        await blocksDailyService.create(prisma, {
+          averageBlockTimeMs: 0,
+          averageDifficultyMillis: 0,
+          blocksCount: 0,
+          blocksWithGraffitiCount: 0,
+          chainSequence: 0,
+          cumulativeUniqueGraffiti: 0,
+          date: new Date(start),
+          transactionsCount: 0,
+          uniqueGraffiti: 0,
+        });
+
+        const { body } = await request(app.getHttpServer())
+          .get('/blocks/metrics')
+          .query({
+            start,
+            end,
+            granularity: MetricsGranularity.DAY,
+          })
+          .expect(HttpStatus.OK);
+
+        const { data } = body;
+        expect((data as unknown[]).length).toBeGreaterThan(0);
+        expect((data as unknown[])[0]).toMatchObject({
+          object: 'block_metrics',
+          average_block_time_ms: expect.any(Number),
+          average_difficulty: expect.any(Number),
+          blocks_count: expect.any(Number),
+          blocks_with_graffiti_count: expect.any(Number),
+          chain_sequence: expect.any(Number),
+          cumulative_unique_graffiti: expect.any(Number),
+          date: expect.any(String),
+          transactions_count: expect.any(Number),
+          unique_graffiti_count: expect.any(Number),
+        });
       });
     });
   });

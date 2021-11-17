@@ -54,6 +54,14 @@ Object {
 }
 `;
 
+exports[`UsersController GET /users/:id/metrics with invalid granularity returns a 422 1`] = `
+Object {
+  "error": "Unprocessable Entity",
+  "message": "\\"granularity\\" must be \\"lifetime\\" or \\"total\\"",
+  "statusCode": 422,
+}
+`;
+
 exports[`UsersController GET /users/:id/metrics with start after end returns a 422 1`] = `
 Object {
   "error": "Unprocessable Entity",

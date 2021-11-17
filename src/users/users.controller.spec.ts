@@ -6,9 +6,9 @@ import faker from 'faker';
 import request from 'supertest';
 import { ulid } from 'ulid';
 import { v4 as uuid } from 'uuid';
+import { MetricsGranularity } from '../common/enums/metrics-granularity';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
-import { MetricsGranularity } from './enums/metrics-granularity';
 
 const API_KEY = 'test';
 
@@ -92,6 +92,17 @@ describe('UsersController', () => {
       it('returns a 422', async () => {
         const { body } = await request(app.getHttpServer())
           .get('/users/123/metrics')
+          .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+
+        expect(body).toMatchSnapshot();
+      });
+    });
+
+    describe('with invalid granularity', () => {
+      it('returns a 422', async () => {
+        const { body } = await request(app.getHttpServer())
+          .get('/users/123/metrics')
+          .query({ granularity: MetricsGranularity.DAY })
           .expect(HttpStatus.UNPROCESSABLE_ENTITY);
 
         expect(body).toMatchSnapshot();
