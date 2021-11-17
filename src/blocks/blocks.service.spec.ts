@@ -175,6 +175,35 @@ describe('BlocksService', () => {
     });
   });
 
+  describe('getDateMetrics', () => {
+    it('returns metrics for the day', async () => {
+      const date = new Date();
+      await blocksService.upsert(prisma, {
+        hash: uuid(),
+        sequence: faker.datatype.number(),
+        difficulty: faker.datatype.number(),
+        timestamp: date,
+        transactionsCount: 1,
+        type: BlockOperation.CONNECTED,
+        graffiti: uuid(),
+        previous_block_hash: uuid(),
+        size: faker.datatype.number(),
+      });
+
+      const metrics = await blocksService.getDateMetrics(prisma, date);
+      expect(metrics).toMatchObject({
+        averageBlockTimeMs: expect.any(Number),
+        averageDifficultyMillis: expect.any(Number),
+        blocksCount: expect.any(Number),
+        blocksWithGraffitiCount: expect.any(Number),
+        chainSequence: expect.any(Number),
+        cumulativeUniqueGraffiti: expect.any(Number),
+        transactionsCount: expect.any(Number),
+        uniqueGraffiti: expect.any(Number),
+      });
+    });
+  });
+
   describe('getStatus', () => {
     it('returns statistics for blocks in the main chain', async () => {
       const status = await blocksService.getStatus();
