@@ -41,4 +41,9 @@ export class BlocksQueryDto extends PaginationArgsDto {
   @IsBoolean()
   @Type(() => Boolean)
   readonly with_transactions?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  @Type(() => Boolean)
+  readonly main?: boolean;
 }

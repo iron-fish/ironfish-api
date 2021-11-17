@@ -4,6 +4,7 @@
 import { PaginationOptions } from '../../common/interfaces/pagination-options';
 
 export interface ListBlocksOptions extends PaginationOptions {
+  main?: boolean;
   transactionId?: number;
   sequenceGte?: number;
   sequenceLt?: number;
