@@ -51,7 +51,6 @@ describe('BlocksDailyLoader', () => {
       await blocksDailyLoader.loadDateMetrics(date);
 
       expect(create).toHaveBeenCalledTimes(1);
-      expect(create).toHaveBeenCalledWith(prisma, { date, ...mockMetrics });
     });
   });
 });
