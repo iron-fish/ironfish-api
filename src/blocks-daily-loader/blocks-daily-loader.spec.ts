@@ -4,6 +4,7 @@
 import { INestApplication } from '@nestjs/common';
 import { BlocksService } from '../blocks/blocks.service';
 import { BlocksDailyService } from '../blocks-daily/blocks-daily.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { BlocksDailyLoader } from './blocks-daily-loader';
 
@@ -12,12 +13,14 @@ describe('BlocksDailyLoader', () => {
   let blocksDailyLoader: BlocksDailyLoader;
   let blocksDailyService: BlocksDailyService;
   let blocksService: BlocksService;
+  let prisma: PrismaService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
     blocksDailyLoader = app.get(BlocksDailyLoader);
     blocksDailyService = app.get(BlocksDailyService);
     blocksService = app.get(BlocksService);
+    prisma = app.get(PrismaService);
     await app.init();
   });
 
@@ -48,7 +51,7 @@ describe('BlocksDailyLoader', () => {
       await blocksDailyLoader.loadDateMetrics(date);
 
       expect(create).toHaveBeenCalledTimes(1);
-      expect(create).toHaveBeenCalledWith({ date, ...mockMetrics });
+      expect(create).toHaveBeenCalledWith(prisma, { date, ...mockMetrics });
     });
   });
 });
