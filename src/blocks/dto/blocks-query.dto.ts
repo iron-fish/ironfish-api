@@ -2,9 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { IsBoolean, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { Transform, TransformFnParams, Type } from 'class-transformer';
+import { IsInt, IsOptional, IsString, Min } from 'class-validator';
 import { PaginationArgsDto } from '../../common/dto/pagination-args.dto';
+import { stringToBoolean } from '../../common/utils/boolean';
 
 export class BlocksQueryDto extends PaginationArgsDto {
   @ApiPropertyOptional({ description: 'Unique Transaction identifier' })
@@ -38,7 +39,10 @@ export class BlocksQueryDto extends PaginationArgsDto {
     description: 'Whether or not to include transactions in the response',
   })
   @IsOptional()
-  @IsBoolean()
-  @Type(() => Boolean)
+  @Transform(({ value }: TransformFnParams) => stringToBoolean(value))
   readonly with_transactions?: boolean;
+
+  @IsOptional()
+  @Transform(({ value }: TransformFnParams) => stringToBoolean(value))
+  readonly main?: boolean;
 }
