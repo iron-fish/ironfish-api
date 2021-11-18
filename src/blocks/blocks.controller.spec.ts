@@ -257,7 +257,7 @@ describe('BlocksController', () => {
 
           const { body } = await request(app.getHttpServer())
             .get('/blocks')
-            .query({ main: 'false' })
+            .query({ main: false })
             .expect(HttpStatus.OK);
 
           const { data } = body;
