@@ -22,12 +22,12 @@ export class BlocksDailyService {
     });
   }
 
-  async create(
+  async upsert(
     prisma: BasePrismaClient,
     options: CreateBlocksDailyOptions,
   ): Promise<BlockDaily> {
-    return prisma.blockDaily.create({
-      data: {
+    return prisma.blockDaily.upsert({
+      create: {
         average_block_time_ms: options.averageBlockTimeMs,
         average_difficulty_millis: options.averageDifficultyMillis,
         blocks_count: options.blocksCount,
@@ -37,6 +37,19 @@ export class BlocksDailyService {
         date: options.date,
         transactions_count: options.transactionsCount,
         unique_graffiti: options.uniqueGraffiti,
+      },
+      update: {
+        average_block_time_ms: options.averageBlockTimeMs,
+        average_difficulty_millis: options.averageDifficultyMillis,
+        blocks_count: options.blocksCount,
+        blocks_with_graffiti_count: options.blocksWithGraffitiCount,
+        chain_sequence: options.chainSequence,
+        cumulative_unique_graffiti: options.cumulativeUniqueGraffiti,
+        transactions_count: options.transactionsCount,
+        unique_graffiti: options.uniqueGraffiti,
+      },
+      where: {
+        date: options.date,
       },
     });
   }

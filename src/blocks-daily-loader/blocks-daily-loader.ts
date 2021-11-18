@@ -18,7 +18,7 @@ export class BlocksDailyLoader {
   async loadDateMetrics(date: Date): Promise<BlockDaily> {
     return this.prisma.$transaction(async (prisma) => {
       const dateMetrics = await this.blocksService.getDateMetrics(prisma, date);
-      return this.blocksDailyService.create(prisma, { date, ...dateMetrics });
+      return this.blocksDailyService.upsert(prisma, { date, ...dateMetrics });
     });
   }
 }

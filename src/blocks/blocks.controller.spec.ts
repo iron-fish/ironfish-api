@@ -724,7 +724,7 @@ describe('BlocksController', () => {
       it('returns daily snapshots', async () => {
         const start = '2021-06-01T00:00:00.000Z';
         const end = '2021-07-01T00:00:00.000Z';
-        await blocksDailyService.create(prisma, {
+        await blocksDailyService.upsert(prisma, {
           averageBlockTimeMs: 0,
           averageDifficultyMillis: 0,
           blocksCount: 0,
