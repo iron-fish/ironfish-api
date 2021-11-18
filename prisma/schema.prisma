@@ -137,6 +137,7 @@ model BlockDaily {
   average_difficulty_millis  BigInt
   chain_sequence             Int
 
+  @@unique([date], name: "uq_blocks_daily_on_date")
   @@index([date], map: "index_blocks_daily_on_date")
   @@map("blocks_daily")
 }
