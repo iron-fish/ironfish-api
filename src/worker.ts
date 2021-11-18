@@ -6,13 +6,21 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { GraphileWorkerMicroservice } from './graphile-worker/graphile-worker.microservice';
 
+const PORT = 8004;
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  const graphileWorkerMicroservice = new GraphileWorkerMicroservice(
+    app.get(ConfigService),
+  );
   app.connectMicroservice({
-    strategy: new GraphileWorkerMicroservice(app.get(ConfigService)),
+    strategy: graphileWorkerMicroservice,
   });
   await app.init();
+
+  await app.startAllMicroservices();
+  await app.listen(PORT);
 }
 
 // eslint-disable-next-line no-console

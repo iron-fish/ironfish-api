@@ -14,9 +14,10 @@ export class GraphileWorkerService {
 
   constructor(private readonly config: ApiConfigService) {}
 
-  async addJob(
+  async addJob<T>(
     pattern: GraphileWorkerPattern,
-    payload: Record<string, unknown>,
+    payload: T,
+    runAt?: Date,
     queueName?: string,
   ): Promise<Job> {
     if (!this.workerUtils) {
@@ -25,6 +26,7 @@ export class GraphileWorkerService {
     return this.workerUtils.addJob(pattern.toString(), payload, {
       jobKey: `job_${uuid()}`,
       queueName,
+      runAt,
     });
   }
 
