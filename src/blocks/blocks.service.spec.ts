@@ -173,7 +173,7 @@ describe('BlocksService', () => {
         });
 
         for (const block of blocks.data) {
-          expect(block.main).toBeFalsy();
+          expect(block.main).toBe(false);
         }
       });
     });
