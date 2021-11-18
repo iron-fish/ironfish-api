@@ -2,9 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform, TransformFnParams, Type } from 'class-transformer';
 import {
-  IsBoolean,
   IsDefined,
   IsInt,
   IsOptional,
@@ -12,6 +11,7 @@ import {
   Min,
   ValidateIf,
 } from 'class-validator';
+import { stringToBoolean } from '../../common/utils/boolean';
 
 export class BlockQueryDto {
   @ApiPropertyOptional({ description: 'Block hash' })
@@ -36,7 +36,6 @@ export class BlockQueryDto {
     description: 'Whether or not to include transactions in the response',
   })
   @IsOptional()
-  @IsBoolean()
-  @Type(() => Boolean)
+  @Transform(({ value }: TransformFnParams) => stringToBoolean(value))
   readonly with_transactions?: boolean;
 }
