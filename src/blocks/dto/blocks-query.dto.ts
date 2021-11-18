@@ -8,11 +8,17 @@ import { PaginationArgsDto } from '../../common/dto/pagination-args.dto';
 import { stringToBoolean } from '../../common/utils/boolean';
 
 export class BlocksQueryDto extends PaginationArgsDto {
-  @ApiPropertyOptional({ description: 'Unique Transaction identifier' })
+  @ApiPropertyOptional({
+    description: 'Whether to include only main-chain or non-main-chain blocks',
+  })
   @IsOptional()
-  @IsInt()
-  @Type(() => Number)
-  readonly transaction_id?: number;
+  @Transform(({ value }: TransformFnParams) => stringToBoolean(value))
+  readonly main?: boolean;
+
+  @ApiPropertyOptional({ description: 'Keyword search filter' })
+  @IsOptional()
+  @IsString()
+  readonly search?: string;
 
   @ApiPropertyOptional({
     description: 'Greater than or equal to filter for Block sequence',
@@ -30,19 +36,16 @@ export class BlocksQueryDto extends PaginationArgsDto {
   @Type(() => Number)
   readonly sequence_lt?: number;
 
-  @ApiPropertyOptional({ description: 'Keyword search filter' })
+  @ApiPropertyOptional({ description: 'Unique Transaction identifier' })
   @IsOptional()
-  @IsString()
-  readonly search?: string;
+  @IsInt()
+  @Type(() => Number)
+  readonly transaction_id?: number;
 
   @ApiPropertyOptional({
-    description: 'Whether or not to include transactions in the response',
+    description: 'Whether to include transactions in the response',
   })
   @IsOptional()
   @Transform(({ value }: TransformFnParams) => stringToBoolean(value))
   readonly with_transactions?: boolean;
-
-  @IsOptional()
-  @Transform(({ value }: TransformFnParams) => stringToBoolean(value))
-  readonly main?: boolean;
 }
