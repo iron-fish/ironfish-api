@@ -10,7 +10,7 @@ export function isBoolString(value: unknown): boolean {
 export function stringToBoolean(value: unknown): boolean {
   if (!isBoolString(value)) {
     throw new UnprocessableEntityException(
-      `Boolean string parameter must have value of either true or false`,
+      `Boolean string parameter must have value of either 'true' or 'false'`,
     );
   } 
   return value === 'true';
