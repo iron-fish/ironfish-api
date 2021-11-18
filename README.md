@@ -1,5 +1,7 @@
 # ironfish-api
 
+![Build](https://github.com/iron-fish/ironfish-api/actions/workflows/ci.yml/badge.svg)
+
 ## Installing
 
 * Make sure you're running at least node 16 - you may want to avail yourself of a tool like [nvm](https://nvm.sh)
