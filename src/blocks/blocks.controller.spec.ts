@@ -233,7 +233,7 @@ describe('BlocksController', () => {
         );
       });
 
-      describe.only('with main chain parameter set to false', () => {
+      describe('with main chain parameter set to false', () => {
         it('returns only non-main chain blocks', async () => {
           for (let i = 0; i < 10; i++) {
             const hash = uuid();
@@ -256,8 +256,8 @@ describe('BlocksController', () => {
           }
 
           const { body } = await request(app.getHttpServer())
-            .get('/blocks?main=beepboop')
-            // .query({ main: false })
+            .get('/blocks')
+            .query({ main: 'false' })
             .expect(HttpStatus.OK);
 
           const { data } = body;
