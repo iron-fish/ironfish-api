@@ -41,7 +41,7 @@ export class GraphileWorkerService {
       connectionString: this.config.get<string>('DATABASE_URL'),
       ssl:
         this.config.get<string>('NODE_ENV') !== 'development'
-          ? { rejectUnauthorized: true }
+          ? { rejectUnauthorized: false }
           : undefined,
     };
   }
