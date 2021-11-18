@@ -24,6 +24,7 @@ export class BlocksDailyJobsController {
   async sync({
     date,
   }: SyncBlocksDailyOptions): Promise<GraphileWorkerHandlerResponse> {
+    date = new Date(date);
     const head = await this.blocksService.head();
     const diffInMs = head.timestamp.getTime() - date.getTime();
     const diffInDays = diffInMs / MS_PER_DAY;
