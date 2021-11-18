@@ -260,7 +260,7 @@ export class BlocksService {
       }[]
     >(`
       SELECT
-        COALESCE(EXTRACT(EPOCH FROM MAX(timestamp) - MIN(timestamp)), 0) * 1000 AS average_block_time_ms,
+        FLOOR(COALESCE(EXTRACT(EPOCH FROM MAX(timestamp) - MIN(timestamp)), 0) * 1000 / COALESCE(COUNT(*), 1)) AS average_block_time_ms,
         COALESCE(FLOOR(AVG(difficulty) * 1000), 0) AS average_difficulty_millis,
         COUNT(*) AS blocks_count,
         COALESCE(SUM(CASE WHEN graffiti IS NOT NULL THEN 1 ELSE 0 END), 0) AS blocks_with_graffiti_count,
