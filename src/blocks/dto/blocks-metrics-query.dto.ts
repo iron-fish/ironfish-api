@@ -8,21 +8,22 @@ import { MetricsGranularity } from '../../common/enums/metrics-granularity';
 
 export class BlocksMetricsQueryDto {
   @ApiProperty({
-    description: 'Start date for snapshots',
+    description: 'ISO 8601 start date for blocks metrics snapshots',
   })
   @IsDate()
   @Type(() => Date)
   readonly start!: Date;
 
   @ApiProperty({
-    description: 'End date for snapshots (exclusive)',
+    description: 'ISO 8601 end date (exclusive) for blocks metrics snapshots',
   })
   @IsDate()
   @Type(() => Date)
   readonly end!: Date;
 
   @ApiProperty({
-    description: 'Granularity breakdown for metrics',
+    description: `Granularity breakdown for metrics. Must be ${MetricsGranularity.DAY} requests`,
+    enum: MetricsGranularity,
   })
   @IsEnum(MetricsGranularity)
   readonly granularity!: MetricsGranularity;
