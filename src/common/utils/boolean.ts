@@ -12,8 +12,6 @@ export function stringToBoolean(value: unknown): boolean {
     throw new UnprocessableEntityException(
       `Boolean string parameter must have value of either 'true' or 'false'`,
     );
-  } 
-  return value === 'true';
-    return value === 'true';
   }
+  return value === 'true';
 }
