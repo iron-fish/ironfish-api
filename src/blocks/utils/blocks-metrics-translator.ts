@@ -17,6 +17,6 @@ export function serializedBlockMetricsFromRecord(
     cumulative_unique_graffiti: record.cumulative_unique_graffiti,
     date: record.date.toISOString(),
     transactions_count: record.transactions_count,
-    unique_graffiti_count: record.unique_graffiti,
+    unique_graffiti_count: record.unique_graffiti_count,
   };
 }

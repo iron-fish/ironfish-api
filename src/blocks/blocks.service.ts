@@ -256,7 +256,7 @@ export class BlocksService {
         blocks_with_graffiti_count: number;
         chain_sequence: number;
         transactions_count: number;
-        unique_graffiti: number;
+        unique_graffiti_count: number;
       }[]
     >(`
       SELECT
@@ -266,7 +266,7 @@ export class BlocksService {
         COALESCE(SUM(CASE WHEN graffiti != '' THEN 1 ELSE 0 END), 0) AS blocks_with_graffiti_count,
         COALESCE(MAX(sequence), 0) AS chain_sequence,
         COALESCE(SUM(transactions_count), 0) AS transactions_count,
-        COUNT(DISTINCT graffiti) AS unique_graffiti
+        COUNT(DISTINCT graffiti) AS unique_graffiti_count
       FROM
         blocks
       WHERE
@@ -315,7 +315,7 @@ export class BlocksService {
       cumulativeUniqueGraffiti:
         cumulativeMetricsResponse[0].cumulative_unique_graffiti,
       transactionsCount: dateMetricsResponse[0].transactions_count,
-      uniqueGraffiti: dateMetricsResponse[0].unique_graffiti,
+      uniqueGraffiti: dateMetricsResponse[0].unique_graffiti_count,
     };
   }
 

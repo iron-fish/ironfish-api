@@ -36,7 +36,7 @@ export class BlocksDailyService {
         cumulative_unique_graffiti: options.cumulativeUniqueGraffiti,
         date: options.date,
         transactions_count: options.transactionsCount,
-        unique_graffiti: options.uniqueGraffiti,
+        unique_graffiti_count: options.uniqueGraffiti,
       },
     });
   }
