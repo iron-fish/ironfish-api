@@ -34,7 +34,7 @@ describe('BlocksDailyService', () => {
           cumulative_unique_graffiti: 1,
           date: new Date('2021-11-16T00:00:00Z'),
           transactions_count: 1,
-          unique_graffiti: 1,
+          unique_graffiti_count: 1,
         },
       });
       await prisma.blockDaily.create({
@@ -47,7 +47,7 @@ describe('BlocksDailyService', () => {
           cumulative_unique_graffiti: 1,
           date: new Date('2021-11-17T00:00:00Z'),
           transactions_count: 1,
-          unique_graffiti: 1,
+          unique_graffiti_count: 1,
         },
       });
       await prisma.blockDaily.create({
@@ -60,7 +60,7 @@ describe('BlocksDailyService', () => {
           cumulative_unique_graffiti: 1,
           date: new Date('2021-11-18T00:00:00Z'),
           transactions_count: 1,
-          unique_graffiti: 1,
+          unique_graffiti_count: 1,
         },
       });
     };
