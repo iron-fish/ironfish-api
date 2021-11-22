@@ -78,8 +78,8 @@ describe('BlocksDailyService', () => {
     });
   });
 
-  describe('create', () => {
-    it('creates a BlockDaily record', async () => {
+  describe('upsert', () => {
+    it('upserts a BlockDaily record', async () => {
       const options = {
         averageBlockTimeMs: 0,
         averageDifficultyMillis: 0,
@@ -92,7 +92,7 @@ describe('BlocksDailyService', () => {
         uniqueGraffiti: 0,
       };
 
-      const blockDaily = await blocksDailyService.create(prisma, options);
+      const blockDaily = await blocksDailyService.upsert(prisma, options);
       expect(blockDaily).toMatchObject({
         id: expect.any(Number),
         average_block_time_ms: options.averageBlockTimeMs,

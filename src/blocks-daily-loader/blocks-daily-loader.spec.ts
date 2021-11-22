@@ -26,7 +26,7 @@ describe('BlocksDailyLoader', () => {
   });
 
   describe('loadDateMetrics', () => {
-    it('fetches date metrics and creates a new Block Daily record', async () => {
+    it('fetches date metrics and upserts a new Block Daily record', async () => {
       const date = new Date();
       const mockMetrics = {
         averageBlockTimeMs: 0,
@@ -38,8 +38,8 @@ describe('BlocksDailyLoader', () => {
         transactionsCount: 0,
         uniqueGraffiti: 0,
       };
-      const create = jest
-        .spyOn(blocksDailyService, 'create')
+      const upsert = jest
+        .spyOn(blocksDailyService, 'upsert')
         .mockImplementationOnce(jest.fn());
       jest
         .spyOn(blocksService, 'getDateMetrics')
@@ -47,7 +47,7 @@ describe('BlocksDailyLoader', () => {
 
       await blocksDailyLoader.loadDateMetrics(date);
 
-      expect(create).toHaveBeenCalledTimes(1);
+      expect(upsert).toHaveBeenCalledTimes(1);
     });
   });
 });
