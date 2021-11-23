@@ -2,12 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Module } from '@nestjs/common';
+import { ApiConfigModule } from '../api-config/api-config.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { EventsService } from './events.service';
 
 @Module({
   exports: [EventsService],
-  imports: [PrismaModule],
+  imports: [ApiConfigModule, PrismaModule],
   providers: [EventsService],
 })
 export class EventsModule {}

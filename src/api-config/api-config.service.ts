@@ -19,4 +19,8 @@ export class ApiConfigService {
   isStaging(): boolean {
     return this.get<string>('NODE_ENV') === 'staging';
   }
+
+  isProduction(): boolean {
+    return this.get<string>('NODE_ENV') === 'production';
+  }
 }
