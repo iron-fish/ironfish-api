@@ -27,15 +27,23 @@ describe('RegistrationController', () => {
 
   describe('GET /registration/:token/confirm', () => {
     describe('with an invalid token', () => {
-      it('returns a 404', async () => {
-        await request(app.getHttpServer())
+      it('redirects with an error toast', async () => {
+        const message = 'Invalid confirmation token';
+        const { header } = await request(app.getHttpServer())
           .get('/registration/token/confirm')
-          .expect(HttpStatus.NOT_FOUND);
+          .expect(HttpStatus.FOUND);
+
+        expect((header as Record<string, unknown>).location).toBe(
+          `${config.get<string>(
+            'INCENTIVIZED_TESTNET_URL',
+          )}/login?toast=${Buffer.from(message).toString('base64')}`,
+        );
       });
     });
 
     describe('with an already confirmed user', () => {
-      it('returns a 404', async () => {
+      it('redirects with an error toast', async () => {
+        const message = 'Invalid confirmation token';
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: uuid(),
@@ -43,9 +51,15 @@ describe('RegistrationController', () => {
         });
         await usersService.confirm(user);
 
-        await request(app.getHttpServer())
-          .get(`/registration/${user.confirmation_token}/confirm`)
-          .expect(HttpStatus.NOT_FOUND);
+        const { header } = await request(app.getHttpServer())
+          .get('/registration/token/confirm')
+          .expect(HttpStatus.FOUND);
+
+        expect((header as Record<string, unknown>).location).toBe(
+          `${config.get<string>(
+            'INCENTIVIZED_TESTNET_URL',
+          )}/login?toast=${Buffer.from(message).toString('base64')}`,
+        );
       });
     });
 
