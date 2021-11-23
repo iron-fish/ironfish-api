@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import is from '@sindresorhus/is';
 import { ApiConfigService } from '../api-config/api-config.service';
 import {
@@ -260,7 +260,7 @@ export class EventsService {
     };
   }
 
-  async create(options: CreateEventOptions): Promise<Event | undefined> {
+  async create(options: CreateEventOptions): Promise<Event> {
     return this.prisma.$transaction(async (prisma) => {
       return this.createWithClient(options, prisma);
     });
@@ -269,7 +269,7 @@ export class EventsService {
   async createWithClient(
     { blockId, occurredAt, points, type, userId }: CreateEventOptions,
     client: BasePrismaClient,
-  ): Promise<Event | undefined> {
+  ): Promise<Event> {
     occurredAt = occurredAt || new Date();
     // 2021 December 1 8 AM UTC
     const launchDate = new Date(Date.UTC(2021, 11, 1, 8, 0, 0));
@@ -280,7 +280,7 @@ export class EventsService {
       occurredAt < launchDate &&
       now < launchDate
     ) {
-      return undefined;
+      throw new UnprocessableEntityException();
     }
 
     const weeklyLimitForEventType = WEEKLY_POINT_LIMITS_BY_EVENT_TYPE[type];
