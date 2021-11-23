@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { Controller, Get, NotFoundException, Param, Res } from '@nestjs/common';
+import { Controller, Get, Param, Res } from '@nestjs/common';
 import { ApiExcludeEndpoint } from '@nestjs/swagger';
 import { Response } from 'express';
 import { ApiConfigService } from '../api-config/api-config.service';
@@ -22,13 +22,19 @@ export class RegistrationController {
   ): Promise<void> {
     const user = await this.usersService.findByConfirmationToken(token);
     if (!user || user.confirmed_at) {
-      throw new NotFoundException();
+      const message = 'Invalid confirmation token';
+      res.redirect(
+        `${this.config.get<string>(
+          'INCENTIVIZED_TESTNET_URL',
+        )}/login?toast=${Buffer.from(message).toString('base64')}`,
+      );
+    } else {
+      await this.usersService.confirm(user);
+      res.redirect(
+        `${this.config.get<string>(
+          'INCENTIVIZED_TESTNET_URL',
+        )}/login?confirmed=true`,
+      );
     }
-    await this.usersService.confirm(user);
-    res.redirect(
-      `${this.config.get<string>(
-        'INCENTIVIZED_TESTNET_URL',
-      )}/login?confirmed=true`,
-    );
   }
 }
