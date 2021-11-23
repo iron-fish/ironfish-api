@@ -329,7 +329,7 @@ export class EventsService {
     block: Block,
     user: User,
     client: BasePrismaClient,
-  ): Promise<Event | undefined> {
+  ): Promise<Event> {
     const points = POINTS_PER_CATEGORY[EventType.BLOCK_MINED];
     const record = await client.event.findUnique({
       where: {
