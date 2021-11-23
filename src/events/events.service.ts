@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable } from '@nestjs/common';
 import is from '@sindresorhus/is';
+import { ApiConfigService } from '../api-config/api-config.service';
 import {
   DEFAULT_LIMIT,
   MAX_LIMIT,
@@ -20,7 +21,10 @@ import { Block, Event, EventType, Prisma, User } from '.prisma/client';
 
 @Injectable()
 export class EventsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private config: ApiConfigService,
+    private prisma: PrismaService,
+  ) {}
 
   async list(options: ListEventsOptions): Promise<{
     data: Event[];
@@ -256,7 +260,7 @@ export class EventsService {
     };
   }
 
-  async create(options: CreateEventOptions): Promise<Event> {
+  async create(options: CreateEventOptions): Promise<Event | undefined> {
     return this.prisma.$transaction(async (prisma) => {
       return this.createWithClient(options, prisma);
     });
@@ -265,7 +269,20 @@ export class EventsService {
   async createWithClient(
     { blockId, occurredAt, points, type, userId }: CreateEventOptions,
     client: BasePrismaClient,
-  ): Promise<Event> {
+  ): Promise<Event | undefined> {
+    occurredAt = occurredAt || new Date();
+    // 2021 December 1 8 AM UTC
+    const launchDate = new Date(Date.UTC(2021, 11, 1, 8, 0, 0));
+    const now = new Date();
+    // Requests to create events and the event timestamp should both be after launch
+    if (
+      this.config.isProduction() &&
+      occurredAt < launchDate &&
+      now < launchDate
+    ) {
+      return undefined;
+    }
+
     const weeklyLimitForEventType = WEEKLY_POINT_LIMITS_BY_EVENT_TYPE[type];
     const startOfWeek = getMondayFromDate(occurredAt);
     const pointsAggregateThisWeek = await client.event.aggregate({
@@ -302,7 +319,7 @@ export class EventsService {
         type,
         block_id: blockId,
         points: adjustedPoints,
-        occurred_at: (occurredAt || new Date()).toISOString(),
+        occurred_at: occurredAt.toISOString(),
         user_id: userId,
       },
     });
@@ -312,7 +329,7 @@ export class EventsService {
     block: Block,
     user: User,
     client: BasePrismaClient,
-  ): Promise<Event> {
+  ): Promise<Event | undefined> {
     const points = POINTS_PER_CATEGORY[EventType.BLOCK_MINED];
     const record = await client.event.findUnique({
       where: {

@@ -5,6 +5,7 @@ import { INestApplication } from '@nestjs/common';
 import faker from 'faker';
 import { ulid } from 'ulid';
 import { v4 as uuid } from 'uuid';
+import { ApiConfigService } from '../api-config/api-config.service';
 import {
   POINTS_PER_CATEGORY,
   WEEKLY_POINT_LIMITS_BY_EVENT_TYPE,
@@ -17,12 +18,14 @@ import { EventType } from '.prisma/client';
 
 describe('EventsService', () => {
   let app: INestApplication;
+  let config: ApiConfigService;
   let eventsService: EventsService;
   let prisma: PrismaService;
   let usersService: UsersService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
+    config = app.get(ApiConfigService);
     eventsService = app.get(EventsService);
     prisma = app.get(PrismaService);
     usersService = app.get(UsersService);
@@ -317,6 +320,31 @@ describe('EventsService', () => {
   });
 
   describe('create', () => {
+    describe('when the event is before the launch date in production', () => {
+      it('returns undefined', async () => {
+        jest.spyOn(config, 'isProduction').mockImplementationOnce(() => true);
+
+        const user = await prisma.user.create({
+          data: {
+            confirmation_token: ulid(),
+            confirmed_at: new Date().toISOString(),
+            email: faker.internet.email(),
+            graffiti: uuid(),
+            country_code: faker.address.countryCode('alpha-3'),
+          },
+        });
+        const type = EventType.PULL_REQUEST_MERGED;
+        const event = await eventsService.create({
+          type,
+          userId: user.id,
+          points: 100,
+          occurredAt: new Date(Date.UTC(2021, 10, 1)),
+        });
+
+        expect(event).toBeUndefined();
+      });
+    });
+
     describe('when the user has hit the weekly limit', () => {
       it('does not increment the total points for a user', async () => {
         const points = 1000;
@@ -370,6 +398,9 @@ describe('EventsService', () => {
           userId: user.id,
           points: 100,
         });
+        if (!event) {
+          throw new Error('Undefined event');
+        }
         expect(event.points).toBe(0);
       });
     });
@@ -431,6 +462,9 @@ describe('EventsService', () => {
           userId: user.id,
           points,
         });
+        if (!event) {
+          throw new Error('Undefined event');
+        }
         expect(event.points).toBe(
           WEEKLY_POINT_LIMITS_BY_EVENT_TYPE[type] - currentPointsThisWeek,
         );
