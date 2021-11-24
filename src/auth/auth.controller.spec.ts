@@ -94,6 +94,7 @@ describe('AuthController', () => {
             last_login_at: null,
             discord: null,
             telegram: ulid(),
+            github: faker.internet.userName(),
             confirmation_token: ulid(),
             confirmed_at: new Date(),
           },
