@@ -46,7 +46,7 @@ export class BlocksDailyService {
         chain_sequence: options.chainSequence,
         cumulative_unique_graffiti: options.cumulativeUniqueGraffiti,
         transactions_count: options.transactionsCount,
-        unique_graffiti: options.uniqueGraffiti,
+        unique_graffiti_count: options.uniqueGraffiti,
       },
       where: {
         date: options.date,
