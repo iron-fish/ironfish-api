@@ -19,7 +19,7 @@ export const WEEKLY_POINT_LIMITS_BY_EVENT_TYPE: Record<EventType, number> = {
 };
 
 export const POINTS_PER_CATEGORY: Record<EventType, number> = {
-  [EventType.BLOCK_MINED]: 10,
+  [EventType.BLOCK_MINED]: 100,
   [EventType.BUG_CAUGHT]: 100,
   [EventType.COMMUNITY_CONTRIBUTION]: 1000,
   [EventType.PULL_REQUEST_MERGED]: 500,
