@@ -271,8 +271,8 @@ export class EventsService {
     client: BasePrismaClient,
   ): Promise<Event | null> {
     occurredAt = occurredAt || new Date();
-    // 2021 December 1 8 AM UTC
-    const launchDate = new Date(Date.UTC(2021, 11, 1, 8, 0, 0));
+    // 2021 December 1 8 PM UTC
+    const launchDate = new Date(Date.UTC(2021, 11, 1, 20, 0, 0));
     const now = new Date();
     // Requests to create events and the event timestamp should both be after launch
     if (
