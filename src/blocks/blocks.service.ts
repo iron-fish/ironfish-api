@@ -259,7 +259,8 @@ export class BlocksService {
         transactions_count: number;
         unique_graffiti_count: number;
       }[]
-    >(`
+    >(
+      `
       SELECT
         FLOOR(COALESCE(EXTRACT(EPOCH FROM MAX(timestamp) - MIN(timestamp)), 0) * 1000 / GREATEST(COUNT(*), 1)) AS average_block_time_ms,
         COALESCE(FLOOR(AVG(difficulty) * 1000), 0) AS average_difficulty_millis,
