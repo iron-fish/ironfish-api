@@ -1,7 +1,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { INestApplication, UnprocessableEntityException } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
+import assert from 'assert';
 import faker from 'faker';
 import { ulid } from 'ulid';
 import { v4 as uuid } from 'uuid';
@@ -321,7 +322,7 @@ describe('EventsService', () => {
 
   describe('create', () => {
     describe('when the event is before the launch date in production', () => {
-      it('returns undefined', async () => {
+      it('returns null', async () => {
         jest.spyOn(config, 'isProduction').mockImplementationOnce(() => true);
 
         const user = await prisma.user.create({
@@ -335,14 +336,13 @@ describe('EventsService', () => {
         });
         const type = EventType.PULL_REQUEST_MERGED;
 
-        await expect(
-          eventsService.create({
-            type,
-            userId: user.id,
-            points: 100,
-            occurredAt: new Date(Date.UTC(2021, 10, 1)),
-          }),
-        ).rejects.toThrow(UnprocessableEntityException);
+        const event = await eventsService.create({
+          type,
+          userId: user.id,
+          points: 100,
+          occurredAt: new Date(Date.UTC(2021, 10, 1)),
+        });
+        expect(event).toBeNull();
       });
     });
 
@@ -399,6 +399,7 @@ describe('EventsService', () => {
           userId: user.id,
           points: 100,
         });
+        assert.ok(event);
         expect(event.points).toBe(0);
       });
     });
@@ -460,6 +461,7 @@ describe('EventsService', () => {
           userId: user.id,
           points,
         });
+        assert.ok(event);
         expect(event.points).toBe(
           WEEKLY_POINT_LIMITS_BY_EVENT_TYPE[type] - currentPointsThisWeek,
         );
