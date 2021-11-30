@@ -247,6 +247,7 @@ export class BlocksService {
     prisma: BasePrismaClient,
     date: Date,
   ): Promise<BlocksDateMetrics> {
+    const networkVersion = this.config.get<number>('NETWORK_VERSION');
     const end = getNextDate(date);
     const dateMetricsResponse = await prisma.$queryRawUnsafe<
       {
@@ -258,7 +259,8 @@ export class BlocksService {
         transactions_count: number;
         unique_graffiti_count: number;
       }[]
-    >(`
+    >(
+      `
       SELECT
         FLOOR(COALESCE(EXTRACT(EPOCH FROM MAX(timestamp) - MIN(timestamp)), 0) * 1000 / GREATEST(COUNT(*), 1)) AS average_block_time_ms,
         COALESCE(FLOOR(AVG(difficulty) * 1000), 0) AS average_difficulty_millis,
@@ -272,8 +274,11 @@ export class BlocksService {
       WHERE
         '${date.toISOString()}' <= timestamp AND
         timestamp < '${end.toISOString()}' AND
-        main = TRUE
-    `);
+        main = TRUE AND
+        network_version = $1
+    `,
+      networkVersion,
+    );
     if (
       !is.array(dateMetricsResponse) ||
       dateMetricsResponse.length !== 1 ||
@@ -284,7 +289,8 @@ export class BlocksService {
 
     const cumulativeMetricsResponse = await this.prisma.$queryRawUnsafe<
       { cumulative_unique_graffiti: number }[]
-    >(`
+    >(
+      `
       SELECT
         COUNT(*) AS cumulative_unique_graffiti
       FROM (
@@ -294,9 +300,12 @@ export class BlocksService {
           blocks 
         WHERE 
           timestamp < '${end.toISOString()}' AND
-          main = true
+          main = true AND
+          network_version = $1
       ) AS main_blocks
-    `);
+    `,
+      networkVersion,
+    );
     if (
       !is.array(cumulativeMetricsResponse) ||
       cumulativeMetricsResponse.length !== 1 ||
