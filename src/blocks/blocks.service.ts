@@ -247,6 +247,7 @@ export class BlocksService {
     prisma: BasePrismaClient,
     date: Date,
   ): Promise<BlocksDateMetrics> {
+    const networkVersion = this.config.get<number>('NETWORK_VERSION');
     const end = getNextDate(date);
     const dateMetricsResponse = await prisma.$queryRawUnsafe<
       {
@@ -272,8 +273,11 @@ export class BlocksService {
       WHERE
         '${date.toISOString()}' <= timestamp AND
         timestamp < '${end.toISOString()}' AND
-        main = TRUE
-    `);
+        main = TRUE AND
+        network_version = $1
+    `,
+      networkVersion,
+    );
     if (
       !is.array(dateMetricsResponse) ||
       dateMetricsResponse.length !== 1 ||
@@ -284,7 +288,8 @@ export class BlocksService {
 
     const cumulativeMetricsResponse = await this.prisma.$queryRawUnsafe<
       { cumulative_unique_graffiti: number }[]
-    >(`
+    >(
+      `
       SELECT
         COUNT(*) AS cumulative_unique_graffiti
       FROM (
@@ -294,9 +299,12 @@ export class BlocksService {
           blocks 
         WHERE 
           timestamp < '${end.toISOString()}' AND
-          main = true
+          main = true AND
+          network_version = $1
       ) AS main_blocks
-    `);
+    `,
+      networkVersion,
+    );
     if (
       !is.array(cumulativeMetricsResponse) ||
       cumulativeMetricsResponse.length !== 1 ||
