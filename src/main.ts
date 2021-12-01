@@ -34,7 +34,7 @@ async function bootstrap() {
         /block-explorer.*\.vercel\.app/,
         /website-testnet.*\.vercel\.app/,
       ]
-    : defaultOrigins;
+    : [...defaultOrigins, /website-testnet.*\.vercel\.app/];
 
   app.enableCors({
     origin: enabledOrigins,
