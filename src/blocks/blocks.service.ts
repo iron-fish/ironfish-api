@@ -329,10 +329,12 @@ export class BlocksService {
   }
 
   async getStatus(): Promise<BlocksStatus> {
+    const networkVersion = this.config.get<number>('NETWORK_VERSION');
     const [chainHeight, markedBlocks] = await this.prisma.$transaction([
       this.prisma.block.count({
         where: {
           main: true,
+          network_version: networkVersion,
         },
       }),
       this.prisma.block.count({
@@ -341,6 +343,7 @@ export class BlocksService {
           graffiti: {
             not: '',
           },
+          network_version: networkVersion,
         },
       }),
     ]);
@@ -350,7 +353,8 @@ export class BlocksService {
     // See more: https://github.com/prisma/prisma/issues/4228
     const uniqueGraffiti = (
       await this.prisma.$queryRawUnsafe<{ count: number }[]>(
-        'SELECT COUNT(*) FROM (SELECT DISTINCT graffiti FROM blocks WHERE main = true) AS main_blocks;',
+        'SELECT COUNT(*) FROM (SELECT DISTINCT graffiti FROM blocks WHERE main = true AND network_version = $1) AS main_blocks;',
+        networkVersion,
       )
     )[0].count;
     const percentageMarked = markedBlocks / chainHeight;
