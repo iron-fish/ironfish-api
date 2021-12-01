@@ -321,8 +321,8 @@ describe('EventsService', () => {
   });
 
   describe('create', () => {
-    describe('when the event is before the launch date in production', () => {
-      it('returns null', async () => {
+    describe('when the event is after the launch date in production', () => {
+      it('does not return null', async () => {
         jest.spyOn(config, 'isProduction').mockImplementationOnce(() => true);
 
         const user = await prisma.user.create({
@@ -342,7 +342,7 @@ describe('EventsService', () => {
           points: 100,
           occurredAt: new Date(Date.UTC(2021, 10, 1)),
         });
-        expect(event).toBeNull();
+        expect(event).not.toBeNull();
       });
     });
 
