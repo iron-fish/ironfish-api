@@ -4,10 +4,10 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
   Equals,
-  IsAlphanumeric,
   IsEnum,
   IsISO31661Alpha3,
   IsOptional,
+  IsString,
 } from 'class-validator';
 import { PaginationArgsDto } from '../../common/dto/pagination-args.dto';
 import { EventType } from '.prisma/client';
@@ -29,7 +29,7 @@ export class UsersQueryDto extends PaginationArgsDto {
 
   @ApiPropertyOptional({ description: 'Keyword search filter' })
   @IsOptional()
-  @IsAlphanumeric()
+  @IsString()
   readonly search?: string;
 
   @ApiPropertyOptional({ description: 'Event type filter', enum: EventType })
