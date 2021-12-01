@@ -52,7 +52,37 @@ describe('RegistrationController', () => {
         await usersService.confirm(user);
 
         const { header } = await request(app.getHttpServer())
-          .get('/registration/token/confirm')
+          .get(`/registration/${user.confirmation_token}/confirm`)
+          .expect(HttpStatus.FOUND);
+
+        expect((header as Record<string, unknown>).location).toBe(
+          `${config.get<string>(
+            'INCENTIVIZED_TESTNET_URL',
+          )}/login?toast=${Buffer.from(message).toString('base64')}`,
+        );
+      });
+    });
+
+    describe('with a confirmed user for a different token', () => {
+      it('redirects with an error toast', async () => {
+        const message = 'User already confirmed';
+        const email = faker.internet.email();
+        const user = await usersService.create({
+          email,
+          graffiti: uuid(),
+          country_code: faker.address.countryCode('alpha-3'),
+        });
+        const userFromSecondRegistration = await usersService.create({
+          email,
+          graffiti: uuid(),
+          country_code: faker.address.countryCode('alpha-3'),
+        });
+        await usersService.confirm(user);
+
+        const { header } = await request(app.getHttpServer())
+          .get(
+            `/registration/${userFromSecondRegistration.confirmation_token}/confirm`,
+          )
           .expect(HttpStatus.FOUND);
 
         expect((header as Record<string, unknown>).location).toBe(

@@ -28,6 +28,19 @@ export class RegistrationController {
           'INCENTIVIZED_TESTNET_URL',
         )}/login?toast=${Buffer.from(message).toString('base64')}`,
       );
+      return;
+    }
+
+    const existingUser = await this.usersService.findConfirmedByEmail(
+      user.email,
+    );
+    if (existingUser) {
+      const message = 'User already confirmed';
+      res.redirect(
+        `${this.config.get<string>(
+          'INCENTIVIZED_TESTNET_URL',
+        )}/login?toast=${Buffer.from(message).toString('base64')}`,
+      );
     } else {
       await this.usersService.confirm(user);
       res.redirect(
