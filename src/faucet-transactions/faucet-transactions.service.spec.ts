@@ -10,7 +10,10 @@ import faker from 'faker';
 import { ulid } from 'ulid';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
-import { FaucetTransactionsService } from './faucet-transactions.service';
+import {
+  FAUCET_REQUESTS_LIMIT,
+  FaucetTransactionsService,
+} from './faucet-transactions.service';
 
 describe('FaucetTransactionService', () => {
   let app: INestApplication;
@@ -55,18 +58,41 @@ describe('FaucetTransactionService', () => {
   });
 
   describe('create', () => {
-    it('creates a FaucetTransaction record', async () => {
-      const email = faker.internet.email();
-      const publicKey = ulid();
-      const faucetTransaction = await faucetTransactionsService.create({
-        email,
-        publicKey,
-      });
+    describe('with too many faucet requests', () => {
+      it('throws an exception', async () => {
+        const email = faker.internet.email();
+        const publicKey = ulid();
 
-      expect(faucetTransaction).toMatchObject({
-        id: expect.any(Number),
-        email,
-        public_key: publicKey,
+        for (let i = 0; i < FAUCET_REQUESTS_LIMIT; i++) {
+          await faucetTransactionsService.create({
+            email,
+            publicKey,
+          });
+        }
+
+        await expect(
+          faucetTransactionsService.create({
+            email,
+            publicKey,
+          }),
+        ).rejects.toThrow(UnprocessableEntityException);
+      });
+    });
+
+    describe('when the limit for requests has not been hit', () => {
+      it('creates a FaucetTransaction record', async () => {
+        const email = faker.internet.email();
+        const publicKey = ulid();
+        const faucetTransaction = await faucetTransactionsService.create({
+          email,
+          publicKey,
+        });
+
+        expect(faucetTransaction).toMatchObject({
+          id: expect.any(Number),
+          email,
+          public_key: publicKey,
+        });
       });
     });
   });
