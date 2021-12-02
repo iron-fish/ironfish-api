@@ -41,6 +41,7 @@ model User {
   telegram            String?   @db.VarChar
   confirmation_token  String    @db.VarChar
   confirmed_at        DateTime? @db.Timestamp(6)
+  github              String?   @db.VarChar
   events              Event[]
 
   @@unique([confirmation_token], name: "uq_users_on_confirmation_token")
