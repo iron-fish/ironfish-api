@@ -402,6 +402,62 @@ describe('UsersService', () => {
       });
     });
 
+    describe('with a duplicate github', () => {
+      describe('with a previously confirmed user', () => {
+        it('throws an exception', async () => {
+          const github = faker.internet.userName();
+          await prisma.user.create({
+            data: {
+              confirmation_token: ulid(),
+              email: faker.internet.email(),
+              github,
+              graffiti: uuid(),
+              country_code: faker.address.countryCode('alpha-3'),
+              confirmed_at: new Date(),
+            },
+          });
+
+          await expect(
+            usersService.create({
+              email: faker.internet.email(),
+              graffiti: uuid(),
+              github,
+              country_code: faker.address.countryCode('alpha-3'),
+            }),
+          ).rejects.toThrow(UnprocessableEntityException);
+        });
+      });
+
+      describe('with a user that has not been confirmed', () => {
+        it('creates a record', async () => {
+          const github = faker.internet.userName();
+          await prisma.user.create({
+            data: {
+              confirmation_token: ulid(),
+              email: faker.internet.email(),
+              graffiti: uuid(),
+              github,
+              country_code: faker.address.countryCode('alpha-3'),
+            },
+          });
+
+          const email = faker.internet.email();
+          const user = await usersService.create({
+            email,
+            github,
+            graffiti: uuid(),
+            country_code: faker.address.countryCode('alpha-3'),
+          });
+
+          expect(user).toMatchObject({
+            id: expect.any(Number),
+            email,
+            github,
+          });
+        });
+      });
+    });
+
     describe('with a new graffiti and email', () => {
       it('creates a new record', async () => {
         const email = faker.internet.email();

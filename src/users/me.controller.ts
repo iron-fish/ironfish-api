@@ -6,14 +6,15 @@ import { ApiExcludeController } from '@nestjs/swagger';
 import { MagicLinkGuard } from '../auth/guards/magic-link.guard';
 import { Context } from '../common/decorators/context';
 import { MagicLinkContext } from '../common/interfaces/magic-link-context';
-import { User } from '.prisma/client';
+import { SerializedUser } from './interfaces/serialized-user';
+import { serializedUserFromRecord } from './utils/user-translator';
 
 @ApiExcludeController()
 @Controller('me')
 export class MeController {
   @Get()
   @UseGuards(MagicLinkGuard)
-  me(@Context() { user }: MagicLinkContext): User {
-    return user;
+  me(@Context() { user }: MagicLinkContext): SerializedUser {
+    return serializedUserFromRecord(user);
   }
 }

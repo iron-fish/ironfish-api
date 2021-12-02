@@ -56,7 +56,6 @@ describe('MeController', () => {
 
         expect(body).toMatchObject({
           id: user.id,
-          email: user.email,
           country_code: user.country_code,
           graffiti: user.graffiti,
         });
