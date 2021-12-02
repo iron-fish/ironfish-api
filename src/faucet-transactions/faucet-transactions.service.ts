@@ -12,6 +12,8 @@ import { CreateFaucetTransactionOptions } from './interfaces/create-faucet-trans
 import { FaucetTransactionsStatus } from './interfaces/faucet-transactions-status';
 import { FaucetTransaction, Prisma } from '.prisma/client';
 
+export const FAUCET_REQUESTS_LIMIT = 3;
+
 @Injectable()
 export class FaucetTransactionsService {
   constructor(private readonly prisma: PrismaService) {}
@@ -33,6 +35,19 @@ export class FaucetTransactionsService {
     publicKey,
   }: CreateFaucetTransactionOptions): Promise<FaucetTransaction> {
     return this.prisma.$transaction(async (prisma) => {
+      const count = await this.prisma.faucetTransaction.count({
+        where: {
+          OR: [
+            { email },
+            {
+              public_key: publicKey,
+            },
+          ],
+        },
+      });
+      if (count >= FAUCET_REQUESTS_LIMIT) {
+        throw new UnprocessableEntityException('Too many faucet requests');
+      }
       return prisma.faucetTransaction.create({
         data: {
           email,
