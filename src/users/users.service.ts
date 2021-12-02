@@ -102,6 +102,7 @@ export class UsersService {
     country_code: countryCode,
     discord,
     telegram,
+    github,
   }: CreateUserDto): Promise<User> {
     const existingRecord = await this.prisma.user.findFirst({
       where: {
@@ -114,6 +115,9 @@ export class UsersService {
           },
           {
             graffiti,
+          },
+          {
+            github,
           },
         ],
       },
@@ -132,6 +136,7 @@ export class UsersService {
           graffiti,
           discord,
           telegram,
+          github,
           country_code: countryCode,
           confirmation_token: ulid(),
         },

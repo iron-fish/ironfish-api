@@ -6,6 +6,7 @@ import {
   IsEmail,
   IsISO31661Alpha3,
   IsNotEmpty,
+  IsOptional,
   IsString,
   ValidateIf,
 } from 'class-validator';
@@ -32,4 +33,8 @@ export class CreateUserDto {
     message: '"discord" or "telegram" required when registering',
   })
   readonly telegram?: string;
+
+  @IsOptional()
+  @IsString()
+  readonly github?: string;
 }
