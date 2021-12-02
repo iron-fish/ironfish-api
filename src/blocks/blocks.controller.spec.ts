@@ -38,7 +38,8 @@ describe('BlocksController', () => {
   const seedBlock = async () => {
     const hash = uuid();
     const sequence = faker.datatype.number();
-    const searchable_text = hash + ' ' + String(sequence);
+    const testGraffiti = `graffiti ${sequence}`;
+    const searchableText = `hash ${sequence} ${testGraffiti}`;
 
     const block = await prisma.block.create({
       data: {
@@ -51,7 +52,7 @@ describe('BlocksController', () => {
         graffiti: uuid(),
         previous_block_hash: uuid(),
         network_version: 0,
-        searchable_text,
+        searchable_text: searchableText,
         size: faker.datatype.number(),
       },
     });
@@ -199,8 +200,8 @@ describe('BlocksController', () => {
       it('returns a list of blocks in descending order', async () => {
         for (let i = 0; i < 10; i++) {
           const hash = uuid();
-          const testGraffiti = 'graffiti' + String(i);
-          const searchableText = hash + ' ' + String(i) + ' ' + testGraffiti;
+          const testGraffiti = `graffiti ${i}`;
+          const searchableText = `hash ${i} ${testGraffiti}`;
           await prisma.block.create({
             data: {
               hash,
@@ -242,8 +243,8 @@ describe('BlocksController', () => {
         it('returns only non-main chain blocks', async () => {
           for (let i = 0; i < 10; i++) {
             const hash = uuid();
-            const testGraffiti = 'graffiti' + String(i);
-            const searchableText = hash + ' ' + String(i) + ' ' + testGraffiti;
+            const testGraffiti = `graffiti ${i}`;
+            const searchableText = `hash ${i} ${testGraffiti}`;
             await prisma.block.create({
               data: {
                 hash,
@@ -323,8 +324,8 @@ describe('BlocksController', () => {
         // Seed some blocks
         for (let i = 0; i < 10; i++) {
           const hash = uuid();
-          const testGraffiti = 'graffiti' + String(i);
-          const searchableText = hash + ' ' + String(i) + ' ' + testGraffiti;
+          const testGraffiti = `graffiti ${i}`;
+          const searchableText = `hash ${i} ${testGraffiti}`;
           await prisma.block.create({
             data: {
               hash,
@@ -367,9 +368,8 @@ describe('BlocksController', () => {
         it('returns block(s) with a match', async () => {
           const testBlockHash = uuid();
           const testSequence = faker.datatype.number();
-          const testGraffiti = 'graffiti' + String(testSequence);
-          const searchableText =
-            testBlockHash + ' ' + String(testSequence) + ' ' + testGraffiti;
+          const testGraffiti = `graffiti ${testSequence}`;
+          const searchableText = `hash ${testSequence} ${testGraffiti}`;
           const searchHash = testBlockHash.slice(0, 4);
           await prisma.block.create({
             data: {
@@ -411,9 +411,8 @@ describe('BlocksController', () => {
         it('returns block(s) with a match', async () => {
           const testBlockHash = uuid();
           const testSequence = 12345;
-          const testGraffiti = 'graffiti' + String(testSequence);
-          const searchableText =
-            testBlockHash + ' ' + String(testSequence) + ' ' + testGraffiti;
+          const testGraffiti = `graffiti ${testSequence}`;
+          const searchableText = `hash ${testSequence} ${testGraffiti}`;
           const searchSequence = testBlockHash.slice(-5);
           await prisma.block.create({
             data: {
@@ -497,9 +496,8 @@ describe('BlocksController', () => {
       it('returns the block with the correct hash', async () => {
         const testBlockHash = uuid();
         const testSequence = faker.datatype.number();
-        const testGraffiti = 'graffiti' + String(testSequence);
-        const searchableText =
-          testBlockHash + ' ' + String(testSequence) + ' ' + testGraffiti;
+        const testGraffiti = `graffiti ${testSequence}`;
+        const searchableText = `hash ${testSequence} ${testGraffiti}`;
         await prisma.block.create({
           data: {
             hash: testBlockHash,
@@ -538,9 +536,8 @@ describe('BlocksController', () => {
       it('returns the block with the correct sequence', async () => {
         const hash = uuid();
         const testBlockSequence = faker.datatype.number();
-        const testGraffiti = 'graffiti' + String(testBlockSequence);
-        const searchableText =
-          hash + ' ' + String(testBlockSequence) + ' ' + testGraffiti;
+        const testGraffiti = `graffiti ${testBlockSequence}`;
+        const searchableText = `hash ${testBlockSequence} ${testGraffiti}`;
         await prisma.block.create({
           data: {
             hash,
@@ -579,9 +576,8 @@ describe('BlocksController', () => {
       it('returns a 404', async () => {
         const hash = uuid();
         const sequence = faker.datatype.number();
-        const testGraffiti = 'graffiti' + String(sequence);
-        const searchableText =
-          hash + ' ' + String(sequence) + ' ' + testGraffiti;
+        const testGraffiti = `graffiti ${sequence}`;
+        const searchableText = `hash ${sequence} ${testGraffiti}`;
 
         await prisma.block.create({
           data: {
@@ -612,9 +608,8 @@ describe('BlocksController', () => {
       it('returns a 422', async () => {
         const hash = uuid();
         const sequence = faker.datatype.number();
-        const testGraffiti = 'graffiti' + String(sequence);
-        const searchableText =
-          hash + ' ' + String(sequence) + ' ' + testGraffiti;
+        const testGraffiti = `graffiti ${sequence}`;
+        const searchableText = `hash ${sequence} ${testGraffiti}`;
         await prisma.block.create({
           data: {
             hash,
