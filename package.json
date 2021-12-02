@@ -78,7 +78,7 @@
     "postmark": "2.7.8",
     "reflect-metadata": "0.1.13",
     "rxjs": "7.4.0",
-    "swagger-ui-express": "4.1.6",
+    "swagger-ui-express": "4.2.0",
     "type-fest": "2.8.0",
     "ulid": "2.3.0"
   }
