@@ -50,7 +50,7 @@ export class BlocksService {
   ): Promise<Block> {
     const main = type === BlockOperation.CONNECTED;
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
-    const searchable_text = hash + ' ' + String(sequence);
+    const searchable_text = `${hash} ${sequence} ${graffiti}`;
 
     const block = await prisma.block.upsert({
       create: {

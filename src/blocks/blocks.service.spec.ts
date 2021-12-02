@@ -149,6 +149,28 @@ describe('BlocksService', () => {
       });
     });
 
+    describe('with a valid graffiti search string', () => {
+      it('returns block(s) with matches', async () => {
+        const searchGraffiti = 'testGraffiti';
+        await blocksService.upsert(prisma, {
+          hash: uuid(),
+          sequence: faker.datatype.number(),
+          difficulty: faker.datatype.number(),
+          timestamp: new Date(),
+          transactionsCount: 1,
+          type: BlockOperation.CONNECTED,
+          graffiti: searchGraffiti,
+          previous_block_hash: uuid(),
+          size: faker.datatype.number(),
+        });
+
+        const { data: blocks } = await blocksService.list({
+          search: searchGraffiti,
+        });
+        expect(blocks.length).toBeGreaterThanOrEqual(1);
+      });
+    });
+
     describe('with a transaction ID', () => {
       it('returns block(s) that contain said transaction', async () => {
         const transactionId = 5;
