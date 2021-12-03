@@ -46,7 +46,10 @@ export class FaucetTransactionsService {
         },
       });
       if (count >= FAUCET_REQUESTS_LIMIT) {
-        throw new UnprocessableEntityException('Too many faucet requests');
+        throw new UnprocessableEntityException({
+          error: 'faucet_max_requests_reached',
+          error_description: 'Too many faucet requests',
+        });
       }
       return prisma.faucetTransaction.create({
         data: {
