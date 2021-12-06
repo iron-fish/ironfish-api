@@ -73,6 +73,7 @@
     "express": "4.17.1",
     "graphile-worker": "0.12.1",
     "helmet": "4.6.0",
+    "hot-shots": "9.0.0",
     "joi": "17.5.0",
     "passport": "0.4.1",
     "postmark": "2.7.8",

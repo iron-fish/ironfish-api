@@ -17,6 +17,7 @@ import { BlocksDailyJobsModule } from './blocks-daily/blocks-daily.jobs.module';
 import { BlocksDailyRestModule } from './blocks-daily/blocks-daily.rest.module';
 import { ContextMiddleware } from './common/middlewares/context.middleware';
 import { RequireSslMiddleware } from './common/middlewares/require-ssl.middleware';
+import { DatadogModule } from './datadog/datadog.module';
 import { EventsRestModule } from './events/events.rest.module';
 import { FaucetTransactionsRestModule } from './faucet-transactions/faucet-transactions.rest.module';
 import { HealthRestModule } from './health/health.rest.module';
@@ -48,6 +49,7 @@ export const REST_MODULES = [
         API_URL: joi.string().required(),
         BLOCK_EXPLORER_URL: joi.string().required(),
         DATABASE_URL: joi.string().required(),
+        DATADOG_URL: joi.string().required(),
         INCENTIVIZED_TESTNET_URL: joi.string().required(),
         IRONFISH_API_KEY: joi.string().required(),
         MAGIC_SECRET_KEY: joi.string().required(),
@@ -57,6 +59,7 @@ export const REST_MODULES = [
         POSTMARK_API_KEY: joi.string().required(),
       }),
     }),
+    DatadogModule,
     ...JOBS_MODULES,
     ...REST_MODULES,
   ],
