@@ -370,7 +370,6 @@ describe('BlocksController', () => {
           const testSequence = faker.datatype.number();
           const testGraffiti = `graffiti ${testSequence}`;
           const searchableText = `${testBlockHash} ${testSequence} ${testGraffiti}`;
-          const searchHash = testBlockHash.slice(0, 4);
           await prisma.block.create({
             data: {
               hash: testBlockHash,
@@ -389,7 +388,7 @@ describe('BlocksController', () => {
 
           const { body } = await request(app.getHttpServer())
             .get('/blocks')
-            .query({ search: searchHash })
+            .query({ search: testBlockHash })
             .expect(HttpStatus.OK);
 
           const { data } = body;
@@ -413,7 +412,6 @@ describe('BlocksController', () => {
           const testSequence = 12345;
           const testGraffiti = `graffiti ${testSequence}`;
           const searchableText = `${testBlockHash} ${testSequence} ${testGraffiti}`;
-          const searchSequence = testBlockHash.slice(-5);
           await prisma.block.create({
             data: {
               hash: testBlockHash,
@@ -432,7 +430,7 @@ describe('BlocksController', () => {
 
           const { body } = await request(app.getHttpServer())
             .get('/blocks')
-            .query({ search: searchSequence })
+            .query({ search: testSequence })
             .expect(HttpStatus.OK);
 
           const { data } = body;

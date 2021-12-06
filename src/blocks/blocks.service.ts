@@ -153,13 +153,33 @@ export class BlocksService {
         hasPrevious: false,
       };
     } else if (options.search !== undefined) {
+      const search = options.search;
+
+      let filter = [];
+      if (isNaN(Number(search))) {
+        filter = [
+          {
+            hash: search,
+          },
+          {
+            graffiti: search,
+          },
+        ];
+      } else {
+        filter = [
+          {
+            graffiti: search,
+          },
+          {
+            sequence: Number(search),
+          },
+        ];
+      }
+
       const where = {
-        searchable_text: {
-          contains: options.search,
-          mode: Prisma.QueryMode.insensitive,
-        },
         main,
         network_version: networkVersion,
+        OR: filter,
       };
       const data = await this.getBlocksData(
         cursor,
