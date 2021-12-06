@@ -50,7 +50,6 @@ export class BlocksService {
   ): Promise<Block> {
     const main = type === BlockOperation.CONNECTED;
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
-    const searchable_text = `${hash} ${sequence} ${graffiti}`;
 
     const block = await prisma.block.upsert({
       create: {
@@ -63,7 +62,6 @@ export class BlocksService {
         transactions_count: transactionsCount,
         network_version: networkVersion,
         previous_block_hash,
-        searchable_text,
         size,
         difficulty_temporary: difficulty,
       },

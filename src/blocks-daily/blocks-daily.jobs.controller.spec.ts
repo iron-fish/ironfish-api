@@ -58,7 +58,6 @@ describe('BlocksDailyJobsController', () => {
             graffiti: uuid(),
             previous_block_hash: uuid(),
             network_version: 0,
-            searchable_text: '',
             size: faker.datatype.number(),
           }),
         );
@@ -96,7 +95,6 @@ describe('BlocksDailyJobsController', () => {
             graffiti: uuid(),
             previous_block_hash: uuid(),
             network_version: 0,
-            searchable_text: '',
             size: faker.datatype.number(),
           }),
         );
