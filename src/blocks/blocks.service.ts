@@ -65,6 +65,7 @@ export class BlocksService {
         previous_block_hash,
         searchable_text,
         size,
+        difficulty_temporary: difficulty,
       },
       update: {
         sequence,
@@ -75,6 +76,7 @@ export class BlocksService {
         transactions_count: transactionsCount,
         previous_block_hash,
         size,
+        difficulty_temporary: difficulty,
       },
       where: {
         uq_blocks_on_hash_and_network_version: {

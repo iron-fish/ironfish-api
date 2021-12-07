@@ -66,7 +66,7 @@ model Block {
   searchable_text      String             @db.VarChar
   size                 Int?
   difficulty           Int
-  difficulty_temporary BigInt?
+  difficulty_temporary BigInt
   blocks_transactions  BlockTransaction[]
   event                Event?
 
