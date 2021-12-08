@@ -21,6 +21,7 @@ import { DatadogModule } from './datadog/datadog.module';
 import { EventsRestModule } from './events/events.rest.module';
 import { FaucetTransactionsRestModule } from './faucet-transactions/faucet-transactions.rest.module';
 import { HealthRestModule } from './health/health.rest.module';
+import { LoggerModule } from './logger/logger.module';
 import { MetricsRestModule } from './metrics/metrics.rest.module';
 import { TransactionsRestModule } from './transactions/transactions.rest.module';
 import { UsersRestModule } from './users/users.rest.module';
@@ -60,6 +61,7 @@ export const REST_MODULES = [
       }),
     }),
     DatadogModule,
+    LoggerModule,
     ...JOBS_MODULES,
     ...REST_MODULES,
   ],

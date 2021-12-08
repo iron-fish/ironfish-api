@@ -17,6 +17,7 @@ import http from 'http';
 import os from 'os';
 import { ApiConfigService } from './api-config/api-config.service';
 import { AppModule } from './app.module';
+import { LoggerService } from './logger/logger.service';
 
 async function bootstrap(): Promise<void> {
   const server = express();
@@ -25,6 +26,7 @@ async function bootstrap(): Promise<void> {
     new ExpressAdapter(server),
   );
   const config = app.get(ApiConfigService);
+  const logger = app.get(LoggerService);
 
   const defaultOrigins = [
     config.get<string>('BLOCK_EXPLORER_URL'),
@@ -63,18 +65,25 @@ async function bootstrap(): Promise<void> {
   await app.init();
 
   const port = config.get<number>('PORT');
+  logger.info(`Starting API on PORT ${port}`);
   http.createServer(server).listen(port);
 }
 
+/* eslint-disable no-console */
 function clusterize(callback: () => Promise<void>): void {
   if (cluster.isPrimary) {
+    console.log(`Starting master process PID ${process.pid}`);
+
     process.on('SIGINT', function () {
       if (cluster.workers) {
         for (const worker of Object.values(cluster.workers)) {
           assert.ok(worker);
+          const { pid } = worker.process;
+          console.log(`Killing worker ${pid ? `PID ${pid}` : ''}`);
           worker.kill();
         }
       }
+      console.log(`Killing master process PID ${process.pid}`);
       process.exit(0);
     });
 
@@ -83,14 +92,17 @@ function clusterize(callback: () => Promise<void>): void {
       cluster.fork();
     }
 
-    cluster.on('exit', () => {
-      // Restart worker
+    cluster.on('exit', (worker, _code, signal) => {
+      const { pid } = worker.process;
+      console.log(
+        `Worker ${pid ? `PID ${pid}` : ''} died from ${signal}. Restarting...`,
+      );
       cluster.fork();
     });
   } else {
-    // eslint-disable-next-line no-console
     callback().catch(console.error);
   }
 }
+/* eslint-enable no-console */
 
 clusterize(bootstrap);
