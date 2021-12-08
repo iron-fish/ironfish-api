@@ -64,7 +64,7 @@ model Block {
   timestamp            DateTime           @db.Timestamp(6)
   graffiti             String             @db.VarChar
   size                 Int?
-  difficulty           BigInt
+  difficulty           BigInt?
   difficulty_temporary BigInt
   blocks_transactions  BlockTransaction[]
   event                Event?
