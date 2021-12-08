@@ -44,7 +44,6 @@ describe('EventsService', () => {
     const block = await prisma.block.create({
       data: {
         hash,
-        difficulty: faker.datatype.number(),
         main: true,
         sequence,
         timestamp: new Date(),

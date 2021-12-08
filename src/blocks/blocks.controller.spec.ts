@@ -42,7 +42,6 @@ describe('BlocksController', () => {
     const block = await prisma.block.create({
       data: {
         hash,
-        difficulty: faker.datatype.number(),
         main: true,
         sequence,
         timestamp: new Date(),
@@ -203,7 +202,6 @@ describe('BlocksController', () => {
           await prisma.block.create({
             data: {
               hash,
-              difficulty: faker.datatype.number(),
               main: true,
               sequence: i,
               timestamp: new Date(),
@@ -245,7 +243,6 @@ describe('BlocksController', () => {
             await prisma.block.create({
               data: {
                 hash,
-                difficulty: faker.datatype.number(),
                 main: i < 5,
                 sequence: i,
                 timestamp: new Date(),
@@ -325,7 +322,6 @@ describe('BlocksController', () => {
           await prisma.block.create({
             data: {
               hash,
-              difficulty: faker.datatype.number(),
               main: true,
               sequence: i,
               timestamp: new Date(),
@@ -368,7 +364,6 @@ describe('BlocksController', () => {
           await prisma.block.create({
             data: {
               hash: testBlockHash,
-              difficulty: faker.datatype.number(),
               main: true,
               sequence: testSequence,
               timestamp: new Date(),
@@ -409,7 +404,6 @@ describe('BlocksController', () => {
           await prisma.block.create({
             data: {
               hash: testBlockHash,
-              difficulty: faker.datatype.number(),
               main: true,
               sequence: testSequence,
               timestamp: new Date(),
@@ -492,7 +486,6 @@ describe('BlocksController', () => {
         await prisma.block.create({
           data: {
             hash: testBlockHash,
-            difficulty: faker.datatype.number(),
             main: true,
             sequence: faker.datatype.number(),
             timestamp: new Date(),
@@ -531,7 +524,6 @@ describe('BlocksController', () => {
         await prisma.block.create({
           data: {
             hash,
-            difficulty: faker.datatype.number(),
             main: true,
             sequence: testBlockSequence,
             timestamp: new Date(),
@@ -571,7 +563,6 @@ describe('BlocksController', () => {
         await prisma.block.create({
           data: {
             hash,
-            difficulty: faker.datatype.number(),
             main: true,
             sequence,
             timestamp: new Date(),
@@ -601,7 +592,6 @@ describe('BlocksController', () => {
         await prisma.block.create({
           data: {
             hash,
-            difficulty: faker.datatype.number(),
             main: true,
             sequence,
             timestamp: new Date(),
