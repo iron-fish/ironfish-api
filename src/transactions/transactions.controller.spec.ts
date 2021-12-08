@@ -44,6 +44,7 @@ describe('TransactionsController', () => {
         network_version: 0,
         searchable_text,
         size: faker.datatype.number(),
+        difficulty_temporary: faker.datatype.number(),
       },
     });
 
