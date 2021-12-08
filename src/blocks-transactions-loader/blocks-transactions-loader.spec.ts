@@ -56,7 +56,7 @@ describe('BlocksTransactionsLoader', () => {
           id: expect.any(Number),
           hash: blockHash,
           sequence: expect.any(Number),
-          difficulty: expect.any(Number),
+          difficulty_temporary: expect.any(BigInt),
           main: true,
           timestamp: expect.any(Date),
           transactions_count: expect.any(Number),

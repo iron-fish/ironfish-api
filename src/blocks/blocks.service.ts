@@ -55,7 +55,6 @@ export class BlocksService {
       create: {
         hash,
         sequence,
-        difficulty,
         main,
         timestamp,
         graffiti,
@@ -67,7 +66,6 @@ export class BlocksService {
       },
       update: {
         sequence,
-        difficulty,
         main,
         timestamp,
         graffiti,
