@@ -63,7 +63,6 @@ model Block {
   transactions_count   Int
   timestamp            DateTime           @db.Timestamp(6)
   graffiti             String             @db.VarChar
-  searchable_text      String             @db.VarChar
   size                 Int?
   difficulty           Int
   difficulty_temporary BigInt
@@ -74,7 +73,6 @@ model Block {
   @@index([hash], name: "index_blocks_on_hash")
   @@index([hash, network_version], name: "index_blocks_on_hash_and_network_version")
   @@index([sequence, network_version], name: "index_blocks_on_sequence_and_network_version")
-  @@index([searchable_text], name: "index_blocks_on_searchable_text")
   @@map("blocks")
 }
 

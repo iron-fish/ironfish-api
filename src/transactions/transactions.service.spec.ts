@@ -31,7 +31,6 @@ describe('TransactionsService', () => {
   const seedBlock = async () => {
     const hash = uuid();
     const sequence = faker.datatype.number();
-    const searchable_text = hash + ' ' + String(sequence);
 
     const block = await prisma.block.create({
       data: {
@@ -44,7 +43,6 @@ describe('TransactionsService', () => {
         graffiti: uuid(),
         previous_block_hash: uuid(),
         network_version: 0,
-        searchable_text,
         size: faker.datatype.number(),
         difficulty_temporary: faker.datatype.number(),
       },
