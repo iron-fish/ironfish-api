@@ -10,6 +10,7 @@ import { JOBS_MODULES, REST_MODULES } from '../app.module';
 import { AuthModule } from '../auth/auth.module';
 import { BlocksModule } from '../blocks/blocks.module';
 import { BlocksTransactionsModule } from '../blocks-transactions/blocks-transactions.module';
+import { DatadogModule } from '../datadog/datadog.module';
 import { PostmarkService } from '../postmark/postmark.service';
 import { MockPostmarkService } from './mocks/mock-postmark.service';
 
@@ -26,6 +27,7 @@ export async function bootstrapTestApp(): Promise<INestApplication> {
           API_URL: joi.string().required(),
           BLOCK_EXPLORER_URL: joi.string().required(),
           DATABASE_URL: joi.string().required(),
+          DATADOG_URL: joi.string().required(),
           INCENTIVIZED_TESTNET_URL: joi.string().required(),
           IRONFISH_API_KEY: joi.string().required(),
           MAGIC_SECRET_KEY: joi.string().required(),
@@ -35,6 +37,7 @@ export async function bootstrapTestApp(): Promise<INestApplication> {
           POSTMARK_API_KEY: joi.string().required(),
         }),
       }),
+      DatadogModule,
       ...JOBS_MODULES,
       ...REST_MODULES,
     ],

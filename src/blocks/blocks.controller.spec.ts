@@ -51,6 +51,7 @@ describe('BlocksController', () => {
         previous_block_hash: uuid(),
         network_version: 0,
         size: faker.datatype.number(),
+        difficulty_temporary: faker.datatype.number(),
       },
     });
 
@@ -94,6 +95,7 @@ describe('BlocksController', () => {
             graffiti: uuid(),
             previous_block_hash: uuid(),
             size: faker.datatype.number(),
+            difficulty_temporary: faker.datatype.number(),
             transactions: [
               {
                 hash: uuid(),
@@ -210,6 +212,7 @@ describe('BlocksController', () => {
               previous_block_hash: uuid(),
               network_version: 0,
               size: faker.datatype.number(),
+              difficulty_temporary: faker.datatype.number(),
             },
           });
         }
@@ -251,6 +254,7 @@ describe('BlocksController', () => {
                 previous_block_hash: uuid(),
                 network_version: 0,
                 size: faker.datatype.number(),
+                difficulty_temporary: faker.datatype.number(),
               },
             });
           }
@@ -330,6 +334,7 @@ describe('BlocksController', () => {
               previous_block_hash: uuid(),
               network_version: 0,
               size: faker.datatype.number(),
+              difficulty_temporary: faker.datatype.number(),
             },
           });
         }
@@ -372,6 +377,7 @@ describe('BlocksController', () => {
               previous_block_hash: uuid(),
               network_version: 0,
               size: faker.datatype.number(),
+              difficulty_temporary: faker.datatype.number(),
             },
           });
 
@@ -412,6 +418,7 @@ describe('BlocksController', () => {
               previous_block_hash: uuid(),
               network_version: 0,
               size: faker.datatype.number(),
+              difficulty_temporary: faker.datatype.number(),
             },
           });
 
@@ -494,6 +501,7 @@ describe('BlocksController', () => {
             previous_block_hash: uuid(),
             network_version: 0,
             size: faker.datatype.number(),
+            difficulty_temporary: faker.datatype.number(),
           },
         });
 
@@ -532,6 +540,7 @@ describe('BlocksController', () => {
             previous_block_hash: uuid(),
             network_version: 0,
             size: faker.datatype.number(),
+            difficulty_temporary: faker.datatype.number(),
           },
         });
 
@@ -571,6 +580,7 @@ describe('BlocksController', () => {
             previous_block_hash: uuid(),
             network_version: 0,
             size: faker.datatype.number(),
+            difficulty_temporary: faker.datatype.number(),
           },
         });
 
@@ -600,6 +610,7 @@ describe('BlocksController', () => {
             previous_block_hash: uuid(),
             network_version: 0,
             size: faker.datatype.number(),
+            difficulty_temporary: faker.datatype.number(),
           },
         });
 
