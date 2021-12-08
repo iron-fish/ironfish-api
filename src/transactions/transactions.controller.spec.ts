@@ -41,6 +41,7 @@ describe('TransactionsController', () => {
         previous_block_hash: uuid(),
         network_version: 0,
         size: faker.datatype.number(),
+        difficulty: faker.datatype.number(),
         difficulty_temporary: faker.datatype.number(),
       },
     });
