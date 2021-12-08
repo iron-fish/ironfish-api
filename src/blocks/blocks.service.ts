@@ -62,6 +62,7 @@ export class BlocksService {
         network_version: networkVersion,
         previous_block_hash,
         size,
+        difficulty,
         difficulty_temporary: difficulty,
       },
       update: {
@@ -72,6 +73,7 @@ export class BlocksService {
         transactions_count: transactionsCount,
         previous_block_hash,
         size,
+        difficulty,
         difficulty_temporary: difficulty,
       },
       where: {
