@@ -44,7 +44,6 @@ describe('TransactionsService', () => {
         network_version: 0,
         size: faker.datatype.number(),
         difficulty: faker.datatype.number(),
-        difficulty_temporary: faker.datatype.number(),
       },
     });
 
