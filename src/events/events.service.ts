@@ -5,14 +5,13 @@ import { Injectable } from '@nestjs/common';
 import is from '@sindresorhus/is';
 import { ApiConfigService } from '../api-config/api-config.service';
 import {
-  DAYS_IN_WEEK,
   DEFAULT_LIMIT,
   MAX_LIMIT,
   POINTS_PER_CATEGORY,
   WEEKLY_POINT_LIMITS_BY_EVENT_TYPE,
 } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
-import { addDays, getMondayFromDate } from '../common/utils/date';
+import { getMondayFromDate } from '../common/utils/date';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { CreateEventOptions } from './interfaces/create-event-options';
@@ -295,7 +294,7 @@ export class EventsService {
         user_id: userId,
         deleted_at: null,
         occurred_at: {
-          lt: addDays(startOfWeek, DAYS_IN_WEEK),
+          lt: occurredAt,
           gte: startOfWeek,
         },
       },

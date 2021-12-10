@@ -8,11 +8,9 @@ import { ulid } from 'ulid';
 import { v4 as uuid } from 'uuid';
 import { ApiConfigService } from '../api-config/api-config.service';
 import {
-  DAYS_IN_WEEK,
   POINTS_PER_CATEGORY,
   WEEKLY_POINT_LIMITS_BY_EVENT_TYPE,
 } from '../common/constants';
-import { addDays } from '../common/utils/date';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
@@ -564,7 +562,7 @@ describe('EventsService', () => {
 
     describe('when a block exists and points need to be removed', () => {
       it('removes points from the existing record', async () => {
-        const { block, event, user } = await setupBlockMinedWithEvent();
+        const { user } = await setupBlockMinedWithEvent();
         for (
           let i = 0;
           i <
@@ -580,15 +578,8 @@ describe('EventsService', () => {
               user_id: user.id,
             },
           });
-          await prisma.event.create({
-            data: {
-              occurred_at: addDays(new Date(), DAYS_IN_WEEK),
-              points: POINTS_PER_CATEGORY.BLOCK_MINED,
-              type: EventType.BLOCK_MINED,
-              user_id: user.id,
-            },
-          });
         }
+        const { block, event } = await setupBlockMinedWithEvent();
 
         expect(event.points).toBe(POINTS_PER_CATEGORY.BLOCK_MINED);
         const record = await eventsService.upsertBlockMined(
@@ -603,7 +594,7 @@ describe('EventsService', () => {
       });
 
       it('removes points from the user', async () => {
-        const { block, user } = await setupBlockMinedWithEvent();
+        const { user } = await setupBlockMinedWithEvent();
         for (
           let i = 0;
           i <
@@ -619,15 +610,8 @@ describe('EventsService', () => {
               user_id: user.id,
             },
           });
-          await prisma.event.create({
-            data: {
-              occurred_at: addDays(new Date(), DAYS_IN_WEEK),
-              points: POINTS_PER_CATEGORY.BLOCK_MINED,
-              type: EventType.BLOCK_MINED,
-              user_id: user.id,
-            },
-          });
         }
+        const { block } = await setupBlockMinedWithEvent();
 
         expect(user.total_points).toBe(POINTS_PER_CATEGORY.BLOCK_MINED);
         await eventsService.upsertBlockMined(block, user, prisma);
