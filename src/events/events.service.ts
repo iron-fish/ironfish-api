@@ -304,25 +304,63 @@ export class EventsService {
       points ?? POINTS_PER_CATEGORY[type],
     );
 
-    await client.user.update({
-      where: {
-        id: userId,
-      },
-      data: {
-        total_points: {
-          increment: adjustedPoints,
+    let existingEvent;
+    if (blockId) {
+      existingEvent = await client.event.findUnique({
+        where: {
+          block_id: blockId,
         },
-      },
-    });
-    return client.event.create({
-      data: {
-        type,
-        block_id: blockId,
-        points: adjustedPoints,
-        occurred_at: occurredAt.toISOString(),
-        user_id: userId,
-      },
-    });
+      });
+    }
+
+    if (existingEvent) {
+      const pointDifference = adjustedPoints - existingEvent.points;
+      // Only update total user points and event points if necessary
+      if (pointDifference !== 0) {
+        await client.user.update({
+          data: {
+            total_points: {
+              increment: adjustedPoints - existingEvent.points,
+            },
+          },
+          where: {
+            id: userId,
+          },
+        });
+
+        existingEvent = client.event.update({
+          data: {
+            points: adjustedPoints,
+          },
+          where: {
+            id: existingEvent.id,
+          },
+        });
+      }
+
+      return existingEvent;
+    } else {
+      await client.user.update({
+        data: {
+          total_points: {
+            increment: adjustedPoints,
+          },
+        },
+        where: {
+          id: userId,
+        },
+      });
+
+      return client.event.create({
+        data: {
+          type,
+          block_id: blockId,
+          points: adjustedPoints,
+          occurred_at: occurredAt.toISOString(),
+          user_id: userId,
+        },
+      });
+    }
   }
 
   async upsertBlockMined(
@@ -330,22 +368,13 @@ export class EventsService {
     user: User,
     client: BasePrismaClient,
   ): Promise<Event | null> {
-    const points = POINTS_PER_CATEGORY[EventType.BLOCK_MINED];
-    const record = await client.event.findUnique({
-      where: {
-        block_id: block.id,
-      },
-    });
-    if (record) {
-      return record;
-    }
     return this.createWithClient(
       {
         blockId: block.id,
         occurredAt: block.timestamp,
         type: EventType.BLOCK_MINED,
         userId: user.id,
-        points,
+        points: POINTS_PER_CATEGORY[EventType.BLOCK_MINED],
       },
       client,
     );
