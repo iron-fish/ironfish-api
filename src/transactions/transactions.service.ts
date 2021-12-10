@@ -92,6 +92,7 @@ export class TransactionsService {
   async list(
     options: ListTransactionOptions,
   ): Promise<Transaction[] | (Transaction & { blocks: Block[] })[]> {
+    const networkVersion = this.config.get<number>('NETWORK_VERSION');
     const orderBy = { id: SortOrder.DESC };
     const direction = options.before !== undefined ? -1 : 1;
     const limit =
@@ -100,10 +101,8 @@ export class TransactionsService {
 
     if (options.search !== undefined) {
       const where = {
-        hash: {
-          contains: options.search,
-          mode: Prisma.QueryMode.insensitive,
-        },
+        hash: options.search,
+        network_version: networkVersion,
       };
       return this.getTransactionsData(orderBy, limit, where, withBlocks);
     } else if (options.blockId !== undefined) {
@@ -115,6 +114,7 @@ export class TransactionsService {
       );
       const where = {
         id: { in: transactionsIds },
+        network_version: networkVersion,
       };
       return this.getTransactionsData(orderBy, limit, where, withBlocks);
     } else {
