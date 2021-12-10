@@ -37,7 +37,7 @@ describe('EventsService', () => {
     await app.close();
   });
 
-  const setupBlockMined = async () => {
+  const setupBlockMined = async (points?: number) => {
     const hash = uuid();
     const sequence = faker.datatype.number();
 
@@ -62,17 +62,18 @@ describe('EventsService', () => {
         email: faker.internet.email(),
         graffiti: uuid(),
         country_code: faker.address.countryCode('alpha-3'),
+        total_points: points ?? POINTS_PER_CATEGORY.BLOCK_MINED,
       },
     });
     return { block, user };
   };
 
-  const setupBlockMinedWithEvent = async () => {
-    const { block, user } = await setupBlockMined();
+  const setupBlockMinedWithEvent = async (points?: number) => {
+    const { block, user } = await setupBlockMined(points);
     const event = await prisma.event.create({
       data: {
         occurred_at: new Date(),
-        points: 10,
+        points: points ?? POINTS_PER_CATEGORY.BLOCK_MINED,
         type: EventType.BLOCK_MINED,
         block_id: block.id,
         user_id: user.id,
@@ -556,6 +557,98 @@ describe('EventsService', () => {
         await eventsService.upsertBlockMined(block, user, prisma);
         const create = jest.spyOn(eventsService, 'create');
         expect(create).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when a block exists and points need to be removed', () => {
+      it('removes points from the existing record', async () => {
+        const { block, event, user } = await setupBlockMinedWithEvent();
+        for (
+          let i = 0;
+          i <
+          WEEKLY_POINT_LIMITS_BY_EVENT_TYPE.BLOCK_MINED /
+            POINTS_PER_CATEGORY.BLOCK_MINED;
+          i++
+        ) {
+          await prisma.event.create({
+            data: {
+              occurred_at: new Date(),
+              points: POINTS_PER_CATEGORY.BLOCK_MINED,
+              type: EventType.BLOCK_MINED,
+              user_id: user.id,
+            },
+          });
+        }
+
+        expect(event.points).toBe(POINTS_PER_CATEGORY.BLOCK_MINED);
+        const record = await eventsService.upsertBlockMined(
+          block,
+          user,
+          prisma,
+        );
+        expect(record).toMatchObject({
+          id: event.id,
+          points: 0,
+        });
+      });
+
+      it('removes points from the user', async () => {
+        const { block, user } = await setupBlockMinedWithEvent();
+        for (
+          let i = 0;
+          i <
+          WEEKLY_POINT_LIMITS_BY_EVENT_TYPE.BLOCK_MINED /
+            POINTS_PER_CATEGORY.BLOCK_MINED;
+          i++
+        ) {
+          await prisma.event.create({
+            data: {
+              occurred_at: new Date(),
+              points: POINTS_PER_CATEGORY.BLOCK_MINED,
+              type: EventType.BLOCK_MINED,
+              user_id: user.id,
+            },
+          });
+        }
+
+        expect(user.total_points).toBe(POINTS_PER_CATEGORY.BLOCK_MINED);
+        await eventsService.upsertBlockMined(block, user, prisma);
+
+        const updatedUser = await usersService.findOrThrow(user.id);
+        expect(updatedUser).toMatchObject({
+          id: user.id,
+          total_points: 0,
+        });
+      });
+    });
+
+    describe('when a block exists and points need to be added', () => {
+      it('adds points to the existing record', async () => {
+        const { block, event, user } = await setupBlockMinedWithEvent(0);
+
+        expect(event.points).toBe(0);
+        const record = await eventsService.upsertBlockMined(
+          block,
+          user,
+          prisma,
+        );
+        expect(record).toMatchObject({
+          id: event.id,
+          points: POINTS_PER_CATEGORY.BLOCK_MINED,
+        });
+      });
+
+      it('adds points to the user', async () => {
+        const { block, user } = await setupBlockMinedWithEvent(0);
+
+        expect(user.total_points).toBe(0);
+        await eventsService.upsertBlockMined(block, user, prisma);
+
+        const updatedUser = await usersService.findOrThrow(user.id);
+        expect(updatedUser).toMatchObject({
+          id: user.id,
+          total_points: POINTS_PER_CATEGORY.BLOCK_MINED,
+        });
       });
     });
 
