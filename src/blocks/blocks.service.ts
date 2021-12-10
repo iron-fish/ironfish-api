@@ -453,7 +453,7 @@ export class BlocksService {
     if (options.hash !== undefined) {
       const block = await this.prisma.block.findFirst({
         where: {
-          hash: options.hash,
+          hash: options.hash.toLowerCase(),
           network_version: networkVersion,
         },
       });
