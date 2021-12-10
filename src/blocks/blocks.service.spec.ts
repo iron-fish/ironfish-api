@@ -67,6 +67,26 @@ describe('BlocksService', () => {
         const block = await blocksService.find({ hash: testBlockHash });
         expect(block).toMatchObject(testBlock);
       });
+
+      it('returns the block with the mismatched hash cases', async () => {
+        const testBlockHash = 'aaa';
+        const blocks = await blocksService.upsert(prisma, {
+          hash: testBlockHash,
+          sequence: faker.datatype.number(),
+          difficulty: faker.datatype.number(),
+          timestamp: new Date(),
+          transactionsCount: 1,
+          type: BlockOperation.CONNECTED,
+          graffiti: uuid(),
+          previous_block_hash: uuid(),
+          size: faker.datatype.number(),
+        });
+        const testBlock = blocks;
+        const block = await blocksService.find({
+          hash: testBlockHash.toUpperCase(),
+        });
+        expect(block).toMatchObject(testBlock);
+      });
     });
 
     describe('with a valid sequence index', () => {
