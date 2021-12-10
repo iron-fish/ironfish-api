@@ -8,9 +8,11 @@ import { ulid } from 'ulid';
 import { v4 as uuid } from 'uuid';
 import { ApiConfigService } from '../api-config/api-config.service';
 import {
+  DAYS_IN_WEEK,
   POINTS_PER_CATEGORY,
   WEEKLY_POINT_LIMITS_BY_EVENT_TYPE,
 } from '../common/constants';
+import { addDays } from '../common/utils/date';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
@@ -578,6 +580,14 @@ describe('EventsService', () => {
               user_id: user.id,
             },
           });
+          await prisma.event.create({
+            data: {
+              occurred_at: addDays(new Date(), DAYS_IN_WEEK),
+              points: POINTS_PER_CATEGORY.BLOCK_MINED,
+              type: EventType.BLOCK_MINED,
+              user_id: user.id,
+            },
+          });
         }
 
         expect(event.points).toBe(POINTS_PER_CATEGORY.BLOCK_MINED);
@@ -604,6 +614,14 @@ describe('EventsService', () => {
           await prisma.event.create({
             data: {
               occurred_at: new Date(),
+              points: POINTS_PER_CATEGORY.BLOCK_MINED,
+              type: EventType.BLOCK_MINED,
+              user_id: user.id,
+            },
+          });
+          await prisma.event.create({
+            data: {
+              occurred_at: addDays(new Date(), DAYS_IN_WEEK),
               points: POINTS_PER_CATEGORY.BLOCK_MINED,
               type: EventType.BLOCK_MINED,
               user_id: user.id,

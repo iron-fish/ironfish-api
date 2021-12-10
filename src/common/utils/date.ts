@@ -13,5 +13,9 @@ export function getMondayFromDate(date: Date = new Date()): Date {
 }
 
 export function getNextDate(date: Date): Date {
-  return new Date(new Date(date).setDate(date.getDate() + 1));
+  return addDays(date, 1);
+}
+
+export function addDays(date: Date, days: number): Date {
+  return new Date(new Date(date).setDate(date.getDate() + days));
 }
