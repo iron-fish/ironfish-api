@@ -261,49 +261,6 @@ describe('TransactionsController', () => {
 
   describe('GET /transactions', () => {
     describe('with block info requested', () => {
-      describe('with a valid partial hash search string', () => {
-        it('retuns matching transactions with block info included', async () => {
-          const { block } = await seedBlock();
-          const serializedBlock = serializedBlockFromRecord(block);
-          const testTransactionHash = uuid();
-          const notes = [{ commitment: uuid() }];
-          const spends = [{ nullifier: uuid() }];
-          const transaction = await prisma.transaction.create({
-            data: {
-              hash: testTransactionHash,
-              network_version: 0,
-              fee: faker.datatype.number(),
-              size: faker.datatype.number(),
-              notes,
-              spends,
-            },
-          });
-
-          await prisma.blockTransaction.create({
-            data: {
-              block_id: block.id,
-              transaction_id: transaction.id,
-            },
-          });
-
-          const { body } = await request(app.getHttpServer())
-            .get('/transactions')
-            .query({
-              search: testTransactionHash.slice(0, 5),
-              with_blocks: true,
-            })
-            .expect(HttpStatus.OK);
-
-          const { data } = body;
-          expect((data as unknown[]).length).toBeGreaterThan(0);
-          for (const serializedTransaction of data as SerializedTransactionWithBlocks[]) {
-            for (const block of serializedTransaction.blocks) {
-              expect(block.id).toBe(serializedBlock.id);
-            }
-          }
-        });
-      });
-
       describe('with a block ID', () => {
         it('returns transactions that are part of the block', async () => {
           const { block } = await seedBlock();
@@ -392,40 +349,6 @@ describe('TransactionsController', () => {
     });
 
     describe('with block info not reqeusted', () => {
-      describe('with a valid partial hash search string', () => {
-        it('retuns matching transactions', async () => {
-          const testTransactionHash = uuid();
-          const notes = [{ commitment: uuid() }];
-          const spends = [{ nullifier: uuid() }];
-          const transaction = await prisma.transaction.create({
-            data: {
-              hash: testTransactionHash,
-              network_version: 0,
-              fee: faker.datatype.number(),
-              size: faker.datatype.number(),
-              notes,
-              spends,
-            },
-          });
-
-          const { body } = await request(app.getHttpServer())
-            .get('/transactions')
-            .query({ search: testTransactionHash.slice(0, 5) })
-            .expect(HttpStatus.OK);
-
-          const { data } = body;
-          expect((data as unknown[]).length).toBeGreaterThan(0);
-          expect((data as unknown[])[0]).toMatchObject({
-            id: expect.any(Number),
-            hash: transaction.hash,
-            fee: transaction.fee.toString(),
-            size: transaction.size,
-            notes,
-            spends,
-          });
-        });
-      });
-
       describe('with no query parameters', () => {
         it('retuns transactions in descending order', async () => {
           const notes = [{ commitment: uuid() }];

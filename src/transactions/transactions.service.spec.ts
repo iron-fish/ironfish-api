@@ -221,144 +221,72 @@ describe('TransactionsService', () => {
 
   describe('list', () => {
     describe('with block info requested', () => {
-      describe('with a valid partial hash search string', () => {
-        it('returns transactions with match(es) with blocks included', async () => {
-          const { block } = await seedBlock();
-          const testTransactionHash = uuid();
-          const notes = [{ commitment: uuid() }];
-          const spends = [{ nullifier: uuid() }];
-          const transactions = await transactionsService.bulkUpsert(prisma, [
-            {
-              hash: testTransactionHash,
-              fee: faker.datatype.number(),
-              size: faker.datatype.number(),
-              notes,
-              spends,
-            },
-            {
-              hash: uuid(),
-              fee: faker.datatype.number(),
-              size: faker.datatype.number(),
-              notes,
-              spends,
-            },
-          ]);
+      it('returns transactions in descending order with blocks included', async () => {
+        const { block } = await seedBlock();
+        const testTransactionHash = uuid();
+        const notes = [{ commitment: uuid() }];
+        const spends = [{ nullifier: uuid() }];
+        const transactions = await transactionsService.bulkUpsert(prisma, [
+          {
+            hash: testTransactionHash,
+            fee: faker.datatype.number(),
+            size: faker.datatype.number(),
+            notes,
+            spends,
+          },
+          {
+            hash: uuid(),
+            fee: faker.datatype.number(),
+            size: faker.datatype.number(),
+            notes,
+            spends,
+          },
+        ]);
 
-          for (const transaction of transactions) {
-            await blocksTransactionsService.upsert(prisma, block, transaction);
-          }
+        for (const transaction of transactions) {
+          await blocksTransactionsService.upsert(prisma, block, transaction);
+        }
 
-          const receivedTransactions = await transactionsService.list({
-            search: testTransactionHash.slice(0, 5),
-            withBlocks: true,
-          });
-          expect(receivedTransactions.length).toBeGreaterThan(0);
-          const testTransaction = receivedTransactions[0] as Transaction & {
-            blocks: Block[];
-          };
-          expect(testTransaction.blocks).toContainEqual(block);
+        const receivedTransactions = await transactionsService.list({
+          withBlocks: true,
         });
-      });
 
-      describe('with only block info requested', () => {
-        it('returns transactions in descending order with blocks included', async () => {
-          const { block } = await seedBlock();
-          const testTransactionHash = uuid();
-          const notes = [{ commitment: uuid() }];
-          const spends = [{ nullifier: uuid() }];
-          const transactions = await transactionsService.bulkUpsert(prisma, [
-            {
-              hash: testTransactionHash,
-              fee: faker.datatype.number(),
-              size: faker.datatype.number(),
-              notes,
-              spends,
-            },
-            {
-              hash: uuid(),
-              fee: faker.datatype.number(),
-              size: faker.datatype.number(),
-              notes,
-              spends,
-            },
-          ]);
-
-          for (const transaction of transactions) {
-            await blocksTransactionsService.upsert(prisma, block, transaction);
-          }
-
-          const receivedTransactions = await transactionsService.list({
-            withBlocks: true,
-          });
-
-          expect(receivedTransactions.length).toBeGreaterThan(0);
-          expect(receivedTransactions[0].id).toBeGreaterThan(
-            receivedTransactions[1].id,
-          );
-          const testTransaction = receivedTransactions[0] as Transaction & {
-            blocks: Block[];
-          };
-          expect(testTransaction.blocks).toContainEqual(block);
-        });
+        expect(receivedTransactions.length).toBeGreaterThan(0);
+        expect(receivedTransactions[0].id).toBeGreaterThan(
+          receivedTransactions[1].id,
+        );
+        const testTransaction = receivedTransactions[0] as Transaction & {
+          blocks: Block[];
+        };
+        expect(testTransaction.blocks).toContainEqual(block);
       });
     });
 
     describe('with block info not requested', () => {
-      describe('with a valid partial hash search string', () => {
-        it('returns transactions with match(es)', async () => {
-          const testTransactionHash = uuid();
-          const notes = [{ commitment: uuid() }];
-          const spends = [{ nullifier: uuid() }];
-          await transactionsService.bulkUpsert(prisma, [
-            {
-              hash: testTransactionHash,
-              fee: faker.datatype.number(),
-              size: faker.datatype.number(),
-              notes,
-              spends,
-            },
-            {
-              hash: uuid(),
-              fee: faker.datatype.number(),
-              size: faker.datatype.number(),
-              notes,
-              spends,
-            },
-          ]);
+      it('returns transactions in descending order', async () => {
+        const testTransactionHash = uuid();
+        const notes = [{ commitment: uuid() }];
+        const spends = [{ nullifier: uuid() }];
+        await transactionsService.bulkUpsert(prisma, [
+          {
+            hash: testTransactionHash,
+            fee: faker.datatype.number(),
+            size: faker.datatype.number(),
+            notes,
+            spends,
+          },
+          {
+            hash: uuid(),
+            fee: faker.datatype.number(),
+            size: faker.datatype.number(),
+            notes,
+            spends,
+          },
+        ]);
 
-          const transactions = await transactionsService.list({
-            search: testTransactionHash.slice(0, 5),
-          });
-          expect(transactions.length).toBeGreaterThan(0);
-        });
-      });
-
-      describe('with no query parameters', () => {
-        it('returns transactions in descending order', async () => {
-          const testTransactionHash = uuid();
-          const notes = [{ commitment: uuid() }];
-          const spends = [{ nullifier: uuid() }];
-          await transactionsService.bulkUpsert(prisma, [
-            {
-              hash: testTransactionHash,
-              fee: faker.datatype.number(),
-              size: faker.datatype.number(),
-              notes,
-              spends,
-            },
-            {
-              hash: uuid(),
-              fee: faker.datatype.number(),
-              size: faker.datatype.number(),
-              notes,
-              spends,
-            },
-          ]);
-
-          const transactions = await transactionsService.list({});
-          expect(transactions.length).toBeGreaterThan(0);
-          expect(transactions[0].id).toBeGreaterThan(transactions[1].id);
-        });
+        const transactions = await transactionsService.list({});
+        expect(transactions.length).toBeGreaterThan(0);
+        expect(transactions[0].id).toBeGreaterThan(transactions[1].id);
       });
     });
   });
