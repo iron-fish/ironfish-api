@@ -8,6 +8,7 @@ import { ApiConfigService } from '../api-config/api-config.service';
 import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
 import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
+import { standardizeHash } from '../common/utils/hash';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { FindTransactionOptions } from './interfaces/find-transactions-options';
@@ -39,6 +40,8 @@ export class TransactionsService {
     { hash, fee, size, notes, spends }: UpsertTransactionOptions,
   ): Promise<Transaction> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
+    hash = standardizeHash(hash);
+
     return prisma.transaction.upsert({
       create: {
         hash,
@@ -70,7 +73,7 @@ export class TransactionsService {
     const { withBlocks } = options;
 
     const where = {
-      hash: options.hash,
+      hash: standardizeHash(options.hash),
       network_version: networkVersion,
     };
 
@@ -101,7 +104,7 @@ export class TransactionsService {
 
     if (options.search !== undefined) {
       const where = {
-        hash: options.search,
+        hash: standardizeHash(options.search),
         network_version: networkVersion,
       };
       return this.getTransactionsData(orderBy, limit, where, withBlocks);
