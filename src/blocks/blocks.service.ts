@@ -13,6 +13,7 @@ import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
 import { getNextDate } from '../common/utils/date';
 import { EventsService } from '../events/events.service';
+import { UpsertBlockMinedEventOptions } from '../events/interfaces/upsert-block-mined-event-options';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { UsersService } from '../users/users.service';
@@ -40,16 +41,20 @@ export class BlocksService {
       difficulty,
       graffiti,
       hash,
-      previous_block_hash,
+      previousBlockHash,
       sequence,
       timestamp,
       transactionsCount,
       type,
       size,
     }: UpsertBlockOptions,
-  ): Promise<Block> {
+  ): Promise<{
+    block: Block;
+    upsertBlockMinedOptions?: UpsertBlockMinedEventOptions;
+  }> {
     const main = type === BlockOperation.CONNECTED;
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
+    let upsertBlockMinedOptions;
 
     const block = await prisma.block.upsert({
       create: {
@@ -60,7 +65,7 @@ export class BlocksService {
         graffiti,
         transactions_count: transactionsCount,
         network_version: networkVersion,
-        previous_block_hash,
+        previous_block_hash: previousBlockHash,
         size,
         difficulty,
       },
@@ -70,7 +75,7 @@ export class BlocksService {
         timestamp,
         graffiti,
         transactions_count: transactionsCount,
-        previous_block_hash,
+        previous_block_hash: previousBlockHash,
         size,
         difficulty,
       },
@@ -88,13 +93,13 @@ export class BlocksService {
     );
     if (user && timestamp > user.created_at) {
       if (main) {
-        await this.eventsService.upsertBlockMined(block, user, prisma);
+        upsertBlockMinedOptions = { hash: block.hash, user_id: user.id };
       } else {
         await this.eventsService.deleteBlockMined(block, user, prisma);
       }
     }
 
-    return block;
+    return { block, upsertBlockMinedOptions };
   }
 
   async head(): Promise<Block> {

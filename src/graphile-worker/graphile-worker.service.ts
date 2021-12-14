@@ -7,6 +7,7 @@ import { Pool, PoolConfig } from 'pg';
 import { v4 as uuid } from 'uuid';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { GraphileWorkerPattern } from './enums/graphile-worker-pattern';
+import { GraphileWorkerJobOptions } from './interfaces/graphile-worker-job-options';
 
 @Injectable()
 export class GraphileWorkerService {
@@ -17,8 +18,7 @@ export class GraphileWorkerService {
   async addJob<T>(
     pattern: GraphileWorkerPattern,
     payload: T,
-    runAt?: Date,
-    queueName?: string,
+    { queueName, runAt }: GraphileWorkerJobOptions = {},
   ): Promise<Job> {
     if (!this.workerUtils) {
       await this.initWorkerUtils();

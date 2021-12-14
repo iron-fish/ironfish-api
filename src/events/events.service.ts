@@ -364,21 +364,14 @@ export class EventsService {
     }
   }
 
-  async upsertBlockMined(
-    block: Block,
-    user: User,
-    client: BasePrismaClient,
-  ): Promise<Event | null> {
-    return this.createWithClient(
-      {
-        blockId: block.id,
-        occurredAt: block.timestamp,
-        type: EventType.BLOCK_MINED,
-        userId: user.id,
-        points: POINTS_PER_CATEGORY[EventType.BLOCK_MINED],
-      },
-      client,
-    );
+  async upsertBlockMined(block: Block, user: User): Promise<Event | null> {
+    return this.create({
+      blockId: block.id,
+      occurredAt: block.timestamp,
+      type: EventType.BLOCK_MINED,
+      userId: user.id,
+      points: POINTS_PER_CATEGORY[EventType.BLOCK_MINED],
+    });
   }
 
   async deleteBlockMined(
