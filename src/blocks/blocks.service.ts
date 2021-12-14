@@ -501,4 +501,18 @@ export class BlocksService {
       }),
     ]);
   }
+
+  async countByGraffiti(
+    graffiti: string,
+    client: BasePrismaClient,
+  ): Promise<number> {
+    // Don't include a network version so we can account for points from
+    // previous resets
+    return client.block.count({
+      where: {
+        graffiti,
+        main: true,
+      },
+    });
+  }
 }
