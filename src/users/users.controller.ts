@@ -9,8 +9,10 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Put,
   Query,
   UnprocessableEntityException,
+  UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
 import {
@@ -19,18 +21,23 @@ import {
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
+import { MagicLinkGuard } from '../auth/guards/magic-link.guard';
 import { DEFAULT_LIMIT, MAX_LIMIT, MS_PER_DAY } from '../common/constants';
+import { Context } from '../common/decorators/context';
 import { MetricsGranularity } from '../common/enums/metrics-granularity';
+import { MagicLinkContext } from '../common/interfaces/magic-link-context';
 import { PaginatedList } from '../common/interfaces/paginated-list';
 import { EventsService } from '../events/events.service';
 import { SerializedEventMetrics } from '../events/interfaces/serialized-event-metrics';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { UserMetricsQueryDto } from './dto/user-metrics-query.dto';
 import { UsersQueryDto } from './dto/users-query.dto';
 import { SerializedUser } from './interfaces/serialized-user';
 import { SerializedUserMetrics } from './interfaces/serialized-user-metrics';
 import { SerializedUserWithRank } from './interfaces/serialized-user-with-rank';
 import { UsersService } from './users.service';
+import { UsersUpdater } from './users-updater';
 import {
   serializedUserFromRecord,
   serializedUserFromRecordWithRank,
@@ -45,6 +52,7 @@ export class UsersController {
   constructor(
     private readonly eventsService: EventsService,
     private readonly usersService: UsersService,
+    private readonly usersUpdater: UsersUpdater,
   ) {}
 
   @ApiOperation({ summary: 'Gets a specific User' })
@@ -241,5 +249,21 @@ export class UsersController {
     dto: CreateUserDto,
   ): Promise<User> {
     return this.usersService.create(dto);
+  }
+
+  @ApiExcludeEndpoint()
+  @Put(':id')
+  @UseGuards(MagicLinkGuard)
+  async update(
+    @Context() { user }: MagicLinkContext,
+    @Body(
+      new ValidationPipe({
+        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        transform: true,
+      }),
+    )
+    dto: UpdateUserDto,
+  ): Promise<User> {
+    return this.usersUpdater.update(user, dto);
   }
 }

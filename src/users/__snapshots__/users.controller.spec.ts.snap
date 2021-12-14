@@ -108,3 +108,25 @@ Object {
   "statusCode": 422,
 }
 `;
+
+exports[`UsersController PUT /users/:id with missing fields returns a 422 1`] = `
+Object {
+  "error": "Unprocessable Entity",
+  "message": Array [
+    "\\"discord\\", \\"graffiti\\", or \\"telegram\\" required when updating",
+    "discord must be a string",
+    "\\"discord\\", \\"graffiti\\", or \\"telegram\\" required when updating",
+    "graffiti must be a string",
+    "\\"discord\\", \\"graffiti\\", or \\"telegram\\" required when updating",
+    "telegram must be a string",
+  ],
+  "statusCode": 422,
+}
+`;
+
+exports[`UsersController PUT /users/:id with no logged in user returns a 401 1`] = `
+Object {
+  "message": "Unauthorized",
+  "statusCode": 401,
+}
+`;
