@@ -7,18 +7,24 @@ import request from 'supertest';
 import { ulid } from 'ulid';
 import { v4 as uuid } from 'uuid';
 import { MetricsGranularity } from '../common/enums/metrics-granularity';
+import { MagicLinkService } from '../magic-link/magic-link.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
+import { UsersService } from './users.service';
 
 const API_KEY = 'test';
 
 describe('UsersController', () => {
   let app: INestApplication;
+  let magicLinkService: MagicLinkService;
   let prisma: PrismaService;
+  let usersService: UsersService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
+    magicLinkService = app.get(MagicLinkService);
     prisma = app.get(PrismaService);
+    usersService = app.get(UsersService);
     await app.init();
   });
 
@@ -445,6 +451,67 @@ describe('UsersController', () => {
           email,
           graffiti,
           discord,
+        });
+      });
+    });
+  });
+
+  describe('PUT /users/:id', () => {
+    describe('with no logged in user', () => {
+      it('returns a 401', async () => {
+        const { body } = await request(app.getHttpServer())
+          .put('/users/0')
+          .expect(HttpStatus.UNAUTHORIZED);
+
+        expect(body).toMatchSnapshot();
+      });
+    });
+
+    describe('with missing fields', () => {
+      it('returns a 422', async () => {
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          country_code: faker.address.countryCode('alpha-3'),
+        });
+        await usersService.confirm(user);
+
+        jest
+          .spyOn(magicLinkService, 'getEmailFromHeader')
+          .mockImplementationOnce(() => Promise.resolve(user.email));
+
+        const { body } = await request(app.getHttpServer())
+          .put(`/users/${user.id}`)
+          .set('Authorization', 'token')
+          .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+
+        expect(body).toMatchSnapshot();
+      });
+    });
+
+    describe('with a valid payload', () => {
+      it('updates the user', async () => {
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          country_code: faker.address.countryCode('alpha-3'),
+        });
+        await usersService.confirm(user);
+
+        jest
+          .spyOn(magicLinkService, 'getEmailFromHeader')
+          .mockImplementationOnce(() => Promise.resolve(user.email));
+
+        const options = { discord: uuid() };
+        const { body } = await request(app.getHttpServer())
+          .put(`/users/${user.id}`)
+          .set('Authorization', 'token')
+          .send(options)
+          .expect(HttpStatus.OK);
+
+        expect(body).toMatchObject({
+          id: user.id,
+          discord: options.discord,
         });
       });
     });
