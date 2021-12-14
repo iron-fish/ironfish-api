@@ -57,7 +57,10 @@ describe('MeController', () => {
         expect(body).toMatchObject({
           id: user.id,
           country_code: user.country_code,
+          discord: user.discord,
+          email: user.email,
           graffiti: user.graffiti,
+          telegram: user.telegram,
         });
       });
     });
