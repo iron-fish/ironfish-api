@@ -6,6 +6,7 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
+import assert from 'assert';
 import faker from 'faker';
 import { ulid } from 'ulid';
 import { v4 as uuid } from 'uuid';
@@ -581,6 +582,113 @@ describe('UsersService', () => {
 
       const updatedUser = await usersService.confirm(user);
       expect(updatedUser.confirmed_at).not.toBeNull();
+    });
+  });
+
+  describe('findDuplicateUser', () => {
+    describe('with a duplicate discord', () => {
+      it('returns the duplicate records', async () => {
+        const user = await usersService.create({
+          country_code: faker.address.countryCode('alpha-3'),
+          discord: ulid(),
+          email: faker.internet.email(),
+          graffiti: uuid(),
+        });
+        const duplicateUser = await usersService.create({
+          country_code: faker.address.countryCode('alpha-3'),
+          discord: ulid(),
+          email: faker.internet.email(),
+          graffiti: uuid(),
+        });
+        await usersService.confirm(duplicateUser);
+
+        assert.ok(duplicateUser.discord);
+        const duplicateUsers = await usersService.findDuplicateUser(
+          user,
+          { discord: duplicateUser.discord },
+          prisma,
+        );
+        expect(duplicateUsers).toHaveLength(1);
+        assert.ok(duplicateUsers[0]);
+        expect(duplicateUsers[0].id).toBe(duplicateUser.id);
+      });
+    });
+
+    describe('with a duplicate graffiti', () => {
+      it('returns the duplicate records', async () => {
+        const user = await usersService.create({
+          country_code: faker.address.countryCode('alpha-3'),
+          email: faker.internet.email(),
+          graffiti: uuid(),
+        });
+        const duplicateUser = await usersService.create({
+          country_code: faker.address.countryCode('alpha-3'),
+          email: faker.internet.email(),
+          graffiti: uuid(),
+        });
+        await usersService.confirm(duplicateUser);
+
+        const duplicateUsers = await usersService.findDuplicateUser(
+          user,
+          { graffiti: duplicateUser.graffiti },
+          prisma,
+        );
+        expect(duplicateUsers).toHaveLength(1);
+        assert.ok(duplicateUsers[0]);
+        expect(duplicateUsers[0].id).toBe(duplicateUser.id);
+      });
+    });
+
+    describe('with a duplicate telegram', () => {
+      it('returns the duplicate records', async () => {
+        const user = await usersService.create({
+          country_code: faker.address.countryCode('alpha-3'),
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          telegram: ulid(),
+        });
+        const duplicateUser = await usersService.create({
+          country_code: faker.address.countryCode('alpha-3'),
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          telegram: ulid(),
+        });
+        await usersService.confirm(duplicateUser);
+
+        assert.ok(duplicateUser.telegram);
+        const duplicateUsers = await usersService.findDuplicateUser(
+          user,
+          { telegram: duplicateUser.telegram },
+          prisma,
+        );
+        expect(duplicateUsers).toHaveLength(1);
+        assert.ok(duplicateUsers[0]);
+        expect(duplicateUsers[0].id).toBe(duplicateUser.id);
+      });
+    });
+  });
+
+  describe('update', () => {
+    it('updates the record', async () => {
+      const options = {
+        discord: ulid(),
+        graffiti: ulid(),
+        telegram: ulid(),
+      };
+      const user = await usersService.create({
+        country_code: faker.address.countryCode('alpha-3'),
+        email: faker.internet.email(),
+        graffiti: uuid(),
+        telegram: ulid(),
+      });
+
+      const updatedUser = await usersService.update(user, options, prisma);
+      expect(updatedUser).toMatchObject({
+        id: user.id,
+        discord: options.discord,
+        graffiti: options.graffiti,
+        telegram: options.telegram,
+      });
     });
   });
 });

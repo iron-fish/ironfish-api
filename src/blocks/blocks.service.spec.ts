@@ -284,4 +284,39 @@ describe('BlocksService', () => {
       }
     });
   });
+
+  describe('countByGraffiti', () => {
+    it('returns the count of main blocks for a given graffiti', async () => {
+      const graffiti = uuid();
+      const count = 15;
+      for (let i = 0; i < count; i++) {
+        await blocksService.upsert(prisma, {
+          hash: uuid(),
+          sequence: faker.datatype.number(),
+          difficulty: faker.datatype.number(),
+          timestamp: new Date(),
+          transactionsCount: 1,
+          type: BlockOperation.CONNECTED,
+          graffiti,
+          previous_block_hash: uuid(),
+          size: faker.datatype.number(),
+        });
+
+        // Seed forks to make sure they are not counted
+        await blocksService.upsert(prisma, {
+          hash: uuid(),
+          sequence: faker.datatype.number(),
+          difficulty: faker.datatype.number(),
+          timestamp: new Date(),
+          transactionsCount: 1,
+          type: BlockOperation.DISCONNECTED,
+          graffiti,
+          previous_block_hash: uuid(),
+          size: faker.datatype.number(),
+        });
+      }
+
+      expect(await blocksService.countByGraffiti(graffiti, prisma)).toBe(count);
+    });
+  });
 });

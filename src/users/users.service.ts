@@ -18,6 +18,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { ListUsersWithRankOptions } from './interfaces/list-by-rank-options';
 import { ListUsersOptions } from './interfaces/list-users-options';
 import { SerializedUserWithRank } from './interfaces/serialized-user-with-rank';
+import { UpdateUserOptions } from './interfaces/update-user-options';
 import { Prisma, User } from '.prisma/client';
 
 @Injectable()
@@ -457,6 +458,43 @@ export class UsersService {
           confirmed_at: new Date().toISOString(),
         },
       });
+    });
+  }
+
+  async findDuplicateUser(
+    user: User,
+    options: UpdateUserOptions,
+    client: BasePrismaClient,
+  ): Promise<User[]> {
+    const { discord, graffiti, telegram } = options;
+    return client.user.findMany({
+      where: {
+        confirmed_at: {
+          not: null,
+        },
+        OR: [{ discord }, { graffiti }, { telegram }],
+        NOT: {
+          id: user.id,
+        },
+      },
+    });
+  }
+
+  async update(
+    user: User,
+    options: UpdateUserOptions,
+    client: BasePrismaClient,
+  ): Promise<User> {
+    const { discord, graffiti, telegram } = options;
+    return client.user.update({
+      data: {
+        discord,
+        graffiti,
+        telegram,
+      },
+      where: {
+        id: user.id,
+      },
     });
   }
 }

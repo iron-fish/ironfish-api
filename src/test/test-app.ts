@@ -12,6 +12,7 @@ import { BlocksModule } from '../blocks/blocks.module';
 import { BlocksTransactionsModule } from '../blocks-transactions/blocks-transactions.module';
 import { DatadogModule } from '../datadog/datadog.module';
 import { PostmarkService } from '../postmark/postmark.service';
+import { UsersUpdaterModule } from '../users/users-updater.module';
 import { MockPostmarkService } from './mocks/mock-postmark.service';
 
 export async function bootstrapTestApp(): Promise<INestApplication> {
@@ -38,6 +39,7 @@ export async function bootstrapTestApp(): Promise<INestApplication> {
         }),
       }),
       DatadogModule,
+      UsersUpdaterModule,
       ...JOBS_MODULES,
       ...REST_MODULES,
     ],
