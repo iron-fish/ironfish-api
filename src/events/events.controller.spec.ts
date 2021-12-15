@@ -42,6 +42,7 @@ describe('EventsController', () => {
           id: expect.any(Number),
           user_id: expect.any(Number),
           type: expect.any(String),
+          metadata: expect.any(Object),
         });
       });
     });
@@ -94,6 +95,7 @@ describe('EventsController', () => {
             id: expect.any(Number),
             user_id: user.id,
             type: expect.any(String),
+            metadata: expect.any(Object),
           });
         }
       });

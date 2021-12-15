@@ -19,7 +19,7 @@ import { UsersService } from '../users/users.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { EventsQueryDto } from './dto/events-query.dto';
 import { SerializedEvent } from './interfaces/serialized-event';
-import { serializedEventFromRecord } from './utils/event-translator';
+import { serializedEventFromRecordWithMetadata } from './utils/event-translator';
 
 @ApiTags('Events')
 @Controller('events')
@@ -48,7 +48,7 @@ export class EventsController {
     });
     return {
       object: 'list',
-      data: data.map((event) => serializedEventFromRecord(event)),
+      data: data.map((event) => serializedEventFromRecordWithMetadata(event)),
       metadata: {
         has_next: hasNext,
         has_previous: hasPrevious,
@@ -80,6 +80,6 @@ export class EventsController {
     if (!event) {
       return null;
     }
-    return serializedEventFromRecord(event);
+    return serializedEventFromRecordWithMetadata(event);
   }
 }

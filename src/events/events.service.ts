@@ -4,6 +4,7 @@
 import { Injectable } from '@nestjs/common';
 import is from '@sindresorhus/is';
 import { ApiConfigService } from '../api-config/api-config.service';
+import { serializedBlockFromRecord } from '../blocks/utils/block-translator';
 import {
   DEFAULT_LIMIT,
   MAX_LIMIT,
@@ -15,6 +16,7 @@ import { getMondayFromDate } from '../common/utils/date';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { CreateEventOptions } from './interfaces/create-event-options';
+import { EventWithMetadata } from './interfaces/event-with-metadata';
 import { ListEventsOptions } from './interfaces/list-events-options';
 import { SerializedEventMetrics } from './interfaces/serialized-event-metrics';
 import { Block, Event, EventType, Prisma, User } from '.prisma/client';
@@ -27,7 +29,7 @@ export class EventsService {
   ) {}
 
   async list(options: ListEventsOptions): Promise<{
-    data: Event[];
+    data: EventWithMetadata[];
     hasNext: boolean;
     hasPrevious: boolean;
   }> {
@@ -44,7 +46,7 @@ export class EventsService {
       user_id: options.userId,
       deleted_at: null,
     };
-    const data = await this.prisma.event.findMany({
+    const records = await this.prisma.event.findMany({
       cursor,
       orderBy,
       skip,
@@ -52,9 +54,36 @@ export class EventsService {
       where,
     });
     return {
-      data,
-      ...(await this.getListMetadata(data, where, orderBy)),
+      data: await this.enrichEventsWithMetadata(records),
+      ...(await this.getListMetadata(records, where, orderBy)),
     };
+  }
+
+  private async enrichEventsWithMetadata(
+    records: Event[],
+  ): Promise<EventWithMetadata[]> {
+    const data = [];
+    for (const record of records) {
+      let metadata = {};
+      if (record.block_id) {
+        // TODO(rohanjadvani): Replace this call with a service method.
+        // https://linear.app/ironfish/issue/IRO-1422/replace-block-metadata-call-with-service-call
+        const block = await this.prisma.block.findUnique({
+          where: {
+            id: record.block_id,
+          },
+        });
+        if (!block) {
+          throw new Error('Invalid database response');
+        }
+        metadata = serializedBlockFromRecord(block);
+      }
+      data.push({
+        ...record,
+        metadata,
+      });
+    }
+    return data;
   }
 
   private async getListMetadata(
@@ -260,7 +289,7 @@ export class EventsService {
     };
   }
 
-  async create(options: CreateEventOptions): Promise<Event | null> {
+  async create(options: CreateEventOptions): Promise<EventWithMetadata | null> {
     return this.prisma.$transaction(async (prisma) => {
       return this.createWithClient(options, prisma);
     });
@@ -269,7 +298,7 @@ export class EventsService {
   async createWithClient(
     { blockId, occurredAt, points, type, userId }: CreateEventOptions,
     client: BasePrismaClient,
-  ): Promise<Event | null> {
+  ): Promise<EventWithMetadata | null> {
     occurredAt = occurredAt || new Date();
     // 2021 December 1 8 PM UTC
     const launchDate = new Date(Date.UTC(2021, 11, 1, 20, 0, 0));
@@ -306,12 +335,25 @@ export class EventsService {
     );
 
     let existingEvent;
+    let metadata = {};
     if (blockId) {
       existingEvent = await client.event.findUnique({
         where: {
           block_id: blockId,
         },
       });
+
+      // TODO(rohanjadvani): Replace this call with a service method.
+      // https://linear.app/ironfish/issue/IRO-1422/replace-block-metadata-call-with-service-call
+      const block = await client.block.findUnique({
+        where: {
+          id: blockId,
+        },
+      });
+      if (!block) {
+        throw new Error('Invalid database response');
+      }
+      metadata = serializedBlockFromRecord(block);
     }
 
     if (existingEvent) {
@@ -329,7 +371,7 @@ export class EventsService {
           },
         });
 
-        existingEvent = client.event.update({
+        existingEvent = await client.event.update({
           data: {
             points: adjustedPoints,
           },
@@ -339,7 +381,10 @@ export class EventsService {
         });
       }
 
-      return existingEvent;
+      return {
+        ...existingEvent,
+        metadata,
+      };
     } else {
       await client.user.update({
         data: {
@@ -352,7 +397,7 @@ export class EventsService {
         },
       });
 
-      return client.event.create({
+      const record = await client.event.create({
         data: {
           type,
           block_id: blockId,
@@ -361,6 +406,10 @@ export class EventsService {
           user_id: userId,
         },
       });
+      return {
+        ...record,
+        metadata,
+      };
     }
   }
 
