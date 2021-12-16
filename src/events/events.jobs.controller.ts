@@ -9,6 +9,7 @@ import { GraphileWorkerHandlerResponse } from '../graphile-worker/interfaces/gra
 import { LoggerService } from '../logger/logger.service';
 import { UsersService } from '../users/users.service';
 import { EventsService } from './events.service';
+import { DeleteBlockMinedEventOptions } from './interfaces/delete-block-mined-event-options';
 import { UpsertBlockMinedEventOptions } from './interfaces/upsert-block-mined-event-options';
 
 @Controller()
@@ -38,6 +39,27 @@ export class EventsJobsController {
     }
 
     await this.eventsService.upsertBlockMined(block, user);
+    return { requeue: false };
+  }
+
+  @MessagePattern(GraphileWorkerPattern.UPSERT_BLOCK_MINED_EVENT)
+  async deleteBlockMinedEvent({
+    block_id: blockId,
+    user_id: userId,
+  }: DeleteBlockMinedEventOptions): Promise<GraphileWorkerHandlerResponse> {
+    const user = await this.usersService.findConfirmed(userId);
+    if (!user) {
+      this.loggerService.error(`No user found for '${userId}'`, '');
+      return { requeue: false };
+    }
+
+    const block = await this.blocksService.find(blockId);
+    if (!block) {
+      this.loggerService.error(`No block found for '${blockId}'`, '');
+      return { requeue: false };
+    }
+
+    await this.eventsService.deleteBlockMined(block, user);
     return { requeue: false };
   }
 }

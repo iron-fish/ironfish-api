@@ -71,7 +71,7 @@ describe('BlocksDailyJobsController', () => {
       });
     });
 
-    describe('with a missing id', () => {
+    describe('with a missing block', () => {
       it('logs an error', async () => {
         const user = await usersService.create({
           email: faker.internet.email(),
@@ -162,6 +162,122 @@ describe('BlocksDailyJobsController', () => {
         assert.ok(upsertBlockMined.mock.calls);
         expect(upsertBlockMined.mock.calls[0][0].id).toBe(block.id);
         expect(upsertBlockMined.mock.calls[0][1].id).toBe(user.id);
+      });
+    });
+  });
+
+  describe('deleteBlockMinedEvent', () => {
+    describe('with a missing user', () => {
+      it('logs an error', async () => {
+        await eventsJobsController.deleteBlockMinedEvent({
+          block_id: 12345,
+          user_id: 12345,
+        });
+
+        expect(logError).toHaveBeenCalledTimes(1);
+      });
+
+      it('does not requeue', async () => {
+        const { requeue } = await eventsJobsController.deleteBlockMinedEvent({
+          block_id: 12345,
+          user_id: 12345,
+        });
+
+        expect(requeue).toBe(false);
+      });
+    });
+
+    describe('with a missing block', () => {
+      it('logs an error', async () => {
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: ulid(),
+          country_code: faker.address.countryCode('alpha-3'),
+        });
+        await usersService.confirm(user);
+
+        await eventsJobsController.deleteBlockMinedEvent({
+          block_id: 12345,
+          user_id: user.id,
+        });
+
+        expect(logError).toHaveBeenCalledTimes(1);
+      });
+
+      it('does not requeue', async () => {
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: ulid(),
+          country_code: faker.address.countryCode('alpha-3'),
+        });
+        await usersService.confirm(user);
+
+        const { requeue } = await eventsJobsController.deleteBlockMinedEvent({
+          block_id: 12345,
+          user_id: user.id,
+        });
+
+        expect(requeue).toBe(false);
+      });
+    });
+
+    describe('with a valid payload', () => {
+      it('does not requeue', async () => {
+        const { block } = await blocksService.upsert(prisma, {
+          hash: ulid(),
+          sequence: faker.datatype.number(),
+          difficulty: faker.datatype.number(),
+          timestamp: new Date(),
+          transactionsCount: 1,
+          type: BlockOperation.CONNECTED,
+          graffiti: ulid(),
+          previousBlockHash: ulid(),
+          size: faker.datatype.number(),
+        });
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: ulid(),
+          country_code: faker.address.countryCode('alpha-3'),
+        });
+        await usersService.confirm(user);
+
+        const { requeue } = await eventsJobsController.deleteBlockMinedEvent({
+          block_id: block.id,
+          user_id: user.id,
+        });
+
+        expect(requeue).toBe(false);
+      });
+
+      it('upserts a block mined event', async () => {
+        const { block } = await blocksService.upsert(prisma, {
+          hash: ulid().toLowerCase(),
+          sequence: faker.datatype.number(),
+          difficulty: faker.datatype.number(),
+          timestamp: new Date(),
+          transactionsCount: 1,
+          type: BlockOperation.CONNECTED,
+          graffiti: ulid(),
+          previousBlockHash: ulid(),
+          size: faker.datatype.number(),
+        });
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: ulid(),
+          country_code: faker.address.countryCode('alpha-3'),
+        });
+        await usersService.confirm(user);
+
+        const deleteBlockMined = jest.spyOn(eventsService, 'deleteBlockMined');
+        await eventsJobsController.deleteBlockMinedEvent({
+          block_id: block.id,
+          user_id: user.id,
+        });
+
+        expect(deleteBlockMined).toHaveBeenCalledTimes(1);
+        assert.ok(deleteBlockMined.mock.calls);
+        expect(deleteBlockMined.mock.calls[0][0].id).toBe(block.id);
+        expect(deleteBlockMined.mock.calls[0][1].id).toBe(user.id);
       });
     });
   });
