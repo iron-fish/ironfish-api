@@ -101,12 +101,12 @@ describe('BlocksService', () => {
         size: faker.datatype.number(),
       };
 
-      const { upsertBlockMinedOptions } = await blocksService.upsert(
+      const { block, upsertBlockMinedOptions } = await blocksService.upsert(
         prisma,
         options,
       );
       expect(upsertBlockMinedOptions).toEqual({
-        hash: options.hash,
+        block_id: block.id,
         user_id: user.id,
       });
     });
@@ -132,6 +132,24 @@ describe('BlocksService', () => {
   });
 
   describe('find', () => {
+    describe('with an id', () => {
+      it('returns the block', async () => {
+        const { block } = await blocksService.upsert(prisma, {
+          hash: uuid(),
+          sequence: faker.datatype.number(),
+          difficulty: faker.datatype.number(),
+          timestamp: new Date(),
+          transactionsCount: 1,
+          type: BlockOperation.CONNECTED,
+          graffiti: uuid(),
+          previousBlockHash: uuid(),
+          size: faker.datatype.number(),
+        });
+        const record = await blocksService.find(block.id);
+        expect(record).toMatchObject(block);
+      });
+    });
+
     describe('with a valid hash', () => {
       it('returns the block with the correct hash', async () => {
         const testBlockHash = uuid();

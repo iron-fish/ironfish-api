@@ -22,7 +22,7 @@ export class EventsJobsController {
 
   @MessagePattern(GraphileWorkerPattern.UPSERT_BLOCK_MINED_EVENT)
   async upsertBlockMinedEvent({
-    hash,
+    block_id: blockId,
     user_id: userId,
   }: UpsertBlockMinedEventOptions): Promise<GraphileWorkerHandlerResponse> {
     const user = await this.usersService.findConfirmed(userId);
@@ -31,9 +31,9 @@ export class EventsJobsController {
       return { requeue: false };
     }
 
-    const block = await this.blocksService.find({ hash });
+    const block = await this.blocksService.find(blockId);
     if (!block) {
-      this.loggerService.error(`No block found for '${hash}'`, '');
+      this.loggerService.error(`No block found for '${blockId}'`, '');
       return { requeue: false };
     }
 

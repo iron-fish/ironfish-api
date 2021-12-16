@@ -93,7 +93,7 @@ export class BlocksService {
     );
     if (user && timestamp > user.created_at) {
       if (main) {
-        upsertBlockMinedOptions = { hash: block.hash, user_id: user.id };
+        upsertBlockMinedOptions = { block_id: block.id, user_id: user.id };
       } else {
         await this.eventsService.deleteBlockMined(block, user, prisma);
       }
@@ -450,11 +450,19 @@ export class BlocksService {
   }
 
   async find(
-    options: FindBlockOptions,
+    options: number | FindBlockOptions,
   ): Promise<Block | (Block & { transactions: Transaction[] }) | null> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
-    const { withTransactions } = options;
 
+    if (typeof options === 'number') {
+      return this.prisma.block.findUnique({
+        where: {
+          id: options,
+        },
+      });
+    }
+
+    const { withTransactions } = options;
     if (options.hash !== undefined) {
       const block = await this.prisma.block.findFirst({
         where: {
