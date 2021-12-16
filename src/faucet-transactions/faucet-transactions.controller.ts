@@ -11,6 +11,7 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Query,
   UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
@@ -20,9 +21,11 @@ import {
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
+import is from '@sindresorhus/is';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { CompleteFaucetTransactionDto } from './dto/complete-faucet-transaction.dto';
 import { CreateFaucetTransactionDto } from './dto/create-faucet-transaction.dto';
+import { NextFaucetTransactionsDto } from './dto/next-faucet-transactions.dto';
 import { FaucetTransactionsService } from './faucet-transactions.service';
 import { FaucetTransactionsStatus } from './interfaces/faucet-transactions-status';
 import { SerializedFaucetTransaction } from './interfaces/serialized-faucet-transaction';
@@ -53,12 +56,30 @@ export class FaucetTransactionsController {
   @ApiExcludeEndpoint()
   @Get('next')
   @UseGuards(ApiKeyGuard)
-  async next(): Promise<SerializedFaucetTransaction> {
-    const nextFaucetTransaction = await this.faucetTransactionsService.next();
-    if (!nextFaucetTransaction) {
+  async next(
+    @Query(
+      new ValidationPipe({
+        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        transform: true,
+      }),
+    )
+    { num }: NextFaucetTransactionsDto,
+  ): Promise<SerializedFaucetTransaction | SerializedFaucetTransaction[]> {
+    const nextFaucetTransactions = await this.faucetTransactionsService.next({
+      num,
+    });
+    if (!nextFaucetTransactions) {
       throw new NotFoundException();
     }
-    return serializedFaucetTransactionFromRecord(nextFaucetTransaction);
+
+    // TODO: This is temporary measure to avoid downtime in the faucet
+    // before we change the faucet service to expect arrays - deekerno
+    if (is.array(nextFaucetTransactions)) {
+      return nextFaucetTransactions.map((nextFaucetTransaction) =>
+        serializedFaucetTransactionFromRecord(nextFaucetTransaction),
+      );
+    }
+    return serializedFaucetTransactionFromRecord(nextFaucetTransactions);
   }
 
   @ApiOperation({ summary: 'Returns the global status of faucet transactions' })

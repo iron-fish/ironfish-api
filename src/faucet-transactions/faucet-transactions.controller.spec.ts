@@ -115,6 +115,54 @@ describe('FaucetTransactionsController', () => {
         });
       });
     });
+
+    describe('when multiple FaucetTransactions are requested', () => {
+      it('returns the record', async () => {
+        jest.spyOn(faucetTransactionsService, 'next').mockResolvedValueOnce([
+          {
+            id: 0,
+            created_at: new Date(),
+            updated_at: new Date(),
+            public_key: 'mock-key',
+            email: null,
+            completed_at: null,
+            started_at: null,
+            tries: 0,
+            hash: null,
+          },
+          {
+            id: 1,
+            created_at: new Date(),
+            updated_at: new Date(),
+            public_key: 'mock-key',
+            email: null,
+            completed_at: null,
+            started_at: null,
+            tries: 0,
+            hash: null,
+          },
+        ]);
+
+        const { body } = await request(app.getHttpServer())
+          .get('/faucet_transactions/next')
+          .set('Authorization', `Bearer ${API_KEY}`)
+          .query({ num: 2 })
+          .expect(HttpStatus.OK);
+
+        expect(body).toMatchObject([
+          {
+            object: 'faucet_transaction',
+            id: expect.any(Number),
+            public_key: expect.any(String),
+          },
+          {
+            object: 'faucet_transaction',
+            id: expect.any(Number),
+            public_key: expect.any(String),
+          },
+        ]);
+      });
+    });
   });
 
   describe('GET /faucet_transactions/status', () => {

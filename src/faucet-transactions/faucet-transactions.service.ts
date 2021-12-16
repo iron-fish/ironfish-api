@@ -10,6 +10,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CompleteFaucetTransactionOptions } from './interfaces/complete-faucet-transaction-options';
 import { CreateFaucetTransactionOptions } from './interfaces/create-faucet-transaction-options';
 import { FaucetTransactionsStatus } from './interfaces/faucet-transactions-status';
+import { NextFaucetTransactionsOptions } from './interfaces/next-faucet-transactions-options';
 import { FaucetTransaction, Prisma } from '.prisma/client';
 
 export const FAUCET_REQUESTS_LIMIT = 3;
@@ -60,10 +61,44 @@ export class FaucetTransactionsService {
     });
   }
 
-  async next(): Promise<FaucetTransaction | null> {
+  async next(
+    options: NextFaucetTransactionsOptions,
+  ): Promise<FaucetTransaction | FaucetTransaction[] | null> {
+    const limit = options.num ?? 1;
+    // TODO: This is temporary measure to avoid downtime in the faucet
+    // before we change the faucet service to expect arrays - deekerno
+    if (limit === 1) {
+      return this.prisma.$transaction(async (prisma) => {
+        const currentlyRunningFaucetTransaction =
+          await prisma.faucetTransaction.findFirst({
+            where: {
+              started_at: {
+                not: null,
+              },
+              completed_at: null,
+            },
+            orderBy: {
+              created_at: Prisma.SortOrder.asc,
+            },
+          });
+        if (currentlyRunningFaucetTransaction) {
+          return currentlyRunningFaucetTransaction;
+        }
+        return prisma.faucetTransaction.findFirst({
+          where: {
+            started_at: null,
+            completed_at: null,
+          },
+          orderBy: {
+            created_at: Prisma.SortOrder.asc,
+          },
+        });
+      });
+    }
+
     return this.prisma.$transaction(async (prisma) => {
-      const currentlyRunningFaucetTransaction =
-        await prisma.faucetTransaction.findFirst({
+      const currentlyRunningFaucetTransactions =
+        await prisma.faucetTransaction.findMany({
           where: {
             started_at: {
               not: null,
@@ -73,19 +108,36 @@ export class FaucetTransactionsService {
           orderBy: {
             created_at: Prisma.SortOrder.asc,
           },
+          take: limit,
         });
-      if (currentlyRunningFaucetTransaction) {
-        return currentlyRunningFaucetTransaction;
+      if (currentlyRunningFaucetTransactions.length < limit) {
+        const diff = limit - currentlyRunningFaucetTransactions.length;
+        const unfulfilledFaucetTransactions =
+          await prisma.faucetTransaction.findMany({
+            where: {
+              started_at: null,
+              completed_at: null,
+            },
+            orderBy: {
+              created_at: Prisma.SortOrder.asc,
+            },
+            take: diff,
+          });
+        const faucetTransactions = [
+          ...currentlyRunningFaucetTransactions,
+          ...unfulfilledFaucetTransactions,
+        ];
+        if (faucetTransactions.length === 0) {
+          return null;
+        } else {
+          return [
+            ...currentlyRunningFaucetTransactions,
+            ...unfulfilledFaucetTransactions,
+          ];
+        }
       }
-      return prisma.faucetTransaction.findFirst({
-        where: {
-          started_at: null,
-          completed_at: null,
-        },
-        orderBy: {
-          created_at: Prisma.SortOrder.asc,
-        },
-      });
+
+      return currentlyRunningFaucetTransactions;
     });
   }
 
