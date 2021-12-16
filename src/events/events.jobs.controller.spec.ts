@@ -54,7 +54,7 @@ describe('BlocksDailyJobsController', () => {
     describe('with a missing user', () => {
       it('logs an error', async () => {
         await eventsJobsController.upsertBlockMinedEvent({
-          hash: 'foo',
+          block_id: 12345,
           user_id: 12345,
         });
 
@@ -63,7 +63,7 @@ describe('BlocksDailyJobsController', () => {
 
       it('does not requeue', async () => {
         const { requeue } = await eventsJobsController.upsertBlockMinedEvent({
-          hash: 'foo',
+          block_id: 12345,
           user_id: 12345,
         });
 
@@ -71,7 +71,7 @@ describe('BlocksDailyJobsController', () => {
       });
     });
 
-    describe('with a missing hash', () => {
+    describe('with a missing id', () => {
       it('logs an error', async () => {
         const user = await usersService.create({
           email: faker.internet.email(),
@@ -81,7 +81,7 @@ describe('BlocksDailyJobsController', () => {
         await usersService.confirm(user);
 
         await eventsJobsController.upsertBlockMinedEvent({
-          hash: 'foo',
+          block_id: 12345,
           user_id: user.id,
         });
 
@@ -97,7 +97,7 @@ describe('BlocksDailyJobsController', () => {
         await usersService.confirm(user);
 
         const { requeue } = await eventsJobsController.upsertBlockMinedEvent({
-          hash: 'foo',
+          block_id: 12345,
           user_id: user.id,
         });
 
@@ -126,7 +126,7 @@ describe('BlocksDailyJobsController', () => {
         await usersService.confirm(user);
 
         const { requeue } = await eventsJobsController.upsertBlockMinedEvent({
-          hash: block.hash,
+          block_id: block.id,
           user_id: user.id,
         });
 
@@ -154,7 +154,7 @@ describe('BlocksDailyJobsController', () => {
 
         const upsertBlockMined = jest.spyOn(eventsService, 'upsertBlockMined');
         await eventsJobsController.upsertBlockMinedEvent({
-          hash: block.hash,
+          block_id: block.id,
           user_id: user.id,
         });
 
