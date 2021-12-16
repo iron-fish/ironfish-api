@@ -29,15 +29,6 @@ export class UsersUpdater {
             message: `Current graffiti '${user.graffiti}' has already mined blocks`,
           });
         }
-
-        const minedBlocksForNewGraffiti =
-          await this.blocksService.countByGraffiti(graffiti, prisma);
-        if (minedBlocksForNewGraffiti > 0) {
-          throw new UnprocessableEntityException({
-            code: 'duplicate_block_graffiti',
-            message: `Blocks with '${graffiti}' already exist`,
-          });
-        }
       }
 
       const users = await this.usersService.findDuplicateUser(
