@@ -7,6 +7,7 @@ import request from 'supertest';
 import { ulid } from 'ulid';
 import { v4 as uuid } from 'uuid';
 import { MetricsGranularity } from '../common/enums/metrics-granularity';
+import { standardizeEmail } from '../common/utils/email';
 import { MagicLinkService } from '../magic-link/magic-link.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
@@ -433,7 +434,7 @@ describe('UsersController', () => {
 
     describe('with valid arguments', () => {
       it('creates a user', async () => {
-        const email = faker.internet.email();
+        const email = faker.internet.email().toUpperCase();
         const graffiti = uuid();
         const discord = faker.internet.userName();
         const { body } = await request(app.getHttpServer())
@@ -448,7 +449,7 @@ describe('UsersController', () => {
           .expect(HttpStatus.CREATED);
         expect(body).toMatchObject({
           id: expect.any(Number),
-          email: email.toLocaleLowerCase(),
+          email: standardizeEmail(email),
           graffiti,
           discord,
         });
