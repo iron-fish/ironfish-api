@@ -71,7 +71,7 @@
     "class-validator": "0.13.2",
     "cluster": "0.7.7",
     "compression": "1.7.4",
-    "express": "4.17.1",
+    "express": "4.17.2",
     "graphile-worker": "0.12.2",
     "helmet": "4.6.0",
     "hot-shots": "9.0.0",
