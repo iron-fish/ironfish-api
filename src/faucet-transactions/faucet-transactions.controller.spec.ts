@@ -117,7 +117,7 @@ describe('FaucetTransactionsController', () => {
     });
 
     describe('when multiple FaucetTransactions are requested', () => {
-      it('returns the record', async () => {
+      it('returns the records', async () => {
         jest.spyOn(faucetTransactionsService, 'next').mockResolvedValueOnce([
           {
             id: 0,
@@ -149,16 +149,19 @@ describe('FaucetTransactionsController', () => {
           .query({ num: 2 })
           .expect(HttpStatus.OK);
 
-        expect(body).toMatchObject([
+        const { data } = body;
+        expect(data as unknown[]).toMatchObject([
           {
             object: 'faucet_transaction',
             id: expect.any(Number),
             public_key: expect.any(String),
+            completed_at: null,
           },
           {
             object: 'faucet_transaction',
             id: expect.any(Number),
             public_key: expect.any(String),
+            completed_at: null,
           },
         ]);
       });

@@ -23,6 +23,7 @@ import {
 } from '@nestjs/swagger';
 import is from '@sindresorhus/is';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
+import { List } from '../common/interfaces/list';
 import { CompleteFaucetTransactionDto } from './dto/complete-faucet-transaction.dto';
 import { CreateFaucetTransactionDto } from './dto/create-faucet-transaction.dto';
 import { NextFaucetTransactionsDto } from './dto/next-faucet-transactions.dto';
@@ -63,10 +64,10 @@ export class FaucetTransactionsController {
         transform: true,
       }),
     )
-    { num }: NextFaucetTransactionsDto,
-  ): Promise<SerializedFaucetTransaction | SerializedFaucetTransaction[]> {
+    { count }: NextFaucetTransactionsDto,
+  ): Promise<SerializedFaucetTransaction | List<SerializedFaucetTransaction>> {
     const nextFaucetTransactions = await this.faucetTransactionsService.next({
-      num,
+      count,
     });
     if (!nextFaucetTransactions) {
       throw new NotFoundException();
@@ -75,9 +76,12 @@ export class FaucetTransactionsController {
     // TODO: This is temporary measure to avoid downtime in the faucet
     // before we change the faucet service to expect arrays - deekerno
     if (is.array(nextFaucetTransactions)) {
-      return nextFaucetTransactions.map((nextFaucetTransaction) =>
-        serializedFaucetTransactionFromRecord(nextFaucetTransaction),
-      );
+      return {
+        object: 'list',
+        data: nextFaucetTransactions.map((nextFaucetTransaction) =>
+          serializedFaucetTransactionFromRecord(nextFaucetTransaction),
+        ),
+      };
     }
     return serializedFaucetTransactionFromRecord(nextFaucetTransactions);
   }

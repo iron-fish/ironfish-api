@@ -64,10 +64,10 @@ export class FaucetTransactionsService {
   async next(
     options: NextFaucetTransactionsOptions,
   ): Promise<FaucetTransaction | FaucetTransaction[] | null> {
-    const limit = options.num ?? 1;
+    const count = options.count ?? 1;
     // TODO: This is temporary measure to avoid downtime in the faucet
     // before we change the faucet service to expect arrays - deekerno
-    if (limit === 1) {
+    if (count === 1) {
       return this.prisma.$transaction(async (prisma) => {
         const currentlyRunningFaucetTransaction =
           await prisma.faucetTransaction.findFirst({
@@ -108,10 +108,10 @@ export class FaucetTransactionsService {
           orderBy: {
             created_at: Prisma.SortOrder.asc,
           },
-          take: limit,
+          take: count,
         });
-      if (currentlyRunningFaucetTransactions.length < limit) {
-        const diff = limit - currentlyRunningFaucetTransactions.length;
+      if (currentlyRunningFaucetTransactions.length < count) {
+        const diff = count - currentlyRunningFaucetTransactions.length;
         const unfulfilledFaucetTransactions =
           await prisma.faucetTransaction.findMany({
             where: {

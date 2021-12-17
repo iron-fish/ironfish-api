@@ -115,9 +115,9 @@ describe('FaucetTransactionService', () => {
           .spyOn(prisma.faucetTransaction, 'findFirst')
           .mockResolvedValueOnce(runningFaucetTransaction);
 
-        expect(
-          await faucetTransactionsService.next({ num: undefined }),
-        ).toMatchObject(runningFaucetTransaction);
+        expect(await faucetTransactionsService.next({})).toMatchObject(
+          runningFaucetTransaction,
+        );
       });
     });
 
@@ -141,9 +141,9 @@ describe('FaucetTransactionService', () => {
           // Waiting to run FaucetTransaction
           .mockResolvedValueOnce(pendingFaucetTransaction);
 
-        expect(
-          await faucetTransactionsService.next({ num: undefined }),
-        ).toMatchObject(pendingFaucetTransaction);
+        expect(await faucetTransactionsService.next({})).toMatchObject(
+          pendingFaucetTransaction,
+        );
       });
     });
 
@@ -180,7 +180,7 @@ describe('FaucetTransactionService', () => {
             ]);
 
           expect(
-            await faucetTransactionsService.next({ num: 2 }),
+            await faucetTransactionsService.next({ count: 2 }),
           ).toMatchObject([
             runningFaucetTransaction1,
             runningFaucetTransaction2,
@@ -232,7 +232,7 @@ describe('FaucetTransactionService', () => {
             ]);
 
           expect(
-            await faucetTransactionsService.next({ num: 3 }),
+            await faucetTransactionsService.next({ count: 3 }),
           ).toMatchObject([
             runningFaucetTransaction1,
             runningFaucetTransaction2,

@@ -9,5 +9,5 @@ export class NextFaucetTransactionsDto {
   @IsOptional()
   @IsInt()
   @Type(() => Number)
-  readonly num?: number;
+  readonly count?: number;
 }
