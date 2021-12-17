@@ -112,13 +112,14 @@ describe('BlocksService', () => {
           size: faker.datatype.number(),
         });
         const testBlock = blocks;
-        let block = await blocksService.find({
+        const uppercaseHashBlock = await blocksService.find({
           hash: testBlockHash.toUpperCase(),
         });
-        expect(block).toMatchObject(testBlock);
-        block = await blocksService.find({
+        expect(uppercaseHashBlock).toMatchObject(testBlock);
+        const lowercaseHashBlock = await blocksService.find({
           hash: testBlockHash.toLowerCase(),
         });
+        expect(lowercaseHashBlock).toMatchObject(testBlock);
       });
     });
 
