@@ -31,7 +31,7 @@ describe('BlocksService', () => {
   });
 
   describe('upsert', () => {
-    it('Should standardize hash and previous_block_hash', async () => {
+    it('should standardize hash and previous_block_hash', async () => {
       const hash = faker.random.alpha({ count: 10, upcase: true });
       const previousBlockHash = faker.random.alpha({ count: 10, upcase: true });
       expect(hash).toEqual(hash.toUpperCase());
