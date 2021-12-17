@@ -115,7 +115,7 @@ describe('FaucetTransactionService', () => {
           .spyOn(prisma.faucetTransaction, 'findFirst')
           .mockResolvedValueOnce(runningFaucetTransaction);
 
-        expect(await faucetTransactionsService.next()).toMatchObject(
+        expect(await faucetTransactionsService.next({})).toMatchObject(
           runningFaucetTransaction,
         );
       });
@@ -141,9 +141,104 @@ describe('FaucetTransactionService', () => {
           // Waiting to run FaucetTransaction
           .mockResolvedValueOnce(pendingFaucetTransaction);
 
-        expect(await faucetTransactionsService.next()).toMatchObject(
+        expect(await faucetTransactionsService.next({})).toMatchObject(
           pendingFaucetTransaction,
         );
+      });
+    });
+
+    describe('when a number of FaucetTransactions are requested', () => {
+      describe('when the amount of running FaucetTransactions is greater than or equal to requested number', () => {
+        it('returns the running FaucetTransactions', async () => {
+          const runningFaucetTransaction1 = {
+            id: 0,
+            created_at: new Date(),
+            updated_at: new Date(),
+            public_key: 'mock-key',
+            email: null,
+            completed_at: null,
+            started_at: new Date(),
+            tries: 1,
+            hash: null,
+          };
+          const runningFaucetTransaction2 = {
+            id: 1,
+            created_at: new Date(),
+            updated_at: new Date(),
+            public_key: 'mock-key',
+            email: null,
+            completed_at: null,
+            started_at: new Date(),
+            tries: 1,
+            hash: null,
+          };
+          jest
+            .spyOn(prisma.faucetTransaction, 'findMany')
+            .mockResolvedValueOnce([
+              runningFaucetTransaction1,
+              runningFaucetTransaction2,
+            ]);
+
+          expect(
+            await faucetTransactionsService.next({ count: 2 }),
+          ).toMatchObject([
+            runningFaucetTransaction1,
+            runningFaucetTransaction2,
+          ]);
+        });
+      });
+
+      describe('when the amount of running FaucetTransactions is less than requested number', () => {
+        it('returns running and pending FaucetTransactions', async () => {
+          const runningFaucetTransaction1 = {
+            id: 0,
+            created_at: new Date(),
+            updated_at: new Date(),
+            public_key: 'mock-key',
+            email: null,
+            completed_at: null,
+            started_at: new Date(),
+            tries: 1,
+            hash: null,
+          };
+          const runningFaucetTransaction2 = {
+            id: 1,
+            created_at: new Date(),
+            updated_at: new Date(),
+            public_key: 'mock-key',
+            email: null,
+            completed_at: null,
+            started_at: new Date(),
+            tries: 1,
+            hash: null,
+          };
+          const pendingFaucetTransaction = {
+            id: 2,
+            created_at: new Date(),
+            updated_at: new Date(),
+            public_key: 'mock-key',
+            email: null,
+            completed_at: null,
+            started_at: null,
+            tries: 0,
+            hash: null,
+          };
+          jest
+            .spyOn(prisma.faucetTransaction, 'findMany')
+            .mockResolvedValueOnce([
+              runningFaucetTransaction1,
+              runningFaucetTransaction2,
+              pendingFaucetTransaction,
+            ]);
+
+          expect(
+            await faucetTransactionsService.next({ count: 3 }),
+          ).toMatchObject([
+            runningFaucetTransaction1,
+            runningFaucetTransaction2,
+            pendingFaucetTransaction,
+          ]);
+        });
       });
     });
   });
