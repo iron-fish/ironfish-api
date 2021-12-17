@@ -60,7 +60,7 @@ describe('TransactionsService', () => {
         expect(hash).toEqual(hash.toUpperCase());
         const transactions = await transactionsService.bulkUpsert(prisma, [
           {
-            hash: hash,
+            hash,
             fee: faker.datatype.number(),
             size: faker.datatype.number(),
             notes,
