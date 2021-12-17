@@ -432,7 +432,7 @@ describe('UsersController', () => {
     });
 
     describe('with valid arguments', () => {
-      it('creates an user', async () => {
+      it('creates a user', async () => {
         const email = faker.internet.email();
         const graffiti = uuid();
         const discord = faker.internet.userName();
@@ -448,7 +448,7 @@ describe('UsersController', () => {
           .expect(HttpStatus.CREATED);
         expect(body).toMatchObject({
           id: expect.any(Number),
-          email,
+          email: email.toLocaleLowerCase(),
           graffiti,
           discord,
         });

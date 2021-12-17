@@ -11,6 +11,7 @@ import { ulid } from 'ulid';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
+import { standardizeEmail } from '../common/utils/email';
 import { PostmarkService } from '../postmark/postmark.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
@@ -82,6 +83,7 @@ export class UsersService {
   }
 
   async listByEmail(email: string): Promise<User[]> {
+    email = standardizeEmail(email);
     return this.prisma.user.findMany({
       where: {
         email,
@@ -105,6 +107,7 @@ export class UsersService {
     telegram,
     github,
   }: CreateUserDto): Promise<User> {
+    email = standardizeEmail(email);
     const existingRecord = await this.prisma.user.findFirst({
       where: {
         confirmed_at: {
