@@ -109,6 +109,13 @@ Object {
 }
 `;
 
+exports[`UsersController PUT /users/:id with a mismatch in id returns a 403 1`] = `
+Object {
+  "message": "Forbidden",
+  "statusCode": 403,
+}
+`;
+
 exports[`UsersController PUT /users/:id with missing fields returns a 422 1`] = `
 Object {
   "error": "Unprocessable Entity",
