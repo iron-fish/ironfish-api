@@ -245,7 +245,7 @@ describe('UsersService', () => {
       const records = await usersService.listByEmail(email);
       expect(records).toHaveLength(numRecords);
       for (const record of records) {
-        expect(record.email).toBe(email.toLowerCase());
+        expect(record.email).toBe(standardizeEmail(email));
       }
     });
   });
