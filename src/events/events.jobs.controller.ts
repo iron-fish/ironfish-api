@@ -42,7 +42,7 @@ export class EventsJobsController {
     return { requeue: false };
   }
 
-  @MessagePattern(GraphileWorkerPattern.UPSERT_BLOCK_MINED_EVENT)
+  @MessagePattern(GraphileWorkerPattern.DELETE_BLOCK_MINED_EVENT)
   async deleteBlockMinedEvent({
     block_id: blockId,
     user_id: userId,
