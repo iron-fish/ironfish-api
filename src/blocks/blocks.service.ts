@@ -14,6 +14,7 @@ import { SortOrder } from '../common/enums/sort-order';
 import { getNextDate } from '../common/utils/date';
 import { standardizeHash } from '../common/utils/hash';
 import { EventsService } from '../events/events.service';
+import { DeleteBlockMinedEventOptions } from '../events/interfaces/delete-block-mined-event-options';
 import { UpsertBlockMinedEventOptions } from '../events/interfaces/upsert-block-mined-event-options';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
@@ -51,10 +52,12 @@ export class BlocksService {
     }: UpsertBlockOptions,
   ): Promise<{
     block: Block;
+    deleteBlockMinedOptions?: DeleteBlockMinedEventOptions;
     upsertBlockMinedOptions?: UpsertBlockMinedEventOptions;
   }> {
     const main = type === BlockOperation.CONNECTED;
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
+    let deleteBlockMinedOptions;
     let upsertBlockMinedOptions;
     hash = standardizeHash(hash);
     previousBlockHash = previousBlockHash
@@ -100,11 +103,11 @@ export class BlocksService {
       if (main) {
         upsertBlockMinedOptions = { block_id: block.id, user_id: user.id };
       } else {
-        await this.eventsService.deleteBlockMined(block, user, prisma);
+        deleteBlockMinedOptions = { block_id: block.id, user_id: user.id };
       }
     }
 
-    return { block, upsertBlockMinedOptions };
+    return { block, deleteBlockMinedOptions, upsertBlockMinedOptions };
   }
 
   async head(): Promise<Block> {

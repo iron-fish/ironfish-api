@@ -683,20 +683,14 @@ describe('EventsService', () => {
     describe('when the event does not exist', () => {
       it('returns null', async () => {
         const { block, user } = await setupBlockMined();
-        expect(
-          await eventsService.deleteBlockMined(block, user, prisma),
-        ).toBeNull();
+        expect(await eventsService.deleteBlockMined(block, user)).toBeNull();
       });
     });
 
     describe('when the event exists', () => {
       it('deletes the record', async () => {
         const { block, event, user } = await setupBlockMinedWithEvent();
-        const record = await eventsService.deleteBlockMined(
-          block,
-          user,
-          prisma,
-        );
+        const record = await eventsService.deleteBlockMined(block, user);
         expect(record).toMatchObject({
           ...event,
           deleted_at: expect.any(Date),
@@ -707,7 +701,7 @@ describe('EventsService', () => {
 
       it('subtracts points from the user total points', async () => {
         const { block, event, user } = await setupBlockMinedWithEvent();
-        await eventsService.deleteBlockMined(block, user, prisma);
+        await eventsService.deleteBlockMined(block, user);
         const updatedUser = await usersService.findOrThrow(user.id);
         expect(updatedUser.total_points).toBe(user.total_points - event.points);
       });
