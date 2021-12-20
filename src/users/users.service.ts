@@ -496,9 +496,10 @@ export class UsersService {
     options: UpdateUserOptions,
     client: BasePrismaClient,
   ): Promise<User> {
-    const { discord, graffiti, telegram } = options;
+    const { countryCode, discord, graffiti, telegram } = options;
     return client.user.update({
       data: {
+        country_code: countryCode,
         discord,
         graffiti,
         telegram,
