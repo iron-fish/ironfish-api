@@ -14,7 +14,7 @@ import { UsersService } from '../users/users.service';
 import { EventsJobsController } from './events.jobs.controller';
 import { EventsService } from './events.service';
 
-describe('BlocksDailyJobsController', () => {
+describe('EventsJobsController', () => {
   let app: INestApplication;
   let blocksService: BlocksService;
   let eventsJobsController: EventsJobsController;
