@@ -18,6 +18,7 @@ import { BlocksDailyRestModule } from './blocks-daily/blocks-daily.rest.module';
 import { ContextMiddleware } from './common/middlewares/context.middleware';
 import { RequireSslMiddleware } from './common/middlewares/require-ssl.middleware';
 import { DatadogModule } from './datadog/datadog.module';
+import { EventsJobsModule } from './events/events.jobs.module';
 import { EventsRestModule } from './events/events.rest.module';
 import { FaucetTransactionsRestModule } from './faucet-transactions/faucet-transactions.rest.module';
 import { HealthRestModule } from './health/health.rest.module';
@@ -26,7 +27,7 @@ import { MetricsRestModule } from './metrics/metrics.rest.module';
 import { TransactionsRestModule } from './transactions/transactions.rest.module';
 import { UsersRestModule } from './users/users.rest.module';
 
-export const JOBS_MODULES = [BlocksDailyJobsModule];
+export const JOBS_MODULES = [BlocksDailyJobsModule, EventsJobsModule];
 
 export const REST_MODULES = [
   AuthRestModule,

@@ -35,6 +35,31 @@ describe('UsersService', () => {
     await app.close();
   });
 
+  describe('findConfirmed', () => {
+    describe('with a valid id', () => {
+      it('returns the record', async () => {
+        const user = await prisma.user.create({
+          data: {
+            confirmation_token: ulid(),
+            confirmed_at: new Date().toISOString(),
+            email: faker.internet.email(),
+            graffiti: uuid(),
+            country_code: faker.address.countryCode('alpha-3'),
+          },
+        });
+        const record = await usersService.findConfirmed(user.id);
+        expect(record).not.toBeNull();
+        expect(record).toMatchObject(user);
+      });
+    });
+
+    describe('with a missing id', () => {
+      it('returns null', async () => {
+        expect(await usersService.findConfirmed(100000)).toBeNull();
+      });
+    });
+  });
+
   describe('findOrThrow', () => {
     describe('with a valid id', () => {
       it('returns the record', async () => {
@@ -54,7 +79,7 @@ describe('UsersService', () => {
     });
 
     describe('with a missing id', () => {
-      it('returns null', async () => {
+      it('throws a NotFoundException', async () => {
         await expect(usersService.findOrThrow(100000)).rejects.toThrow(
           NotFoundException,
         );

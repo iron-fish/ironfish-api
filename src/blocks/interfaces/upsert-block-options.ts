@@ -12,5 +12,5 @@ export interface UpsertBlockOptions {
   transactionsCount: number;
   graffiti: string;
   size: number;
-  previous_block_hash?: string;
+  previousBlockHash?: string;
 }

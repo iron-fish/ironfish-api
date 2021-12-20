@@ -30,11 +30,19 @@ export class UsersService {
     private readonly prisma: PrismaService,
   ) {}
 
-  async findOrThrow(id: number): Promise<User> {
+  async findConfirmed(id: number): Promise<User | null> {
     const record = await this.prisma.user.findUnique({
       where: { id },
     });
     if (record === null || record.confirmed_at === null) {
+      return null;
+    }
+    return record;
+  }
+
+  async findOrThrow(id: number): Promise<User> {
+    const record = await this.findConfirmed(id);
+    if (record === null) {
       throw new NotFoundException();
     }
     return record;

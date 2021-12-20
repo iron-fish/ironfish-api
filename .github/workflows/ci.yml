@@ -22,9 +22,9 @@ jobs:
       - name: Check out Git repository
         uses: actions/checkout@v2
       - name: Use Node.js
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2
         with:
-          node-version: '16.6.2'
+          node-version: '16.13.1'
       - name: Restore Yarn cache
         id: yarn-cache
         uses: actions/cache@v2
@@ -48,9 +48,9 @@ jobs:
       - name: Check out Git repository
         uses: actions/checkout@v2
       - name: Use Node.js
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2
         with:
-          node-version: '16.6.2'
+          node-version: '16.13.1'
       - name: Restore Yarn cache
         id: yarn-cache
         uses: actions/cache@v2
@@ -72,5 +72,7 @@ jobs:
         run: npx prisma migrate deploy
       - name: Run tests
         run: yarn test
+        env:
+          NODE_OPTIONS: --max_old_space_size=8192
       - name: Stop Docker
         run: yarn docker:stop

@@ -14,6 +14,8 @@ import { SortOrder } from '../common/enums/sort-order';
 import { getNextDate } from '../common/utils/date';
 import { standardizeHash } from '../common/utils/hash';
 import { EventsService } from '../events/events.service';
+import { DeleteBlockMinedEventOptions } from '../events/interfaces/delete-block-mined-event-options';
+import { UpsertBlockMinedEventOptions } from '../events/interfaces/upsert-block-mined-event-options';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { UsersService } from '../users/users.service';
@@ -41,20 +43,26 @@ export class BlocksService {
       difficulty,
       graffiti,
       hash,
-      previous_block_hash,
+      previousBlockHash,
       sequence,
       timestamp,
       transactionsCount,
       type,
       size,
     }: UpsertBlockOptions,
-  ): Promise<Block> {
+  ): Promise<{
+    block: Block;
+    deleteBlockMinedOptions?: DeleteBlockMinedEventOptions;
+    upsertBlockMinedOptions?: UpsertBlockMinedEventOptions;
+  }> {
     const main = type === BlockOperation.CONNECTED;
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
+    let deleteBlockMinedOptions;
+    let upsertBlockMinedOptions;
     hash = standardizeHash(hash);
-    previous_block_hash = previous_block_hash
-      ? standardizeHash(previous_block_hash)
-      : previous_block_hash;
+    previousBlockHash = previousBlockHash
+      ? standardizeHash(previousBlockHash)
+      : previousBlockHash;
 
     const block = await prisma.block.upsert({
       create: {
@@ -65,7 +73,7 @@ export class BlocksService {
         graffiti,
         transactions_count: transactionsCount,
         network_version: networkVersion,
-        previous_block_hash,
+        previous_block_hash: previousBlockHash,
         size,
         difficulty,
       },
@@ -75,7 +83,7 @@ export class BlocksService {
         timestamp,
         graffiti,
         transactions_count: transactionsCount,
-        previous_block_hash,
+        previous_block_hash: previousBlockHash,
         size,
         difficulty,
       },
@@ -93,13 +101,13 @@ export class BlocksService {
     );
     if (user && timestamp > user.created_at) {
       if (main) {
-        await this.eventsService.upsertBlockMined(block, user, prisma);
+        upsertBlockMinedOptions = { block_id: block.id, user_id: user.id };
       } else {
-        await this.eventsService.deleteBlockMined(block, user, prisma);
+        deleteBlockMinedOptions = { block_id: block.id, user_id: user.id };
       }
     }
 
-    return block;
+    return { block, deleteBlockMinedOptions, upsertBlockMinedOptions };
   }
 
   async head(): Promise<Block> {
@@ -450,11 +458,19 @@ export class BlocksService {
   }
 
   async find(
-    options: FindBlockOptions,
+    options: number | FindBlockOptions,
   ): Promise<Block | (Block & { transactions: Transaction[] }) | null> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
-    const { withTransactions } = options;
 
+    if (typeof options === 'number') {
+      return this.prisma.block.findUnique({
+        where: {
+          id: options,
+        },
+      });
+    }
+
+    const { withTransactions } = options;
     if (options.hash !== undefined) {
       const block = await this.prisma.block.findFirst({
         where: {

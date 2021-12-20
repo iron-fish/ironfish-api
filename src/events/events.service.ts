@@ -413,55 +413,46 @@ export class EventsService {
     }
   }
 
-  async upsertBlockMined(
-    block: Block,
-    user: User,
-    client: BasePrismaClient,
-  ): Promise<Event | null> {
-    return this.createWithClient(
-      {
-        blockId: block.id,
-        occurredAt: block.timestamp,
-        type: EventType.BLOCK_MINED,
-        userId: user.id,
-        points: POINTS_PER_CATEGORY[EventType.BLOCK_MINED],
-      },
-      client,
-    );
+  async upsertBlockMined(block: Block, user: User): Promise<Event | null> {
+    return this.create({
+      blockId: block.id,
+      occurredAt: block.timestamp,
+      type: EventType.BLOCK_MINED,
+      userId: user.id,
+      points: POINTS_PER_CATEGORY[EventType.BLOCK_MINED],
+    });
   }
 
-  async deleteBlockMined(
-    block: Block,
-    user: User,
-    client: BasePrismaClient,
-  ): Promise<Event | null> {
-    const event = await client.event.findUnique({
-      where: {
-        block_id: block.id,
-      },
-    });
-    if (event) {
-      await client.user.update({
-        where: {
-          id: user.id,
-        },
-        data: {
-          total_points: {
-            decrement: event.points,
-          },
-        },
-      });
-      return client.event.update({
-        data: {
-          deleted_at: new Date().toISOString(),
-          points: 0,
-        },
+  async deleteBlockMined(block: Block, user: User): Promise<Event | null> {
+    return this.prisma.$transaction(async (prisma) => {
+      const event = await prisma.event.findUnique({
         where: {
           block_id: block.id,
         },
       });
-    }
-    return event;
+      if (event) {
+        await prisma.user.update({
+          where: {
+            id: user.id,
+          },
+          data: {
+            total_points: {
+              decrement: event.points,
+            },
+          },
+        });
+        return prisma.event.update({
+          data: {
+            deleted_at: new Date().toISOString(),
+            points: 0,
+          },
+          where: {
+            block_id: block.id,
+          },
+        });
+      }
+      return event;
+    });
   }
 
   async getRanksForEventTypes(

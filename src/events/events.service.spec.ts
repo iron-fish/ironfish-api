@@ -34,6 +34,10 @@ describe('EventsService', () => {
     await app.init();
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   afterAll(async () => {
     await app.close();
   });
@@ -559,17 +563,13 @@ describe('EventsService', () => {
     describe('when a block exists', () => {
       it('returns the record', async () => {
         const { block, event, user } = await setupBlockMinedWithEvent();
-        const record = await eventsService.upsertBlockMined(
-          block,
-          user,
-          prisma,
-        );
+        const record = await eventsService.upsertBlockMined(block, user);
         expect(record).toMatchObject(event);
       });
 
       it('does not create a record', async () => {
         const { block, user } = await setupBlockMined();
-        await eventsService.upsertBlockMined(block, user, prisma);
+        await eventsService.upsertBlockMined(block, user);
         const create = jest.spyOn(eventsService, 'create');
         expect(create).not.toHaveBeenCalled();
       });
@@ -597,11 +597,7 @@ describe('EventsService', () => {
         const { block, event } = await setupBlockMinedWithEvent();
 
         expect(event.points).toBe(POINTS_PER_CATEGORY.BLOCK_MINED);
-        const record = await eventsService.upsertBlockMined(
-          block,
-          user,
-          prisma,
-        );
+        const record = await eventsService.upsertBlockMined(block, user);
         expect(record).toMatchObject({
           id: event.id,
           points: 0,
@@ -629,7 +625,7 @@ describe('EventsService', () => {
         const { block } = await setupBlockMinedWithEvent();
 
         expect(user.total_points).toBe(POINTS_PER_CATEGORY.BLOCK_MINED);
-        await eventsService.upsertBlockMined(block, user, prisma);
+        await eventsService.upsertBlockMined(block, user);
 
         const updatedUser = await usersService.findOrThrow(user.id);
         expect(updatedUser).toMatchObject({
@@ -644,11 +640,7 @@ describe('EventsService', () => {
         const { block, event, user } = await setupBlockMinedWithEvent(0);
 
         expect(event.points).toBe(0);
-        const record = await eventsService.upsertBlockMined(
-          block,
-          user,
-          prisma,
-        );
+        const record = await eventsService.upsertBlockMined(block, user);
         expect(record).toMatchObject({
           id: event.id,
           points: POINTS_PER_CATEGORY.BLOCK_MINED,
@@ -659,7 +651,7 @@ describe('EventsService', () => {
         const { block, user } = await setupBlockMinedWithEvent(0);
 
         expect(user.total_points).toBe(0);
-        await eventsService.upsertBlockMined(block, user, prisma);
+        await eventsService.upsertBlockMined(block, user);
 
         const updatedUser = await usersService.findOrThrow(user.id);
         expect(updatedUser).toMatchObject({
@@ -672,20 +664,17 @@ describe('EventsService', () => {
     describe('for a new block', () => {
       it('creates a record', async () => {
         const { block, user } = await setupBlockMined();
-        const create = jest.spyOn(eventsService, 'createWithClient');
-        await eventsService.upsertBlockMined(block, user, prisma);
+        const create = jest.spyOn(eventsService, 'create');
+        await eventsService.upsertBlockMined(block, user);
 
         expect(create).toHaveBeenCalledTimes(1);
-        expect(create).toHaveBeenCalledWith(
-          {
-            blockId: block.id,
-            points: expect.any(Number),
-            occurredAt: expect.any(Date),
-            type: EventType.BLOCK_MINED,
-            userId: user.id,
-          },
-          prisma,
-        );
+        expect(create).toHaveBeenCalledWith({
+          blockId: block.id,
+          points: expect.any(Number),
+          occurredAt: expect.any(Date),
+          type: EventType.BLOCK_MINED,
+          userId: user.id,
+        });
       });
     });
   });
@@ -694,20 +683,14 @@ describe('EventsService', () => {
     describe('when the event does not exist', () => {
       it('returns null', async () => {
         const { block, user } = await setupBlockMined();
-        expect(
-          await eventsService.deleteBlockMined(block, user, prisma),
-        ).toBeNull();
+        expect(await eventsService.deleteBlockMined(block, user)).toBeNull();
       });
     });
 
     describe('when the event exists', () => {
       it('deletes the record', async () => {
         const { block, event, user } = await setupBlockMinedWithEvent();
-        const record = await eventsService.deleteBlockMined(
-          block,
-          user,
-          prisma,
-        );
+        const record = await eventsService.deleteBlockMined(block, user);
         expect(record).toMatchObject({
           ...event,
           deleted_at: expect.any(Date),
@@ -718,7 +701,7 @@ describe('EventsService', () => {
 
       it('subtracts points from the user total points', async () => {
         const { block, event, user } = await setupBlockMinedWithEvent();
-        await eventsService.deleteBlockMined(block, user, prisma);
+        await eventsService.deleteBlockMined(block, user);
         const updatedUser = await usersService.findOrThrow(user.id);
         expect(updatedUser.total_points).toBe(user.total_points - event.points);
       });

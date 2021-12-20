@@ -8,6 +8,7 @@ import { ApiConfigService } from '../api-config/api-config.service';
 import { standardizeHash } from '../common/utils/hash';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
+import { UsersService } from '../users/users.service';
 import { BlocksService } from './blocks.service';
 import { BlockOperation } from './enums/block-operation';
 import { Block, Transaction } from '.prisma/client';
@@ -17,12 +18,14 @@ describe('BlocksService', () => {
   let blocksService: BlocksService;
   let config: ApiConfigService;
   let prisma: PrismaService;
+  let usersService: UsersService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
     blocksService = app.get(BlocksService);
     config = app.get(ApiConfigService);
     prisma = app.get(PrismaService);
+    usersService = app.get(UsersService);
     await app.init();
   });
 
@@ -31,9 +34,90 @@ describe('BlocksService', () => {
   });
 
   describe('upsert', () => {
+    it('upserts a Block record', async () => {
+      const options = {
+        hash: uuid(),
+        sequence: faker.datatype.number(),
+        difficulty: faker.datatype.number(),
+        timestamp: new Date(),
+        transactionsCount: 1,
+        type: BlockOperation.CONNECTED,
+        graffiti: uuid(),
+        previousBlockHash: uuid(),
+        size: faker.datatype.number(),
+      };
+
+      const { block } = await blocksService.upsert(prisma, options);
+      expect(block).toMatchObject({
+        id: expect.any(Number),
+        hash: options.hash,
+        sequence: options.sequence,
+        difficulty: BigInt(options.difficulty),
+        timestamp: options.timestamp,
+        transactions_count: options.transactionsCount,
+        main: true,
+        graffiti: options.graffiti,
+        previous_block_hash: options.previousBlockHash,
+        size: options.size,
+      });
+    });
+
+    it('does not return a payload if a graffiti does not exist', async () => {
+      const options = {
+        hash: uuid(),
+        sequence: faker.datatype.number(),
+        difficulty: faker.datatype.number(),
+        timestamp: new Date(),
+        transactionsCount: 1,
+        type: BlockOperation.CONNECTED,
+        graffiti: uuid(),
+        previousBlockHash: uuid(),
+        size: faker.datatype.number(),
+      };
+
+      const { upsertBlockMinedOptions } = await blocksService.upsert(
+        prisma,
+        options,
+      );
+      expect(upsertBlockMinedOptions).toBeUndefined();
+    });
+
+    it('returns a payload for block mined event with a valid graffiti', async () => {
+      const graffiti = uuid();
+      const user = await usersService.create({
+        email: faker.internet.email(),
+        graffiti,
+        country_code: faker.address.countryCode('alpha-3'),
+      });
+      await usersService.confirm(user);
+      const options = {
+        hash: uuid(),
+        sequence: faker.datatype.number(),
+        difficulty: faker.datatype.number(),
+        timestamp: new Date(),
+        transactionsCount: 1,
+        type: BlockOperation.CONNECTED,
+        graffiti,
+        previousBlockHash: uuid(),
+        size: faker.datatype.number(),
+      };
+
+      const { block, upsertBlockMinedOptions } = await blocksService.upsert(
+        prisma,
+        options,
+      );
+      expect(upsertBlockMinedOptions).toEqual({
+        block_id: block.id,
+        user_id: user.id,
+      });
+    });
+
     it('should standardize hash and previous_block_hash', async () => {
       const hash = faker.random.alpha({ count: 10, upcase: true });
-      const previousBlockHash = faker.random.alpha({ count: 10, upcase: true });
+      const previousBlockHash = faker.random.alpha({
+        count: 10,
+        upcase: true,
+      });
       expect(hash).toEqual(hash.toUpperCase());
       expect(previousBlockHash).toEqual(previousBlockHash.toUpperCase());
 
@@ -45,7 +129,7 @@ describe('BlocksService', () => {
         transactionsCount: 1,
         type: BlockOperation.CONNECTED,
         graffiti: uuid(),
-        previous_block_hash: previousBlockHash,
+        previousBlockHash,
         size: faker.datatype.number(),
       });
 
@@ -79,10 +163,28 @@ describe('BlocksService', () => {
   });
 
   describe('find', () => {
+    describe('with an id', () => {
+      it('returns the block', async () => {
+        const { block } = await blocksService.upsert(prisma, {
+          hash: uuid(),
+          sequence: faker.datatype.number(),
+          difficulty: faker.datatype.number(),
+          timestamp: new Date(),
+          transactionsCount: 1,
+          type: BlockOperation.CONNECTED,
+          graffiti: uuid(),
+          previousBlockHash: uuid(),
+          size: faker.datatype.number(),
+        });
+        const record = await blocksService.find(block.id);
+        expect(record).toMatchObject(block);
+      });
+    });
+
     describe('with a valid hash', () => {
       it('returns the block with the correct hash', async () => {
         const testBlockHash = uuid();
-        const blocks = await blocksService.upsert(prisma, {
+        const { block } = await blocksService.upsert(prisma, {
           hash: testBlockHash,
           sequence: faker.datatype.number(),
           difficulty: faker.datatype.number(),
@@ -90,17 +192,16 @@ describe('BlocksService', () => {
           transactionsCount: 1,
           type: BlockOperation.CONNECTED,
           graffiti: uuid(),
-          previous_block_hash: uuid(),
+          previousBlockHash: uuid(),
           size: faker.datatype.number(),
         });
-        const testBlock = blocks;
-        const block = await blocksService.find({ hash: testBlockHash });
-        expect(block).toMatchObject(testBlock);
+        const record = await blocksService.find({ hash: testBlockHash });
+        expect(record).toMatchObject(block);
       });
 
       it('returns the block regardless of hash cases', async () => {
         const testBlockHash = faker.random.alpha({ count: 10, upcase: true });
-        const blocks = await blocksService.upsert(prisma, {
+        const { block } = await blocksService.upsert(prisma, {
           hash: testBlockHash,
           sequence: faker.datatype.number(),
           difficulty: faker.datatype.number(),
@@ -108,25 +209,24 @@ describe('BlocksService', () => {
           transactionsCount: 1,
           type: BlockOperation.CONNECTED,
           graffiti: uuid(),
-          previous_block_hash: uuid(),
+          previousBlockHash: uuid(),
           size: faker.datatype.number(),
         });
-        const testBlock = blocks;
         const uppercaseHashBlock = await blocksService.find({
           hash: testBlockHash.toUpperCase(),
         });
-        expect(uppercaseHashBlock).toMatchObject(testBlock);
+        expect(uppercaseHashBlock).toMatchObject(block);
         const lowercaseHashBlock = await blocksService.find({
           hash: testBlockHash.toLowerCase(),
         });
-        expect(lowercaseHashBlock).toMatchObject(testBlock);
+        expect(lowercaseHashBlock).toMatchObject(block);
       });
     });
 
     describe('with a valid sequence index', () => {
       it('returns the block with the correct sequence index', async () => {
         const testBlockSequence = faker.datatype.number();
-        const blocks = await blocksService.upsert(prisma, {
+        const { block } = await blocksService.upsert(prisma, {
           hash: uuid(),
           sequence: testBlockSequence,
           difficulty: faker.datatype.number(),
@@ -134,14 +234,13 @@ describe('BlocksService', () => {
           transactionsCount: 1,
           type: BlockOperation.CONNECTED,
           graffiti: uuid(),
-          previous_block_hash: uuid(),
+          previousBlockHash: uuid(),
           size: faker.datatype.number(),
         });
-        const testBlock = blocks;
-        const block = await blocksService.find({
+        const record = await blocksService.find({
           sequence: testBlockSequence,
         });
-        expect(block).toMatchObject(testBlock);
+        expect(block).toMatchObject(record as Block);
       });
     });
 
@@ -155,7 +254,7 @@ describe('BlocksService', () => {
           transactionsCount: 1,
           type: BlockOperation.CONNECTED,
           graffiti: uuid(),
-          previous_block_hash: uuid(),
+          previousBlockHash: uuid(),
           size: faker.datatype.number(),
         });
         const block = await blocksService.find({
@@ -214,7 +313,7 @@ describe('BlocksService', () => {
           transactionsCount: 1,
           type: BlockOperation.CONNECTED,
           graffiti: searchGraffiti,
-          previous_block_hash: uuid(),
+          previousBlockHash: uuid(),
           size: faker.datatype.number(),
         });
 
@@ -274,7 +373,7 @@ describe('BlocksService', () => {
         transactionsCount: 1,
         type: BlockOperation.CONNECTED,
         graffiti: uuid(),
-        previous_block_hash: uuid(),
+        previousBlockHash: uuid(),
         size: faker.datatype.number(),
       });
 
@@ -332,7 +431,7 @@ describe('BlocksService', () => {
           transactionsCount: 1,
           type: BlockOperation.CONNECTED,
           graffiti,
-          previous_block_hash: uuid(),
+          previousBlockHash: uuid(),
           size: faker.datatype.number(),
         });
 
@@ -345,7 +444,7 @@ describe('BlocksService', () => {
           transactionsCount: 1,
           type: BlockOperation.DISCONNECTED,
           graffiti,
-          previous_block_hash: uuid(),
+          previousBlockHash: uuid(),
           size: faker.datatype.number(),
         });
       }
