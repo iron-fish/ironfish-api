@@ -468,6 +468,29 @@ describe('UsersController', () => {
       });
     });
 
+    describe('with a mismatch in id', () => {
+      it('returns a 403', async () => {
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          country_code: faker.address.countryCode('alpha-3'),
+        });
+        await usersService.confirm(user);
+
+        jest
+          .spyOn(magicLinkService, 'getEmailFromHeader')
+          .mockImplementationOnce(() => Promise.resolve(user.email));
+
+        const { body } = await request(app.getHttpServer())
+          .put('/users/0')
+          .set('Authorization', 'token')
+          .send({ discord: 'foo' })
+          .expect(HttpStatus.FORBIDDEN);
+
+        expect(body).toMatchSnapshot();
+      });
+    });
+
     describe('with missing fields', () => {
       it('returns a 422', async () => {
         const user = await usersService.create({

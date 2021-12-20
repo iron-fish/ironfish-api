@@ -4,6 +4,7 @@
 import {
   Body,
   Controller,
+  ForbiddenException,
   Get,
   HttpStatus,
   Param,
@@ -256,6 +257,13 @@ export class UsersController {
   @UseGuards(MagicLinkGuard)
   async update(
     @Context() { user }: MagicLinkContext,
+    @Param(
+      'id',
+      new ParseIntPipe({
+        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+      }),
+    )
+    id: number,
     @Body(
       new ValidationPipe({
         errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
@@ -264,6 +272,14 @@ export class UsersController {
     )
     dto: UpdateUserDto,
   ): Promise<User> {
-    return this.usersUpdater.update(user, dto);
+    if (id !== user.id) {
+      throw new ForbiddenException();
+    }
+    return this.usersUpdater.update(user, {
+      countryCode: dto.country_code,
+      discord: dto.discord,
+      graffiti: dto.graffiti,
+      telegram: dto.telegram,
+    });
   }
 }
