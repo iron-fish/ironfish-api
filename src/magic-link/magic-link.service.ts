@@ -4,6 +4,7 @@
 import { Magic, MagicUserMetadata } from '@magic-sdk/admin';
 import { Injectable } from '@nestjs/common';
 import { ApiConfigService } from '../api-config/api-config.service';
+import { standardizeEmail } from '../common/utils/email';
 
 @Injectable()
 export class MagicLinkService {
@@ -24,7 +25,7 @@ export class MagicLinkService {
     if (!email) {
       throw new Error('No email found for token');
     }
-    return email;
+    return standardizeEmail(email);
   }
 
   private async getMetadataFromToken(
