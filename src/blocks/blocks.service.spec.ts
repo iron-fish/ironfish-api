@@ -5,6 +5,7 @@ import { INestApplication, NotFoundException } from '@nestjs/common';
 import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { ApiConfigService } from '../api-config/api-config.service';
+import { standardizeHash } from '../common/utils/hash';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
@@ -109,6 +110,36 @@ describe('BlocksService', () => {
         block_id: block.id,
         user_id: user.id,
       });
+
+      it('should standardize hash and previous_block_hash', async () => {
+        const hash = faker.random.alpha({ count: 10, upcase: true });
+        const previousBlockHash = faker.random.alpha({
+          count: 10,
+          upcase: true,
+        });
+        expect(hash).toEqual(hash.toUpperCase());
+        expect(previousBlockHash).toEqual(previousBlockHash.toUpperCase());
+
+        await blocksService.upsert(prisma, {
+          hash: hash,
+          sequence: faker.datatype.number(),
+          difficulty: faker.datatype.number(),
+          timestamp: new Date(),
+          transactionsCount: 1,
+          type: BlockOperation.CONNECTED,
+          graffiti: uuid(),
+          previousBlockHash,
+          size: faker.datatype.number(),
+        });
+
+        const block = await prisma.block.findFirst({
+          where: { hash: standardizeHash(hash) },
+        });
+        expect(block).toMatchObject({
+          hash: standardizeHash(hash),
+          previous_block_hash: standardizeHash(previousBlockHash),
+        });
+      });
     });
   });
 
@@ -168,9 +199,9 @@ describe('BlocksService', () => {
         expect(record).toMatchObject(block);
       });
 
-      it('returns the block with the mismatched hash cases', async () => {
-        const testBlockHash = 'aaa';
-        const { block } = await blocksService.upsert(prisma, {
+      it('returns the block regardless of hash cases', async () => {
+        const testBlockHash = faker.random.alpha({ count: 10, upcase: true });
+        const blocks = await blocksService.upsert(prisma, {
           hash: testBlockHash,
           sequence: faker.datatype.number(),
           difficulty: faker.datatype.number(),
@@ -181,10 +212,15 @@ describe('BlocksService', () => {
           previousBlockHash: uuid(),
           size: faker.datatype.number(),
         });
-        const record = await blocksService.find({
+        const testBlock = blocks;
+        const uppercaseHashBlock = await blocksService.find({
           hash: testBlockHash.toUpperCase(),
         });
-        expect(record).toMatchObject(block);
+        expect(uppercaseHashBlock).toMatchObject(testBlock);
+        const lowercaseHashBlock = await blocksService.find({
+          hash: testBlockHash.toLowerCase(),
+        });
+        expect(lowercaseHashBlock).toMatchObject(testBlock);
       });
     });
 

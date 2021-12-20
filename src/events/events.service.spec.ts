@@ -7,6 +7,7 @@ import faker from 'faker';
 import { ulid } from 'ulid';
 import { v4 as uuid } from 'uuid';
 import { ApiConfigService } from '../api-config/api-config.service';
+import { serializedBlockFromRecord } from '../blocks/utils/block-translator';
 import {
   POINTS_PER_CATEGORY,
   WEEKLY_POINT_LIMITS_BY_EVENT_TYPE,
@@ -194,6 +195,20 @@ describe('EventsService', () => {
           for (const record of records) {
             expect(record.id).toBeGreaterThan(firstEventId);
             expect(record.user_id).toBe(user.id);
+          }
+        });
+      });
+
+      describe('with block mined events', () => {
+        it('returns the block as metadata', async () => {
+          const { block, user } = await setupBlockMinedWithEvent();
+          const { data: records } = await eventsService.list({
+            userId: user.id,
+          });
+          for (const record of records) {
+            expect(record.metadata).toMatchObject(
+              serializedBlockFromRecord(block),
+            );
           }
         });
       });

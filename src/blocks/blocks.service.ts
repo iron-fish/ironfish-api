@@ -12,6 +12,7 @@ import { BlocksTransactionsService } from '../blocks-transactions/blocks-transac
 import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
 import { getNextDate } from '../common/utils/date';
+import { standardizeHash } from '../common/utils/hash';
 import { EventsService } from '../events/events.service';
 import { UpsertBlockMinedEventOptions } from '../events/interfaces/upsert-block-mined-event-options';
 import { PrismaService } from '../prisma/prisma.service';
@@ -55,6 +56,10 @@ export class BlocksService {
     const main = type === BlockOperation.CONNECTED;
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
     let upsertBlockMinedOptions;
+    hash = standardizeHash(hash);
+    previousBlockHash = previousBlockHash
+      ? standardizeHash(previousBlockHash)
+      : previousBlockHash;
 
     const block = await prisma.block.upsert({
       create: {
@@ -162,7 +167,7 @@ export class BlocksService {
       if (isNaN(Number(search))) {
         filter = [
           {
-            hash: search,
+            hash: standardizeHash(search),
           },
           {
             graffiti: search,
@@ -466,7 +471,7 @@ export class BlocksService {
     if (options.hash !== undefined) {
       const block = await this.prisma.block.findFirst({
         where: {
-          hash: options.hash.toLowerCase(),
+          hash: standardizeHash(options.hash),
           network_version: networkVersion,
         },
       });

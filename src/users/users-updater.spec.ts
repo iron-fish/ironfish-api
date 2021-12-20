@@ -71,45 +71,6 @@ describe('UsersUpdater', () => {
       });
     });
 
-    describe('if blocks with the new graffiti without a registered user exist on the main chain', () => {
-      it('throws an UnprocessableEntityException', async () => {
-        const hash = uuid();
-        const sequence = faker.datatype.number();
-        const graffiti = uuid();
-
-        const block = await prisma.block.create({
-          data: {
-            hash,
-            main: true,
-            sequence,
-            timestamp: new Date(),
-            transactions_count: 0,
-            graffiti,
-            previous_block_hash: uuid(),
-            network_version: 0,
-            size: faker.datatype.number(),
-            difficulty: faker.datatype.number(),
-          },
-        });
-        const user = await prisma.user.create({
-          data: {
-            confirmation_token: ulid(),
-            confirmed_at: new Date().toISOString(),
-            discord: faker.internet.userName(),
-            email: faker.internet.email(),
-            graffiti: ulid(),
-            country_code: faker.address.countryCode('alpha-3'),
-            telegram: faker.internet.userName(),
-            total_points: 0,
-          },
-        });
-
-        await expect(
-          usersUpdater.update(user, { graffiti: block.graffiti }),
-        ).rejects.toThrow(UnprocessableEntityException);
-      });
-    });
-
     describe('when a user exists for the new discord', () => {
       it('throws an UnprocessableEntityException', async () => {
         const { user: existingUser } = await setupBlockMined();

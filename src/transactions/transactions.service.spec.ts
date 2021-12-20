@@ -5,6 +5,7 @@ import { INestApplication } from '@nestjs/common';
 import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
+import { standardizeHash } from '../common/utils/hash';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { TransactionsService } from './transactions.service';
@@ -55,9 +56,11 @@ describe('TransactionsService', () => {
       it('stores a transaction record', async () => {
         const notes = [{ commitment: uuid() }];
         const spends = [{ nullifier: uuid() }];
+        const hash = faker.random.alpha({ count: 10, upcase: true });
+        expect(hash).toEqual(hash.toUpperCase());
         const transactions = await transactionsService.bulkUpsert(prisma, [
           {
-            hash: uuid(),
+            hash,
             fee: faker.datatype.number(),
             size: faker.datatype.number(),
             notes,
@@ -66,7 +69,7 @@ describe('TransactionsService', () => {
         ]);
         expect(transactions[0]).toMatchObject({
           id: expect.any(Number),
-          hash: expect.any(String),
+          hash: standardizeHash(hash),
           fee: expect.any(Number),
           size: expect.any(Number),
           notes: notes,
@@ -121,7 +124,10 @@ describe('TransactionsService', () => {
           const { block } = await seedBlock();
           const notes = [{ commitment: uuid() }];
           const spends = [{ nullifier: uuid() }];
-          const testTransactionHash = uuid();
+          const testTransactionHash = faker.random.alpha({
+            count: 10,
+            upcase: true,
+          });
           const transactions = await transactionsService.bulkUpsert(prisma, [
             {
               hash: testTransactionHash,
@@ -139,13 +145,22 @@ describe('TransactionsService', () => {
             testTransaction,
           );
 
-          const receivedTransaction = await transactionsService.find({
-            hash: testTransactionHash,
+          let receivedTransaction = await transactionsService.find({
+            hash: testTransactionHash.toLowerCase(),
             withBlocks: true,
           });
-
           expect(receivedTransaction).toMatchObject(testTransaction);
-          const transaction = receivedTransaction as Transaction & {
+          let transaction = receivedTransaction as Transaction & {
+            blocks: Block[];
+          };
+          expect(transaction.blocks).toContainEqual(block);
+
+          receivedTransaction = await transactionsService.find({
+            hash: testTransactionHash.toUpperCase(),
+            withBlocks: true,
+          });
+          expect(receivedTransaction).toMatchObject(testTransaction);
+          transaction = receivedTransaction as Transaction & {
             blocks: Block[];
           };
           expect(transaction.blocks).toContainEqual(block);

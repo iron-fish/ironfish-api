@@ -10,6 +10,7 @@ import assert from 'assert';
 import faker from 'faker';
 import { ulid } from 'ulid';
 import { v4 as uuid } from 'uuid';
+import { standardizeEmail } from '../common/utils/email';
 import { PostmarkService } from '../postmark/postmark.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
@@ -269,7 +270,7 @@ describe('UsersService', () => {
       const records = await usersService.listByEmail(email);
       expect(records).toHaveLength(numRecords);
       for (const record of records) {
-        expect(record.email).toBe(email);
+        expect(record.email).toBe(standardizeEmail(email));
       }
     });
   });
@@ -369,7 +370,7 @@ describe('UsersService', () => {
 
           expect(user).toMatchObject({
             id: expect.any(Number),
-            email,
+            email: standardizeEmail(email),
             graffiti,
           });
         });
@@ -383,7 +384,7 @@ describe('UsersService', () => {
           await prisma.user.create({
             data: {
               confirmation_token: ulid(),
-              email,
+              email: standardizeEmail(email),
               graffiti: uuid(),
               country_code: faker.address.countryCode('alpha-3'),
               confirmed_at: new Date(),
@@ -421,7 +422,7 @@ describe('UsersService', () => {
 
           expect(user).toMatchObject({
             id: expect.any(Number),
-            email,
+            email: standardizeEmail(email),
             graffiti,
           });
         });
@@ -477,7 +478,7 @@ describe('UsersService', () => {
 
           expect(user).toMatchObject({
             id: expect.any(Number),
-            email,
+            email: standardizeEmail(email),
             github,
           });
         });
@@ -496,7 +497,7 @@ describe('UsersService', () => {
 
         expect(user).toMatchObject({
           id: expect.any(Number),
-          email,
+          email: standardizeEmail(email),
           graffiti,
         });
       });
