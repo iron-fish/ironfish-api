@@ -258,17 +258,13 @@ describe('UsersService', () => {
   describe('listByEmail', () => {
     it('returns a list of matching users by email', async () => {
       const email = faker.internet.email();
-      const numRecords = 10;
-      for (let i = 0; i < numRecords; i++) {
-        await usersService.create({
-          email,
-          graffiti: uuid(),
-          country_code: faker.address.countryCode('alpha-3'),
-        });
-      }
+      await usersService.create({
+        email,
+        graffiti: uuid(),
+        country_code: faker.address.countryCode('alpha-3'),
+      });
 
       const records = await usersService.listByEmail(email);
-      expect(records).toHaveLength(numRecords);
       for (const record of records) {
         expect(record.email).toBe(standardizeEmail(email));
       }
@@ -326,162 +322,73 @@ describe('UsersService', () => {
 
   describe('create', () => {
     describe('with a duplicate graffiti', () => {
-      describe('with a previously confirmed user', () => {
-        it('throws an exception', async () => {
-          const graffiti = uuid();
-          await prisma.user.create({
-            data: {
-              confirmation_token: ulid(),
-              email: faker.internet.email(),
-              graffiti,
-              country_code: faker.address.countryCode('alpha-3'),
-              confirmed_at: new Date(),
-            },
-          });
-
-          await expect(
-            usersService.create({
-              email: faker.internet.email(),
-              graffiti,
-              country_code: faker.address.countryCode('alpha-3'),
-            }),
-          ).rejects.toThrow(UnprocessableEntityException);
-        });
-      });
-
-      describe('with a user that has not been confirmed', () => {
-        it('creates a record', async () => {
-          const graffiti = uuid();
-          await prisma.user.create({
-            data: {
-              confirmation_token: ulid(),
-              email: faker.internet.email(),
-              graffiti,
-              country_code: faker.address.countryCode('alpha-3'),
-            },
-          });
-
-          const email = faker.internet.email();
-          const user = await usersService.create({
-            email,
+      it('throws an exception', async () => {
+        const graffiti = uuid();
+        await prisma.user.create({
+          data: {
+            confirmation_token: ulid(),
+            email: faker.internet.email(),
             graffiti,
             country_code: faker.address.countryCode('alpha-3'),
-          });
-
-          expect(user).toMatchObject({
-            id: expect.any(Number),
-            email: standardizeEmail(email),
-            graffiti,
-          });
+            confirmed_at: new Date(),
+          },
         });
+
+        await expect(
+          usersService.create({
+            email: faker.internet.email(),
+            graffiti,
+            country_code: faker.address.countryCode('alpha-3'),
+          }),
+        ).rejects.toThrow(UnprocessableEntityException);
       });
     });
 
     describe('with a duplicate email', () => {
-      describe('with a previously confirmed user', () => {
-        it('throws an exception', async () => {
-          const email = faker.internet.email();
-          await prisma.user.create({
-            data: {
-              confirmation_token: ulid(),
-              email: standardizeEmail(email),
-              graffiti: uuid(),
-              country_code: faker.address.countryCode('alpha-3'),
-              confirmed_at: new Date(),
-            },
-          });
-
-          await expect(
-            usersService.create({
-              email,
-              graffiti: uuid(),
-              country_code: faker.address.countryCode('alpha-3'),
-            }),
-          ).rejects.toThrow(UnprocessableEntityException);
-        });
-      });
-
-      describe('with a user that has not been confirmed', () => {
-        it('creates a record', async () => {
-          const email = faker.internet.email();
-          await prisma.user.create({
-            data: {
-              confirmation_token: ulid(),
-              email,
-              graffiti: uuid(),
-              country_code: faker.address.countryCode('alpha-3'),
-            },
-          });
-
-          const graffiti = uuid();
-          const user = await usersService.create({
-            email,
-            graffiti,
-            country_code: faker.address.countryCode('alpha-3'),
-          });
-
-          expect(user).toMatchObject({
-            id: expect.any(Number),
+      it('throws an exception', async () => {
+        const email = faker.internet.email();
+        await prisma.user.create({
+          data: {
+            confirmation_token: ulid(),
             email: standardizeEmail(email),
-            graffiti,
-          });
+            graffiti: uuid(),
+            country_code: faker.address.countryCode('alpha-3'),
+            confirmed_at: new Date(),
+          },
         });
+
+        await expect(
+          usersService.create({
+            email,
+            graffiti: uuid(),
+            country_code: faker.address.countryCode('alpha-3'),
+          }),
+        ).rejects.toThrow(UnprocessableEntityException);
       });
     });
 
     describe('with a duplicate github', () => {
-      describe('with a previously confirmed user', () => {
-        it('throws an exception', async () => {
-          const github = faker.internet.userName();
-          await prisma.user.create({
-            data: {
-              confirmation_token: ulid(),
-              email: faker.internet.email(),
-              github,
-              graffiti: uuid(),
-              country_code: faker.address.countryCode('alpha-3'),
-              confirmed_at: new Date(),
-            },
-          });
-
-          await expect(
-            usersService.create({
-              email: faker.internet.email(),
-              graffiti: uuid(),
-              github,
-              country_code: faker.address.countryCode('alpha-3'),
-            }),
-          ).rejects.toThrow(UnprocessableEntityException);
-        });
-      });
-
-      describe('with a user that has not been confirmed', () => {
-        it('creates a record', async () => {
-          const github = faker.internet.userName();
-          await prisma.user.create({
-            data: {
-              confirmation_token: ulid(),
-              email: faker.internet.email(),
-              graffiti: uuid(),
-              github,
-              country_code: faker.address.countryCode('alpha-3'),
-            },
-          });
-
-          const email = faker.internet.email();
-          const user = await usersService.create({
-            email,
+      it('throws an exception', async () => {
+        const github = faker.internet.userName();
+        await prisma.user.create({
+          data: {
+            confirmation_token: ulid(),
+            email: faker.internet.email(),
             github,
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
-          });
-
-          expect(user).toMatchObject({
-            id: expect.any(Number),
-            email: standardizeEmail(email),
-            github,
-          });
+            confirmed_at: new Date(),
+          },
         });
+
+        await expect(
+          usersService.create({
+            email: faker.internet.email(),
+            graffiti: uuid(),
+            github,
+            country_code: faker.address.countryCode('alpha-3'),
+          }),
+        ).rejects.toThrow(UnprocessableEntityException);
       });
     });
 
