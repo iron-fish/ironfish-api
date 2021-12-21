@@ -241,6 +241,7 @@ describe('BlocksService', () => {
           sequence: testBlockSequence,
         });
         expect(block).toMatchObject(record as Block);
+        expect(block.main).toBe(true);
       });
     });
 

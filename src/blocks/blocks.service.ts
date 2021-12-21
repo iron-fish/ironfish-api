@@ -490,6 +490,7 @@ export class BlocksService {
       const block = await this.prisma.block.findFirst({
         where: {
           sequence: options.sequence,
+          main: true,
           network_version: networkVersion,
         },
       });
