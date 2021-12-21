@@ -22,7 +22,10 @@ export class BlockQueryDto {
   @IsString()
   readonly hash?: string;
 
-  @ApiPropertyOptional({ description: 'Block sequence' })
+  @ApiPropertyOptional({
+    description:
+      'Block sequence. Will only return blocks on the main chain if provided',
+  })
   @ValidateIf((o: BlockQueryDto) => o.hash === undefined)
   @IsDefined({
     message: '"hash" or "sequence" required to query for single block',
