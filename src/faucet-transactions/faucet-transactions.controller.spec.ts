@@ -77,42 +77,49 @@ describe('FaucetTransactionsController', () => {
     });
 
     describe('when no next FaucetTransaction is available', () => {
-      it('returns a 404', async () => {
-        jest
-          .spyOn(faucetTransactionsService, 'next')
-          .mockResolvedValueOnce(null);
-
-        await request(app.getHttpServer())
-          .get('/faucet_transactions/next')
-          .set('Authorization', `Bearer ${API_KEY}`)
-          .expect(HttpStatus.NOT_FOUND);
-      });
-    });
-
-    describe('when there is a pending FaucetTransaction', () => {
-      it('returns the record', async () => {
-        jest.spyOn(faucetTransactionsService, 'next').mockResolvedValueOnce({
-          id: 0,
-          created_at: new Date(),
-          updated_at: new Date(),
-          public_key: 'mock-key',
-          email: null,
-          completed_at: null,
-          started_at: null,
-          tries: 0,
-          hash: null,
-        });
+      it('returns an empty list', async () => {
+        jest.spyOn(faucetTransactionsService, 'next').mockResolvedValueOnce([]);
 
         const { body } = await request(app.getHttpServer())
           .get('/faucet_transactions/next')
           .set('Authorization', `Bearer ${API_KEY}`)
           .expect(HttpStatus.OK);
 
-        expect(body).toMatchObject({
-          object: 'faucet_transaction',
-          id: expect.any(Number),
-          public_key: expect.any(String),
-        });
+        const { data } = body;
+        expect(data).toMatchObject([]);
+      });
+    });
+
+    describe('when there is a pending FaucetTransaction', () => {
+      it('returns the record', async () => {
+        jest.spyOn(faucetTransactionsService, 'next').mockResolvedValueOnce([
+          {
+            id: 0,
+            created_at: new Date(),
+            updated_at: new Date(),
+            public_key: 'mock-key',
+            email: null,
+            completed_at: null,
+            started_at: null,
+            tries: 0,
+            hash: null,
+          },
+        ]);
+
+        const { body } = await request(app.getHttpServer())
+          .get('/faucet_transactions/next')
+          .set('Authorization', `Bearer ${API_KEY}`)
+          .expect(HttpStatus.OK);
+
+        const { data } = body;
+        expect(data as unknown[]).toMatchObject([
+          {
+            object: 'faucet_transaction',
+            id: expect.any(Number),
+            public_key: expect.any(String),
+            completed_at: null,
+          },
+        ]);
       });
     });
 
@@ -146,7 +153,7 @@ describe('FaucetTransactionsController', () => {
         const { body } = await request(app.getHttpServer())
           .get('/faucet_transactions/next')
           .set('Authorization', `Bearer ${API_KEY}`)
-          .query({ num: 2 })
+          .query({ count: 2 })
           .expect(HttpStatus.OK);
 
         const { data } = body;

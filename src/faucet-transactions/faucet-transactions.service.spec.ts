@@ -99,20 +99,22 @@ describe('FaucetTransactionService', () => {
 
   describe('next', () => {
     describe('when a FaucetTransaction is already running', () => {
-      it('returns null', async () => {
-        const runningFaucetTransaction = {
-          id: 0,
-          created_at: new Date(),
-          updated_at: new Date(),
-          public_key: 'mock-key',
-          email: null,
-          completed_at: null,
-          started_at: new Date(),
-          tries: 1,
-          hash: null,
-        };
+      it('returns the running transaction', async () => {
+        const runningFaucetTransaction = [
+          {
+            id: 0,
+            created_at: new Date(),
+            updated_at: new Date(),
+            public_key: 'mock-key',
+            email: null,
+            completed_at: null,
+            started_at: new Date(),
+            tries: 1,
+            hash: null,
+          },
+        ];
         jest
-          .spyOn(prisma.faucetTransaction, 'findFirst')
+          .spyOn(prisma.faucetTransaction, 'findMany')
           .mockResolvedValueOnce(runningFaucetTransaction);
 
         expect(await faucetTransactionsService.next({})).toMatchObject(
@@ -123,21 +125,23 @@ describe('FaucetTransactionService', () => {
 
     describe('when no FaucetTransactions are running', () => {
       it('returns the next available FaucetTransaction', async () => {
-        const pendingFaucetTransaction = {
-          id: 0,
-          created_at: new Date(),
-          updated_at: new Date(),
-          public_key: 'mock-key',
-          email: null,
-          completed_at: null,
-          started_at: null,
-          tries: 0,
-          hash: null,
-        };
+        const pendingFaucetTransaction = [
+          {
+            id: 0,
+            created_at: new Date(),
+            updated_at: new Date(),
+            public_key: 'mock-key',
+            email: null,
+            completed_at: null,
+            started_at: null,
+            tries: 0,
+            hash: null,
+          },
+        ];
         jest
-          .spyOn(prisma.faucetTransaction, 'findFirst')
+          .spyOn(prisma.faucetTransaction, 'findMany')
           // No currently running FaucetTransaction
-          .mockResolvedValueOnce(null)
+          .mockResolvedValueOnce([])
           // Waiting to run FaucetTransaction
           .mockResolvedValueOnce(pendingFaucetTransaction);
 
