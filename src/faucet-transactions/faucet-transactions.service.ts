@@ -92,18 +92,10 @@ export class FaucetTransactionsService {
             },
             take: diff,
           });
-        const faucetTransactions = [
+        return [
           ...currentlyRunningFaucetTransactions,
           ...unfulfilledFaucetTransactions,
         ];
-        if (faucetTransactions.length === 0) {
-          return [];
-        } else {
-          return [
-            ...currentlyRunningFaucetTransactions,
-            ...unfulfilledFaucetTransactions,
-          ];
-        }
       }
 
       return currentlyRunningFaucetTransactions;
