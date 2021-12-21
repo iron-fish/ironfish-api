@@ -7,7 +7,6 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  NotFoundException,
   Param,
   ParseIntPipe,
   Post,
@@ -21,7 +20,6 @@ import {
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
-import is from '@sindresorhus/is';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { List } from '../common/interfaces/list';
 import { CompleteFaucetTransactionDto } from './dto/complete-faucet-transaction.dto';
@@ -65,25 +63,17 @@ export class FaucetTransactionsController {
       }),
     )
     { count }: NextFaucetTransactionsDto,
-  ): Promise<SerializedFaucetTransaction | List<SerializedFaucetTransaction>> {
+  ): Promise<List<SerializedFaucetTransaction>> {
     const nextFaucetTransactions = await this.faucetTransactionsService.next({
       count,
     });
-    if (!nextFaucetTransactions) {
-      throw new NotFoundException();
-    }
 
-    // TODO: This is temporary measure to avoid downtime in the faucet
-    // before we change the faucet service to expect arrays - deekerno
-    if (is.array(nextFaucetTransactions)) {
-      return {
-        object: 'list',
-        data: nextFaucetTransactions.map((nextFaucetTransaction) =>
-          serializedFaucetTransactionFromRecord(nextFaucetTransaction),
-        ),
-      };
-    }
-    return serializedFaucetTransactionFromRecord(nextFaucetTransactions);
+    return {
+      object: 'list',
+      data: nextFaucetTransactions.map((nextFaucetTransaction) =>
+        serializedFaucetTransactionFromRecord(nextFaucetTransaction),
+      ),
+    };
   }
 
   @ApiOperation({ summary: 'Returns the global status of faucet transactions' })
