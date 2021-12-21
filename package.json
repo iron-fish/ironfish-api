@@ -64,7 +64,7 @@
     "@nestjs/passport": "8.0.1",
     "@nestjs/platform-express": "8.2.4",
     "@nestjs/swagger": "5.1.5",
-    "@prisma/client": "3.6.0",
+    "@prisma/client": "3.7.0",
     "@sindresorhus/is": "4.2.0",
     "assert": "2.0.0",
     "class-transformer": "0.5.1",
