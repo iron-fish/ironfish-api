@@ -118,9 +118,6 @@ export class UsersService {
     email = standardizeEmail(email);
     const existingRecord = await this.prisma.user.findFirst({
       where: {
-        confirmed_at: {
-          not: null,
-        },
         OR: [
           {
             email,

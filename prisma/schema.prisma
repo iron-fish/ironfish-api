@@ -32,7 +32,7 @@ model User {
   created_at          DateTime  @default(now()) @db.Timestamp(6)
   updated_at          DateTime  @default(now()) @updatedAt @db.Timestamp(6)
   email               String    @db.VarChar
-  graffiti            String    @db.VarChar
+  graffiti            String    @db.VarChar @unique(map: "uq_users_on_graffiti")
   total_points        Int       @default(0)
   country_code        String    @db.VarChar
   email_notifications Boolean   @default(false)

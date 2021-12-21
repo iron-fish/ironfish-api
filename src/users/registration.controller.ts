@@ -31,23 +31,11 @@ export class RegistrationController {
       return;
     }
 
-    const existingUser = await this.usersService.findConfirmedByEmail(
-      user.email,
+    await this.usersService.confirm(user);
+    res.redirect(
+      `${this.config.get<string>(
+        'INCENTIVIZED_TESTNET_URL',
+      )}/login?confirmed=true`,
     );
-    if (existingUser) {
-      const message = 'User already confirmed';
-      res.redirect(
-        `${this.config.get<string>(
-          'INCENTIVIZED_TESTNET_URL',
-        )}/login?toast=${Buffer.from(message).toString('base64')}`,
-      );
-    } else {
-      await this.usersService.confirm(user);
-      res.redirect(
-        `${this.config.get<string>(
-          'INCENTIVIZED_TESTNET_URL',
-        )}/login?confirmed=true`,
-      );
-    }
   }
 }
