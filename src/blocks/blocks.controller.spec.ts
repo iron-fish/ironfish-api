@@ -8,6 +8,7 @@ import request from 'supertest';
 import { v4 as uuid } from 'uuid';
 import { BlocksDailyService } from '../blocks-daily/blocks-daily.service';
 import { MetricsGranularity } from '../common/enums/metrics-granularity';
+import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { BlocksService } from './blocks.service';
@@ -21,12 +22,14 @@ describe('BlocksController', () => {
   let app: INestApplication;
   let blocksDailyService: BlocksDailyService;
   let blocksService: BlocksService;
+  let graphileWorkerService: GraphileWorkerService;
   let prisma: PrismaService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
     blocksDailyService = app.get(BlocksDailyService);
     blocksService = app.get(BlocksService);
+    graphileWorkerService = app.get(GraphileWorkerService);
     prisma = app.get(PrismaService);
     await app.init();
   });
@@ -119,6 +122,9 @@ describe('BlocksController', () => {
 
     describe('with a valid payload', () => {
       it('upserts blocks', async () => {
+        jest
+          .spyOn(graphileWorkerService, 'addJob')
+          .mockImplementationOnce(jest.fn());
         const payload: UpsertBlocksDto = {
           blocks: [
             {

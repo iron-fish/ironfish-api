@@ -18,7 +18,7 @@ import { ApiExcludeEndpoint, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { BlocksDailyService } from '../blocks-daily/blocks-daily.service';
-import { BlocksTransactionsLoader } from '../blocks-transactions-loader/block-transactions-loader';
+import { BlocksTransactionsLoader } from '../blocks-transactions-loader/blocks-transactions-loader';
 import { MS_PER_DAY } from '../common/constants';
 import { MetricsGranularity } from '../common/enums/metrics-granularity';
 import { List } from '../common/interfaces/list';

@@ -5,6 +5,7 @@ import { Injectable } from '@nestjs/common';
 import { Block, Transaction } from '@prisma/client';
 import { BlocksService } from '../blocks/blocks.service';
 import { UpsertBlocksDto } from '../blocks/dto/upsert-blocks.dto';
+import { BlocksDailyService } from '../blocks-daily/blocks-daily.service';
 import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
 import { DeleteBlockMinedEventOptions } from '../events/interfaces/delete-block-mined-event-options';
 import { UpsertBlockMinedEventOptions } from '../events/interfaces/upsert-block-mined-event-options';
@@ -16,8 +17,9 @@ import { TransactionsService } from '../transactions/transactions.service';
 @Injectable()
 export class BlocksTransactionsLoader {
   constructor(
-    private readonly blocksTransactionsService: BlocksTransactionsService,
+    private readonly blocksDailyService: BlocksDailyService,
     private readonly blocksService: BlocksService,
+    private readonly blocksTransactionsService: BlocksTransactionsService,
     private readonly graphileWorkerService: GraphileWorkerService,
     private readonly prisma: PrismaService,
     private readonly transactionsService: TransactionsService,
@@ -86,6 +88,13 @@ export class BlocksTransactionsLoader {
         },
       );
     }
+
+    await this.graphileWorkerService.addJob(
+      GraphileWorkerPattern.SYNC_BLOCKS_DAILY,
+      {
+        date: await this.blocksDailyService.getNextDateToSync(),
+      },
+    );
 
     return response;
   }

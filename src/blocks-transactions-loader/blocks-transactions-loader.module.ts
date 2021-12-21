@@ -3,15 +3,17 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Module } from '@nestjs/common';
 import { BlocksModule } from '../blocks/blocks.module';
+import { BlocksDailyModule } from '../blocks-daily/blocks-daily.module';
 import { BlocksTransactionsModule } from '../blocks-transactions/blocks-transactions.module';
 import { GraphileWorkerModule } from '../graphile-worker/graphile-worker.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { TransactionsModule } from '../transactions/transactions.module';
-import { BlocksTransactionsLoader } from './block-transactions-loader';
+import { BlocksTransactionsLoader } from './blocks-transactions-loader';
 
 @Module({
   exports: [BlocksTransactionsLoader],
   imports: [
+    BlocksDailyModule,
     BlocksModule,
     BlocksTransactionsModule,
     GraphileWorkerModule,

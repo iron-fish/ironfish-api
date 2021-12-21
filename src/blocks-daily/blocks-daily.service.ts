@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable } from '@nestjs/common';
+import { getNextDate } from '../common/utils/date';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { CreateBlocksDailyOptions } from './interfaces/create-blocks-daily-options';
@@ -52,5 +53,20 @@ export class BlocksDailyService {
         date: options.date,
       },
     });
+  }
+
+  async getNextDateToSync(): Promise<Date> {
+    const aggregate = await this.prisma.blockDaily.aggregate({
+      _max: {
+        date: true,
+      },
+    });
+    // 2021 December 1 12 AM UTC
+    const defaultStart = new Date(Date.UTC(2021, 11, 1, 0, 0, 0));
+    const latestDate = aggregate._max.date;
+    if (!latestDate) {
+      return defaultStart;
+    }
+    return getNextDate(latestDate);
   }
 }
