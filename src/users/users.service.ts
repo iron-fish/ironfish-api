@@ -80,9 +80,6 @@ export class UsersService {
     return this.prisma.user.findFirst({
       where: {
         email,
-        confirmed_at: {
-          not: null,
-        },
       },
     });
   }
