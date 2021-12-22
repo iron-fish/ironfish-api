@@ -68,9 +68,7 @@ export class EventsController {
     )
     { graffiti, points, type, occurred_at: occurredAt }: CreateEventDto,
   ): Promise<SerializedEvent | null> {
-    const user = await this.usersService.findConfirmedByGraffitiOrThrow(
-      graffiti,
-    );
+    const user = await this.usersService.findByGraffitiOrThrow(graffiti);
     const event = await this.eventsService.create({
       type,
       points,
