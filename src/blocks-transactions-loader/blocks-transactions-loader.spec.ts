@@ -10,7 +10,7 @@ import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-
 import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
-import { BlocksTransactionsLoader } from './block-transactions-loader';
+import { BlocksTransactionsLoader } from './blocks-transactions-loader';
 
 describe('BlocksTransactionsLoader', () => {
   let app: INestApplication;
@@ -18,6 +18,8 @@ describe('BlocksTransactionsLoader', () => {
   let blocksTransactionsService: BlocksTransactionsService;
   let graphileWorkerService: GraphileWorkerService;
   let usersService: UsersService;
+
+  let addJob: jest.SpyInstance;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
@@ -30,6 +32,12 @@ describe('BlocksTransactionsLoader', () => {
 
   afterAll(async () => {
     await app.close();
+  });
+
+  beforeEach(() => {
+    addJob = jest
+      .spyOn(graphileWorkerService, 'addJob')
+      .mockImplementation(jest.fn());
   });
 
   afterEach(() => {
@@ -94,14 +102,6 @@ describe('BlocksTransactionsLoader', () => {
     });
 
     describe('when the blocks are associated with a registered user', () => {
-      let addJob: jest.SpyInstance;
-
-      beforeEach(() => {
-        addJob = jest
-          .spyOn(graphileWorkerService, 'addJob')
-          .mockImplementationOnce(jest.fn());
-      });
-
       it('queues delete jobs for disconnected blocks', async () => {
         const graffiti = uuid();
         const user = await usersService.create({
@@ -126,7 +126,7 @@ describe('BlocksTransactionsLoader', () => {
           ],
         });
 
-        expect(addJob).toHaveBeenCalledTimes(1);
+        expect(addJob).toHaveBeenCalledTimes(2);
         expect(addJob).toHaveBeenCalledWith(
           GraphileWorkerPattern.DELETE_BLOCK_MINED_EVENT,
           {
@@ -161,7 +161,7 @@ describe('BlocksTransactionsLoader', () => {
           ],
         });
 
-        expect(addJob).toHaveBeenCalledTimes(1);
+        expect(addJob).toHaveBeenCalledTimes(2);
         expect(addJob).toHaveBeenCalledWith(
           GraphileWorkerPattern.UPSERT_BLOCK_MINED_EVENT,
           {
@@ -169,6 +169,32 @@ describe('BlocksTransactionsLoader', () => {
             user_id: user.id,
           },
           expect.anything(),
+        );
+      });
+
+      it('queues a job to sync a daily snapshot', async () => {
+        await blocksTransactionsLoader.bulkUpsert({
+          blocks: [
+            {
+              hash: uuid(),
+              sequence: faker.datatype.number(),
+              difficulty: faker.datatype.number(),
+              timestamp: new Date(),
+              type: BlockOperation.CONNECTED,
+              graffiti: uuid(),
+              previous_block_hash: uuid(),
+              size: faker.datatype.number(),
+              transactions: [],
+            },
+          ],
+        });
+
+        expect(addJob).toHaveBeenCalledTimes(1);
+        expect(addJob).toHaveBeenCalledWith(
+          GraphileWorkerPattern.SYNC_BLOCKS_DAILY,
+          {
+            date: expect.any(Date),
+          },
         );
       });
     });

@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { INestApplication } from '@nestjs/common';
+import { getNextDate } from '../common/utils/date';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { BlocksDailyService } from './blocks-daily.service';
@@ -105,6 +106,26 @@ describe('BlocksDailyService', () => {
         transactions_count: options.transactionsCount,
         unique_graffiti_count: options.uniqueGraffiti,
       });
+    });
+  });
+
+  describe('getNextDateToSync', () => {
+    it('returns the next date from the last daily snapshot', async () => {
+      const options = {
+        averageBlockTimeMs: 0,
+        averageDifficultyMillis: 0,
+        blocksCount: 0,
+        blocksWithGraffitiCount: 0,
+        chainSequence: 0,
+        cumulativeUniqueGraffiti: 0,
+        date: new Date('3000-01-01'),
+        transactionsCount: 0,
+        uniqueGraffiti: 0,
+      };
+
+      const blockDaily = await blocksDailyService.upsert(prisma, options);
+      const nextSyncDate = await blocksDailyService.getNextDateToSync();
+      expect(nextSyncDate).toEqual(getNextDate(blockDaily.date));
     });
   });
 });
