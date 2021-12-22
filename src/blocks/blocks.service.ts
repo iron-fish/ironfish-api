@@ -13,7 +13,6 @@ import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
 import { getNextDate } from '../common/utils/date';
 import { standardizeHash } from '../common/utils/hash';
-import { EventsService } from '../events/events.service';
 import { DeleteBlockMinedEventOptions } from '../events/interfaces/delete-block-mined-event-options';
 import { UpsertBlockMinedEventOptions } from '../events/interfaces/upsert-block-mined-event-options';
 import { PrismaService } from '../prisma/prisma.service';
@@ -32,7 +31,6 @@ export class BlocksService {
   constructor(
     private readonly blocksTransactionsService: BlocksTransactionsService,
     private readonly config: ApiConfigService,
-    private readonly eventsService: EventsService,
     private readonly prisma: PrismaService,
     private readonly usersService: UsersService,
   ) {}
