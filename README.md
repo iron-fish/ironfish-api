@@ -23,7 +23,6 @@ You'll need a `.env` file with the following keys:
 * `MAGIC_SECRET_KEY`
 * `NETWORK_VERSION`
 * `NODE_ENV`
-* `POSTMARK_API_KEY`
 
 You can copy `.env.template` to your own `.env` file
 

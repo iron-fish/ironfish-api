@@ -11,8 +11,6 @@ import { AuthModule } from '../auth/auth.module';
 import { BlocksModule } from '../blocks/blocks.module';
 import { BlocksTransactionsModule } from '../blocks-transactions/blocks-transactions.module';
 import { DatadogModule } from '../datadog/datadog.module';
-import { PostmarkService } from '../postmark/postmark.service';
-import { MockPostmarkService } from './mocks/mock-postmark.service';
 
 export async function bootstrapTestApp(): Promise<INestApplication> {
   const module = await Test.createTestingModule({
@@ -34,17 +32,13 @@ export async function bootstrapTestApp(): Promise<INestApplication> {
           NETWORK_VERSION: joi.number().required(),
           NODE_ENV: joi.string().required(),
           PORT: joi.number().default(8003),
-          POSTMARK_API_KEY: joi.string().required(),
         }),
       }),
       DatadogModule,
       ...JOBS_MODULES,
       ...REST_MODULES,
     ],
-  })
-    .overrideProvider(PostmarkService)
-    .useClass(MockPostmarkService)
-    .compile();
+  }).compile();
 
   const app = module.createNestApplication();
   app.use(json({ limit: '10mb' }));
