@@ -25,7 +25,6 @@ export class AuthController {
   @Post('login')
   async login(@Req() req: Request, @Res() res: Response): Promise<void> {
     let email;
-    let errorBody = {};
 
     const { authorization } = req.headers;
     if (!authorization) {
@@ -39,18 +38,11 @@ export class AuthController {
     }
 
     if (email) {
-      const user = await this.usersService.findConfirmedByEmail(email);
+      const user = await this.usersService.findByEmail(email);
       if (user) {
         await this.usersService.updateLastLoginAt(user);
       } else {
-        const unconfirmedUsers = await this.usersService.listByEmail(email);
-        if (unconfirmedUsers.length > 0) {
-          errorBody = { error: 'user_unconfirmed' };
-        } else {
-          errorBody = { error: 'user_invalid' };
-        }
-
-        throw new UnauthorizedException(errorBody);
+        throw new UnauthorizedException({ error: 'user_invalid' });
       }
     }
 

@@ -68,21 +68,18 @@ export class UsersService {
     return record;
   }
 
-  async findConfirmedByEmailOrThrow(email: string): Promise<User> {
-    const record = await this.findConfirmedByEmail(email);
+  async findByEmailOrThrow(email: string): Promise<User> {
+    const record = await this.findByEmail(email);
     if (!record) {
       throw new NotFoundException();
     }
     return record;
   }
 
-  async findConfirmedByEmail(email: string): Promise<User | null> {
+  async findByEmail(email: string): Promise<User | null> {
     return this.prisma.user.findFirst({
       where: {
         email,
-        confirmed_at: {
-          not: null,
-        },
       },
     });
   }

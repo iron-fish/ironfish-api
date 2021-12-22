@@ -30,7 +30,7 @@ export class MagicLinkStrategy extends PassportStrategy(
       const email = await this.magicLinkService.getEmailFromHeader(
         authorization,
       );
-      const user = await this.usersService.findConfirmedByEmailOrThrow(email);
+      const user = await this.usersService.findByEmailOrThrow(email);
       req.context = {
         ...req.context,
         user,
