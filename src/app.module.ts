@@ -58,7 +58,6 @@ export const REST_MODULES = [
         NETWORK_VERSION: joi.number().required(),
         NODE_ENV: joi.string().required(),
         PORT: joi.number().default(8003),
-        POSTMARK_API_KEY: joi.string().required(),
       }),
     }),
     DatadogModule,
