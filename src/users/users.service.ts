@@ -24,18 +24,14 @@ import { Prisma, User } from '.prisma/client';
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findConfirmed(id: number): Promise<User | null> {
-    const record = await this.prisma.user.findUnique({
+  async find(id: number): Promise<User | null> {
+    return this.prisma.user.findUnique({
       where: { id },
     });
-    if (record === null || record.confirmed_at === null) {
-      return null;
-    }
-    return record;
   }
 
   async findOrThrow(id: number): Promise<User> {
-    const record = await this.findConfirmed(id);
+    const record = await this.find(id);
     if (record === null) {
       throw new NotFoundException();
     }

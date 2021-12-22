@@ -26,7 +26,7 @@ export class EventsJobsController {
     block_id: blockId,
     user_id: userId,
   }: UpsertBlockMinedEventOptions): Promise<GraphileWorkerHandlerResponse> {
-    const user = await this.usersService.findConfirmed(userId);
+    const user = await this.usersService.find(userId);
     if (!user) {
       this.loggerService.error(`No user found for '${userId}'`, '');
       return { requeue: false };
@@ -47,7 +47,7 @@ export class EventsJobsController {
     block_id: blockId,
     user_id: userId,
   }: DeleteBlockMinedEventOptions): Promise<GraphileWorkerHandlerResponse> {
-    const user = await this.usersService.findConfirmed(userId);
+    const user = await this.usersService.find(userId);
     if (!user) {
       this.loggerService.error(`No user found for '${userId}'`, '');
       return { requeue: false };
