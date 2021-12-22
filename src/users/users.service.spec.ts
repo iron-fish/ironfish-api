@@ -139,11 +139,11 @@ describe('UsersService', () => {
     });
   });
 
-  describe('findConfirmedByEmailOrThrow', () => {
+  describe('findByEmailOrThrow', () => {
     describe('with a missing email', () => {
       it('throws an exception', async () => {
         await expect(
-          usersService.findConfirmedByEmailOrThrow('howdy@partner.com'),
+          usersService.findByEmailOrThrow('howdy@partner.com'),
         ).rejects.toThrow(NotFoundException);
       });
     });
@@ -161,18 +161,16 @@ describe('UsersService', () => {
           },
         });
 
-        const record = await usersService.findConfirmedByEmailOrThrow(email);
+        const record = await usersService.findByEmailOrThrow(email);
         expect(record).toMatchObject(user);
       });
     });
   });
 
-  describe('findConfirmedByEmail', () => {
+  describe('findByEmail', () => {
     describe('with a missing email', () => {
       it('returns null', async () => {
-        expect(
-          await usersService.findConfirmedByEmail('howdy@partner.com'),
-        ).toBeNull();
+        expect(await usersService.findByEmail('howdy@partner.com')).toBeNull();
       });
     });
 
@@ -189,7 +187,7 @@ describe('UsersService', () => {
           },
         });
 
-        const record = await usersService.findConfirmedByEmail(email);
+        const record = await usersService.findByEmail(email);
         expect(record).toMatchObject(user);
       });
     });

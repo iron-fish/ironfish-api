@@ -4,7 +4,6 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import faker from 'faker';
 import request from 'supertest';
-import { ulid } from 'ulid';
 import { v4 as uuid } from 'uuid';
 import { MagicLinkService } from '../magic-link/magic-link.service';
 import { bootstrapTestApp } from '../test/test-app';
@@ -71,42 +70,6 @@ describe('AuthController', () => {
 
         expect(body).toMatchObject({
           error: 'user_invalid',
-        });
-      });
-    });
-
-    describe('with an unconfirmed user for the given e-mail', () => {
-      it('returns a 401 back with `user_unconfirmed`', async () => {
-        const email = 'iron@fish.com';
-        jest
-          .spyOn(magicLinkService, 'getEmailFromHeader')
-          .mockImplementationOnce(() => Promise.resolve(email));
-        jest.spyOn(usersService, 'listByEmail').mockResolvedValueOnce([
-          {
-            id: 0,
-            created_at: new Date(),
-            updated_at: new Date(),
-            email,
-            graffiti: ulid(),
-            total_points: 0,
-            country_code: faker.address.countryCode('alpha-3'),
-            email_notifications: false,
-            last_login_at: null,
-            discord: null,
-            telegram: ulid(),
-            github: faker.internet.userName(),
-            confirmation_token: ulid(),
-            confirmed_at: new Date(),
-          },
-        ]);
-
-        const { body } = await request(app.getHttpServer())
-          .post('/login')
-          .set('Authorization', 'unconfirmed-token')
-          .expect(HttpStatus.UNAUTHORIZED);
-
-        expect(body).toMatchObject({
-          error: 'user_unconfirmed',
         });
       });
     });
