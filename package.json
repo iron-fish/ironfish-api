@@ -78,7 +78,7 @@
     "joi": "17.5.0",
     "passport": "0.4.1",
     "pino": "7.6.0",
-    "postmark": "2.7.9",
+    "postmark": "2.8.1",
     "reflect-metadata": "0.1.13",
     "rxjs": "7.4.0",
     "swagger-ui-express": "4.3.0",
