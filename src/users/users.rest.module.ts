@@ -5,13 +5,12 @@ import { Module } from '@nestjs/common';
 import { ApiConfigModule } from '../api-config/api-config.module';
 import { EventsModule } from '../events/events.module';
 import { MeController } from './me.controller';
-import { RegistrationController } from './registration.controller';
 import { UsersController } from './users.controller';
 import { UsersModule } from './users.module';
 import { UsersUpdaterModule } from './users-updater.module';
 
 @Module({
-  controllers: [MeController, RegistrationController, UsersController],
+  controllers: [MeController, UsersController],
   imports: [ApiConfigModule, EventsModule, UsersModule, UsersUpdaterModule],
 })
 export class UsersRestModule {}

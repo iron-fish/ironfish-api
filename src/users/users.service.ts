@@ -96,14 +96,6 @@ export class UsersService {
     });
   }
 
-  async findByConfirmationToken(token: string): Promise<User | null> {
-    return this.prisma.user.findUnique({
-      where: {
-        confirmation_token: token,
-      },
-    });
-  }
-
   async create({
     email,
     graffiti,
@@ -148,16 +140,6 @@ export class UsersService {
         },
       }),
     ]);
-    await this.postmarkService.send({
-      alias: 'incentivized-testnet-confirmation',
-      templateModel: {
-        action_url: `${this.config.get<string>('API_URL')}/registration/${
-          user.confirmation_token
-        }/confirm`,
-        graffiti: user.graffiti,
-      },
-      to: user.email,
-    });
     return user;
   }
 

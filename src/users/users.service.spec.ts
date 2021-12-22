@@ -11,7 +11,6 @@ import faker from 'faker';
 import { ulid } from 'ulid';
 import { v4 as uuid } from 'uuid';
 import { standardizeEmail } from '../common/utils/email';
-import { PostmarkService } from '../postmark/postmark.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from './users.service';
@@ -20,13 +19,11 @@ import { EventType } from '.prisma/client';
 describe('UsersService', () => {
   let app: INestApplication;
   let usersService: UsersService;
-  let postmarkService: PostmarkService;
   let prisma: PrismaService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
     usersService = app.get(UsersService);
-    postmarkService = app.get(PostmarkService);
     prisma = app.get(PrismaService);
     await app.init();
   });
@@ -195,29 +192,6 @@ describe('UsersService', () => {
     });
   });
 
-  describe('findByConfirmationToken', () => {
-    describe('with an invalid token', () => {
-      it('returns null', async () => {
-        expect(await usersService.findByConfirmationToken('token')).toBeNull();
-      });
-    });
-
-    describe('with a valid token', () => {
-      it('returns the record', async () => {
-        const user = await usersService.create({
-          email: faker.internet.email(),
-          graffiti: uuid(),
-          country_code: faker.address.countryCode('alpha-3'),
-        });
-
-        const record = await usersService.findByConfirmationToken(
-          user.confirmation_token,
-        );
-        expect(record).toMatchObject(user);
-      });
-    });
-  });
-
   describe('listByEmail', () => {
     it('returns a list of matching users by email', async () => {
       const email = faker.internet.email();
@@ -371,21 +345,6 @@ describe('UsersService', () => {
           graffiti,
         });
       });
-    });
-
-    it('sends a confirmation email', async () => {
-      const sendMail = jest.spyOn(postmarkService, 'send');
-      const user = await usersService.create({
-        email: faker.internet.email(),
-        graffiti: uuid(),
-        country_code: faker.address.countryCode('alpha-3'),
-      });
-      expect(sendMail).toHaveBeenCalledTimes(1);
-      expect(sendMail).toHaveBeenCalledWith(
-        expect.objectContaining({
-          to: user.email,
-        }),
-      );
     });
   });
 
