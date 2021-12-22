@@ -48,7 +48,7 @@ export class UsersService {
     return record;
   }
 
-  async findConfirmedByGraffiti(
+  async findByGraffiti(
     graffiti: string,
     prisma?: BasePrismaClient,
   ): Promise<User | null> {
@@ -56,15 +56,12 @@ export class UsersService {
     return client.user.findFirst({
       where: {
         graffiti,
-        confirmed_at: {
-          not: null,
-        },
       },
     });
   }
 
-  async findConfirmedByGraffitiOrThrow(graffiti: string): Promise<User> {
-    const record = await this.findConfirmedByGraffiti(graffiti);
+  async findByGraffitiOrThrow(graffiti: string): Promise<User> {
+    const record = await this.findByGraffiti(graffiti);
     if (!record) {
       throw new NotFoundException();
     }

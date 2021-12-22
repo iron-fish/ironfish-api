@@ -87,7 +87,7 @@ describe('UsersService', () => {
     });
   });
 
-  describe('findConfirmedByGraffiti', () => {
+  describe('findByGraffiti', () => {
     describe('with a valid graffiti', () => {
       it('returns the record', async () => {
         const user = await prisma.user.create({
@@ -99,39 +99,20 @@ describe('UsersService', () => {
             confirmed_at: new Date(),
           },
         });
-        const record = await usersService.findConfirmedByGraffiti(
-          user.graffiti,
-        );
+        const record = await usersService.findByGraffiti(user.graffiti);
         expect(record).not.toBeNull();
         expect(record).toMatchObject(user);
       });
     });
 
-    describe('with a user not logged in yet', () => {
+    describe('with a missing graffiti', () => {
       it('returns null', async () => {
-        const user = await prisma.user.create({
-          data: {
-            confirmation_token: ulid(),
-            email: faker.internet.email(),
-            graffiti: uuid(),
-            country_code: faker.address.countryCode('alpha-3'),
-          },
-        });
-        const record = await usersService.findConfirmedByGraffiti(
-          user.graffiti,
-        );
-        expect(record).toBeNull();
-      });
-    });
-
-    describe('with a missing id', () => {
-      it('returns null', async () => {
-        expect(await usersService.findConfirmedByGraffiti('1337')).toBeNull();
+        expect(await usersService.findByGraffiti('1337')).toBeNull();
       });
     });
   });
 
-  describe('findConfirmedByGraffitiOrThrow', () => {
+  describe('findByGraffitiOrThrow', () => {
     describe('with a valid graffiti', () => {
       it('returns the record', async () => {
         const user = await prisma.user.create({
@@ -143,9 +124,7 @@ describe('UsersService', () => {
             country_code: faker.address.countryCode('alpha-3'),
           },
         });
-        const record = await usersService.findConfirmedByGraffitiOrThrow(
-          user.graffiti,
-        );
+        const record = await usersService.findByGraffitiOrThrow(user.graffiti);
         expect(record).not.toBeNull();
         expect(record).toMatchObject(user);
       });
@@ -154,7 +133,7 @@ describe('UsersService', () => {
     describe('with a missing graffiti', () => {
       it('throws an exception', async () => {
         await expect(
-          usersService.findConfirmedByGraffitiOrThrow('1337'),
+          usersService.findByGraffitiOrThrow('1337'),
         ).rejects.toThrow(NotFoundException);
       });
     });

@@ -93,10 +93,7 @@ export class BlocksService {
       },
     });
 
-    const user = await this.usersService.findConfirmedByGraffiti(
-      graffiti,
-      prisma,
-    );
+    const user = await this.usersService.findByGraffiti(graffiti, prisma);
     if (user && timestamp > user.created_at) {
       if (main) {
         upsertBlockMinedOptions = { block_id: block.id, user_id: user.id };
