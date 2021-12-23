@@ -39,7 +39,6 @@ describe('UsersController', () => {
         const user = await prisma.user.create({
           data: {
             confirmation_token: ulid(),
-            confirmed_at: new Date().toISOString(),
             email: faker.internet.email(),
             graffiti: uuid(),
             country_code: faker.address.countryCode(),
@@ -198,7 +197,6 @@ describe('UsersController', () => {
         const user = await prisma.user.create({
           data: {
             confirmation_token: ulid(),
-            confirmed_at: new Date().toISOString(),
             email: faker.internet.email(),
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
@@ -246,7 +244,6 @@ describe('UsersController', () => {
         const user = await prisma.user.create({
           data: {
             confirmation_token: ulid(),
-            confirmed_at: new Date().toISOString(),
             email: faker.internet.email(),
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
@@ -475,7 +472,6 @@ describe('UsersController', () => {
           graffiti: uuid(),
           country_code: faker.address.countryCode('alpha-3'),
         });
-        await usersService.confirm(user);
 
         jest
           .spyOn(magicLinkService, 'getEmailFromHeader')
@@ -498,7 +494,6 @@ describe('UsersController', () => {
           graffiti: uuid(),
           country_code: faker.address.countryCode('alpha-3'),
         });
-        await usersService.confirm(user);
 
         jest
           .spyOn(magicLinkService, 'getEmailFromHeader')
@@ -520,7 +515,6 @@ describe('UsersController', () => {
           graffiti: uuid(),
           country_code: faker.address.countryCode('alpha-3'),
         });
-        await usersService.confirm(user);
 
         jest
           .spyOn(magicLinkService, 'getEmailFromHeader')

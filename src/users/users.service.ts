@@ -147,9 +147,6 @@ export class UsersService {
       graffiti: {
         contains: options.search,
       },
-      confirmed_at: {
-        not: null,
-      },
     };
     const data = await this.prisma.user.findMany({
       cursor,
@@ -269,8 +266,6 @@ export class UsersService {
             ) user_latest_events
           ON
             user_latest_events.user_id = users.id
-          WHERE
-            confirmed_at IS NOT NULL
         ) user_ranks
       WHERE
         graffiti ILIKE $1 AND
@@ -403,8 +398,6 @@ export class UsersService {
             ) user_latest_events
           ON
             user_latest_events.user_id = users.id
-          WHERE
-            users.confirmed_at IS NOT NULL
         ) user_ranks
       WHERE
         id = $1`,
@@ -422,19 +415,6 @@ export class UsersService {
     return rankResponse[0].rank;
   }
 
-  async confirm(user: User): Promise<User> {
-    return this.prisma.$transaction(async (prisma) => {
-      return prisma.user.update({
-        where: {
-          id: user.id,
-        },
-        data: {
-          confirmed_at: new Date().toISOString(),
-        },
-      });
-    });
-  }
-
   async findDuplicateUser(
     user: User,
     options: UpdateUserOptions,
@@ -443,9 +423,6 @@ export class UsersService {
     const { discord, graffiti, telegram } = options;
     return client.user.findMany({
       where: {
-        confirmed_at: {
-          not: null,
-        },
         OR: [{ discord }, { graffiti }, { telegram }],
         NOT: {
           id: user.id,

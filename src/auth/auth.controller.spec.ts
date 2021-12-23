@@ -81,7 +81,6 @@ describe('AuthController', () => {
           graffiti: uuid(),
           country_code: faker.address.countryCode('alpha-3'),
         });
-        await usersService.confirm(user);
 
         const updateLastLoginAt = jest.spyOn(usersService, 'updateLastLoginAt');
         jest

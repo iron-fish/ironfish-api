@@ -78,7 +78,6 @@ describe('EventsJobsController', () => {
           graffiti: ulid(),
           country_code: faker.address.countryCode('alpha-3'),
         });
-        await usersService.confirm(user);
 
         await eventsJobsController.upsertBlockMinedEvent({
           block_id: 12345,
@@ -94,7 +93,6 @@ describe('EventsJobsController', () => {
           graffiti: ulid(),
           country_code: faker.address.countryCode('alpha-3'),
         });
-        await usersService.confirm(user);
 
         const { requeue } = await eventsJobsController.upsertBlockMinedEvent({
           block_id: 12345,
@@ -123,7 +121,6 @@ describe('EventsJobsController', () => {
           graffiti: ulid(),
           country_code: faker.address.countryCode('alpha-3'),
         });
-        await usersService.confirm(user);
 
         const { requeue } = await eventsJobsController.upsertBlockMinedEvent({
           block_id: block.id,
@@ -150,7 +147,6 @@ describe('EventsJobsController', () => {
           graffiti: ulid(),
           country_code: faker.address.countryCode('alpha-3'),
         });
-        await usersService.confirm(user);
 
         const upsertBlockMined = jest.spyOn(eventsService, 'upsertBlockMined');
         await eventsJobsController.upsertBlockMinedEvent({
@@ -194,7 +190,6 @@ describe('EventsJobsController', () => {
           graffiti: ulid(),
           country_code: faker.address.countryCode('alpha-3'),
         });
-        await usersService.confirm(user);
 
         await eventsJobsController.deleteBlockMinedEvent({
           block_id: 12345,
@@ -210,7 +205,6 @@ describe('EventsJobsController', () => {
           graffiti: ulid(),
           country_code: faker.address.countryCode('alpha-3'),
         });
-        await usersService.confirm(user);
 
         const { requeue } = await eventsJobsController.deleteBlockMinedEvent({
           block_id: 12345,
@@ -239,7 +233,6 @@ describe('EventsJobsController', () => {
           graffiti: ulid(),
           country_code: faker.address.countryCode('alpha-3'),
         });
-        await usersService.confirm(user);
 
         const { requeue } = await eventsJobsController.deleteBlockMinedEvent({
           block_id: block.id,
@@ -266,7 +259,6 @@ describe('EventsJobsController', () => {
           graffiti: ulid(),
           country_code: faker.address.countryCode('alpha-3'),
         });
-        await usersService.confirm(user);
 
         const deleteBlockMined = jest.spyOn(eventsService, 'deleteBlockMined');
         await eventsJobsController.deleteBlockMinedEvent({
