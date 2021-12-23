@@ -4,6 +4,7 @@
 import { Injectable } from '@nestjs/common';
 import is from '@sindresorhus/is';
 import { ApiConfigService } from '../api-config/api-config.service';
+import { BlocksService } from '../blocks/blocks.service';
 import { serializedBlockFromRecord } from '../blocks/utils/block-translator';
 import {
   DEFAULT_LIMIT,
@@ -24,8 +25,9 @@ import { Block, Event, EventType, Prisma, User } from '.prisma/client';
 @Injectable()
 export class EventsService {
   constructor(
-    private config: ApiConfigService,
-    private prisma: PrismaService,
+    private readonly blocksService: BlocksService,
+    private readonly config: ApiConfigService,
+    private readonly prisma: PrismaService,
   ) {}
 
   async list(options: ListEventsOptions): Promise<{
@@ -66,13 +68,7 @@ export class EventsService {
     for (const record of records) {
       let metadata = {};
       if (record.block_id) {
-        // TODO(rohanjadvani): Replace this call with a service method.
-        // https://linear.app/ironfish/issue/IRO-1422/replace-block-metadata-call-with-service-call
-        const block = await this.prisma.block.findUnique({
-          where: {
-            id: record.block_id,
-          },
-        });
+        const block = await this.blocksService.find(record.block_id);
         if (!block) {
           throw new Error('Invalid database response');
         }
@@ -343,13 +339,7 @@ export class EventsService {
         },
       });
 
-      // TODO(rohanjadvani): Replace this call with a service method.
-      // https://linear.app/ironfish/issue/IRO-1422/replace-block-metadata-call-with-service-call
-      const block = await client.block.findUnique({
-        where: {
-          id: blockId,
-        },
-      });
+      const block = await this.blocksService.find(blockId);
       if (!block) {
         throw new Error('Invalid database response');
       }
