@@ -37,7 +37,6 @@ describe('UsersService', () => {
       it('returns the record', async () => {
         const user = await prisma.user.create({
           data: {
-            confirmation_token: ulid(),
             email: faker.internet.email(),
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
@@ -61,7 +60,6 @@ describe('UsersService', () => {
       it('returns the record', async () => {
         const user = await prisma.user.create({
           data: {
-            confirmation_token: ulid(),
             email: faker.internet.email(),
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
@@ -87,11 +85,9 @@ describe('UsersService', () => {
       it('returns the record', async () => {
         const user = await prisma.user.create({
           data: {
-            confirmation_token: ulid(),
             email: faker.internet.email(),
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
-            confirmed_at: new Date(),
           },
         });
         const record = await usersService.findByGraffiti(user.graffiti);
@@ -112,7 +108,6 @@ describe('UsersService', () => {
       it('returns the record', async () => {
         const user = await prisma.user.create({
           data: {
-            confirmation_token: ulid(),
             email: faker.internet.email(),
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
@@ -147,7 +142,6 @@ describe('UsersService', () => {
         const email = faker.internet.email();
         const user = await prisma.user.create({
           data: {
-            confirmation_token: ulid(),
             email,
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
@@ -172,7 +166,6 @@ describe('UsersService', () => {
         const email = faker.internet.email();
         const user = await prisma.user.create({
           data: {
-            confirmation_token: ulid(),
             email,
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
@@ -256,11 +249,9 @@ describe('UsersService', () => {
         const graffiti = uuid();
         await prisma.user.create({
           data: {
-            confirmation_token: ulid(),
             email: faker.internet.email(),
             graffiti,
             country_code: faker.address.countryCode('alpha-3'),
-            confirmed_at: new Date(),
           },
         });
 
@@ -279,7 +270,6 @@ describe('UsersService', () => {
         const email = faker.internet.email();
         await prisma.user.create({
           data: {
-            confirmation_token: ulid(),
             email: standardizeEmail(email),
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
@@ -301,7 +291,6 @@ describe('UsersService', () => {
         const github = faker.internet.userName();
         await prisma.user.create({
           data: {
-            confirmation_token: ulid(),
             email: faker.internet.email(),
             github,
             graffiti: uuid(),
@@ -366,7 +355,6 @@ describe('UsersService', () => {
       const totalPoints = currentMaxPoints + 2;
       const firstUser = await prisma.user.create({
         data: {
-          confirmation_token: ulid(),
           email: faker.internet.email(),
           graffiti: uuid(),
           country_code: faker.address.countryCode('alpha-3'),
@@ -375,7 +363,6 @@ describe('UsersService', () => {
       });
       const secondUser = await prisma.user.create({
         data: {
-          confirmation_token: ulid(),
           email: faker.internet.email(),
           graffiti: uuid(),
           country_code: faker.address.countryCode('alpha-3'),
@@ -384,7 +371,6 @@ describe('UsersService', () => {
       });
       const thirdUser = await prisma.user.create({
         data: {
-          confirmation_token: ulid(),
           email: faker.internet.email(),
           graffiti: uuid(),
           country_code: faker.address.countryCode('alpha-3'),
