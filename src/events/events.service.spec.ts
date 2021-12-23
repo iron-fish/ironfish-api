@@ -63,7 +63,6 @@ describe('EventsService', () => {
     const user = await prisma.user.create({
       data: {
         confirmation_token: ulid(),
-        confirmed_at: new Date().toISOString(),
         email: faker.internet.email(),
         graffiti: uuid(),
         country_code: faker.address.countryCode('alpha-3'),
@@ -346,7 +345,6 @@ describe('EventsService', () => {
         const user = await prisma.user.create({
           data: {
             confirmation_token: ulid(),
-            confirmed_at: new Date().toISOString(),
             email: faker.internet.email(),
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
@@ -370,7 +368,6 @@ describe('EventsService', () => {
         const user = await prisma.user.create({
           data: {
             confirmation_token: ulid(),
-            confirmed_at: new Date().toISOString(),
             email: faker.internet.email(),
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
@@ -428,7 +425,6 @@ describe('EventsService', () => {
         const user = await prisma.user.create({
           data: {
             confirmation_token: ulid(),
-            confirmed_at: new Date().toISOString(),
             email: faker.internet.email(),
             graffiti: uuid(),
             total_points: currentPointsThisWeek,
@@ -515,7 +511,6 @@ describe('EventsService', () => {
       const user = await prisma.user.create({
         data: {
           confirmation_token: ulid(),
-          confirmed_at: new Date().toISOString(),
           email: faker.internet.email(),
           graffiti: uuid(),
           country_code: faker.address.countryCode('alpha-3'),

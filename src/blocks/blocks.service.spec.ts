@@ -89,7 +89,6 @@ describe('BlocksService', () => {
         graffiti,
         country_code: faker.address.countryCode('alpha-3'),
       });
-      await usersService.confirm(user);
       const options = {
         hash: uuid(),
         sequence: faker.datatype.number(),

@@ -109,7 +109,6 @@ describe('BlocksTransactionsLoader', () => {
           graffiti,
           country_code: faker.address.countryCode('alpha-3'),
         });
-        await usersService.confirm(user);
         const blocks = await blocksTransactionsLoader.bulkUpsert({
           blocks: [
             {
@@ -144,7 +143,6 @@ describe('BlocksTransactionsLoader', () => {
           graffiti,
           country_code: faker.address.countryCode('alpha-3'),
         });
-        await usersService.confirm(user);
         const blocks = await blocksTransactionsLoader.bulkUpsert({
           blocks: [
             {

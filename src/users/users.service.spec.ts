@@ -38,7 +38,6 @@ describe('UsersService', () => {
         const user = await prisma.user.create({
           data: {
             confirmation_token: ulid(),
-            confirmed_at: new Date().toISOString(),
             email: faker.internet.email(),
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
@@ -63,7 +62,6 @@ describe('UsersService', () => {
         const user = await prisma.user.create({
           data: {
             confirmation_token: ulid(),
-            confirmed_at: new Date().toISOString(),
             email: faker.internet.email(),
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
@@ -115,7 +113,6 @@ describe('UsersService', () => {
         const user = await prisma.user.create({
           data: {
             confirmation_token: ulid(),
-            confirmed_at: new Date().toISOString(),
             email: faker.internet.email(),
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
@@ -151,7 +148,6 @@ describe('UsersService', () => {
         const user = await prisma.user.create({
           data: {
             confirmation_token: ulid(),
-            confirmed_at: new Date().toISOString(),
             email,
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
@@ -177,7 +173,6 @@ describe('UsersService', () => {
         const user = await prisma.user.create({
           data: {
             confirmation_token: ulid(),
-            confirmed_at: new Date().toISOString(),
             email,
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
@@ -288,7 +283,6 @@ describe('UsersService', () => {
             email: standardizeEmail(email),
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
-            confirmed_at: new Date(),
           },
         });
 
@@ -312,7 +306,6 @@ describe('UsersService', () => {
             github,
             graffiti: uuid(),
             country_code: faker.address.countryCode('alpha-3'),
-            confirmed_at: new Date(),
           },
         });
 
@@ -374,7 +367,6 @@ describe('UsersService', () => {
       const firstUser = await prisma.user.create({
         data: {
           confirmation_token: ulid(),
-          confirmed_at: new Date().toISOString(),
           email: faker.internet.email(),
           graffiti: uuid(),
           country_code: faker.address.countryCode('alpha-3'),
@@ -384,7 +376,6 @@ describe('UsersService', () => {
       const secondUser = await prisma.user.create({
         data: {
           confirmation_token: ulid(),
-          confirmed_at: new Date().toISOString(),
           email: faker.internet.email(),
           graffiti: uuid(),
           country_code: faker.address.countryCode('alpha-3'),
@@ -394,7 +385,6 @@ describe('UsersService', () => {
       const thirdUser = await prisma.user.create({
         data: {
           confirmation_token: ulid(),
-          confirmed_at: new Date().toISOString(),
           email: faker.internet.email(),
           graffiti: uuid(),
           country_code: faker.address.countryCode('alpha-3'),
@@ -424,20 +414,6 @@ describe('UsersService', () => {
     });
   });
 
-  describe('confirm', () => {
-    it('updates the confirmation timestamp', async () => {
-      const user = await usersService.create({
-        email: faker.internet.email(),
-        graffiti: uuid(),
-        country_code: faker.address.countryCode('alpha-3'),
-      });
-      expect(user.confirmed_at).toBeNull();
-
-      const updatedUser = await usersService.confirm(user);
-      expect(updatedUser.confirmed_at).not.toBeNull();
-    });
-  });
-
   describe('findDuplicateUser', () => {
     describe('with a duplicate discord', () => {
       it('returns the duplicate records', async () => {
@@ -453,7 +429,6 @@ describe('UsersService', () => {
           email: faker.internet.email(),
           graffiti: uuid(),
         });
-        await usersService.confirm(duplicateUser);
 
         assert.ok(duplicateUser.discord);
         const duplicateUsers = await usersService.findDuplicateUser(
@@ -479,7 +454,6 @@ describe('UsersService', () => {
           email: faker.internet.email(),
           graffiti: uuid(),
         });
-        await usersService.confirm(duplicateUser);
 
         const duplicateUsers = await usersService.findDuplicateUser(
           user,
@@ -506,7 +480,6 @@ describe('UsersService', () => {
           graffiti: uuid(),
           telegram: ulid(),
         });
-        await usersService.confirm(duplicateUser);
 
         assert.ok(duplicateUser.telegram);
         const duplicateUsers = await usersService.findDuplicateUser(
