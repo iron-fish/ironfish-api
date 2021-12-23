@@ -32,7 +32,7 @@ describe('UsersService', () => {
     await app.close();
   });
 
-  describe('findConfirmed', () => {
+  describe('find', () => {
     describe('with a valid id', () => {
       it('returns the record', async () => {
         const user = await prisma.user.create({
@@ -44,7 +44,7 @@ describe('UsersService', () => {
             country_code: faker.address.countryCode('alpha-3'),
           },
         });
-        const record = await usersService.findConfirmed(user.id);
+        const record = await usersService.find(user.id);
         expect(record).not.toBeNull();
         expect(record).toMatchObject(user);
       });
@@ -52,7 +52,7 @@ describe('UsersService', () => {
 
     describe('with a missing id', () => {
       it('returns null', async () => {
-        expect(await usersService.findConfirmed(100000)).toBeNull();
+        expect(await usersService.find(100000)).toBeNull();
       });
     });
   });
