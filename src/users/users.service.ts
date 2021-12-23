@@ -7,7 +7,6 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import is from '@sindresorhus/is';
-import { ulid } from 'ulid';
 import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
 import { standardizeEmail } from '../common/utils/email';
@@ -123,7 +122,6 @@ export class UsersService {
           telegram,
           github,
           country_code: countryCode,
-          confirmation_token: ulid(),
         },
       }),
     ]);

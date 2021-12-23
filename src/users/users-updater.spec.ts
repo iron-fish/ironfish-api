@@ -48,7 +48,6 @@ describe('UsersUpdater', () => {
     });
     const user = await prisma.user.create({
       data: {
-        confirmation_token: ulid(),
         discord: faker.internet.userName(),
         email: faker.internet.email(),
         graffiti,
@@ -75,7 +74,6 @@ describe('UsersUpdater', () => {
         const { user: existingUser } = await setupBlockMined();
         const user = await prisma.user.create({
           data: {
-            confirmation_token: ulid(),
             email: faker.internet.email(),
             graffiti: ulid(),
             country_code: faker.address.countryCode('alpha-3'),
@@ -94,7 +92,6 @@ describe('UsersUpdater', () => {
       it('throws an UnprocessableEntityException', async () => {
         const existingUser = await prisma.user.create({
           data: {
-            confirmation_token: ulid(),
             discord: faker.internet.userName(),
             email: faker.internet.email(),
             graffiti: ulid(),
@@ -105,7 +102,6 @@ describe('UsersUpdater', () => {
         });
         const user = await prisma.user.create({
           data: {
-            confirmation_token: ulid(),
             email: faker.internet.email(),
             graffiti: ulid(),
             country_code: faker.address.countryCode('alpha-3'),
@@ -124,7 +120,6 @@ describe('UsersUpdater', () => {
         const { user: existingUser } = await setupBlockMined();
         const user = await prisma.user.create({
           data: {
-            confirmation_token: ulid(),
             email: faker.internet.email(),
             graffiti: ulid(),
             country_code: faker.address.countryCode('alpha-3'),
@@ -148,7 +143,6 @@ describe('UsersUpdater', () => {
         };
         const user = await prisma.user.create({
           data: {
-            confirmation_token: ulid(),
             email: faker.internet.email(),
             graffiti: ulid(),
             country_code: faker.address.countryCode('alpha-3'),
