@@ -22,7 +22,7 @@ export class PrismaService
           )}?connection_limit=${config.getWithDefault(
             'CONNECTION_LIMIT',
             DEFAULT_CONNECTION_LIMIT,
-          )}&pool_timeout=20${config.getWithDefault(
+          )}&pool_timeout=${config.getWithDefault(
             'POOL_TIMEOUT',
             DEFAULT_POOL_TIMEOUT,
           )}`,
