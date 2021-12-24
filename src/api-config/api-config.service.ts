@@ -16,6 +16,14 @@ export class ApiConfigService {
     return value;
   }
 
+  getWithDefault<T = unknown>(name: string, defaultValue: T): T {
+    const value = this.config.get<T>(name);
+    if (value === undefined) {
+      return defaultValue;
+    }
+    return value;
+  }
+
   isStaging(): boolean {
     return this.get<string>('NODE_ENV') === 'staging';
   }
