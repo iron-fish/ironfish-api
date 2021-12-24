@@ -87,7 +87,10 @@ function clusterize(callback: () => Promise<void>): void {
       process.exit(0);
     });
 
-    const workers = os.cpus().length;
+    const cpuCount = os.cpus().length;
+    const workers = process.env.WORKER_COUNT
+      ? Math.min(Number(process.env.WORKER_COUNT), cpuCount)
+      : cpuCount;
     for (let i = 0; i < workers; i++) {
       cluster.fork();
     }
