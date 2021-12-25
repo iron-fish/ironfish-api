@@ -8,6 +8,8 @@ import {
   RequestMethod,
 } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import joi from 'joi';
 import { ApiConfigModule } from './api-config/api-config.module';
 import { AuthModule } from './auth/auth.module';
@@ -41,6 +43,9 @@ export const REST_MODULES = [
   UsersRestModule,
 ];
 
+const DEFAULT_TTL = 60;
+const DEFAULT_REQUEST_LIMIT = 10;
+
 @Module({
   imports: [
     ApiConfigModule,
@@ -62,8 +67,18 @@ export const REST_MODULES = [
     }),
     DatadogModule,
     LoggerModule,
+    ThrottlerModule.forRoot({
+      ttl: DEFAULT_TTL,
+      limit: DEFAULT_REQUEST_LIMIT,
+    }),
     ...JOBS_MODULES,
     ...REST_MODULES,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule implements NestModule {
