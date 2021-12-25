@@ -24,6 +24,7 @@ export async function bootstrapTestApp(): Promise<INestApplication> {
         validationSchema: joi.object({
           API_URL: joi.string().required(),
           BLOCK_EXPLORER_URL: joi.string().required(),
+          DATABASE_CONNECTION_POOL_URL: joi.string().required(),
           DATABASE_URL: joi.string().required(),
           DATADOG_URL: joi.string().required(),
           INCENTIVIZED_TESTNET_URL: joi.string().required(),
