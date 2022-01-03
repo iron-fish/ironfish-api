@@ -18,14 +18,14 @@ export class PrismaService
       datasources: {
         db: {
           url: `${config.get<string>(
-            'DATABASE_URL',
+            'DATABASE_CONNECTION_POOL_URL',
           )}?connection_limit=${config.getWithDefault(
             'CONNECTION_LIMIT',
             DEFAULT_CONNECTION_LIMIT,
           )}&pool_timeout=${config.getWithDefault(
             'POOL_TIMEOUT',
             DEFAULT_POOL_TIMEOUT,
-          )}`,
+          )}&pgbouncer=true`,
         },
       },
     });
