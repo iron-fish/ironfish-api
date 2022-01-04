@@ -6,6 +6,7 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
+import { MS_PER_DAY } from '../common/constants';
 import { PrismaService } from '../prisma/prisma.service';
 import { CompleteFaucetTransactionOptions } from './interfaces/complete-faucet-transaction-options';
 import { CreateFaucetTransactionOptions } from './interfaces/create-faucet-transaction-options';
@@ -13,7 +14,8 @@ import { FaucetTransactionsStatus } from './interfaces/faucet-transactions-statu
 import { NextFaucetTransactionsOptions } from './interfaces/next-faucet-transactions-options';
 import { FaucetTransaction, Prisma } from '.prisma/client';
 
-export const FAUCET_REQUESTS_LIMIT = 3;
+export const FAUCET_REQUESTS_LIMIT = 2;
+export const FAUCET_TIME_LIMIT_MS = 3 * MS_PER_DAY;
 
 @Injectable()
 export class FaucetTransactionsService {
@@ -34,10 +36,12 @@ export class FaucetTransactionsService {
   async create({
     email,
     publicKey,
+    createdAt,
   }: CreateFaucetTransactionOptions): Promise<FaucetTransaction> {
     return this.prisma.$transaction(async (prisma) => {
       const count = await this.prisma.faucetTransaction.count({
         where: {
+          created_at: { gte: new Date(Date.now() - FAUCET_TIME_LIMIT_MS) },
           OR: [
             { email },
             {
@@ -46,14 +50,17 @@ export class FaucetTransactionsService {
           ],
         },
       });
+
       if (count >= FAUCET_REQUESTS_LIMIT) {
         throw new UnprocessableEntityException({
           code: 'faucet_max_requests_reached',
           message: 'Too many faucet requests',
         });
       }
+
       return prisma.faucetTransaction.create({
         data: {
+          created_at: createdAt,
           email,
           public_key: publicKey,
         },

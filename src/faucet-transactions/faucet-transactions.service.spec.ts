@@ -12,6 +12,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import {
   FAUCET_REQUESTS_LIMIT,
+  FAUCET_TIME_LIMIT_MS,
   FaucetTransactionsService,
 } from './faucet-transactions.service';
 
@@ -76,6 +77,30 @@ describe('FaucetTransactionService', () => {
             publicKey,
           }),
         ).rejects.toThrow(UnprocessableEntityException);
+      });
+
+      it('limits in time range', async () => {
+        const email = faker.internet.email();
+        const publicKey = ulid();
+
+        const pastThreshold = new Date(Date.now() - FAUCET_TIME_LIMIT_MS * 2);
+
+        for (let i = 0; i < FAUCET_REQUESTS_LIMIT; i++) {
+          await faucetTransactionsService.create({
+            email,
+            publicKey,
+            createdAt: pastThreshold,
+          });
+        }
+
+        await expect(
+          faucetTransactionsService.create({
+            email,
+            publicKey,
+          }),
+        ).resolves.toMatchObject({
+          email,
+        });
       });
     });
 

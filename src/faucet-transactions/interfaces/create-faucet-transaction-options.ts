@@ -4,4 +4,5 @@
 export interface CreateFaucetTransactionOptions {
   publicKey: string;
   email?: string;
+  createdAt?: Date;
 }
