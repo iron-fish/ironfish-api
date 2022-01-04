@@ -5,9 +5,6 @@ import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { ApiConfigService } from '../api-config/api-config.service';
 
-const DEFAULT_CONNECTION_LIMIT = 10;
-const DEFAULT_POOL_TIMEOUT = 10;
-
 @Injectable()
 export class PrismaService
   extends PrismaClient
@@ -19,13 +16,7 @@ export class PrismaService
         db: {
           url: `${config.get<string>(
             'DATABASE_CONNECTION_POOL_URL',
-          )}?connection_limit=${config.getWithDefault(
-            'CONNECTION_LIMIT',
-            DEFAULT_CONNECTION_LIMIT,
-          )}&pool_timeout=${config.getWithDefault(
-            'POOL_TIMEOUT',
-            DEFAULT_POOL_TIMEOUT,
-          )}&pgbouncer=true`,
+          )}?pgbouncer=true`,
         },
       },
     });
