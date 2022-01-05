@@ -466,7 +466,10 @@ export class EventsService {
             event_types.type,
             RANK () OVER ( 
               PARTITION BY event_types.type
-              ORDER BY COALESCE(user_event_points.points, 0) DESC, users.created_at ASC
+              ORDER BY
+                COALESCE(user_event_points.points, 0) DESC,
+                COALESCE(user_event_points.latest_event_occurred_at, NOW()) ASC,
+                users.created_at ASC
             ) AS rank 
           FROM
             users
@@ -480,12 +483,14 @@ export class EventsService {
               SELECT
                 user_id,
                 type,
-                SUM(points) AS points
+                SUM(points) AS points,
+                MAX(occurred_at) AS latest_event_occurred_at
               FROM
                 (
                   SELECT
                     user_id,
                     type,
+                    occurred_at,
                     points
                   FROM
                     events
