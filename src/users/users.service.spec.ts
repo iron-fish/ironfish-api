@@ -478,6 +478,33 @@ describe('UsersService', () => {
         expect(duplicateUsers[0].id).toBe(duplicateUser.id);
       });
     });
+
+    describe('with empty strings', () => {
+      it('ignores the empty filters and returns the duplicate records', async () => {
+        const user = await usersService.create({
+          country_code: faker.address.countryCode('alpha-3'),
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          telegram: ulid(),
+        });
+        const duplicateUser = await usersService.create({
+          country_code: faker.address.countryCode('alpha-3'),
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          telegram: ulid(),
+        });
+
+        assert.ok(duplicateUser.telegram);
+        const duplicateUsers = await usersService.findDuplicateUser(
+          user,
+          { telegram: duplicateUser.telegram, discord: '' },
+          prisma,
+        );
+        expect(duplicateUsers).toHaveLength(1);
+        assert.ok(duplicateUsers[0]);
+        expect(duplicateUsers[0].id).toBe(duplicateUser.id);
+      });
+    });
   });
 
   describe('update', () => {

@@ -419,9 +419,21 @@ export class UsersService {
     client: BasePrismaClient,
   ): Promise<User[]> {
     const { discord, graffiti, telegram } = options;
+
+    const filters = [];
+    if (discord && discord.length > 0) {
+      filters.push({ discord });
+    }
+    if (graffiti && graffiti.length > 0) {
+      filters.push({ graffiti });
+    }
+    if (telegram && telegram.length > 0) {
+      filters.push({ telegram });
+    }
+
     return client.user.findMany({
       where: {
-        OR: [{ discord }, { graffiti }, { telegram }],
+        OR: filters,
         NOT: {
           id: user.id,
         },
