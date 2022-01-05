@@ -21,6 +21,10 @@ export class UsersUpdater {
       const { discord, graffiti, telegram } = options;
 
       if (graffiti && user.graffiti !== graffiti) {
+        await prisma.$executeRawUnsafe(
+          'SELECT pg_advisory_xact_lock(HASHTEXT($1));',
+          graffiti,
+        );
         const minedBlocksForCurrentGraffiti =
           await this.blocksService.countByGraffiti(user.graffiti, prisma);
         if (minedBlocksForCurrentGraffiti > 0) {
