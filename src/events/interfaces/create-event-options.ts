@@ -9,4 +9,5 @@ export interface CreateEventOptions {
   points?: number;
   type: EventType;
   userId: number;
+  url?: string;
 }

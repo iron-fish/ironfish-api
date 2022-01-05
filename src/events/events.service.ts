@@ -292,7 +292,7 @@ export class EventsService {
   }
 
   async createWithClient(
-    { blockId, occurredAt, points, type, userId }: CreateEventOptions,
+    { blockId, occurredAt, points, type, userId, url }: CreateEventOptions,
     client: BasePrismaClient,
   ): Promise<EventWithMetadata | null> {
     occurredAt = occurredAt || new Date();
