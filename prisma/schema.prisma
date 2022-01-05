@@ -20,7 +20,7 @@ model Event {
   block_id    Int?      @unique(map: "uq_events_on_block_id")
   block       Block?    @relation(fields: [block_id], references: [id])
   user        User      @relation(fields: [user_id], references: [id])
-  url         String    @db.VarChar @default(value: "")
+  url         String?   @db.VarChar
 
   @@index([block_id], name: "index_events_on_block_id")
   @@index([user_id], name: "index_events_on_user_id")
