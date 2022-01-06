@@ -58,6 +58,7 @@ model Block {
   network_version     Int
   transactions_count  Int
   timestamp           DateTime           @db.Timestamp(6)
+  delta               Int?
   graffiti            String             @db.VarChar
   size                Int?
   difficulty          BigInt
