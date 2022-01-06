@@ -89,21 +89,6 @@ describe('EventsService', () => {
     return { block, event, user };
   };
 
-  const setupPullRequestWithEvent = async (url?: string, points?: number) => {
-    const user = await setupUser(points);
-    const event = await prisma.event.create({
-      data: {
-        occurred_at: new Date(),
-        points: points ?? POINTS_PER_CATEGORY.BLOCK_MINED,
-        type: EventType.BLOCK_MINED,
-        block_id: 0,
-        user_id: user.id,
-        url: url,
-      },
-    });
-    return { event, user };
-  };
-
   describe('list', () => {
     const setup = async () => {
       const user = await prisma.user.create({

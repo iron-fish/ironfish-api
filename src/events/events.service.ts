@@ -20,7 +20,6 @@ import { CreateEventOptions } from './interfaces/create-event-options';
 import { EventWithMetadata } from './interfaces/event-with-metadata';
 import { ListEventsOptions } from './interfaces/list-events-options';
 import { SerializedEventMetrics } from './interfaces/serialized-event-metrics';
-import { serializedEventFromRecordWithMetadata } from './utils/event-translator';
 import { Block, Event, EventType, Prisma, User } from '.prisma/client';
 
 @Injectable()
