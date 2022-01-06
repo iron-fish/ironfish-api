@@ -41,6 +41,18 @@ describe('EventsService', () => {
     await app.close();
   });
 
+  const setupUser = async (points?: number) => {
+    const user = await prisma.user.create({
+      data: {
+        email: faker.internet.email(),
+        graffiti: uuid(),
+        country_code: faker.address.countryCode('alpha-3'),
+        total_points: points ?? POINTS_PER_CATEGORY.BLOCK_MINED,
+      },
+    });
+    return user;
+  };
+
   const setupBlockMined = async (points?: number) => {
     const hash = uuid();
     const sequence = faker.datatype.number();
@@ -59,14 +71,7 @@ describe('EventsService', () => {
         difficulty: faker.datatype.number(),
       },
     });
-    const user = await prisma.user.create({
-      data: {
-        email: faker.internet.email(),
-        graffiti: uuid(),
-        country_code: faker.address.countryCode('alpha-3'),
-        total_points: points ?? POINTS_PER_CATEGORY.BLOCK_MINED,
-      },
-    });
+    const user = await setupUser(points);
     return { block, user };
   };
 
@@ -82,6 +87,21 @@ describe('EventsService', () => {
       },
     });
     return { block, event, user };
+  };
+
+  const setupPullRequestWithEvent = async (url?: string, points?: number) => {
+    const user = await setupUser(points);
+    const event = await prisma.event.create({
+      data: {
+        occurred_at: new Date(),
+        points: points ?? POINTS_PER_CATEGORY.BLOCK_MINED,
+        type: EventType.BLOCK_MINED,
+        block_id: 0,
+        user_id: user.id,
+        url: url,
+      },
+    });
+    return { event, user };
   };
 
   describe('list', () => {
@@ -536,6 +556,54 @@ describe('EventsService', () => {
         user_id: user.id,
         points,
         type,
+      });
+    });
+
+    describe('when user is awarded manually', () => {
+      it('create event for merged pull request', async () => {
+        const points = 100;
+        const user = await setupUser(points);
+        const type = EventType.PULL_REQUEST_MERGED;
+        const url =
+          'https://github.com/iron-fish/ironfish/pull/' + uuid().toString();
+
+        const event = await eventsService.create({
+          type,
+          userId: user.id,
+          points,
+          url,
+        });
+        expect(event).toMatchObject({
+          id: expect.any(Number),
+          user_id: user.id,
+          points,
+          type,
+          url,
+        });
+      });
+
+      it('returns existing event if try to award the second time for the same pull request', async () => {
+        const points = 100;
+        const user1 = await setupUser(points);
+        const user2 = await setupUser(points);
+
+        const type = EventType.PULL_REQUEST_MERGED;
+        const url =
+          'https://github.com/iron-fish/ironfish/pull/' + uuid().toString();
+
+        const event = await eventsService.create({
+          type,
+          userId: user1.id,
+          points,
+          url,
+        });
+        const duplicateEvent = await eventsService.create({
+          type,
+          userId: user2.id,
+          points,
+          url,
+        });
+        expect(event).toStrictEqual(duplicateEvent);
       });
     });
   });

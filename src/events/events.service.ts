@@ -20,6 +20,7 @@ import { CreateEventOptions } from './interfaces/create-event-options';
 import { EventWithMetadata } from './interfaces/event-with-metadata';
 import { ListEventsOptions } from './interfaces/list-events-options';
 import { SerializedEventMetrics } from './interfaces/serialized-event-metrics';
+import { serializedEventFromRecordWithMetadata } from './utils/event-translator';
 import { Block, Event, EventType, Prisma, User } from '.prisma/client';
 
 @Injectable()
@@ -339,6 +340,16 @@ export class EventsService {
       Math.max(weeklyLimitForEventType - pointsThisWeek, 0),
       points ?? POINTS_PER_CATEGORY[type],
     );
+
+    if (url) {
+      const existingEvent = await this.getEventByUrl(url);
+      if (existingEvent) {
+        return {
+          ...existingEvent,
+          metadata: {},
+        };
+      }
+    }
 
     let existingEvent;
     let metadata = {};
