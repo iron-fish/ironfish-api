@@ -13,5 +13,5 @@ export interface UpsertBlockOptions {
   graffiti: string;
   size: number;
   previousBlockHash?: string;
-  time_since_last_block_ms?: number;
+  timeSinceLastBlockMs?: number;
 }

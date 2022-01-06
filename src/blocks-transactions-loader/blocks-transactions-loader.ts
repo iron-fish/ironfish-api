@@ -39,21 +39,21 @@ export class BlocksTransactionsLoader {
       }
 
       for (const block of blocks) {
-        let time_since_last_block_ms = undefined;
+        let timeSinceLastBlockMs = undefined;
         if (block.previous_block_hash !== undefined) {
           const previousBlock = previousHashes.get(block.previous_block_hash);
-          if (previousBlock !== undefined) {
+          if (previousBlock) {
             const prevTimestamp = previousBlock.timestamp;
-            time_since_last_block_ms =
+            timeSinceLastBlockMs =
               block.timestamp.getTime() - prevTimestamp.getTime();
-          } else if (!previousHashes.has(block.previous_block_hash)) {
+          } else {
             const previousBlock = await this.prisma.block.findFirst({
               where: {
                 hash: block.previous_block_hash,
               },
             });
             if (previousBlock) {
-              time_since_last_block_ms =
+              timeSinceLastBlockMs =
                 block.timestamp.getTime() - previousBlock.timestamp.getTime();
             }
           }
@@ -65,7 +65,7 @@ export class BlocksTransactionsLoader {
           upsertBlockMinedOptions,
         } = await this.blocksService.upsert(prisma, {
           ...block,
-          time_since_last_block_ms,
+          timeSinceLastBlockMs,
           previousBlockHash: block.previous_block_hash,
           transactionsCount: block.transactions.length,
         });
