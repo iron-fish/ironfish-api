@@ -66,14 +66,22 @@ export class EventsController {
         transform: true,
       }),
     )
-    { graffiti, points, type, occurred_at: occurredAt }: CreateEventDto,
+    { graffiti, points, type, occurred_at: occurredAt, url }: CreateEventDto,
   ): Promise<SerializedEvent | null> {
     const user = await this.usersService.findByGraffitiOrThrow(graffiti);
+    // validate that event with this url is already in db, so ignore double award
+    if (url && typeof url == 'string') {
+      if ((await this.eventsService.getEventByUrl(url)) != null) {
+        return null;
+      }
+    }
+
     const event = await this.eventsService.create({
       type,
       points,
       occurredAt,
       userId: user.id,
+      url: url,
     });
     if (!event) {
       return null;

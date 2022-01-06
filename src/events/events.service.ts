@@ -183,6 +183,16 @@ export class EventsService {
     };
   }
 
+  async getEventByUrl(url: string): Promise<Event | null> {
+    return await this.prisma.$transaction(async (prisma) => {
+      return await prisma.event.findFirst({
+        where: {
+          url: url,
+        },
+      });
+    });
+  }
+
   async getTotalEventMetricsAndPointsForUser(
     user: User,
     start: Date,
@@ -394,6 +404,7 @@ export class EventsService {
           points: adjustedPoints,
           occurred_at: occurredAt.toISOString(),
           user_id: userId,
+          url: url,
         },
       });
       return {
