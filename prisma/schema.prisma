@@ -48,22 +48,22 @@ model User {
 }
 
 model Block {
-  id                  Int                @id @default(autoincrement())
-  created_at          DateTime           @default(now()) @db.Timestamp(6)
-  updated_at          DateTime           @default(now()) @updatedAt @db.Timestamp(6)
-  hash                String             @db.VarChar
-  sequence            Int
-  previous_block_hash String?            @db.VarChar
-  main                Boolean
-  network_version     Int
-  transactions_count  Int
-  timestamp           DateTime           @db.Timestamp(6)
-  delta               Int?
-  graffiti            String             @db.VarChar
-  size                Int?
-  difficulty          BigInt
-  blocks_transactions BlockTransaction[]
-  event               Event?
+  id                       Int                @id @default(autoincrement())
+  created_at               DateTime           @default(now()) @db.Timestamp(6)
+  updated_at               DateTime           @default(now()) @updatedAt @db.Timestamp(6)
+  hash                     String             @db.VarChar
+  sequence                 Int
+  previous_block_hash      String?            @db.VarChar
+  main                     Boolean
+  network_version          Int
+  transactions_count       Int
+  timestamp                DateTime           @db.Timestamp(6)
+  time_since_last_block_ms Int?
+  graffiti                 String             @db.VarChar
+  size                     Int?
+  difficulty               BigInt
+  blocks_transactions      BlockTransaction[]
+  event                    Event?
 
   @@unique([hash, network_version], name: "uq_blocks_on_hash_and_network_version")
   @@index([hash], name: "index_blocks_on_hash")
