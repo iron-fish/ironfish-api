@@ -42,7 +42,7 @@ describe('EventsService', () => {
   });
 
   const setupUser = async (points?: number) => {
-    const user = await prisma.user.create({
+    return prisma.user.create({
       data: {
         email: faker.internet.email(),
         graffiti: uuid(),
