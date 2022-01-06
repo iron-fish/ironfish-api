@@ -421,13 +421,13 @@ export class UsersService {
     const { discord, graffiti, telegram } = options;
 
     const filters = [];
-    if (discord && discord.length > 0) {
+    if (discord) {
       filters.push({ discord });
     }
-    if (graffiti && graffiti.length > 0) {
+    if (graffiti) {
       filters.push({ graffiti });
     }
-    if (telegram && telegram.length > 0) {
+    if (telegram) {
       filters.push({ telegram });
     }
 
