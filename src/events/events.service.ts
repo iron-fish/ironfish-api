@@ -404,7 +404,7 @@ export class EventsService {
           points: adjustedPoints,
           occurred_at: occurredAt.toISOString(),
           user_id: userId,
-          url: url,
+          url,
         },
       });
       return {
