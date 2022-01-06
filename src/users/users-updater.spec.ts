@@ -6,19 +6,25 @@ import assert from 'assert';
 import faker from 'faker';
 import { ulid } from 'ulid';
 import { v4 as uuid } from 'uuid';
+import { BlocksService } from '../blocks/blocks.service';
 import { POINTS_PER_CATEGORY } from '../common/constants';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
+import { UsersService } from './users.service';
 import { UsersUpdater } from './users-updater';
 
 describe('UsersUpdater', () => {
   let app: INestApplication;
+  let blocksService: BlocksService;
   let prisma: PrismaService;
+  let usersService: UsersService;
   let usersUpdater: UsersUpdater;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
+    blocksService = app.get(BlocksService);
     prisma = app.get(PrismaService);
+    usersService = app.get(UsersService);
     usersUpdater = app.get(UsersUpdater);
     await app.init();
   });
@@ -85,6 +91,51 @@ describe('UsersUpdater', () => {
         await expect(
           usersUpdater.update(user, { discord: existingUser.discord }),
         ).rejects.toThrow(UnprocessableEntityException);
+      });
+    });
+
+    describe('when two users attempt to claim the same graffiti', () => {
+      it('throws an UnprocessableEntityException', async () => {
+        // Manually sleep the first update so the second update begins before
+        // the first transaction completes
+        jest
+          .spyOn(blocksService, 'countByGraffiti')
+          .mockImplementationOnce(async (graffiti, client) => {
+            const sleep = (ms: number) =>
+              new Promise((resolve) => setTimeout(resolve, ms));
+            await sleep(10);
+            return blocksService.countByGraffiti(graffiti, client);
+          });
+
+        const firstUser = await prisma.user.create({
+          data: {
+            email: faker.internet.email(),
+            graffiti: ulid(),
+            country_code: faker.address.countryCode('alpha-3'),
+            total_points: 0,
+          },
+        });
+        const secondUser = await prisma.user.create({
+          data: {
+            email: faker.internet.email(),
+            graffiti: ulid(),
+            country_code: faker.address.countryCode('alpha-3'),
+            total_points: 0,
+          },
+        });
+        const graffiti = ulid();
+
+        // Expect one update to fail given a duplicate graffiti
+        await expect(
+          Promise.all([
+            usersUpdater.update(firstUser, { graffiti }),
+            usersUpdater.update(secondUser, { graffiti }),
+          ]),
+        ).rejects.toThrow(UnprocessableEntityException);
+
+        // Expect one update to succeed
+        const user = await usersService.findByGraffiti(graffiti);
+        expect(user).not.toBeNull();
       });
     });
 
