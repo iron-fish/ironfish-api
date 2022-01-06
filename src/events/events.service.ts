@@ -185,7 +185,7 @@ export class EventsService {
 
   async getEventByUrl(url: string): Promise<Event | null> {
     return this.prisma.$transaction(async (prisma) => {
-      return await prisma.event.findFirst({
+      return prisma.event.findFirst({
         where: {
           url: url,
         },
