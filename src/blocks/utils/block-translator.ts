@@ -18,6 +18,7 @@ export function serializedBlockFromRecord(block: Block): SerializedBlock {
     timestamp: block.timestamp.toISOString(),
     graffiti: block.graffiti,
     size: block.size,
+    delta: block.delta,
     object: 'block',
   };
 }
@@ -39,6 +40,7 @@ export function serializedBlockFromRecordWithTransactions(
     timestamp: block.timestamp.toISOString(),
     graffiti: block.graffiti,
     size: block.size,
+    delta: block.delta,
     object: 'block',
     transactions,
   };
