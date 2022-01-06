@@ -13,4 +13,5 @@ export interface UpsertBlockOptions {
   graffiti: string;
   size: number;
   previousBlockHash?: string;
+  delta?: number;
 }

@@ -46,7 +46,11 @@ describe('BlocksTransactionsLoader', () => {
 
   describe('bulkUpsert', () => {
     it('stores a Block, Transaction, and BlockTransaction record', async () => {
-      const blockHash = uuid();
+      const blockHash1 = uuid();
+      const blockHash2 = uuid();
+      const timestamp1 = new Date();
+      const timestamp2 = new Date();
+
       const transaction = {
         hash: uuid(),
         fee: faker.datatype.number(),
@@ -57,13 +61,24 @@ describe('BlocksTransactionsLoader', () => {
       const blocks = await blocksTransactionsLoader.bulkUpsert({
         blocks: [
           {
-            hash: blockHash,
+            hash: blockHash1,
             sequence: faker.datatype.number(),
             difficulty: faker.datatype.number(),
-            timestamp: new Date(),
+            timestamp: timestamp1,
             type: BlockOperation.CONNECTED,
             graffiti: uuid(),
             previous_block_hash: uuid(),
+            size: faker.datatype.number(),
+            transactions: [transaction],
+          },
+          {
+            hash: blockHash2,
+            sequence: faker.datatype.number(),
+            difficulty: faker.datatype.number(),
+            timestamp: timestamp2,
+            type: BlockOperation.CONNECTED,
+            graffiti: uuid(),
+            previous_block_hash: blockHash1,
             size: faker.datatype.number(),
             transactions: [transaction],
           },
@@ -72,7 +87,7 @@ describe('BlocksTransactionsLoader', () => {
 
       expect(blocks[0]).toMatchObject({
         id: expect.any(Number),
-        hash: blockHash,
+        hash: blockHash1,
         sequence: expect.any(Number),
         difficulty: expect.any(BigInt),
         main: true,
@@ -81,6 +96,21 @@ describe('BlocksTransactionsLoader', () => {
         graffiti: expect.any(String),
         previous_block_hash: expect.any(String),
         size: expect.any(Number),
+        delta: null,
+      });
+
+      expect(blocks[1]).toMatchObject({
+        id: expect.any(Number),
+        hash: blockHash2,
+        sequence: expect.any(Number),
+        difficulty: expect.any(BigInt),
+        main: true,
+        timestamp: expect.any(Date),
+        transactions_count: expect.any(Number),
+        graffiti: expect.any(String),
+        previous_block_hash: expect.any(String),
+        size: expect.any(Number),
+        delta: timestamp2.getTime() - timestamp1.getTime(),
       });
 
       expect(blocks[0].transactions[0]).toMatchObject({

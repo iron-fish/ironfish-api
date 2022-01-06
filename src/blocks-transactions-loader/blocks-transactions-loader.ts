@@ -4,7 +4,7 @@
 import { Injectable } from '@nestjs/common';
 import { Block, Transaction } from '@prisma/client';
 import { BlocksService } from '../blocks/blocks.service';
-import { UpsertBlocksDto } from '../blocks/dto/upsert-blocks.dto';
+import { BlockDto, UpsertBlocksDto } from '../blocks/dto/upsert-blocks.dto';
 import { BlocksDailyService } from '../blocks-daily/blocks-daily.service';
 import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
 import { DeleteBlockMinedEventOptions } from '../events/interfaces/delete-block-mined-event-options';
@@ -33,13 +33,39 @@ export class BlocksTransactionsLoader {
 
     const response = await this.prisma.$transaction(async (prisma) => {
       const records: (Block & { transactions: Transaction[] })[] = [];
+      const previousHashes = new Map<string, BlockDto>();
       for (const block of blocks) {
+        previousHashes.set(block.hash, block);
+      }
+
+      for (const block of blocks) {
+        let delta = undefined;
+        if (block.previous_block_hash !== undefined) {
+          if (previousHashes.has(block.previous_block_hash)) {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            const prevTimestamp = previousHashes.get(
+              block.previous_block_hash,
+            )!.timestamp;
+            delta = block.timestamp.getTime() - prevTimestamp.getTime();
+          } else if (!previousHashes.has(block.previous_block_hash)) {
+            const prevBlock = await this.prisma.block.findFirst({
+              where: {
+                hash: block.previous_block_hash,
+              },
+            });
+            if (prevBlock) {
+              delta = block.timestamp.getTime() - prevBlock.timestamp.getTime();
+            }
+          }
+        }
+
         const {
           block: createdBlock,
           deleteBlockMinedOptions,
           upsertBlockMinedOptions,
         } = await this.blocksService.upsert(prisma, {
           ...block,
+          delta,
           previousBlockHash: block.previous_block_hash,
           transactionsCount: block.transactions.length,
         });

@@ -47,6 +47,7 @@ export class BlocksService {
       transactionsCount,
       type,
       size,
+      delta,
     }: UpsertBlockOptions,
   ): Promise<{
     block: Block;
@@ -74,6 +75,7 @@ export class BlocksService {
         previous_block_hash: previousBlockHash,
         size,
         difficulty,
+        delta,
       },
       update: {
         sequence,
@@ -84,6 +86,7 @@ export class BlocksService {
         previous_block_hash: previousBlockHash,
         size,
         difficulty,
+        delta,
       },
       where: {
         uq_blocks_on_hash_and_network_version: {
