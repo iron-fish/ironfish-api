@@ -66,14 +66,16 @@ export class EventsController {
         transform: true,
       }),
     )
-    { graffiti, points, type, occurred_at: occurredAt }: CreateEventDto,
+    { graffiti, points, type, occurred_at: occurredAt, url }: CreateEventDto,
   ): Promise<SerializedEvent | null> {
     const user = await this.usersService.findByGraffitiOrThrow(graffiti);
+
     const event = await this.eventsService.create({
       type,
       points,
       occurredAt,
       userId: user.id,
+      url,
     });
     if (!event) {
       return null;

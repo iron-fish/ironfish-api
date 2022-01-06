@@ -29,4 +29,8 @@ export class CreateEventDto {
   @IsDate()
   @Type(() => Date)
   readonly occurred_at?: Date;
+
+  @IsOptional()
+  @IsString()
+  readonly url?: string;
 }

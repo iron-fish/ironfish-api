@@ -183,6 +183,14 @@ export class EventsService {
     };
   }
 
+  private async getEventByUrl(url: string): Promise<Event | null> {
+    return this.prisma.event.findFirst({
+      where: {
+        url: url,
+      },
+    });
+  }
+
   async getTotalEventMetricsAndPointsForUser(
     user: User,
     start: Date,
@@ -292,7 +300,7 @@ export class EventsService {
   }
 
   async createWithClient(
-    { blockId, occurredAt, points, type, userId }: CreateEventOptions,
+    { blockId, occurredAt, points, type, userId, url }: CreateEventOptions,
     client: BasePrismaClient,
   ): Promise<EventWithMetadata | null> {
     occurredAt = occurredAt || new Date();
@@ -329,9 +337,23 @@ export class EventsService {
       Math.max(weeklyLimitForEventType - pointsThisWeek, 0),
       points ?? POINTS_PER_CATEGORY[type],
     );
+    let metadata = {};
+
+    if (url) {
+      metadata = { ...metadata, url: url };
+      const existingEvent = await this.getEventByUrl(url);
+      if (existingEvent) {
+        return {
+          ...existingEvent,
+          metadata: {
+            url: url,
+          },
+        };
+      }
+    }
 
     let existingEvent;
-    let metadata = {};
+
     if (blockId) {
       existingEvent = await client.event.findUnique({
         where: {
@@ -394,6 +416,7 @@ export class EventsService {
           points: adjustedPoints,
           occurred_at: occurredAt.toISOString(),
           user_id: userId,
+          url,
         },
       });
       return {

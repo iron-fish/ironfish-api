@@ -41,6 +41,17 @@ describe('EventsService', () => {
     await app.close();
   });
 
+  const setupUser = async (points?: number) => {
+    return prisma.user.create({
+      data: {
+        email: faker.internet.email(),
+        graffiti: uuid(),
+        country_code: faker.address.countryCode('alpha-3'),
+        total_points: points ?? POINTS_PER_CATEGORY.BLOCK_MINED,
+      },
+    });
+  };
+
   const setupBlockMined = async (points?: number) => {
     const hash = uuid();
     const sequence = faker.datatype.number();
@@ -59,14 +70,7 @@ describe('EventsService', () => {
         difficulty: faker.datatype.number(),
       },
     });
-    const user = await prisma.user.create({
-      data: {
-        email: faker.internet.email(),
-        graffiti: uuid(),
-        country_code: faker.address.countryCode('alpha-3'),
-        total_points: points ?? POINTS_PER_CATEGORY.BLOCK_MINED,
-      },
-    });
+    const user = await setupUser(points);
     return { block, user };
   };
 
@@ -536,6 +540,54 @@ describe('EventsService', () => {
         user_id: user.id,
         points,
         type,
+      });
+    });
+
+    describe('for a new URL', () => {
+      it('creates a new event', async () => {
+        const points = 100;
+        const user = await setupUser(points);
+        const type = EventType.PULL_REQUEST_MERGED;
+        const url = `https://github.com/iron-fish/ironfish/pull/${uuid().toString()}`;
+
+        const event = await eventsService.create({
+          type,
+          userId: user.id,
+          points,
+          url,
+        });
+        expect(event).toMatchObject({
+          id: expect.any(Number),
+          user_id: user.id,
+          points,
+          type,
+          url,
+        });
+      });
+    });
+
+    describe('for a duplicate URL', () => {
+      it('returns the existing event', async () => {
+        const points = 100;
+        const user1 = await setupUser(points);
+        const user2 = await setupUser(points);
+
+        const type = EventType.PULL_REQUEST_MERGED;
+        const url = `https://github.com/iron-fish/ironfish/pull/${uuid().toString()}`;
+
+        const event = await eventsService.create({
+          type,
+          userId: user1.id,
+          points,
+          url,
+        });
+        const duplicateEvent = await eventsService.create({
+          type,
+          userId: user2.id,
+          points,
+          url,
+        });
+        expect(event).toStrictEqual(duplicateEvent);
       });
     });
   });
