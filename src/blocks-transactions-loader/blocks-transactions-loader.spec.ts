@@ -96,7 +96,7 @@ describe('BlocksTransactionsLoader', () => {
         graffiti: expect.any(String),
         previous_block_hash: expect.any(String),
         size: expect.any(Number),
-        delta: null,
+        time_since_last_block_ms: null,
       });
 
       expect(blocks[1]).toMatchObject({
@@ -110,7 +110,7 @@ describe('BlocksTransactionsLoader', () => {
         graffiti: expect.any(String),
         previous_block_hash: expect.any(String),
         size: expect.any(Number),
-        delta: timestamp2.getTime() - timestamp1.getTime(),
+        time_since_last_block_ms: timestamp2.getTime() - timestamp1.getTime(),
       });
 
       expect(blocks[0].transactions[0]).toMatchObject({

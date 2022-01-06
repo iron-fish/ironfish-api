@@ -39,22 +39,22 @@ export class BlocksTransactionsLoader {
       }
 
       for (const block of blocks) {
-        let delta = undefined;
+        let time_since_last_block_ms = undefined;
         if (block.previous_block_hash !== undefined) {
-          if (previousHashes.has(block.previous_block_hash)) {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            const prevTimestamp = previousHashes.get(
-              block.previous_block_hash,
-            )!.timestamp;
-            delta = block.timestamp.getTime() - prevTimestamp.getTime();
+          const previousBlock = previousHashes.get(block.previous_block_hash);
+          if (previousBlock !== undefined) {
+            const prevTimestamp = previousBlock.timestamp;
+            time_since_last_block_ms =
+              block.timestamp.getTime() - prevTimestamp.getTime();
           } else if (!previousHashes.has(block.previous_block_hash)) {
-            const prevBlock = await this.prisma.block.findFirst({
+            const previousBlock = await this.prisma.block.findFirst({
               where: {
                 hash: block.previous_block_hash,
               },
             });
-            if (prevBlock) {
-              delta = block.timestamp.getTime() - prevBlock.timestamp.getTime();
+            if (previousBlock) {
+              time_since_last_block_ms =
+                block.timestamp.getTime() - previousBlock.timestamp.getTime();
             }
           }
         }
@@ -65,7 +65,7 @@ export class BlocksTransactionsLoader {
           upsertBlockMinedOptions,
         } = await this.blocksService.upsert(prisma, {
           ...block,
-          delta,
+          time_since_last_block_ms,
           previousBlockHash: block.previous_block_hash,
           transactionsCount: block.transactions.length,
         });
