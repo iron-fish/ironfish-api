@@ -58,6 +58,7 @@ describe('BlocksDailyJobsController', () => {
             previous_block_hash: uuid(),
             network_version: 0,
             size: faker.datatype.number(),
+            time_since_last_block_ms: faker.datatype.number(),
           }),
         );
       });
@@ -94,6 +95,7 @@ describe('BlocksDailyJobsController', () => {
             previous_block_hash: uuid(),
             network_version: 0,
             size: faker.datatype.number(),
+            time_since_last_block_ms: faker.datatype.number(),
           }),
         );
       });
