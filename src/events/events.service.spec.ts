@@ -50,7 +50,6 @@ describe('EventsService', () => {
         total_points: points ?? POINTS_PER_CATEGORY.BLOCK_MINED,
       },
     });
-    return user;
   };
 
   const setupBlockMined = async (points?: number) => {
@@ -544,13 +543,12 @@ describe('EventsService', () => {
       });
     });
 
-    describe('when user is awarded manually', () => {
-      it('create event for merged pull request', async () => {
+    describe('for a new URL', () => {
+      it('creates a new event', async () => {
         const points = 100;
         const user = await setupUser(points);
         const type = EventType.PULL_REQUEST_MERGED;
-        const url =
-          'https://github.com/iron-fish/ironfish/pull/' + uuid().toString();
+        const url = `https://github.com/iron-fish/ironfish/pull/${uuid().toString()}`;
 
         const event = await eventsService.create({
           type,
@@ -566,15 +564,16 @@ describe('EventsService', () => {
           url,
         });
       });
+    });
 
-      it('returns existing event if try to award the second time for the same pull request', async () => {
+    describe('for a duplicate URL', () => {
+      it('returns the existing event', async () => {
         const points = 100;
         const user1 = await setupUser(points);
         const user2 = await setupUser(points);
 
         const type = EventType.PULL_REQUEST_MERGED;
-        const url =
-          'https://github.com/iron-fish/ironfish/pull/' + uuid().toString();
+        const url = `https://github.com/iron-fish/ironfish/pull/${uuid().toString()}`;
 
         const event = await eventsService.create({
           type,

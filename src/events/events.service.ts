@@ -183,13 +183,11 @@ export class EventsService {
     };
   }
 
-  async getEventByUrl(url: string): Promise<Event | null> {
-    return this.prisma.$transaction(async (prisma) => {
-      return prisma.event.findFirst({
-        where: {
-          url: url,
-        },
-      });
+  private async getEventByUrl(url: string): Promise<Event | null> {
+    return this.prisma.event.findFirst({
+      where: {
+        url: url,
+      },
     });
   }
 
@@ -339,19 +337,23 @@ export class EventsService {
       Math.max(weeklyLimitForEventType - pointsThisWeek, 0),
       points ?? POINTS_PER_CATEGORY[type],
     );
+    let metadata = {};
 
     if (url) {
+      metadata = { ...metadata, url: url };
       const existingEvent = await this.getEventByUrl(url);
       if (existingEvent) {
         return {
           ...existingEvent,
-          metadata: {},
+          metadata: {
+            url: url,
+          },
         };
       }
     }
 
     let existingEvent;
-    let metadata = {};
+
     if (blockId) {
       existingEvent = await client.event.findUnique({
         where: {
