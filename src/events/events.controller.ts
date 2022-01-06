@@ -75,7 +75,7 @@ export class EventsController {
       points,
       occurredAt,
       userId: user.id,
-      url: url,
+      url,
     });
     if (!event) {
       return null;
