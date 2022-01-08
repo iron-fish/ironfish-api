@@ -227,6 +227,81 @@ describe('UsersService', () => {
         });
       }
     });
+
+    it('returns users ranked correctly', async () => {
+      const graffiti = uuid();
+      const now = new Date();
+
+      const userA = await prisma.user.create({
+        data: {
+          email: faker.internet.email(),
+          graffiti: graffiti + '-a',
+          country_code: faker.address.countryCode('alpha-3'),
+          total_points: 2,
+        },
+      });
+
+      const userB = await prisma.user.create({
+        data: {
+          email: faker.internet.email(),
+          graffiti: graffiti + '-b',
+          country_code: faker.address.countryCode('alpha-3'),
+          total_points: 2,
+        },
+      });
+
+      const userC = await prisma.user.create({
+        data: {
+          email: faker.internet.email(),
+          graffiti: graffiti + '-c',
+          country_code: faker.address.countryCode('alpha-3'),
+          total_points: 1,
+        },
+      });
+
+      await prisma.event.create({
+        data: {
+          type: EventType.BUG_CAUGHT,
+          user_id: userA.id,
+          occurred_at: now,
+          points: 1,
+        },
+      });
+
+      await prisma.event.create({
+        data: {
+          type: EventType.BUG_CAUGHT,
+          user_id: userB.id,
+          occurred_at: new Date(now.valueOf() - 1000),
+          points: 1,
+        },
+      });
+
+      await prisma.event.create({
+        data: {
+          type: EventType.BUG_CAUGHT,
+          user_id: userB.id,
+          occurred_at: new Date(now.valueOf() + 1000),
+          points: 0,
+        },
+      });
+
+      const { data: records } = await usersService.listWithRank({
+        eventType: 'BUG_CAUGHT',
+        search: graffiti,
+        limit: 3,
+      });
+
+      // Because userB caught a bug first, we consider userB to be
+      // ranked earlier than userA. The last event for userB doesn't
+      // count because it has 0 points.
+      expect(records[0].graffiti).toEqual(userB.graffiti);
+      expect(records[1].graffiti).toEqual(userA.graffiti);
+      expect(records[2].graffiti).toEqual(userC.graffiti);
+      expect(records[0].rank).toBeLessThan(records[1].rank);
+      expect(records[1].rank).toBeLessThan(records[2].rank);
+    });
+
     describe(`when 'event_type' is provided`, () => {
       it('returns a chunk of users by event when specified', async () => {
         const { data: records } = await usersService.listWithRank({
@@ -351,49 +426,68 @@ describe('UsersService', () => {
           total_points: true,
         },
       });
+
       const currentMaxPoints = aggregate._max.total_points || 0;
-      const totalPoints = currentMaxPoints + 2;
+
       const firstUser = await prisma.user.create({
         data: {
           email: faker.internet.email(),
           graffiti: uuid(),
           country_code: faker.address.countryCode('alpha-3'),
-          total_points: totalPoints,
+          total_points: currentMaxPoints + 2,
         },
       });
+
       const secondUser = await prisma.user.create({
         data: {
           email: faker.internet.email(),
           graffiti: uuid(),
           country_code: faker.address.countryCode('alpha-3'),
-          total_points: totalPoints,
+          total_points: currentMaxPoints + 2,
         },
       });
+
       const thirdUser = await prisma.user.create({
         data: {
           email: faker.internet.email(),
           graffiti: uuid(),
           country_code: faker.address.countryCode('alpha-3'),
-          total_points: totalPoints - 1,
+          total_points: currentMaxPoints + 1,
         },
       });
-      const firstEvent = await prisma.event.create({
+
+      const now = new Date();
+
+      await prisma.event.create({
         data: {
           type: EventType.BUG_CAUGHT,
           user_id: firstUser.id,
-          occurred_at: new Date(),
-          points: 0,
+          occurred_at: now,
+          points: 1,
         },
       });
+
       await prisma.event.create({
         data: {
           type: EventType.BUG_CAUGHT,
           user_id: secondUser.id,
-          occurred_at: new Date(firstEvent.occurred_at.valueOf() - 1000),
+          occurred_at: new Date(now.valueOf() - 1000),
+          points: 1,
+        },
+      });
+
+      await prisma.event.create({
+        data: {
+          type: EventType.BUG_CAUGHT,
+          user_id: secondUser.id,
+          occurred_at: new Date(now.valueOf() + 1000),
           points: 0,
         },
       });
 
+      // Because secondUser caught a bug first, we consider secondUser to be
+      // ranked earlier than firstUser. The last event for secondUser doesn't
+      // count because it has 0 points.
       expect(await usersService.getRank(secondUser)).toBe(1);
       expect(await usersService.getRank(firstUser)).toBe(2);
       expect(await usersService.getRank(thirdUser)).toBe(3);
