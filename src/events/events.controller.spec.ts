@@ -171,6 +171,42 @@ describe('EventsController', () => {
           occurred_at: occurredAt,
         });
       });
+
+      it('creates an event with url parameter', async () => {
+        const user = await prisma.user.create({
+          data: {
+            email: faker.internet.email(),
+            graffiti: uuid(),
+            country_code: faker.address.countryCode('alpha-3'),
+          },
+        });
+        const occurredAt = new Date().toISOString();
+        const type = EventType.PULL_REQUEST_MERGED;
+        const url = `https://github.com/iron-fish/ironfish/pull/${uuid().toString()}`;
+        const points = 10;
+        const { body } = await request(app.getHttpServer())
+          .post(`/events`)
+          .set('Authorization', `Bearer ${API_KEY}`)
+          .send({
+            graffiti: user.graffiti,
+            type,
+            points,
+            occurred_at: occurredAt,
+            url,
+          })
+          .expect(HttpStatus.CREATED);
+
+        expect(body).toMatchObject({
+          id: expect.any(Number),
+          user_id: user.id,
+          type,
+          points,
+          occurred_at: occurredAt,
+          metadata: {
+            url: url,
+          },
+        });
+      });
     });
   });
 });
