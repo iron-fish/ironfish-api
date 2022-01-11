@@ -14,18 +14,17 @@
     "api"
   ],
   "scripts": {
-    "build": "nps build",
-    "clean": "nps clean",
-    "docker:start": "nps docker.start",
-    "docker:stop": "nps docker.stop",
-    "lint": "nps lint",
-    "lint:fix": "nps lint.fix",
-    "start": "nps start",
-    "start:worker": "nps start.worker",
-    "test": "nps test",
-    "db:init": "nps db.init",
-    "db:create": "nps db.create",
-    "db:migrate": "nps db.migrate"
+    "build": "tsc -b",
+    "clean": "rm -rf ./build",
+    "docker:start": "docker-compose up -d",
+    "docker:stop": "docker-compose down",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "start": "node build/main.js",
+    "start:worker": "node build/worker.js",
+    "test": "jest --runInBand",
+    "db:client:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev"
   },
   "devDependencies": {
     "@nestjs/testing": "8.2.4",
@@ -47,7 +46,6 @@
     "eslint-plugin-simple-import-sort": "7.0.0",
     "faker": "5.5.3",
     "jest": "27.4.7",
-    "nps": "5.10.0",
     "prettier": "2.5.1",
     "prisma": "3.8.0",
     "supertest": "6.2.0",
