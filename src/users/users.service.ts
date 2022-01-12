@@ -251,6 +251,7 @@ export class UsersService {
                   FROM
                     events
                   WHERE
+                    points != 0 AND
                     deleted_at IS NULL AND
                     CASE WHEN $6::event_type IS NOT NULL
                       THEN
@@ -389,6 +390,7 @@ export class UsersService {
                   FROM
                     events
                   WHERE
+                    points != 0 AND
                     deleted_at IS NULL
                 ) filtered_events
               GROUP BY

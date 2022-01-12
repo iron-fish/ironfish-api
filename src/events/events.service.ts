@@ -518,6 +518,7 @@ export class EventsService {
                   FROM
                     events
                   WHERE
+                    points != 0 AND
                     deleted_at IS NULL
                 ) filtered_events
               GROUP BY
