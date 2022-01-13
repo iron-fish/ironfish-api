@@ -361,7 +361,7 @@ describe('EventsService', () => {
 
     describe('when the user has hit the weekly limit', () => {
       it('does not increment the total points for a user', async () => {
-        const points = 1000;
+        const points = 5000;
         const user = await prisma.user.create({
           data: {
             email: faker.internet.email(),
@@ -386,7 +386,7 @@ describe('EventsService', () => {
       });
 
       it('updates the event points to 0', async () => {
-        const points = 1000;
+        const points = 5000;
         const user = await prisma.user.create({
           data: {
             email: faker.internet.email(),
@@ -416,7 +416,7 @@ describe('EventsService', () => {
 
     describe('when the user will surpass the weekly limit', () => {
       it('increments the total points to not go above weekly limits', async () => {
-        const currentPointsThisWeek = 900;
+        const currentPointsThisWeek = 4900;
         const user = await prisma.user.create({
           data: {
             email: faker.internet.email(),
@@ -444,7 +444,7 @@ describe('EventsService', () => {
       });
 
       it('adjusts the points for the event', async () => {
-        const currentPointsThisWeek = 900;
+        const currentPointsThisWeek = 4900;
         const user = await prisma.user.create({
           data: {
             email: faker.internet.email(),
