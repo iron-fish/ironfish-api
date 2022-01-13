@@ -74,6 +74,9 @@ export class EventsService {
         }
         metadata = serializedBlockFromRecord(block);
       }
+      if (record.url) {
+        metadata = { ...metadata, url: record.url };
+      }
       data.push({
         ...record,
         metadata,
