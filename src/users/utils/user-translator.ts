@@ -11,7 +11,6 @@ export function serializedUserFromRecord(user: User): SerializedUser {
     country_code: user.country_code,
     graffiti: user.graffiti,
     total_points: user.total_points,
-    last_login_at: user.last_login_at,
   };
 }
 
@@ -24,7 +23,6 @@ export function serializedUserFromRecordWithRank(
     country_code: user.country_code,
     graffiti: user.graffiti,
     total_points: user.total_points,
-    last_login_at: user.last_login_at,
     rank,
   };
 }

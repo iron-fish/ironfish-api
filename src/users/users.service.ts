@@ -218,7 +218,6 @@ export class UsersService {
         graffiti,
         total_points,
         country_code,
-        last_login_at,
         rank
       FROM
         (
@@ -227,7 +226,6 @@ export class UsersService {
             graffiti,
             COALESCE(user_latest_events.total_points, 0) as total_points,
             country_code,
-            last_login_at,
             RANK () OVER ( 
               ORDER BY 
                 COALESCE(user_latest_events.total_points, 0) DESC,
