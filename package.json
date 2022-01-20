@@ -20,6 +20,7 @@
     "docker:stop": "docker-compose down",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "prestart": "bash bin/check_for_dotenv.sh",
     "start": "node build/main.js",
     "start:worker": "node build/worker.js",
     "test": "jest --runInBand",
