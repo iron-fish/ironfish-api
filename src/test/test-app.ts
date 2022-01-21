@@ -11,6 +11,7 @@ import { AuthModule } from '../auth/auth.module';
 import { BlocksModule } from '../blocks/blocks.module';
 import { BlocksTransactionsModule } from '../blocks-transactions/blocks-transactions.module';
 import { DatadogModule } from '../datadog/datadog.module';
+import { InfluxDbModule } from '../influxdb/influxdb.module';
 
 export async function bootstrapTestApp(): Promise<INestApplication> {
   const module = await Test.createTestingModule({
@@ -28,6 +29,9 @@ export async function bootstrapTestApp(): Promise<INestApplication> {
           DATABASE_URL: joi.string().required(),
           DATADOG_URL: joi.string().required(),
           INCENTIVIZED_TESTNET_URL: joi.string().required(),
+          INFLUXDB_API_TOKEN: joi.string().required(),
+          INFLUXDB_BUCKET: joi.string().required(),
+          INFLUXDB_URL: joi.string().required(),
           IRONFISH_API_KEY: joi.string().required(),
           MAGIC_SECRET_KEY: joi.string().required(),
           NETWORK_VERSION: joi.number().required(),
@@ -36,6 +40,7 @@ export async function bootstrapTestApp(): Promise<INestApplication> {
         }),
       }),
       DatadogModule,
+      InfluxDbModule,
       ...JOBS_MODULES,
       ...REST_MODULES,
     ],
