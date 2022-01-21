@@ -65,7 +65,7 @@ model Block {
   blocks_transactions      BlockTransaction[]
   event                    Event?
 
-  @@unique([hash, network_version], name: "uq_blocks_on_hash_and_network_version")
+  @@unique([hash, network_version], name: "uq_blocks_on_hash_and_network_version", map: "uq_blocks_on_hash_and_network_version")
   @@index([hash], name: "index_blocks_on_hash")
   @@index([hash, network_version], name: "index_blocks_on_hash_and_network_version")
   @@index([sequence, network_version], name: "index_blocks_on_sequence_and_network_version")
@@ -84,7 +84,7 @@ model Transaction {
   spends              Json
   blocks_transactions BlockTransaction[]
 
-  @@unique([hash, network_version], name: "uq_transactions_on_hash_and_network_version")
+  @@unique([hash, network_version], name: "uq_transactions_on_hash_and_network_version", map: "uq_transactions_on_hash_and_network_version")
   @@index([hash], name: "index_transactions_on_hash")
   @@index([hash, network_version], name: "index_transactions_on_hash_and_network_version")
   @@map("transactions")
