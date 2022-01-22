@@ -137,6 +137,14 @@ model BlockDaily {
   @@map("blocks_daily")
 }
 
+model Version {
+  id         Int      @id @default(autoincrement())
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  version    String   @db.VarChar()
+
+  @@map("versions")
+}
+
 enum EventType {
   BLOCK_MINED
   BUG_CAUGHT
