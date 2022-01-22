@@ -1,20 +1,19 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-
 import { INestApplication } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
-import { VersionService } from './version.service';
+import { VersionsService } from './versions.service';
 
-describe('VersionService', () => {
+describe('VersionsService', () => {
   let app: INestApplication;
-  let versionService: VersionService;
+  let versionsService: VersionsService;
   let prisma: PrismaService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
-    versionService = app.get(VersionService);
+    versionsService = app.get(VersionsService);
     prisma = app.get(PrismaService);
     await app.init();
   });
@@ -25,7 +24,7 @@ describe('VersionService', () => {
 
   describe('create', () => {
     it('creates and returns a version record', async () => {
-      const version = await versionService.create('0.1.20');
+      const version = await versionsService.create('0.1.20');
       expect(version).toMatchObject({
         id: expect.any(Number),
         created_at: expect.any(Date),
@@ -38,15 +37,15 @@ describe('VersionService', () => {
     describe('with no records', () => {
       it('returns null', async () => {
         await prisma.version.deleteMany();
-        const nullVersion = await versionService.getLatest();
+        const nullVersion = await versionsService.getLatest();
         expect(nullVersion).toBeNull();
       });
     });
 
     describe('with multiple records', () => {
       it('returns the latest version', async () => {
-        await versionService.create('0.1.20');
-        const version = await versionService.create('0.1.21');
+        await versionsService.create('0.1.20');
+        const version = await versionsService.create('0.1.21');
         expect(version).toMatchObject({
           id: expect.any(Number),
           created_at: expect.any(Date),

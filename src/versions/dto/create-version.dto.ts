@@ -3,7 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { IsSemVer } from 'class-validator';
 
-export class VersionDto {
+export class CreateVersionDto {
   @IsSemVer()
   readonly version!: string;
 }

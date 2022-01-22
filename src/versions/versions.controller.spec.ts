@@ -5,16 +5,16 @@ import { HttpStatus, INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { bootstrapTestApp } from '../test/test-app';
-import { VersionService } from './version.service';
+import { VersionsService } from './versions.service';
 
-describe('VersionController', () => {
+describe('VersionsController', () => {
   let app: INestApplication;
-  let versionService: VersionService;
+  let versionsService: VersionsService;
   let API_KEY: string;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
-    versionService = app.get(VersionService);
+    versionsService = app.get(VersionsService);
     API_KEY = app.get(ApiConfigService).get<string>('IRONFISH_API_KEY');
     await app.init();
   });
@@ -29,7 +29,7 @@ describe('VersionController', () => {
     });
 
     it('returns the correct version', async () => {
-      await versionService.create('0.1.20');
+      await versionsService.create('0.1.20');
       const { text } = await request(app.getHttpServer()).get('/version');
       expect(text).toBe('0.1.20');
     });
@@ -65,12 +65,16 @@ describe('VersionController', () => {
 
     describe('with a valid version query param', () => {
       it('returns a 201 status code and created version', async () => {
-        const { text } = await request(app.getHttpServer())
+        const { body } = await request(app.getHttpServer())
           .post('/version')
           .query({ version: '0.12.345' })
           .set('Authorization', `Bearer ${API_KEY}`)
           .expect(HttpStatus.CREATED);
-        expect(text).toBe('0.12.345');
+        expect(body).toMatchObject({
+          id: expect.any(Number),
+          created_at: expect.any(String),
+          version: '0.12.345',
+        });
       });
     });
   });

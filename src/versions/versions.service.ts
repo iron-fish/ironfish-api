@@ -7,19 +7,21 @@ import { PrismaService } from '../prisma/prisma.service';
 import { Version } from '.prisma/client';
 
 @Injectable()
-export class VersionService {
+export class VersionsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(version: string): Promise<Version> {
-    return this.prisma.version.create({
-      data: {
-        version,
-      },
+    return this.prisma.$transaction(async (prisma) => {
+      return prisma.version.create({
+        data: {
+          version,
+        },
+      });
     });
   }
 
   async getLatest(): Promise<Version | null> {
-    return await this.prisma.version.findFirst({
+    return this.prisma.version.findFirst({
       orderBy: {
         id: 'desc',
       },

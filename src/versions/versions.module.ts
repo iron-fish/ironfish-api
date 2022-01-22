@@ -3,13 +3,11 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '../prisma/prisma.module';
-import { VersionController } from './version.controller';
-import { VersionService } from './version.service';
+import { VersionsService } from './versions.service';
 
 @Module({
-  controllers: [VersionController],
-  exports: [VersionService],
+  exports: [VersionsService],
   imports: [PrismaModule],
-  providers: [VersionService],
+  providers: [VersionsService],
 })
-export class VersionRestModule {}
+export class VersionsModule {}
