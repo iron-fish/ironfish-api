@@ -4,6 +4,7 @@
 import {
   IsDefined,
   IsISO31661Alpha3,
+  IsNotEmpty,
   IsString,
   ValidateIf,
 } from 'class-validator';
@@ -45,6 +46,7 @@ export class UpdateUserDto {
   @IsDefined({
     message: UPDATE_USER_VALIDATION_MESSAGE,
   })
+  @IsNotEmpty()
   @IsString()
   readonly graffiti?: string;
 
