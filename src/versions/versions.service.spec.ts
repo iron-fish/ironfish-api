@@ -44,8 +44,8 @@ describe('VersionsService', () => {
 
     describe('with multiple records', () => {
       it('returns the latest version', async () => {
-        await versionsService.create('0.1.20');
         const version = await versionsService.create('0.1.21');
+        await versionsService.create('0.1.20');
         expect(version).toMatchObject({
           id: expect.any(Number),
           created_at: expect.any(Date),

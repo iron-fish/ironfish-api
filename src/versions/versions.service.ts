@@ -23,7 +23,7 @@ export class VersionsService {
   async getLatest(): Promise<Version | null> {
     return this.prisma.version.findFirst({
       orderBy: {
-        id: 'desc',
+        version: 'desc',
       },
     });
   }

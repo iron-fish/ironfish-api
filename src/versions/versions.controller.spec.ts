@@ -4,18 +4,22 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { ApiConfigService } from '../api-config/api-config.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { VersionsService } from './versions.service';
 
 describe('VersionsController', () => {
   let app: INestApplication;
   let versionsService: VersionsService;
+  let prisma: PrismaService;
   let API_KEY: string;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
     versionsService = app.get(VersionsService);
+    prisma = app.get(PrismaService);
     API_KEY = app.get(ApiConfigService).get<string>('IRONFISH_API_KEY');
+    await prisma.version.deleteMany();
     await app.init();
   });
 
