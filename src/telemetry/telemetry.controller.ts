@@ -8,6 +8,7 @@ import {
   Post,
   ValidationPipe,
 } from '@nestjs/common';
+import { ApiExcludeEndpoint } from '@nestjs/swagger';
 import { InfluxDbService } from '../influxdb/influxdb.service';
 import { WriteTelemetryPointDto } from './dto/write-telemetry-point.dto';
 
@@ -15,6 +16,7 @@ import { WriteTelemetryPointDto } from './dto/write-telemetry-point.dto';
 export class TelemetryController {
   constructor(private readonly influxDbService: InfluxDbService) {}
 
+  @ApiExcludeEndpoint()
   @Post()
   write(
     @Body(
