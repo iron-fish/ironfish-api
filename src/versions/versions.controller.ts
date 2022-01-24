@@ -12,21 +12,27 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiExcludeEndpoint, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Version } from '@prisma/client';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { CreateVersionDto } from './dto/create-version.dto';
+import { SerializedVersion } from './interfaces/serialized-version';
+import { serializedVersionFromRecord } from './utils/version-translator';
 import { VersionsService } from './versions.service';
 
-@ApiTags('Version')
-@Controller('version')
+@ApiTags('Versions')
+@Controller('versions')
 export class VersionsController {
   constructor(private readonly versionsService: VersionsService) {}
 
   @ApiOperation({ summary: 'Gets the version of the Iron Fish package' })
   @Get()
-  async version(): Promise<string> {
+  async version(): Promise<Record<string, SerializedVersion>> {
     const latestVersion = await this.versionsService.getLatest();
-    return latestVersion ? latestVersion.version : '';
+    if (latestVersion === null) {
+      return {};
+    }
+    return {
+      ironfish: serializedVersionFromRecord(latestVersion),
+    };
   }
 
   @ApiExcludeEndpoint()
@@ -41,7 +47,9 @@ export class VersionsController {
   async updateVersion(
     @Query()
     { version }: CreateVersionDto,
-  ): Promise<Version> {
-    return this.versionsService.create(version);
+  ): Promise<SerializedVersion> {
+    return serializedVersionFromRecord(
+      await this.versionsService.create(version),
+    );
   }
 }

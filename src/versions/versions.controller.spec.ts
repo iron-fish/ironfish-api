@@ -25,13 +25,19 @@ describe('VersionsController', () => {
 
   describe('GET /version', () => {
     it('returns a 200 status code', async () => {
-      await request(app.getHttpServer()).get('/version').expect(HttpStatus.OK);
+      await request(app.getHttpServer()).get('/versions').expect(HttpStatus.OK);
     });
 
     it('returns the correct version', async () => {
       await versionsService.create('0.1.20');
-      const { text } = await request(app.getHttpServer()).get('/version');
-      expect(text).toBe('0.1.20');
+      const { body } = await request(app.getHttpServer()).get('/versions');
+      expect(body).toMatchObject({
+        ironfish: {
+          object: 'version',
+          version: '0.1.20',
+          created_at: expect.any(String),
+        },
+      });
     });
   });
 
@@ -39,7 +45,7 @@ describe('VersionsController', () => {
     describe('with a missing api key', () => {
       it('returns a 401 status code', async () => {
         await request(app.getHttpServer())
-          .post('/version')
+          .post('/versions')
           .expect(HttpStatus.UNAUTHORIZED);
       });
     });
@@ -47,7 +53,7 @@ describe('VersionsController', () => {
     describe('with a missing version query param', () => {
       it('returns a 422 status code', async () => {
         await request(app.getHttpServer())
-          .post('/version')
+          .post('/versions')
           .set('Authorization', `Bearer ${API_KEY}`)
           .expect(HttpStatus.UNPROCESSABLE_ENTITY);
       });
@@ -56,7 +62,7 @@ describe('VersionsController', () => {
     describe('with an incorrectly formatted version query param', () => {
       it('returns a 422 status code', async () => {
         await request(app.getHttpServer())
-          .post('/version')
+          .post('/versions')
           .query({ version: '123' })
           .set('Authorization', `Bearer ${API_KEY}`)
           .expect(HttpStatus.UNPROCESSABLE_ENTITY);
@@ -66,12 +72,11 @@ describe('VersionsController', () => {
     describe('with a valid version query param', () => {
       it('returns a 201 status code and created version', async () => {
         const { body } = await request(app.getHttpServer())
-          .post('/version')
+          .post('/versions')
           .query({ version: '0.12.345' })
           .set('Authorization', `Bearer ${API_KEY}`)
           .expect(HttpStatus.CREATED);
         expect(body).toMatchObject({
-          id: expect.any(Number),
           created_at: expect.any(String),
           version: '0.12.345',
         });
