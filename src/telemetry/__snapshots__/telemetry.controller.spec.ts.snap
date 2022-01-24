@@ -1,0 +1,34 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TelemetryController POST /telemetry with empty or invalid arguments returns a 422 1`] = `
+Object {
+  "error": "Unprocessable Entity",
+  "message": Array [
+    "measurement should not be empty",
+    "name should not be empty",
+    "tags.0.name must be a string",
+    "tags.0.name should not be empty",
+    "tags.0.value must be a string",
+    "tags.0.value should not be empty",
+    "value must be a positive number",
+  ],
+  "statusCode": 422,
+}
+`;
+
+exports[`TelemetryController POST /telemetry with missing arguments returns a 422 1`] = `
+Object {
+  "error": "Unprocessable Entity",
+  "message": Array [
+    "measurement must be a string",
+    "measurement should not be empty",
+    "name must be a string",
+    "name should not be empty",
+    "tags must contain not more than 3000 elements",
+    "tags must be an array",
+    "value must be a number conforming to the specified constraints",
+    "value must be a positive number",
+  ],
+  "statusCode": 422,
+}
+`;

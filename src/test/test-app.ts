@@ -8,17 +8,12 @@ import { json } from 'express';
 import joi from 'joi';
 import { JOBS_MODULES, REST_MODULES } from '../app.module';
 import { AuthModule } from '../auth/auth.module';
-import { BlocksModule } from '../blocks/blocks.module';
-import { BlocksTransactionsModule } from '../blocks-transactions/blocks-transactions.module';
 import { DatadogModule } from '../datadog/datadog.module';
-import { InfluxDbModule } from '../influxdb/influxdb.module';
 
 export async function bootstrapTestApp(): Promise<INestApplication> {
   const module = await Test.createTestingModule({
     imports: [
       AuthModule,
-      BlocksModule,
-      BlocksTransactionsModule,
       ConfigModule.forRoot({
         envFilePath: '.env.test',
         isGlobal: true,
@@ -40,7 +35,6 @@ export async function bootstrapTestApp(): Promise<INestApplication> {
         }),
       }),
       DatadogModule,
-      InfluxDbModule,
       ...JOBS_MODULES,
       ...REST_MODULES,
     ],
