@@ -39,11 +39,10 @@ describe('InfluxDbService', () => {
   describe('writePoint', () => {
     it('writes the data to InfluxDB', () => {
       const options: CreatePointOptions = {
+        fields: [{ name: 'memory', type: 'float', value: 1 }],
         measurement: 'node',
-        name: 'memory',
         tags: [{ name: 'user_agent', value: '0.0.0' }],
         timestamp: new Date(),
-        value: 1,
       };
       influxDbService.writePoints([options]);
 
