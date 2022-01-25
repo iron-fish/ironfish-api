@@ -63,7 +63,7 @@
     "@nestjs/microservices": "8.2.6",
     "@nestjs/passport": "8.1.0",
     "@nestjs/platform-express": "8.2.6",
-    "@nestjs/swagger": "5.1.5",
+    "@nestjs/swagger": "5.2.0",
     "@prisma/client": "3.8.1",
     "@sindresorhus/is": "4.3.0",
     "assert": "2.0.0",
