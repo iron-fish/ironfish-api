@@ -36,10 +36,14 @@ describe('TelemetryController', () => {
         const { body } = await request(app.getHttpServer())
           .post('/telemetry')
           .send({
-            measurement: '',
-            name: '',
-            tags: [{ foo: 'bar' }],
-            value: -1,
+            points: [
+              {
+                measurement: '',
+                name: '',
+                tags: [{ foo: 'bar' }],
+                value: -1,
+              },
+            ],
           })
           .expect(HttpStatus.UNPROCESSABLE_ENTITY);
 
@@ -50,7 +54,7 @@ describe('TelemetryController', () => {
     describe('with valid arguments', () => {
       it('writes the point to InfluxDB', async () => {
         const writePoint = jest
-          .spyOn(influxDbService, 'writePoint')
+          .spyOn(influxDbService, 'writePoints')
           .mockImplementationOnce(jest.fn());
         const measurement = 'node';
         const name = 'memory';
@@ -59,17 +63,19 @@ describe('TelemetryController', () => {
 
         await request(app.getHttpServer())
           .post('/telemetry')
-          .send({ measurement, name, tags, value })
+          .send({ points: [{ measurement, name, tags, value }] })
           .expect(HttpStatus.CREATED);
 
         expect(writePoint).toHaveBeenCalledTimes(1);
-        expect(writePoint).toHaveBeenCalledWith({
-          measurement,
-          name,
-          tags,
-          timestamp: expect.any(Date),
-          value,
-        });
+        expect(writePoint).toHaveBeenCalledWith([
+          {
+            measurement,
+            name,
+            tags,
+            timestamp: expect.any(Date),
+            value,
+          },
+        ]);
       });
     });
   });

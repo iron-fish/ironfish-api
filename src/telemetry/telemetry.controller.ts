@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiExcludeEndpoint } from '@nestjs/swagger';
 import { InfluxDbService } from '../influxdb/influxdb.service';
-import { WriteTelemetryPointDto } from './dto/write-telemetry-point.dto';
+import { WriteTelemetryPointsDto } from './dto/write-telemetry-point.dto';
 
 @Controller('telemetry')
 export class TelemetryController {
@@ -25,14 +25,19 @@ export class TelemetryController {
         transform: true,
       }),
     )
-    { measurement, name, tags, value }: WriteTelemetryPointDto,
+    { points }: WriteTelemetryPointsDto,
   ): void {
-    this.influxDbService.writePoint({
-      measurement,
-      name,
-      tags,
-      value,
-      timestamp: new Date(),
-    });
+    const options = [];
+    for (const { measurement, name, tags, value } of points) {
+      options.push({
+        measurement,
+        name,
+        tags,
+        value,
+        timestamp: new Date(),
+      });
+    }
+
+    this.influxDbService.writePoints(options);
   }
 }
