@@ -11,17 +11,17 @@ describe('InfluxDbService', () => {
   let app: INestApplication;
   let influxDbService: InfluxDbService;
 
-  const writePoint = jest.fn();
+  const writePoints = jest.fn();
 
   beforeAll(async () => {
     jest
       .spyOn(InfluxDB.prototype, 'getWriteApi')
       .mockImplementationOnce(() => ({
-        writePoint,
+        writePoints,
         useDefaultTags: jest.fn(),
         writeRecord: jest.fn(),
         writeRecords: jest.fn(),
-        writePoints: jest.fn(),
+        writePoint: jest.fn(),
         flush: jest.fn(),
         close: jest.fn(),
         dispose: jest.fn(),
@@ -45,9 +45,9 @@ describe('InfluxDbService', () => {
         timestamp: new Date(),
         value: 1,
       };
-      influxDbService.writePoint(options);
+      influxDbService.writePoints([options]);
 
-      expect(writePoint).toHaveBeenCalled();
+      expect(writePoints).toHaveBeenCalled();
     });
   });
 });

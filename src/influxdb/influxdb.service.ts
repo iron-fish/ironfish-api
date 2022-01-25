@@ -24,16 +24,21 @@ export class InfluxDbService implements OnModuleDestroy {
     );
   }
 
-  writePoint(options: CreatePointOptions): void {
-    const { measurement, name, tags, timestamp, value } = options;
-    const point = new Point(measurement)
-      .floatField(name, value)
-      .timestamp(timestamp);
-    for (const tag of tags) {
-      point.tag(tag.name, tag.value);
+  writePoints(options: CreatePointOptions[]): void {
+    const points = [];
+
+    for (const option of options) {
+      const { measurement, name, tags, timestamp, value } = option;
+      const point = new Point(measurement)
+        .floatField(name, value)
+        .timestamp(timestamp);
+      for (const tag of tags) {
+        point.tag(tag.name, tag.value);
+      }
+      points.push(point);
     }
 
-    this.writeClient.writePoint(point);
+    this.writeClient.writePoints(points);
   }
 
   async onModuleDestroy(): Promise<void> {

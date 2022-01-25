@@ -22,7 +22,7 @@ class TagDto {
   readonly value!: string;
 }
 
-export class WriteTelemetryPointDto {
+class WriteTelemetryPointDto {
   @IsNotEmpty()
   @IsString()
   readonly measurement!: string;
@@ -41,4 +41,12 @@ export class WriteTelemetryPointDto {
   @IsNumber()
   @Type(() => Number)
   readonly value!: number;
+}
+
+export class WriteTelemetryPointsDto {
+  @IsArray()
+  @ArrayMaxSize(3000)
+  @ValidateNested({ each: true })
+  @Type(() => WriteTelemetryPointDto)
+  readonly points!: WriteTelemetryPointDto[];
 }
