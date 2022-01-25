@@ -29,7 +29,7 @@ export class InfluxDbService implements OnModuleDestroy {
 
     for (const option of options) {
       const { fields, measurement, tags, timestamp } = option;
-      const point = new Point(measurement).timestamp(timestamp.toISOString());
+      const point = new Point(measurement).timestamp(timestamp);
 
       for (const field of fields) {
         const { name } = field;
