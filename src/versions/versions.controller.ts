@@ -2,11 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import {
+  Body,
   Controller,
   Get,
   HttpStatus,
   Post,
-  Query,
   UseGuards,
   UsePipes,
   ValidationPipe,
@@ -45,7 +45,7 @@ export class VersionsController {
   )
   @Post()
   async updateVersion(
-    @Query()
+    @Body()
     { version }: CreateVersionDto,
   ): Promise<SerializedVersion> {
     return serializedVersionFromRecord(
