@@ -105,7 +105,7 @@ describe('TelemetryController', () => {
         ];
         const measurement = 'node';
         const tags = [{ name: 'user_agent', value: '0.0.0' }];
-        const timestamp = new Date().toISOString();
+        const timestamp = new Date();
 
         await request(app.getHttpServer())
           .post('/telemetry')
@@ -118,7 +118,7 @@ describe('TelemetryController', () => {
             fields,
             measurement,
             tags,
-            timestamp: new Date(timestamp),
+            timestamp,
           },
         ]);
       });
