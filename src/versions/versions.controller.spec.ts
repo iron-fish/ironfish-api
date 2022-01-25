@@ -54,7 +54,7 @@ describe('VersionsController', () => {
       });
     });
 
-    describe('with a missing version query param', () => {
+    describe('with a missing version', () => {
       it('returns a 422 status code', async () => {
         await request(app.getHttpServer())
           .post('/versions')
@@ -63,21 +63,21 @@ describe('VersionsController', () => {
       });
     });
 
-    describe('with an incorrectly formatted version query param', () => {
+    describe('with an incorrectly formatted version', () => {
       it('returns a 422 status code', async () => {
         await request(app.getHttpServer())
           .post('/versions')
-          .query({ version: '123' })
+          .send({ version: '123' })
           .set('Authorization', `Bearer ${API_KEY}`)
           .expect(HttpStatus.UNPROCESSABLE_ENTITY);
       });
     });
 
-    describe('with a valid version query param', () => {
+    describe('with a valid version', () => {
       it('returns a 201 status code and created version', async () => {
         const { body } = await request(app.getHttpServer())
           .post('/versions')
-          .query({ version: '0.12.345' })
+          .send({ version: '0.12.345' })
           .set('Authorization', `Bearer ${API_KEY}`)
           .expect(HttpStatus.CREATED);
         expect(body).toMatchObject({
