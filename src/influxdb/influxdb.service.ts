@@ -30,7 +30,7 @@ export class InfluxDbService implements OnModuleDestroy {
       .floatField(name, value)
       .timestamp(timestamp);
     for (const tag of tags) {
-      point.tag(tag.key, tag.value);
+      point.tag(tag.name, tag.value);
     }
 
     this.writeClient.writePoint(point);

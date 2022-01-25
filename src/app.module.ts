@@ -24,6 +24,7 @@ import { FaucetTransactionsRestModule } from './faucet-transactions/faucet-trans
 import { HealthRestModule } from './health/health.rest.module';
 import { LoggerModule } from './logger/logger.module';
 import { MetricsRestModule } from './metrics/metrics.rest.module';
+import { TelemetryRestModule } from './telemetry/telemetry.rest.module';
 import { TransactionsRestModule } from './transactions/transactions.rest.module';
 import { UsersRestModule } from './users/users.rest.module';
 import { VersionsRestModule } from './versions/versions.rest.module';
@@ -38,6 +39,7 @@ export const REST_MODULES = [
   FaucetTransactionsRestModule,
   HealthRestModule,
   MetricsRestModule,
+  TelemetryRestModule,
   TransactionsRestModule,
   UsersRestModule,
   VersionsRestModule,

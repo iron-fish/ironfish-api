@@ -41,7 +41,7 @@ describe('InfluxDbService', () => {
       const options: CreatePointOptions = {
         measurement: 'node',
         name: 'memory',
-        tags: [{ key: 'user_agent', value: '0.0.0' }],
+        tags: [{ name: 'user_agent', value: '0.0.0' }],
         timestamp: new Date(),
         value: 1,
       };
