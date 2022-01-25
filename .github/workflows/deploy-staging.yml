@@ -1,4 +1,4 @@
-name: Deploy HTTP API
+name: Deploy Staging API
 on:
   push:
     branches:
@@ -6,7 +6,7 @@ on:
 
 jobs:
   deploy:
-    name: Staging API Deploy
+    name: Deploy Staging API
     runs-on: ubuntu-latest
 
     steps:
