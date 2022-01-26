@@ -28,13 +28,26 @@ export class InfluxDbService implements OnModuleDestroy {
     const points = [];
 
     for (const option of options) {
-      const { measurement, name, tags, timestamp, value } = option;
-      const point = new Point(measurement)
-        .floatField(name, value)
-        .timestamp(timestamp);
+      const { fields, measurement, tags, timestamp } = option;
+      const point = new Point(measurement).timestamp(timestamp);
+
+      for (const field of fields) {
+        const { name } = field;
+        if (field.type === 'boolean') {
+          point.booleanField(name, field.value);
+        } else if (field.type === 'float') {
+          point.floatField(name, field.value);
+        } else if (field.type === 'integer') {
+          point.intField(name, field.value);
+        } else {
+          point.stringField(name, field.value);
+        }
+      }
+
       for (const tag of tags) {
         point.tag(tag.name, tag.value);
       }
+
       points.push(point);
     }
 

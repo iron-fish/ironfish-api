@@ -5,12 +5,19 @@ import { Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   IsArray,
+  IsDate,
   IsNotEmpty,
-  IsNumber,
-  IsPositive,
   IsString,
   ValidateNested,
 } from 'class-validator';
+import {
+  BaseFieldDto,
+  BooleanFieldDto,
+  FieldDto,
+  FloatFieldDto,
+  IntegerFieldDto,
+  StringFieldDto,
+} from './field.dto';
 
 class TagDto {
   @IsNotEmpty()
@@ -23,24 +30,36 @@ class TagDto {
 }
 
 class WriteTelemetryPointDto {
+  @IsArray()
+  @ArrayMaxSize(3000)
+  @ValidateNested({ each: true })
+  @Type(() => BaseFieldDto, {
+    keepDiscriminatorProperty: true,
+    discriminator: {
+      property: 'type',
+      subTypes: [
+        { name: 'boolean', value: BooleanFieldDto },
+        { name: 'float', value: FloatFieldDto },
+        { name: 'integer', value: IntegerFieldDto },
+        { name: 'string', value: StringFieldDto },
+      ],
+    },
+  })
+  readonly fields!: FieldDto[];
+
   @IsNotEmpty()
   @IsString()
   readonly measurement!: string;
 
-  @IsNotEmpty()
-  @IsString()
-  readonly name!: string;
+  @IsDate()
+  @Type(() => Date)
+  readonly timestamp!: Date;
 
   @IsArray()
   @ArrayMaxSize(3000)
   @ValidateNested({ each: true })
   @Type(() => TagDto)
   readonly tags!: TagDto[];
-
-  @IsPositive()
-  @IsNumber()
-  @Type(() => Number)
-  readonly value!: number;
 }
 
 export class WriteTelemetryPointsDto {
