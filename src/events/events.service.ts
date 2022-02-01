@@ -12,7 +12,6 @@ import {
   POINTS_PER_CATEGORY,
   WEEKLY_POINT_LIMITS_BY_EVENT_TYPE,
 } from '../common/constants';
-import { SortOrder } from '../common/enums/sort-order';
 import { getMondayFromDate } from '../common/utils/date';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
@@ -41,7 +40,7 @@ export class EventsService {
     const limit =
       direction * Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
     const orderBy = {
-      id: SortOrder.DESC,
+      occurred_at: Prisma.SortOrder.desc,
     };
     const skip = cursor ? 1 : 0;
     const where = {
