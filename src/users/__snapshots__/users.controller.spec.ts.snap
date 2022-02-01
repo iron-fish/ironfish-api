@@ -126,6 +126,7 @@ Object {
     "discord must be a string",
     "\\"discord\\", \\"graffiti\\", \\"telegram\\", or \\"country_code\\" required when updating",
     "graffiti must be a string",
+    "graffiti should not be empty",
     "\\"discord\\", \\"graffiti\\", \\"telegram\\", or \\"country_code\\" required when updating",
     "telegram must be a string",
   ],
