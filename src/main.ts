@@ -41,6 +41,7 @@ async function bootstrap(): Promise<void> {
         /localhost/,
         /block-explorer.*\.vercel\.app/,
         /website-testnet.*\.vercel\.app/,
+        'https://staging.testnet.ironfish.network',
       ]
     : defaultOrigins;
 
