@@ -116,24 +116,6 @@ Object {
 }
 `;
 
-exports[`UsersController PUT /users/:id with missing fields returns a 422 1`] = `
-Object {
-  "error": "Unprocessable Entity",
-  "message": Array [
-    "\\"discord\\", \\"graffiti\\", \\"telegram\\", or \\"country_code\\" required when updating",
-    "country_code must be a valid ISO31661 Alpha3 code",
-    "\\"discord\\", \\"graffiti\\", \\"telegram\\", or \\"country_code\\" required when updating",
-    "discord must be a string",
-    "\\"discord\\", \\"graffiti\\", \\"telegram\\", or \\"country_code\\" required when updating",
-    "graffiti must be a string",
-    "graffiti should not be empty",
-    "\\"discord\\", \\"graffiti\\", \\"telegram\\", or \\"country_code\\" required when updating",
-    "telegram must be a string",
-  ],
-  "statusCode": 422,
-}
-`;
-
 exports[`UsersController PUT /users/:id with no logged in user returns a 401 1`] = `
 Object {
   "message": "Unauthorized",
