@@ -482,7 +482,7 @@ describe('UsersController', () => {
       });
     });
 
-    describe('with missing fields', () => {
+    describe('with an empty string graffiti', () => {
       it('returns a 422', async () => {
         const user = await usersService.create({
           email: faker.internet.email(),
@@ -497,9 +497,16 @@ describe('UsersController', () => {
         const { body } = await request(app.getHttpServer())
           .put(`/users/${user.id}`)
           .set('Authorization', 'token')
+          .send({
+            graffiti: '',
+          })
           .expect(HttpStatus.UNPROCESSABLE_ENTITY);
 
-        expect(body).toMatchSnapshot();
+        expect(body).toEqual({
+          error: 'Unprocessable Entity',
+          message: ['graffiti should not be empty'],
+          statusCode: 422,
+        });
       });
     });
 
