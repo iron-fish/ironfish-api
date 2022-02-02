@@ -24,6 +24,7 @@
     "start": "node build/main.js",
     "start:worker": "node build/worker.js",
     "test": "jest --runInBand",
+    "test:clean": "prisma migrate reset --force --skip-generate > /dev/null && jest --runInBand",
     "db:client:generate": "prisma generate",
     "db:migrate": "prisma migrate dev"
   },
