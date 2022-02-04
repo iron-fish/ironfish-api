@@ -492,7 +492,7 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@datadog/native-appsec@^0.8.0":
+"@datadog/native-appsec@^0.8.1":
   version "0.8.1"
   resolved "https://registry.yarnpkg.com/@datadog/native-appsec/-/native-appsec-0.8.1.tgz#50cb6ef2e75ea13cd9e837e64971deff3673c638"
   integrity sha512-0jewxGPoRxFd/UYY5+9uisTsTfctwRZy19fU5wo+psejhlxflDnupSDamtnr0nF72s4dbX1z1uAwGWGkuxnV3Q==
@@ -2136,12 +2136,12 @@ data-urls@^2.0.0:
     whatwg-mimetype "^2.3.0"
     whatwg-url "^8.0.0"
 
-dd-trace@2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/dd-trace/-/dd-trace-2.0.0.tgz#2c17569bc25fa6dbe39878ee5110ceb41f4708fe"
-  integrity sha512-Iy2ziJJsfWdSQfYwsOoQWtmedf0m18RK452Fvp4vW1wahAcjzFQbkaOlO6bj85KVrpIF1dnrak8Og7GJQkL2aw==
+dd-trace@2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/dd-trace/-/dd-trace-2.0.1.tgz#bb2a0225e1bcf60dde3cd3c1d220d5768384b2b8"
+  integrity sha512-DjMS4LqUQ4sYA8IX97IdSGoik0EO6PXdApkFWbBzstHsQCtI6aIkSplBGrY9ABpA/dAndrjo6sbEVL6Ix7mIgw==
   dependencies:
-    "@datadog/native-appsec" "^0.8.0"
+    "@datadog/native-appsec" "^0.8.1"
     "@datadog/native-metrics" "^1.1.0"
     "@datadog/pprof" "^0.3.0"
     "@datadog/sketches-js" "^1.0.4"
