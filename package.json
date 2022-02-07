@@ -47,7 +47,7 @@
     "eslint-plugin-prettier": "4.0.0",
     "eslint-plugin-simple-import-sort": "7.0.0",
     "faker": "5.5.3",
-    "jest": "27.4.7",
+    "jest": "27.5.0",
     "prettier": "2.5.1",
     "prisma": "3.9.1",
     "supertest": "6.2.2",
