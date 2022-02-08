@@ -2147,10 +2147,10 @@ data-urls@^2.0.0:
     whatwg-mimetype "^2.3.0"
     whatwg-url "^8.0.0"
 
-dd-trace@2.1.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/dd-trace/-/dd-trace-2.1.0.tgz#07134d676d19444fc9e9cbb61ea9baec940ee275"
-  integrity sha512-CViFo+iqRWaXLZi0+blUE26u10BuYinbgoMghmK+nNS7wls8RgN8U9q01HWrhDW1/OY/skhnTREMtGBoWqhaXg==
+dd-trace@2.1.1:
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/dd-trace/-/dd-trace-2.1.1.tgz#42c5d035512d1a65aa9a3f7881dfb3a72f642c0b"
+  integrity sha512-zV8npDF1fHtnf4GPu/FStV7q7df8NK7FyKAzIrsqtdq/ZXbpGZ1dqm2Pfd4g66vODAjjMIBwEAN6j7IydDZEgQ==
   dependencies:
     "@datadog/native-appsec" "^0.8.1"
     "@datadog/native-metrics" "^1.1.0"
