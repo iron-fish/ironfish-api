@@ -83,7 +83,7 @@
     "reflect-metadata": "0.1.13",
     "rxjs": "7.5.3",
     "swagger-ui-express": "4.3.0",
-    "type-fest": "2.11.1",
+    "type-fest": "2.11.2",
     "ulid": "2.3.0"
   }
 }
