@@ -97,7 +97,7 @@ export class BlocksService {
     });
 
     const user = await this.usersService.findByGraffiti(graffiti, prisma);
-    if (user && timestamp > user.created_at) {
+    if (user) {
       if (main) {
         upsertBlockMinedOptions = { block_id: block.id, user_id: user.id };
       } else {
