@@ -6,4 +6,5 @@ export interface SerializedUser {
   graffiti: string;
   total_points: number;
   country_code: string;
+  created_at: string;
 }

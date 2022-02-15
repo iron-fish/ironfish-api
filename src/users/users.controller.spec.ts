@@ -50,6 +50,7 @@ describe('UsersController', () => {
           id: user.id,
           graffiti: user.graffiti,
           total_points: expect.any(Number),
+          created_at: user.created_at.toISOString(),
         });
       });
     });
@@ -324,6 +325,7 @@ describe('UsersController', () => {
         expect((data as unknown[])[0]).toMatchObject({
           id: expect.any(Number),
           graffiti: expect.any(String),
+          created_at: expect.any(String),
         });
       });
     });
@@ -341,6 +343,7 @@ describe('UsersController', () => {
           id: expect.any(Number),
           graffiti: expect.any(String),
           rank: expect.any(Number),
+          created_at: expect.any(String),
         });
       });
     });
@@ -439,9 +442,11 @@ describe('UsersController', () => {
             country_code: faker.address.countryCode('alpha-3'),
           })
           .expect(HttpStatus.CREATED);
+
         expect(body).toMatchObject({
           id: expect.any(Number),
           email: standardizeEmail(email),
+          created_at: expect.any(String),
           graffiti,
           discord,
         });
