@@ -828,10 +828,10 @@
   resolved "https://registry.yarnpkg.com/@nestjs/mapped-types/-/mapped-types-1.0.1.tgz#78b62041c7a407db4a90eb140567321602bed18e"
   integrity sha512-NFvofzSinp00j5rzUd4tf+xi9od6383iY0JP7o0Bnu1fuItAUkWBgc4EKuIQ3D+c2QI3i9pG1kDWAeY27EMGtg==
 
-"@nestjs/microservices@8.2.6":
-  version "8.2.6"
-  resolved "https://registry.yarnpkg.com/@nestjs/microservices/-/microservices-8.2.6.tgz#ed24c360d627d6f04e9c938775fcf077af25e060"
-  integrity sha512-2RxUESoOKveqfs0k57a+EX5Yr3rdwsKXNr7KrO9oseqJvSJPYLyE8MoYUjEAsGHWIeymdLzZwag047kIVBX7eg==
+"@nestjs/microservices@8.3.0":
+  version "8.3.0"
+  resolved "https://registry.yarnpkg.com/@nestjs/microservices/-/microservices-8.3.0.tgz#224f7a3d12bb3ed5d01177ddf8d1abdbf17bf607"
+  integrity sha512-huQGsOALVOPbLxcSUn2sMaB+mFZJYav27P8AByEEI3chyMFgoHpUgdW/G73FztnwWbROwyTygiHXWctTqDMggg==
   dependencies:
     iterare "1.2.1"
     json-socket "0.3.0"
