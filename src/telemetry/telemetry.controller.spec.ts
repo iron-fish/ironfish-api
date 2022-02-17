@@ -79,7 +79,7 @@ describe('TelemetryController', () => {
     describe('with a version lower than the minimum telemetry version', () => {
       it('does not write the points to InfluxDB', async () => {
         const writePoints = jest
-          .spyOn(influxDbService, 'writePointss')
+          .spyOn(influxDbService, 'writePoints')
           .mockImplementationOnce(jest.fn());
         const fields = [
           {
@@ -120,7 +120,7 @@ describe('TelemetryController', () => {
     describe('with valid arguments', () => {
       it('writes the point to InfluxDB', async () => {
         const writePoints = jest
-          .spyOn(influxDbService, 'writePointss')
+          .spyOn(influxDbService, 'writePoints')
           .mockImplementationOnce(jest.fn());
         const fields = [
           {
