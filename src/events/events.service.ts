@@ -438,35 +438,39 @@ export class EventsService {
     });
   }
 
-  async deleteBlockMined(block: Block, user: User): Promise<Event | null> {
+  async deleteBlockMined(block: Block): Promise<Event | null> {
+    const event = await this.prisma.event.findUnique({
+      where: {
+        block_id: block.id,
+      },
+    });
+    if (event) {
+      return this.delete(event);
+    }
+    return event;
+  }
+
+  async delete(event: Event): Promise<Event> {
     return this.prisma.$transaction(async (prisma) => {
-      const event = await prisma.event.findUnique({
+      await prisma.user.update({
         where: {
-          block_id: block.id,
+          id: event.user_id,
+        },
+        data: {
+          total_points: {
+            decrement: event.points,
+          },
         },
       });
-      if (event) {
-        await prisma.user.update({
-          where: {
-            id: user.id,
-          },
-          data: {
-            total_points: {
-              decrement: event.points,
-            },
-          },
-        });
-        return prisma.event.update({
-          data: {
-            deleted_at: new Date().toISOString(),
-            points: 0,
-          },
-          where: {
-            block_id: block.id,
-          },
-        });
-      }
-      return event;
+      return prisma.event.update({
+        data: {
+          deleted_at: new Date().toISOString(),
+          points: 0,
+        },
+        where: {
+          id: event.id,
+        },
+      });
     });
   }
 

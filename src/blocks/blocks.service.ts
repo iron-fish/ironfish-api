@@ -101,7 +101,7 @@ export class BlocksService {
       if (main) {
         upsertBlockMinedOptions = { block_id: block.id, user_id: user.id };
       } else {
-        deleteBlockMinedOptions = { block_id: block.id, user_id: user.id };
+        deleteBlockMinedOptions = { block_id: block.id };
       }
     }
 

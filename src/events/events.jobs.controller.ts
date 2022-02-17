@@ -45,21 +45,14 @@ export class EventsJobsController {
   @MessagePattern(GraphileWorkerPattern.DELETE_BLOCK_MINED_EVENT)
   async deleteBlockMinedEvent({
     block_id: blockId,
-    user_id: userId,
   }: DeleteBlockMinedEventOptions): Promise<GraphileWorkerHandlerResponse> {
-    const user = await this.usersService.find(userId);
-    if (!user) {
-      this.loggerService.error(`No user found for '${userId}'`, '');
-      return { requeue: false };
-    }
-
     const block = await this.blocksService.find(blockId);
     if (!block) {
       this.loggerService.error(`No block found for '${blockId}'`, '');
       return { requeue: false };
     }
 
-    await this.eventsService.deleteBlockMined(block, user);
+    await this.eventsService.deleteBlockMined(block);
     return { requeue: false };
   }
 }

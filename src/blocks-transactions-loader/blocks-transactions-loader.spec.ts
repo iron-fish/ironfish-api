@@ -147,7 +147,7 @@ describe('BlocksTransactionsLoader', () => {
               difficulty: faker.datatype.number(),
               timestamp: new Date(),
               type: BlockOperation.DISCONNECTED,
-              graffiti,
+              graffiti: user.graffiti,
               previous_block_hash: uuid(),
               size: faker.datatype.number(),
               transactions: [],
@@ -160,7 +160,6 @@ describe('BlocksTransactionsLoader', () => {
           GraphileWorkerPattern.DELETE_BLOCK_MINED_EVENT,
           {
             block_id: blocks[0].id,
-            user_id: user.id,
           },
           expect.anything(),
         );
