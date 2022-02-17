@@ -76,9 +76,9 @@ describe('TelemetryController', () => {
       });
     });
 
-    describe('with valid arguments', () => {
-      it('writes the point to InfluxDB', async () => {
-        const writePoint = jest
+    describe('with a version lower than the minimum telemetry version', () => {
+      it('does not write the points to InfluxDB', async () => {
+        const writePoints = jest
           .spyOn(influxDbService, 'writePoints')
           .mockImplementationOnce(jest.fn());
         const fields = [
@@ -104,7 +104,48 @@ describe('TelemetryController', () => {
           },
         ];
         const measurement = 'node';
-        const tags = [{ name: 'user_agent', value: '0.0.0' }];
+        const tags = [{ name: 'version', value: '0.0.0' }];
+
+        await request(app.getHttpServer())
+          .post('/telemetry')
+          .send({
+            points: [{ fields, measurement, tags, timestamp: new Date() }],
+          })
+          .expect(HttpStatus.CREATED);
+
+        expect(writePoints).toHaveBeenCalledTimes(0);
+      });
+    });
+
+    describe('with valid arguments', () => {
+      it('writes the point to InfluxDB', async () => {
+        const writePoints = jest
+          .spyOn(influxDbService, 'writePoints')
+          .mockImplementationOnce(jest.fn());
+        const fields = [
+          {
+            name: 'online',
+            type: 'boolean',
+            value: true,
+          },
+          {
+            name: 'memory',
+            type: 'float',
+            value: 1.23,
+          },
+          {
+            name: 'mempool',
+            type: 'integer',
+            value: 1,
+          },
+          {
+            name: 'name',
+            type: 'string',
+            value: 'howdy',
+          },
+        ];
+        const measurement = 'node';
+        const tags = [{ name: 'version', value: '0.1.23' }];
         const timestamp = new Date();
 
         await request(app.getHttpServer())
@@ -112,8 +153,8 @@ describe('TelemetryController', () => {
           .send({ points: [{ fields, measurement, tags, timestamp }] })
           .expect(HttpStatus.CREATED);
 
-        expect(writePoint).toHaveBeenCalledTimes(1);
-        expect(writePoint).toHaveBeenCalledWith([
+        expect(writePoints).toHaveBeenCalledTimes(1);
+        expect(writePoints).toHaveBeenCalledWith([
           {
             fields,
             measurement,
