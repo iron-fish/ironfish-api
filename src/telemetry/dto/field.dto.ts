@@ -9,8 +9,8 @@ import {
   IsInt,
   IsNotEmpty,
   IsNumber,
-  IsPositive,
   IsString,
+  Min,
 } from 'class-validator';
 
 export abstract class BaseFieldDto {
@@ -36,7 +36,7 @@ export class FloatFieldDto extends BaseFieldDto {
   readonly type!: 'float';
 
   @IsNumber()
-  @IsPositive()
+  @Min(0)
   @Type(() => Number)
   readonly value!: number;
 }
@@ -46,7 +46,7 @@ export class IntegerFieldDto extends BaseFieldDto {
   readonly type!: 'integer';
 
   @IsInt()
-  @IsPositive()
+  @Min(0)
   @Type(() => Number)
   readonly value!: number;
 }
