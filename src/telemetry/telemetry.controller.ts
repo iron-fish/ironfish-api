@@ -15,7 +15,7 @@ import { WriteTelemetryPointsDto } from './dto/write-telemetry-points.dto';
 
 @Controller('telemetry')
 export class TelemetryController {
-  private readonly MINIMUM_TELEMETRY_VERSION = '0.1.23';
+  private readonly MINIMUM_TELEMETRY_VERSION = '0.1.24';
 
   constructor(private readonly influxDbService: InfluxDbService) {}
 

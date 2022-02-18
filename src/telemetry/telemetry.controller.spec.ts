@@ -145,7 +145,7 @@ describe('TelemetryController', () => {
           },
         ];
         const measurement = 'node';
-        const tags = [{ name: 'version', value: '0.1.23' }];
+        const tags = [{ name: 'version', value: '0.1.24' }];
         const timestamp = new Date();
 
         await request(app.getHttpServer())
