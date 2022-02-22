@@ -18,7 +18,7 @@ export class UsersUpdater {
 
   async update(user: User, options: UpdateUserOptions): Promise<User> {
     return this.prisma.$transaction(async (prisma) => {
-      const { discord, graffiti, telegram } = options;
+      const { discord, github, graffiti, telegram } = options;
 
       if (graffiti && user.graffiti !== graffiti) {
         await prisma.$executeRawUnsafe(
@@ -48,6 +48,11 @@ export class UsersUpdater {
           error = {
             code: 'duplicate_user_discord',
             message: `User with Discord '${discord}' already exists`,
+          };
+        } else if (github && github === duplicateUser.github) {
+          error = {
+            code: 'duplicate_user_github',
+            message: `User with github '${github}' already exists`,
           };
         } else if (graffiti && graffiti === duplicateUser.graffiti) {
           error = {

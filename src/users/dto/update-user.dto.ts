@@ -18,6 +18,10 @@ export class UpdateUserDto {
   readonly discord?: string;
 
   @IsOptional()
+  @IsString()
+  readonly github?: string;
+
+  @IsOptional()
   @IsNotEmpty()
   @IsString()
   readonly graffiti?: string;

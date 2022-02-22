@@ -420,11 +420,14 @@ export class UsersService {
     options: UpdateUserOptions,
     client: BasePrismaClient,
   ): Promise<User[]> {
-    const { discord, graffiti, telegram } = options;
+    const { discord, github, graffiti, telegram } = options;
 
     const filters = [];
     if (discord) {
       filters.push({ discord });
+    }
+    if (github) {
+      filters.push({ github });
     }
     if (graffiti) {
       filters.push({ graffiti });
@@ -448,11 +451,12 @@ export class UsersService {
     options: UpdateUserOptions,
     client: BasePrismaClient,
   ): Promise<User> {
-    const { countryCode, discord, graffiti, telegram } = options;
+    const { countryCode, discord, github, graffiti, telegram } = options;
     return client.user.update({
       data: {
         country_code: countryCode,
         discord,
+        github,
         graffiti,
         telegram,
       },

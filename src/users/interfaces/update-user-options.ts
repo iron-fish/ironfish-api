@@ -4,6 +4,7 @@
 export interface UpdateUserOptions {
   countryCode?: string;
   discord?: string;
+  github?: string;
   graffiti?: string;
   telegram?: string;
 }

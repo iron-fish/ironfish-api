@@ -278,6 +278,7 @@ export class UsersController {
     return this.usersUpdater.update(user, {
       countryCode: dto.country_code,
       discord: dto.discord,
+      github: dto.github,
       graffiti: dto.graffiti,
       telegram: dto.telegram,
     });

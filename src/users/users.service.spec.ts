@@ -522,6 +522,33 @@ describe('UsersService', () => {
       });
     });
 
+    describe('with a duplicate github', () => {
+      it('returns the duplicate records', async () => {
+        const user = await usersService.create({
+          country_code: faker.address.countryCode('alpha-3'),
+          email: faker.internet.email(),
+          github: faker.internet.email(),
+          graffiti: uuid(),
+        });
+        const duplicateUser = await usersService.create({
+          country_code: faker.address.countryCode('alpha-3'),
+          email: faker.internet.email(),
+          github: faker.internet.email(),
+          graffiti: uuid(),
+        });
+
+        assert.ok(duplicateUser.github);
+        const duplicateUsers = await usersService.findDuplicateUser(
+          user,
+          { github: duplicateUser.github },
+          prisma,
+        );
+        expect(duplicateUsers).toHaveLength(1);
+        assert.ok(duplicateUsers[0]);
+        expect(duplicateUsers[0].id).toBe(duplicateUser.id);
+      });
+    });
+
     describe('with a duplicate graffiti', () => {
       it('returns the duplicate records', async () => {
         const user = await usersService.create({
@@ -606,6 +633,7 @@ describe('UsersService', () => {
       const options = {
         countryCode: faker.address.countryCode('alpha-3'),
         discord: ulid(),
+        github: ulid(),
         graffiti: ulid(),
         telegram: ulid(),
       };
@@ -621,6 +649,7 @@ describe('UsersService', () => {
         id: user.id,
         country_code: options.countryCode,
         discord: options.discord,
+        github: options.github,
         graffiti: options.graffiti,
         telegram: options.telegram,
       });
