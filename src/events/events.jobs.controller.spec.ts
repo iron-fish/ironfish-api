@@ -167,7 +167,6 @@ describe('EventsJobsController', () => {
       it('logs an error', async () => {
         await eventsJobsController.deleteBlockMinedEvent({
           block_id: 12345,
-          user_id: 12345,
         });
 
         expect(logError).toHaveBeenCalledTimes(1);
@@ -176,7 +175,6 @@ describe('EventsJobsController', () => {
       it('does not requeue', async () => {
         const { requeue } = await eventsJobsController.deleteBlockMinedEvent({
           block_id: 12345,
-          user_id: 12345,
         });
 
         expect(requeue).toBe(false);
@@ -185,30 +183,16 @@ describe('EventsJobsController', () => {
 
     describe('with a missing block', () => {
       it('logs an error', async () => {
-        const user = await usersService.create({
-          email: faker.internet.email(),
-          graffiti: ulid(),
-          country_code: faker.address.countryCode('alpha-3'),
-        });
-
         await eventsJobsController.deleteBlockMinedEvent({
           block_id: 12345,
-          user_id: user.id,
         });
 
         expect(logError).toHaveBeenCalledTimes(1);
       });
 
       it('does not requeue', async () => {
-        const user = await usersService.create({
-          email: faker.internet.email(),
-          graffiti: ulid(),
-          country_code: faker.address.countryCode('alpha-3'),
-        });
-
         const { requeue } = await eventsJobsController.deleteBlockMinedEvent({
           block_id: 12345,
-          user_id: user.id,
         });
 
         expect(requeue).toBe(false);
@@ -228,15 +212,9 @@ describe('EventsJobsController', () => {
           previousBlockHash: ulid(),
           size: faker.datatype.number(),
         });
-        const user = await usersService.create({
-          email: faker.internet.email(),
-          graffiti: ulid(),
-          country_code: faker.address.countryCode('alpha-3'),
-        });
 
         const { requeue } = await eventsJobsController.deleteBlockMinedEvent({
           block_id: block.id,
-          user_id: user.id,
         });
 
         expect(requeue).toBe(false);
@@ -254,22 +232,15 @@ describe('EventsJobsController', () => {
           previousBlockHash: ulid(),
           size: faker.datatype.number(),
         });
-        const user = await usersService.create({
-          email: faker.internet.email(),
-          graffiti: ulid(),
-          country_code: faker.address.countryCode('alpha-3'),
-        });
 
         const deleteBlockMined = jest.spyOn(eventsService, 'deleteBlockMined');
         await eventsJobsController.deleteBlockMinedEvent({
           block_id: block.id,
-          user_id: user.id,
         });
 
         expect(deleteBlockMined).toHaveBeenCalledTimes(1);
         assert.ok(deleteBlockMined.mock.calls);
         expect(deleteBlockMined.mock.calls[0][0].id).toBe(block.id);
-        expect(deleteBlockMined.mock.calls[0][1].id).toBe(user.id);
       });
     });
   });

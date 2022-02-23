@@ -724,15 +724,15 @@ describe('EventsService', () => {
   describe('deleteBlockMined', () => {
     describe('when the event does not exist', () => {
       it('returns null', async () => {
-        const { block, user } = await setupBlockMined();
-        expect(await eventsService.deleteBlockMined(block, user)).toBeNull();
+        const { block } = await setupBlockMined();
+        expect(await eventsService.deleteBlockMined(block)).toBeNull();
       });
     });
 
     describe('when the event exists', () => {
       it('deletes the record', async () => {
-        const { block, event, user } = await setupBlockMinedWithEvent();
-        const record = await eventsService.deleteBlockMined(block, user);
+        const { block, event } = await setupBlockMinedWithEvent();
+        const record = await eventsService.deleteBlockMined(block);
         expect(record).toMatchObject({
           ...event,
           deleted_at: expect.any(Date),
@@ -743,10 +743,30 @@ describe('EventsService', () => {
 
       it('subtracts points from the user total points', async () => {
         const { block, event, user } = await setupBlockMinedWithEvent();
-        await eventsService.deleteBlockMined(block, user);
+        await eventsService.deleteBlockMined(block);
         const updatedUser = await usersService.findOrThrow(user.id);
         expect(updatedUser.total_points).toBe(user.total_points - event.points);
       });
+    });
+  });
+
+  describe('delete', () => {
+    it('sets `deleted_at` for the record', async () => {
+      const { event } = await setupBlockMinedWithEvent();
+      const record = await eventsService.delete(event);
+      expect(record).toMatchObject({
+        ...event,
+        deleted_at: expect.any(Date),
+        updated_at: expect.any(Date),
+        points: 0,
+      });
+    });
+
+    it('subtracts points from the user total points', async () => {
+      const { event, user } = await setupBlockMinedWithEvent();
+      await eventsService.delete(event);
+      const updatedUser = await usersService.findOrThrow(event.user_id);
+      expect(updatedUser.total_points).toBe(user.total_points - event.points);
     });
   });
 

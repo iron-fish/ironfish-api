@@ -3,5 +3,4 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 export interface DeleteBlockMinedEventOptions {
   block_id: number;
-  user_id: number;
 }
