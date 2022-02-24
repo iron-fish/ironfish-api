@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, NotFoundException } from '@nestjs/common';
 import assert from 'assert';
 import faker from 'faker';
 import { v4 as uuid } from 'uuid';
@@ -87,6 +87,25 @@ describe('EventsService', () => {
     });
     return { block, event, user };
   };
+
+  describe('findOrThrow', () => {
+    describe('with a valid id', () => {
+      it('returns the record', async () => {
+        const { event } = await setupBlockMinedWithEvent();
+        const record = await eventsService.findOrThrow(event.id);
+        expect(record).not.toBeNull();
+        expect(record).toMatchObject(event);
+      });
+    });
+
+    describe('with a missing id', () => {
+      it('throws a NotFoundException', async () => {
+        await expect(eventsService.findOrThrow(100000)).rejects.toThrow(
+          NotFoundException,
+        );
+      });
+    });
+  });
 
   describe('list', () => {
     const setup = async () => {

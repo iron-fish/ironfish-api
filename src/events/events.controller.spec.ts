@@ -209,4 +209,54 @@ describe('EventsController', () => {
       });
     });
   });
+
+  describe('DELETE /events', () => {
+    beforeEach(() => {
+      jest.spyOn(config, 'get').mockImplementationOnce(() => API_KEY);
+    });
+
+    describe('with a missing api key', () => {
+      it('returns a 401', async () => {
+        const { body } = await request(app.getHttpServer())
+          .delete(`/events/123`)
+          .expect(HttpStatus.UNAUTHORIZED);
+
+        expect(body).toMatchSnapshot();
+      });
+    });
+
+    describe('with a missing event id', () => {
+      it('returns a 404', async () => {
+        await request(app.getHttpServer())
+          .delete(`/events/12345`)
+          .set('Authorization', `Bearer ${API_KEY}`)
+          .expect(HttpStatus.NOT_FOUND);
+      });
+    });
+
+    describe('with a valid event id', () => {
+      it('returns a 204', async () => {
+        const user = await prisma.user.create({
+          data: {
+            email: faker.internet.email(),
+            graffiti: uuid(),
+            country_code: faker.address.countryCode('alpha-3'),
+          },
+        });
+        const event = await prisma.event.create({
+          data: {
+            type: EventType.BUG_CAUGHT,
+            user_id: user.id,
+            occurred_at: new Date(),
+            points: 0,
+          },
+        });
+
+        await request(app.getHttpServer())
+          .delete(`/events/${event.id}`)
+          .set('Authorization', `Bearer ${API_KEY}`)
+          .expect(HttpStatus.NO_CONTENT);
+      });
+    });
+  });
 });

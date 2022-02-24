@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import is from '@sindresorhus/is';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { BlocksService } from '../blocks/blocks.service';
@@ -28,6 +28,18 @@ export class EventsService {
     private readonly config: ApiConfigService,
     private readonly prisma: PrismaService,
   ) {}
+
+  async findOrThrow(id: number): Promise<Event> {
+    const record = await this.prisma.event.findUnique({
+      where: {
+        id,
+      },
+    });
+    if (!record) {
+      throw new NotFoundException();
+    }
+    return record;
+  }
 
   async list(options: ListEventsOptions): Promise<{
     data: EventWithMetadata[];
