@@ -50,7 +50,7 @@ describe('FaucetTransactionService', () => {
     });
 
     describe('with a missing id', () => {
-      it('returns null', async () => {
+      it('throws a NotFoundException', async () => {
         await expect(
           faucetTransactionsService.findOrThrow(100000),
         ).rejects.toThrow(NotFoundException);

@@ -4,8 +4,12 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
   HttpStatus,
+  Param,
+  ParseIntPipe,
   Post,
   Query,
   UseGuards,
@@ -81,5 +85,21 @@ export class EventsController {
       return null;
     }
     return serializedEventFromRecordWithMetadata(event);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(ApiKeyGuard)
+  async delete(
+    @Param(
+      'id',
+      new ParseIntPipe({
+        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+      }),
+    )
+    id: number,
+  ): Promise<void> {
+    const event = await this.eventsService.findOrThrow(id);
+    await this.eventsService.delete(event);
   }
 }
