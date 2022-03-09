@@ -738,6 +738,15 @@ describe('EventsService', () => {
         });
       });
     });
+
+    describe('when the sequence is after the end of phase one', () => {
+      it('returns null', async () => {
+        const { block, user } = await setupBlockMined();
+        block.sequence = 150001;
+        const event = await eventsService.upsertBlockMined(block, user);
+        expect(event).toBeNull();
+      });
+    });
   });
 
   describe('deleteBlockMined', () => {

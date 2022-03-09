@@ -313,7 +313,7 @@ export class EventsService {
     });
   }
 
-  async createWithClient(
+  private async createWithClient(
     { blockId, occurredAt, points, type, userId, url }: CreateEventOptions,
     client: BasePrismaClient,
   ): Promise<EventWithMetadata | null> {
@@ -441,6 +441,11 @@ export class EventsService {
   }
 
   async upsertBlockMined(block: Block, user: User): Promise<Event | null> {
+    // https://ironfish.network/blog/2022/03/07/incentivized-testnet-roadmap
+    const endOfPhaseOneSequence = 150000;
+    if (block.sequence > endOfPhaseOneSequence) {
+      return null;
+    }
     return this.create({
       blockId: block.id,
       occurredAt: block.timestamp,
