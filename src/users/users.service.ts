@@ -100,9 +100,6 @@ export class UsersService {
           {
             graffiti,
           },
-          {
-            github,
-          },
         ],
       },
     });
