@@ -361,29 +361,6 @@ describe('UsersService', () => {
       });
     });
 
-    describe('with a duplicate github', () => {
-      it('throws an exception', async () => {
-        const github = faker.internet.userName();
-        await prisma.user.create({
-          data: {
-            email: faker.internet.email(),
-            github,
-            graffiti: uuid(),
-            country_code: faker.address.countryCode('alpha-3'),
-          },
-        });
-
-        await expect(
-          usersService.create({
-            email: faker.internet.email(),
-            graffiti: uuid(),
-            github,
-            country_code: faker.address.countryCode('alpha-3'),
-          }),
-        ).rejects.toThrow(UnprocessableEntityException);
-      });
-    });
-
     describe('with a new graffiti and email', () => {
       it('creates a new record', async () => {
         const email = faker.internet.email();
