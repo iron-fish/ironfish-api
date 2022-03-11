@@ -356,7 +356,7 @@ export class EventsService {
     if (url) {
       metadata = { ...metadata, url: url };
       const existingEvent = await this.getEventByUrl(url);
-      if (existingEvent) {
+      if (existingEvent && existingEvent.deleted_at == null) {
         return {
           ...existingEvent,
           metadata: {
