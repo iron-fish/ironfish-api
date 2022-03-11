@@ -618,6 +618,38 @@ describe('EventsService', () => {
         expect(event).toStrictEqual(duplicateEvent);
       });
     });
+
+    describe('for recreating an event', () => {
+      it('after deleting an event, creation of a different event with same url is allowed', async () => {
+        const points = 100;
+        const user = await setupUser(points);
+
+        const type = EventType.COMMUNITY_CONTRIBUTION;
+        const url = `https://twitter.com/brahitoz/status/1494793514839953413?s=20&t=sB0r4-R1ijn7J9kxS3YqPQ`;
+
+        const event = await eventsService.create({
+          type,
+          userId: user.id,
+          points,
+          url,
+        });
+        assert(event);
+        const eventToDelete = await eventsService.findOrThrow(event.id);
+        const deletedEvent = await eventsService.delete(eventToDelete);
+        expect(deletedEvent.deleted_at).toBeTruthy();
+
+        const newPoints = 500;
+        const event2 = await eventsService.create({
+          type,
+          userId: user.id,
+          points: newPoints,
+          url,
+        });
+
+        expect(event2?.points).toStrictEqual(newPoints);
+        expect(event2?.deleted_at).toBeFalsy();
+      });
+    });
   });
 
   describe('upsertBlockMined', () => {
