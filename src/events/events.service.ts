@@ -320,13 +320,12 @@ export class EventsService {
     occurredAt = occurredAt || new Date();
     // 2021 December 1 8 PM UTC
     const launchDate = new Date(Date.UTC(2021, 11, 1, 20, 0, 0));
-    const now = new Date();
+    // 2022 March 12 8 PM UTC
+    const endOfPhaseOne = new Date(Date.UTC(2022, 2, 12, 20, 0, 0));
+    const beforeLaunch = occurredAt < launchDate;
+    const afterPhaseOne = occurredAt > endOfPhaseOne;
     // Requests to create events and the event timestamp should both be after launch
-    if (
-      this.config.isProduction() &&
-      occurredAt < launchDate &&
-      now < launchDate
-    ) {
+    if (this.config.isProduction() && (beforeLaunch || afterPhaseOne)) {
       return null;
     }
 
