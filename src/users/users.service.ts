@@ -277,8 +277,13 @@ export class UsersService {
           ELSE
             TRUE
         END
-      ORDER BY
-        rank ASC
+      ORDER BY 
+        CASE WHEN $2
+          THEN 
+            rank 
+          ELSE 
+            -rank 
+        END ASC
       LIMIT
         $4`;
 
@@ -291,6 +296,12 @@ export class UsersService {
       countryCode,
       eventType,
     );
+    // If fetching a previous page, the ranks are sorted in opposite order.
+    // Reverse the data so the returned chunk is in ascending order.
+    if (before !== undefined) {
+      data.reverse();
+    }
+
     return {
       data,
       ...(await this.getListWithRankMetadata(

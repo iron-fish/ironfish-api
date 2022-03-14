@@ -91,6 +91,16 @@ Object {
 }
 `;
 
+exports[`BlocksController POST /blocks with a valid payload upserts blocks 1`] = `
+Object {
+  "error": "Unprocessable Entity",
+  "message": Array [
+    "blocks must contain not more than 3000 elements",
+  ],
+  "statusCode": 422,
+}
+`;
+
 exports[`BlocksController POST /blocks with missing arguments returns a 422 1`] = `
 Object {
   "error": "Unprocessable Entity",
