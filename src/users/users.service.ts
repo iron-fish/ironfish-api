@@ -298,7 +298,7 @@ export class UsersService {
     );
     // If fetching a previous page, the ranks are sorted in opposite order.
     // Reverse the data so the returned chunk is in ascending order.
-    if (before !== undefined) {
+    if (!before) {
       data.reverse();
     }
 
