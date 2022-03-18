@@ -200,7 +200,8 @@ export class EventsService {
   private async getEventByUrl(url: string): Promise<Event | null> {
     return this.prisma.event.findFirst({
       where: {
-        url: url,
+        url,
+        deleted_at: null,
       },
     });
   }
