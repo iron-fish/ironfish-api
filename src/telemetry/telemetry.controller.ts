@@ -6,9 +6,11 @@ import {
   Controller,
   HttpStatus,
   Post,
+  Req,
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiExcludeEndpoint } from '@nestjs/swagger';
+import { Request } from 'express';
 import { gte, valid } from 'semver';
 import { InfluxDbService } from '../influxdb/influxdb.service';
 import { WriteTelemetryPointsDto } from './dto/write-telemetry-points.dto';
@@ -22,6 +24,7 @@ export class TelemetryController {
   @ApiExcludeEndpoint()
   @Post()
   write(
+    @Req() request: Request,
     @Body(
       new ValidationPipe({
         errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
@@ -48,6 +51,8 @@ export class TelemetryController {
     if (options.length) {
       this.influxDbService.writePoints(options);
     }
+
+    this.submitIpWithoutNodeFieldsToTelemetry(request);
   }
 
   private isValidTelemetryVersion(version: string): boolean {
@@ -56,5 +61,29 @@ export class TelemetryController {
       return false;
     }
     return gte(parsed, this.MINIMUM_TELEMETRY_VERSION);
+  }
+
+  private submitIpWithoutNodeFieldsToTelemetry(request: Request): void {
+    const xForwardedFor = request.header('X-Forwarded-For');
+    if (xForwardedFor) {
+      const addresses = xForwardedFor.split(',');
+      if (addresses.length) {
+        const ip = addresses[0].trim();
+        this.influxDbService.writePoints([
+          {
+            measurement: 'node_addresses',
+            fields: [
+              {
+                name: 'ip',
+                type: 'string',
+                value: ip,
+              },
+            ],
+            tags: [],
+            timestamp: new Date(),
+          },
+        ]);
+      }
+    }
   }
 }
