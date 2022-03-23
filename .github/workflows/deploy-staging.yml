@@ -12,20 +12,8 @@ jobs:
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v2
-      - name: Set up SSH agent
-        uses: webfactory/ssh-agent@v0.5.3
+      - uses: akhileshns/heroku-deploy@v3.12.12
         with:
-          ssh-private-key: ${{ secrets.HEROKU_SSH_PRIVATE_KEY }}
-      - name: Update known hosts
-        run: ssh-keyscan -H heroku.com >> ~/.ssh/known_hosts
-      - name: SSH Git with Heroku
-        run: git config --global url.ssh://git@heroku.com/.insteadOf https://git.heroku.com/
-      - name: Add Heroku remote
-        run: git remote add heroku $HEROKU_REMOTE
-        env:
-          HEROKU_REMOTE: ${{ secrets.HEROKU_REMOTE }}
-      - name: Fetch
-        run: git fetch --unshallow origin
-      - name: Push to Heroku
-        run: git push heroku -f HEAD:master
-
+          heroku_app_name: ${{ secrets.HEROKU_APP_NAME_STAGING }}
+          heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
+          heroku_email: ${{ secrets.HEROKU_EMAIL }}
