@@ -33,6 +33,7 @@ import { SerializedEventMetrics } from '../events/interfaces/serialized-event-me
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserMetricsQueryDto } from './dto/user-metrics-query.dto';
+import { UserQueryDto } from './dto/user-query.dto';
 import { UsersQueryDto } from './dto/users-query.dto';
 import { SerializedUser } from './interfaces/serialized-user';
 import { SerializedUserMetrics } from './interfaces/serialized-user-metrics';
@@ -56,10 +57,33 @@ export class UsersController {
     private readonly usersUpdater: UsersUpdater,
   ) {}
 
+  @ApiOperation({ summary: `Gets a specific User by 'graffiti'` })
+  @Get('find')
+  async find(
+    @Query(
+      new ValidationPipe({
+        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        transform: true,
+      }),
+    )
+    { graffiti, with_rank }: UserQueryDto,
+  ): Promise<SerializedUser | SerializedUserWithRank> {
+    const user = await this.usersService.findByGraffitiOrThrow(graffiti);
+
+    if (with_rank) {
+      return serializedUserFromRecordWithRank(
+        user,
+        await this.usersService.getRank(user),
+      );
+    } else {
+      return serializedUserFromRecord(user);
+    }
+  }
+
   @ApiOperation({ summary: 'Gets a specific User' })
   @ApiParam({ description: 'Unique User identifier', name: 'id' })
   @Get(':id')
-  async find(
+  async get(
     @Param(
       'id',
       new ParseIntPipe({
@@ -67,7 +91,7 @@ export class UsersController {
       }),
     )
     id: number,
-  ): Promise<SerializedUser> {
+  ): Promise<SerializedUserWithRank> {
     const user = await this.usersService.findOrThrow(id);
     return serializedUserFromRecordWithRank(
       user,
