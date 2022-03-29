@@ -75,6 +75,25 @@ export class UsersController {
     );
   }
 
+  @ApiOperation({ summary: 'Gets a specific User' })
+  @ApiParam({ description: 'Unique User graffiti', name: 'graffiti' })
+  @Get('/graffiti/:graffiti')
+  async findByGraffiti(
+    @Param(
+      'graffiti',
+      new ValidationPipe({
+        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+      }),
+    )
+    graffiti: string,
+  ): Promise<SerializedUser> {
+    const user = await this.usersService.findByGraffitiOrThrow(graffiti);
+    return serializedUserFromRecordWithRank(
+      user,
+      await this.usersService.getRank(user),
+    );
+  }
+
   @ApiOperation({ summary: 'Gets metrics for a specific User' })
   @ApiParam({ description: 'Unique User identifier', name: 'id' })
   @Get(':id/metrics')

@@ -64,6 +64,39 @@ describe('UsersController', () => {
     });
   });
 
+  describe('GET /users/graffiti/:graffiti', () => {
+    describe('with a valid graffiti', () => {
+      it('returns the user', async () => {
+        const graffiti = 'foobarbaz';
+        const user = await prisma.user.create({
+          data: {
+            email: faker.internet.email(),
+            graffiti: graffiti,
+            country_code: faker.address.countryCode(),
+          },
+        });
+        const { body } = await request(app.getHttpServer())
+          .get(`/users/graffiti/${graffiti}`)
+          .expect(HttpStatus.OK);
+
+        expect(body).toMatchObject({
+          id: user.id,
+          graffiti: user.graffiti,
+          total_points: expect.any(Number),
+          created_at: user.created_at.toISOString(),
+        });
+      });
+    });
+
+    describe('with a missing graffiti', () => {
+      it('returns a 404', async () => {
+        await request(app.getHttpServer())
+          .get('/users/graffiti/12345')
+          .expect(HttpStatus.NOT_FOUND);
+      });
+    });
+  });
+
   describe('GET /users/:id/metrics', () => {
     describe('with start but no end', () => {
       it('returns a 422', async () => {
