@@ -51,6 +51,7 @@ describe('UsersController', () => {
           graffiti: user.graffiti,
           total_points: expect.any(Number),
           created_at: user.created_at.toISOString(),
+          rank: await usersService.getRank(user),
         });
       });
     });
@@ -64,26 +65,57 @@ describe('UsersController', () => {
     });
   });
 
-  describe('GET /users/graffiti/:graffiti', () => {
-    describe('with a valid graffiti', () => {
-      it('returns the user', async () => {
-        const graffiti = 'foobarbaz';
-        const user = await prisma.user.create({
-          data: {
-            email: faker.internet.email(),
-            graffiti: graffiti,
-            country_code: faker.address.countryCode(),
-          },
-        });
-        const { body } = await request(app.getHttpServer())
-          .get(`/users/graffiti/${graffiti}`)
-          .expect(HttpStatus.OK);
+  describe('GET /users/find', () => {
+    describe('with rank requested', () => {
+      describe('with a valid graffiti', () => {
+        it('returns the user', async () => {
+          const graffiti = uuid();
+          const user = await prisma.user.create({
+            data: {
+              email: faker.internet.email(),
+              graffiti: graffiti,
+              country_code: faker.address.countryCode(),
+            },
+          });
+          const { body } = await request(app.getHttpServer())
+            .get(`/users/find`)
+            .query({ graffiti: graffiti, with_rank: true })
+            .expect(HttpStatus.OK);
 
-        expect(body).toMatchObject({
-          id: user.id,
-          graffiti: user.graffiti,
-          total_points: expect.any(Number),
-          created_at: user.created_at.toISOString(),
+          expect(body).toMatchObject({
+            id: user.id,
+            graffiti: user.graffiti,
+            total_points: expect.any(Number),
+            created_at: user.created_at.toISOString(),
+            rank: await usersService.getRank(user),
+          });
+        });
+      });
+    });
+
+    describe('with rank not requested', () => {
+      describe('with a valid graffiti', () => {
+        it('returns the user', async () => {
+          const graffiti = uuid();
+          const user = await prisma.user.create({
+            data: {
+              email: faker.internet.email(),
+              graffiti: graffiti,
+              country_code: faker.address.countryCode(),
+            },
+          });
+          const { body } = await request(app.getHttpServer())
+            .get(`/users/find`)
+            .query({ graffiti: graffiti })
+            .expect(HttpStatus.OK);
+
+          expect(body).not.toHaveProperty('rank');
+          expect(body).toMatchObject({
+            id: user.id,
+            graffiti: user.graffiti,
+            total_points: expect.any(Number),
+            created_at: user.created_at.toISOString(),
+          });
         });
       });
     });
