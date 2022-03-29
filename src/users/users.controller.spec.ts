@@ -73,13 +73,13 @@ describe('UsersController', () => {
           const user = await prisma.user.create({
             data: {
               email: faker.internet.email(),
-              graffiti: graffiti,
+              graffiti,
               country_code: faker.address.countryCode(),
             },
           });
           const { body } = await request(app.getHttpServer())
             .get(`/users/find`)
-            .query({ graffiti: graffiti, with_rank: true })
+            .query({ graffiti, with_rank: true })
             .expect(HttpStatus.OK);
 
           expect(body).toMatchObject({
@@ -100,13 +100,13 @@ describe('UsersController', () => {
           const user = await prisma.user.create({
             data: {
               email: faker.internet.email(),
-              graffiti: graffiti,
+              graffiti,
               country_code: faker.address.countryCode(),
             },
           });
           const { body } = await request(app.getHttpServer())
             .get(`/users/find`)
-            .query({ graffiti: graffiti })
+            .query({ graffiti })
             .expect(HttpStatus.OK);
 
           expect(body).not.toHaveProperty('rank');
@@ -123,7 +123,7 @@ describe('UsersController', () => {
     describe('with a missing graffiti', () => {
       it('returns a 404', async () => {
         await request(app.getHttpServer())
-          .get('/users/graffiti/12345')
+          .get('/users/find?graffiti=12345')
           .expect(HttpStatus.NOT_FOUND);
       });
     });
