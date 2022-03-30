@@ -14,7 +14,7 @@ export const MAX_LIMIT = 100;
 export const WEEKLY_POINT_LIMITS_BY_EVENT_TYPE: Record<EventType, number> = {
   [EventType.BLOCK_MINED]: 1000,
   [EventType.BUG_CAUGHT]: 1000,
-  [EventType.COMMUNITY_CONTRIBUTION]: 1000,
+  [EventType.COMMUNITY_CONTRIBUTION]: 2000,
   [EventType.PULL_REQUEST_MERGED]: 5000,
   [EventType.SOCIAL_MEDIA_PROMOTION]: 1000,
 };
