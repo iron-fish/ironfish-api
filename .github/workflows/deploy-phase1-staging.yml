@@ -2,7 +2,7 @@ name: Deploy Phase1 Staging API
 on:
   push:
     branches:
-      - master
+      - phase1
 
 jobs:
   deploy:
