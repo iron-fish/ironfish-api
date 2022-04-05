@@ -492,10 +492,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@datadog/native-appsec@^0.8.3":
-  version "0.8.3"
-  resolved "https://registry.yarnpkg.com/@datadog/native-appsec/-/native-appsec-0.8.3.tgz#f18974a66cbee77d77429d24513a42c9343e09d8"
-  integrity sha512-X8RAZkyZUEZ5qywLydpqojJxMcFZjvNS6FhSbBXY8+slbez7wH+nja3CUgUP43Jez/B6jfS49t3WrOX0/BfA8g==
+"@datadog/native-appsec@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@datadog/native-appsec/-/native-appsec-1.0.0.tgz#1f4210e0b0ea07f342c7de2dc874e4bc529806db"
+  integrity sha512-PtTy/SRMeXRvUEqvol4Ex4JJ97rJR5hcQbzwTM0KJo+P3/nfYA9HMjdvnYdk/wDOpkApTcu9RhtahniaJDScLA==
   dependencies:
     detect-libc "^1.0.3"
     minimist "^1.2.6"
@@ -2046,12 +2046,12 @@ data-urls@^2.0.0:
     whatwg-mimetype "^2.3.0"
     whatwg-url "^8.0.0"
 
-dd-trace@2.4.1:
-  version "2.4.1"
-  resolved "https://registry.yarnpkg.com/dd-trace/-/dd-trace-2.4.1.tgz#71c00785db83e29e016998af156e49cf9f7f4417"
-  integrity sha512-l9E0k7wdnXwd/1I8+rzjK3TdhA6E7rs/k/L3qMVdtg6M1DefcUmKixwcuoDLowCHbJr8LvqBv8Qq29fJew6Cyw==
+dd-trace@2.4.2:
+  version "2.4.2"
+  resolved "https://registry.yarnpkg.com/dd-trace/-/dd-trace-2.4.2.tgz#df6f2c7d8076dee3792a605ac97f5d5803e9831a"
+  integrity sha512-lPjWSUB1F+BbgIOFpRXxuZAPpazz4BhtiaJ2jWkib5kaL6um/BY7MuBYmH9be4SKfaTeBR/vITUtznOYWqFKLA==
   dependencies:
-    "@datadog/native-appsec" "^0.8.3"
+    "@datadog/native-appsec" "^1.0.0"
     "@datadog/native-metrics" "^1.1.0"
     "@datadog/pprof" "^0.3.0"
     "@datadog/sketches-js" "^1.0.4"
