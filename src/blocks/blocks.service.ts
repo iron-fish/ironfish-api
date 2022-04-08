@@ -298,11 +298,11 @@ export class BlocksService {
       SELECT
         COUNT(*) AS cumulative_unique_graffiti
       FROM (
-        SELECT 
-          DISTINCT graffiti 
-        FROM 
-          blocks 
-        WHERE 
+        SELECT
+          DISTINCT graffiti
+        FROM
+          blocks
+        WHERE
           timestamp < '${end.toISOString()}' AND
           main = true AND
           network_version = $1

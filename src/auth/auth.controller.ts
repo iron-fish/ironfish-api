@@ -11,12 +11,14 @@ import {
 } from '@nestjs/common';
 import { ApiExcludeEndpoint } from '@nestjs/swagger';
 import { Request, Response } from 'express';
+import { ApiConfigService } from '../api-config/api-config.service';
 import { MagicLinkService } from '../magic-link/magic-link.service';
 import { UsersService } from '../users/users.service';
 
 @Controller()
 export class AuthController {
   constructor(
+    private readonly config: ApiConfigService,
     private readonly magicLinkService: MagicLinkService,
     private readonly usersService: UsersService,
   ) {}
@@ -24,6 +26,10 @@ export class AuthController {
   @ApiExcludeEndpoint()
   @Post('login')
   async login(@Req() req: Request, @Res() res: Response): Promise<void> {
+    if (this.config.get<boolean>('DISABLE_LOGIN')) {
+      throw new UnauthorizedException();
+    }
+
     let email;
 
     const { authorization } = req.headers;

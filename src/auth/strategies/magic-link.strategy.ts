@@ -5,6 +5,7 @@ import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Request } from 'express';
 import { Strategy } from 'passport';
+import { ApiConfigService } from '../../api-config/api-config.service';
 import { MagicLinkContext } from '../../common/interfaces/magic-link-context';
 import { MagicLinkService } from '../../magic-link/magic-link.service';
 import { UsersService } from '../../users/users.service';
@@ -15,6 +16,7 @@ export class MagicLinkStrategy extends PassportStrategy(
   'magic-link',
 ) {
   constructor(
+    private readonly config: ApiConfigService,
     private readonly magicLinkService: MagicLinkService,
     private readonly usersService: UsersService,
   ) {
@@ -26,6 +28,11 @@ export class MagicLinkStrategy extends PassportStrategy(
     if (!authorization) {
       return this.fail();
     }
+
+    if (this.config.get('DISABLE_LOGIN')) {
+      return this.fail();
+    }
+
     try {
       const email = await this.magicLinkService.getEmailFromHeader(
         authorization,
