@@ -140,6 +140,41 @@ describe('BlocksService', () => {
         previous_block_hash: standardizeHash(previousBlockHash),
       });
     });
+
+    describe('if CHECK_USER_CREATED_AT is disabled', () => {
+      it('upserts records with timestamps before created_at', async () => {
+        const graffiti = uuid();
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti,
+          country_code: faker.address.countryCode('alpha-3'),
+        });
+        const options = {
+          hash: uuid(),
+          sequence: faker.datatype.number(),
+          difficulty: faker.datatype.number(),
+          timestamp: new Date('2000-01-01T00:00:00Z'),
+          transactionsCount: 1,
+          type: BlockOperation.CONNECTED,
+          graffiti,
+          previousBlockHash: uuid(),
+          size: faker.datatype.number(),
+        };
+
+        jest
+          .spyOn(config, 'get')
+          .mockImplementationOnce(() => 0)
+          .mockImplementationOnce(() => false);
+        const { block, upsertBlockMinedOptions } = await blocksService.upsert(
+          prisma,
+          options,
+        );
+        expect(upsertBlockMinedOptions).toEqual({
+          block_id: block.id,
+          user_id: user.id,
+        });
+      });
+    });
   });
 
   describe('head', () => {
