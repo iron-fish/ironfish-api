@@ -49,12 +49,12 @@ model User {
 }
 
 model NodeUptime {
+  id              Int      @id @default(autoincrement())
   user            User     @relation(fields: [user_id], references: [id])
   user_id         Int
   total_hours     Int      @default(0)
   last_checked_in DateTime @default(now()) @db.Timestamp(6)
 
-  @@id(user_id)
   @@index([user_id], name: "index_node_uptime_on_user_id")
   @@map("node_uptimes")
 }
