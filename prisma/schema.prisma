@@ -171,7 +171,7 @@ model UserPoints {
   pull_request_merged_points                     Int       @default(0)
   pull_request_merged_last_occurred_at           DateTime? @db.Timestamp(6)
   social_media_promotion_points                  Int       @default(0)
-  social_media_promotion_last_occurred_at_points DateTime? @db.Timestamp(6)
+  social_media_promotion_last_occurred_at        DateTime? @db.Timestamp(6)
   user                                           User      @relation(fields: [user_id], references: [id])
 
   @@index([user_id], map: "index_node_uptime_on_user_id")
