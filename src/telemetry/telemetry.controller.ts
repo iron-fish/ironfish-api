@@ -62,10 +62,9 @@ export class TelemetryController {
 
     if (graffiti) {
       const user = await this.usersService.findByGraffiti(graffiti);
-      if (user == null) {
-        return;
+      if (user) {
+        await this.nodeUptimes.upsert(user);
       }
-      await this.nodeUptimes.upsert(user);
     }
   }
 

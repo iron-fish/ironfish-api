@@ -5,6 +5,7 @@
 import { Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { NodeUptime } from '.prisma/client';
 
 @Injectable()
@@ -17,7 +18,7 @@ export class NodeUptimesService {
     oneHourAgo.setHours(now.getHours() - 1);
 
     return this.prisma.$transaction(async (prisma) => {
-      const nodeUptime = await this.get(user);
+      const nodeUptime = await this.getWithClient(user, prisma);
       if (nodeUptime && nodeUptime.last_checked_in >= oneHourAgo) {
         return null;
       }
@@ -42,7 +43,14 @@ export class NodeUptimesService {
   }
 
   async get(user: User): Promise<NodeUptime | null> {
-    return this.prisma.nodeUptime.findUnique({
+    return this.getWithClient(user, this.prisma);
+  }
+
+  async getWithClient(
+    user: User,
+    client: BasePrismaClient,
+  ): Promise<NodeUptime | null> {
+    return client.nodeUptime.findUnique({
       where: {
         user_id: user.id,
       },

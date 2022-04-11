@@ -26,7 +26,7 @@ describe('NodeUptimesService', () => {
   });
 
   const createUser = async () => {
-    return await prisma.user.create({
+    return prisma.user.create({
       data: {
         email: faker.internet.email(),
         graffiti: uuid(),
