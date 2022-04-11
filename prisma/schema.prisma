@@ -28,23 +28,35 @@ model Event {
 }
 
 model User {
-  id                  Int       @id @default(autoincrement())
-  created_at          DateTime  @default(now()) @db.Timestamp(6)
-  updated_at          DateTime  @default(now()) @updatedAt @db.Timestamp(6)
-  email               String    @db.VarChar @unique(map: "uq_users_on_email")
-  graffiti            String    @db.VarChar @unique(map: "uq_users_on_graffiti")
-  total_points        Int       @default(0)
-  country_code        String    @db.VarChar
-  email_notifications Boolean   @default(false)
-  last_login_at       DateTime? @db.Timestamp(6)
-  discord             String?   @db.VarChar
-  telegram            String?   @db.VarChar
-  github              String?   @db.VarChar
+  id                  Int         @id @default(autoincrement())
+  created_at          DateTime    @default(now()) @db.Timestamp(6)
+  updated_at          DateTime    @default(now()) @updatedAt @db.Timestamp(6)
+  email               String      @db.VarChar @unique(map: "uq_users_on_email")
+  graffiti            String      @db.VarChar @unique(map: "uq_users_on_graffiti")
+  total_points        Int         @default(0)
+  country_code        String      @db.VarChar
+  email_notifications Boolean     @default(false)
+  last_login_at       DateTime?   @db.Timestamp(6)
+  discord             String?     @db.VarChar
+  telegram            String?     @db.VarChar
+  github              String?     @db.VarChar
   events              Event[]
+  node_uptime         NodeUptime?
 
   @@index([email], name: "index_users_on_email")
   @@index([graffiti], name: "index_users_on_graffiti")
   @@map("users")
+}
+
+model NodeUptime {
+  id              Int      @id @default(autoincrement())
+  user            User     @relation(fields: [user_id], references: [id])
+  user_id         Int
+  total_hours     Int      @default(0)
+  last_checked_in DateTime @default(now()) @db.Timestamp(6)
+
+  @@index([user_id], name: "index_node_uptime_on_user_id")
+  @@map("node_uptimes")
 }
 
 model Block {
