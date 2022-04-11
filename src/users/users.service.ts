@@ -12,6 +12,7 @@ import { SortOrder } from '../common/enums/sort-order';
 import { standardizeEmail } from '../common/utils/email';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
+import { UserPointsService } from '../user-points/user-points.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { ListUsersWithRankOptions } from './interfaces/list-by-rank-options';
 import { ListUsersOptions } from './interfaces/list-users-options';
@@ -21,7 +22,10 @@ import { Prisma, User } from '.prisma/client';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly userPointsService: UserPointsService,
+  ) {}
 
   async find(id: number): Promise<User | null> {
     return this.prisma.user.findUnique({
@@ -110,8 +114,8 @@ export class UsersService {
         }'`,
       );
     }
-    const [user] = await this.prisma.$transaction([
-      this.prisma.user.create({
+    return this.prisma.$transaction(async (prisma) => {
+      const user = await prisma.user.create({
         data: {
           email,
           graffiti,
@@ -120,9 +124,10 @@ export class UsersService {
           github,
           country_code: countryCode,
         },
-      }),
-    ]);
-    return user;
+      });
+      await this.userPointsService.upsert({ userId: user.id }, prisma);
+      return user;
+    });
   }
 
   async list(options: ListUsersOptions): Promise<{

@@ -15,6 +15,7 @@ import {
 import { getMondayFromDate } from '../common/utils/date';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
+import { UserPointsService } from '../user-points/user-points.service';
 import { CreateEventOptions } from './interfaces/create-event-options';
 import { EventWithMetadata } from './interfaces/event-with-metadata';
 import { ListEventsOptions } from './interfaces/list-events-options';
@@ -27,6 +28,7 @@ export class EventsService {
     private readonly blocksService: BlocksService,
     private readonly config: ApiConfigService,
     private readonly prisma: PrismaService,
+    private readonly userPointsService: UserPointsService,
   ) {}
 
   async findOrThrow(id: number): Promise<Event> {
@@ -351,24 +353,13 @@ export class EventsService {
       Math.max(weeklyLimitForEventType - pointsThisWeek, 0),
       points ?? POINTS_PER_CATEGORY[type],
     );
+
     let metadata = {};
-
-    if (url) {
-      metadata = { ...metadata, url: url };
-      const existingEvent = await this.getEventByUrl(url);
-      if (existingEvent) {
-        return {
-          ...existingEvent,
-          metadata: {
-            url: url,
-          },
-        };
-      }
-    }
-
     let existingEvent;
-
-    if (blockId) {
+    if (url) {
+      metadata = { ...metadata, url };
+      existingEvent = await this.getEventByUrl(url);
+    } else if (blockId) {
       existingEvent = await client.event.findUnique({
         where: {
           block_id: blockId,
@@ -406,11 +397,6 @@ export class EventsService {
           },
         });
       }
-
-      return {
-        ...existingEvent,
-        metadata,
-      };
     } else {
       await client.user.update({
         data: {
@@ -423,7 +409,7 @@ export class EventsService {
         },
       });
 
-      const record = await client.event.create({
+      existingEvent = await client.event.create({
         data: {
           type,
           block_id: blockId,
@@ -433,11 +419,65 @@ export class EventsService {
           url,
         },
       });
-      return {
-        ...record,
-        metadata,
-      };
     }
+
+    await this.updateLatestPoints(userId, type, occurredAt, client);
+
+    return {
+      ...existingEvent,
+      metadata,
+    };
+  }
+
+  private async updateLatestPoints(
+    userId: number,
+    type: EventType,
+    occurredAt: Date,
+    client: BasePrismaClient,
+  ): Promise<void> {
+    const occurredAtAggregate = await client.event.aggregate({
+      _max: {
+        occurred_at: true,
+      },
+      where: {
+        type,
+        user_id: userId,
+        deleted_at: null,
+      },
+    });
+    const latestOccurredAt = occurredAtAggregate._max.occurred_at ?? occurredAt;
+
+    const pointsAggregate = await client.event.aggregate({
+      _sum: {
+        points: true,
+      },
+      where: {
+        type,
+        user_id: userId,
+        deleted_at: null,
+      },
+    });
+    const points = pointsAggregate._sum.points ?? 0;
+
+    const totalPointsAggregate = await client.event.aggregate({
+      _sum: {
+        points: true,
+      },
+      where: {
+        user_id: userId,
+        deleted_at: null,
+      },
+    });
+    const totalPoints = totalPointsAggregate._sum.points ?? 0;
+
+    await this.userPointsService.upsert(
+      {
+        userId,
+        points: { [type]: { points, latestOccurredAt } },
+        totalPoints,
+      },
+      client,
+    );
   }
 
   async upsertBlockMined(block: Block, user: User): Promise<Event | null> {

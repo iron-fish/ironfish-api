@@ -3,12 +3,11 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '../prisma/prisma.module';
-import { UserPointsModule } from '../user-points/user-points.module';
-import { UsersService } from './users.service';
+import { UserPointsService } from './user-points.service';
 
 @Module({
-  exports: [UsersService],
-  imports: [PrismaModule, UserPointsModule],
-  providers: [UsersService],
+  exports: [UserPointsService],
+  imports: [PrismaModule],
+  providers: [UserPointsService],
 })
-export class UsersModule {}
+export class UserPointsModule {}

@@ -13,6 +13,7 @@ import { v4 as uuid } from 'uuid';
 import { standardizeEmail } from '../common/utils/email';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
+import { UserPointsService } from '../user-points/user-points.service';
 import { UsersService } from './users.service';
 import { EventType } from '.prisma/client';
 
@@ -20,11 +21,13 @@ describe('UsersService', () => {
   let app: INestApplication;
   let usersService: UsersService;
   let prisma: PrismaService;
+  let userPointsService: UserPointsService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
     usersService = app.get(UsersService);
     prisma = app.get(PrismaService);
+    userPointsService = app.get(UserPointsService);
     await app.init();
   });
 
@@ -376,6 +379,22 @@ describe('UsersService', () => {
           email: standardizeEmail(email),
           graffiti,
         });
+      });
+
+      it('creates a new user points record', async () => {
+        const email = faker.internet.email();
+        const graffiti = uuid();
+        const upsertPoints = jest.spyOn(userPointsService, 'upsert');
+
+        const user = await usersService.create({
+          email,
+          graffiti,
+          country_code: faker.address.countryCode('alpha-3'),
+        });
+
+        expect(upsertPoints).toHaveBeenCalledTimes(1);
+        assert.ok(upsertPoints.mock.calls);
+        expect(upsertPoints.mock.calls[0][0].userId).toBe(user.id);
       });
     });
   });

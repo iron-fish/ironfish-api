@@ -5,11 +5,12 @@ import { Module } from '@nestjs/common';
 import { ApiConfigModule } from '../api-config/api-config.module';
 import { BlocksModule } from '../blocks/blocks.module';
 import { PrismaModule } from '../prisma/prisma.module';
+import { UserPointsModule } from '../user-points/user-points.module';
 import { EventsService } from './events.service';
 
 @Module({
   exports: [EventsService],
-  imports: [ApiConfigModule, BlocksModule, PrismaModule],
+  imports: [ApiConfigModule, BlocksModule, PrismaModule, UserPointsModule],
   providers: [EventsService],
 })
 export class EventsModule {}
