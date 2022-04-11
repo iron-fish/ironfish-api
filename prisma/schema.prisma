@@ -28,19 +28,20 @@ model Event {
 }
 
 model User {
-  id                  Int       @id @default(autoincrement())
-  created_at          DateTime  @default(now()) @db.Timestamp(6)
-  updated_at          DateTime  @default(now()) @updatedAt @db.Timestamp(6)
-  email               String    @db.VarChar @unique(map: "uq_users_on_email")
-  graffiti            String    @db.VarChar @unique(map: "uq_users_on_graffiti")
-  total_points        Int       @default(0)
-  country_code        String    @db.VarChar
-  email_notifications Boolean   @default(false)
-  last_login_at       DateTime? @db.Timestamp(6)
-  discord             String?   @db.VarChar
-  telegram            String?   @db.VarChar
-  github              String?   @db.VarChar
+  id                  Int         @id @default(autoincrement())
+  created_at          DateTime    @default(now()) @db.Timestamp(6)
+  updated_at          DateTime    @default(now()) @updatedAt @db.Timestamp(6)
+  email               String      @unique(map: "uq_users_on_email") @db.VarChar
+  graffiti            String      @unique(map: "uq_users_on_graffiti") @db.VarChar
+  total_points        Int         @default(0)
+  country_code        String      @db.VarChar
+  email_notifications Boolean     @default(false)
+  last_login_at       DateTime?   @db.Timestamp(6)
+  discord             String?     @db.VarChar
+  telegram            String?     @db.VarChar
+  github              String?     @db.VarChar
   events              Event[]
+  points              UserPoints?
 
   @@index([email], name: "index_users_on_email")
   @@index([graffiti], name: "index_users_on_graffiti")
@@ -153,4 +154,31 @@ enum EventType {
   SOCIAL_MEDIA_PROMOTION
 
   @@map("event_type")
+}
+
+model UserPoints {
+  id                                             Int       @id @default(autoincrement())
+  created_at                                     DateTime  @default(now()) @db.Timestamp(6)
+  updated_at                                     DateTime  @default(now()) @updatedAt @db.Timestamp(6)
+  user_id                                        Int       @unique
+  total_points                                   Int       @default(0)
+  block_mined_points                             Int       @default(0)
+  block_mined_last_occurred_at                   DateTime? @db.Timestamp(6)
+  bug_caught_points                              Int       @default(0)
+  bug_caught_last_occurred_at                    DateTime? @db.Timestamp(6)
+  community_contribution_points                  Int       @default(0)
+  community_contribution_last_occurred_at        DateTime? @db.Timestamp(6)
+  pull_request_merged_points                     Int       @default(0)
+  pull_request_merged_last_occurred_at           DateTime? @db.Timestamp(6)
+  social_media_promotion_points                  Int       @default(0)
+  social_media_promotion_last_occurred_at        DateTime? @db.Timestamp(6)
+  user                                           User      @relation(fields: [user_id], references: [id])
+
+  @@index([user_id], map: "index_node_uptime_on_user_id")
+  @@index([block_mined_points], map: "index_user_points_on_block_mined")
+  @@index([bug_caught_points], map: "index_user_points_on_bug_caught")
+  @@index([community_contribution_points], map: "index_user_points_on_community_contribution")
+  @@index([pull_request_merged_points], map: "index_user_points_on_pull_request_merged")
+  @@index([social_media_promotion_points], map: "index_user_points_on_social_media_promotion")
+  @@map("user_points")
 }
