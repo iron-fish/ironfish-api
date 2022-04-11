@@ -42,10 +42,22 @@ model User {
   github              String?     @db.VarChar
   events              Event[]
   points              UserPoints?
+  node_uptime         NodeUptime?
 
   @@index([email], name: "index_users_on_email")
   @@index([graffiti], name: "index_users_on_graffiti")
   @@map("users")
+}
+
+model NodeUptime {
+  id              Int      @id @default(autoincrement())
+  user            User     @relation(fields: [user_id], references: [id])
+  user_id         Int
+  total_hours     Int      @default(0)
+  last_checked_in DateTime @default(now()) @db.Timestamp(6)
+
+  @@index([user_id], name: "index_node_uptime_on_user_id")
+  @@map("node_uptimes")
 }
 
 model Block {
@@ -174,7 +186,7 @@ model UserPoints {
   social_media_promotion_last_occurred_at        DateTime? @db.Timestamp(6)
   user                                           User      @relation(fields: [user_id], references: [id])
 
-  @@index([user_id], map: "index_node_uptime_on_user_id")
+  @@index([user_id], map: "index_user_points_on_user_id")
   @@index([block_mined_points], map: "index_user_points_on_block_mined")
   @@index([bug_caught_points], map: "index_user_points_on_bug_caught")
   @@index([community_contribution_points], map: "index_user_points_on_community_contribution")
