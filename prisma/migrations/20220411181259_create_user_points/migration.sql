@@ -14,7 +14,7 @@ CREATE TABLE "user_points" (
     "pull_request_merged_points" INTEGER NOT NULL DEFAULT 0,
     "pull_request_merged_last_occurred_at" TIMESTAMP(6),
     "social_media_promotion_points" INTEGER NOT NULL DEFAULT 0,
-    "social_media_promotion_last_occurred_at_points" TIMESTAMP(6),
+    "social_media_promotion_last_occurred_at" TIMESTAMP(6),
 
     CONSTRAINT "user_points_pkey" PRIMARY KEY ("id")
 );
@@ -23,7 +23,7 @@ CREATE TABLE "user_points" (
 CREATE UNIQUE INDEX "user_points_user_id_key" ON "user_points"("user_id");
 
 -- CreateIndex
-CREATE INDEX "index_node_uptime_on_user_id" ON "user_points"("user_id");
+CREATE INDEX "index_user_points_on_user_id" ON "user_points"("user_id");
 
 -- CreateIndex
 CREATE INDEX "index_user_points_on_block_mined" ON "user_points"("block_mined_points");
