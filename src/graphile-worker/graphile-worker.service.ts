@@ -17,7 +17,7 @@ export class GraphileWorkerService {
 
   async addJob<T = unknown>(
     pattern: GraphileWorkerPattern,
-    payload: T,
+    payload?: T,
     { queueName, runAt }: GraphileWorkerJobOptions = {},
   ): Promise<Job> {
     if (!this.workerUtils) {

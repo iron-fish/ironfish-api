@@ -46,7 +46,6 @@ describe('UserPointsController', () => {
 
       expect(addJob).toHaveBeenCalledWith(
         GraphileWorkerPattern.REFRESH_USERS_POINTS,
-        undefined,
       );
     });
   });

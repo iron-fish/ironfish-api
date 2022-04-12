@@ -25,7 +25,7 @@ describe('UserPointsJobsController', () => {
 
   let addJob: jest.SpyInstance<
     Promise<Job>,
-    [GraphileWorkerPattern, unknown, GraphileWorkerJobOptions?]
+    [GraphileWorkerPattern, unknown?, GraphileWorkerJobOptions?]
   >;
 
   beforeAll(async () => {
