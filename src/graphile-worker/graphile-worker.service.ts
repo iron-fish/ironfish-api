@@ -15,7 +15,7 @@ export class GraphileWorkerService {
 
   constructor(private readonly config: ApiConfigService) {}
 
-  async addJob<T>(
+  async addJob<T = unknown>(
     pattern: GraphileWorkerPattern,
     payload: T,
     { queueName, runAt }: GraphileWorkerJobOptions = {},

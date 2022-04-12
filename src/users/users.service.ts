@@ -125,7 +125,10 @@ export class UsersService {
           country_code: countryCode,
         },
       });
-      await this.userPointsService.upsert({ userId: user.id }, prisma);
+      await this.userPointsService.upsertWithClient(
+        { userId: user.id },
+        prisma,
+      );
       return user;
     });
   }

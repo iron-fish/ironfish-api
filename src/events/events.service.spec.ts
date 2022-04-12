@@ -245,6 +245,68 @@ describe('EventsService', () => {
     });
   });
 
+  describe('getUpsertPointsOptions', () => {
+    it('returns latest points, timestamps, and total points for a user', async () => {
+      const user = await usersService.create({
+        email: faker.internet.email(),
+        graffiti: uuid(),
+        country_code: faker.address.countryCode('alpha-3'),
+      });
+      const eventA = await eventsService.create({
+        type: EventType.PULL_REQUEST_MERGED,
+        userId: user.id,
+        points: 100,
+      });
+      const eventB = await eventsService.create({
+        type: EventType.PULL_REQUEST_MERGED,
+        userId: user.id,
+        points: 200,
+      });
+      const eventC = await eventsService.create({
+        type: EventType.BUG_CAUGHT,
+        userId: user.id,
+        points: 200,
+      });
+      const eventD = await eventsService.create({
+        type: EventType.SOCIAL_MEDIA_PROMOTION,
+        userId: user.id,
+        points: 300,
+      });
+      assert.ok(eventA);
+      assert.ok(eventB);
+      assert.ok(eventC);
+      assert.ok(eventD);
+
+      const options = await eventsService.getUpsertPointsOptions(user);
+      expect(options).toMatchObject({
+        totalPoints:
+          eventA.points + eventB.points + eventC.points + eventD.points,
+        points: {
+          BLOCK_MINED: {
+            points: 0,
+            latestOccurredAt: null,
+          },
+          BUG_CAUGHT: {
+            points: eventC.points,
+            latestOccurredAt: eventC.occurred_at,
+          },
+          COMMUNITY_CONTRIBUTION: {
+            points: 0,
+            latestOccurredAt: null,
+          },
+          PULL_REQUEST_MERGED: {
+            points: eventA.points + eventB.points,
+            latestOccurredAt: eventB.occurred_at,
+          },
+          SOCIAL_MEDIA_PROMOTION: {
+            points: eventD.points,
+            latestOccurredAt: eventD.occurred_at,
+          },
+        },
+      });
+    });
+  });
+
   describe('getLifetimeEventMetricsForUser', () => {
     it('sums up all the events for the users', async () => {
       const eventCounts: Record<EventType, number> = {
@@ -688,7 +750,7 @@ describe('EventsService', () => {
       const points = 50;
       const type = EventType.PULL_REQUEST_MERGED;
       const url = `https://github.com/iron-fish/ironfish/pull/${uuid().toString()}`;
-      const upsertPoints = jest.spyOn(userPointsService, 'upsert');
+      const upsertPoints = jest.spyOn(userPointsService, 'upsertWithClient');
 
       const event = await eventsService.create({
         type,

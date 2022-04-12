@@ -5,7 +5,6 @@ import { INestApplication } from '@nestjs/common';
 import assert from 'assert';
 import faker from 'faker';
 import { v4 as uuid } from 'uuid';
-import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
 import { UpsertUserPointsOptions } from './interfaces/upsert-user-points-options';
@@ -53,10 +52,7 @@ describe('UserPointsService', () => {
         totalPoints,
       };
 
-      const record = await userPointsService.upsert(
-        options,
-        app.get(PrismaService),
-      );
+      const record = await userPointsService.upsert(options);
 
       assert.ok(options.points);
       assert.ok(options.points.BLOCK_MINED);

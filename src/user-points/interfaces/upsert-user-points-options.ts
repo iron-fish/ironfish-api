@@ -6,7 +6,7 @@ import { EventType } from '.prisma/client';
 export interface UpsertUserPointsOptions {
   userId: number;
   points?: Partial<
-    Record<EventType, { points: number; latestOccurredAt: Date }>
+    Record<EventType, { points: number; latestOccurredAt: Date | null }>
   >;
   totalPoints?: number;
 }

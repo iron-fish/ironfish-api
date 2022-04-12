@@ -130,6 +130,84 @@ export class EventsService {
     };
   }
 
+  async getUpsertPointsOptions(user: User): Promise<{
+    userId: number;
+    points: Record<
+      EventType,
+      { points: number; latestOccurredAt: Date | null }
+    >;
+    totalPoints: number;
+  }> {
+    const blockMinedAggregate =
+      await this.getLifetimePointsAndOccurredAtForUserAndType(
+        user,
+        EventType.BLOCK_MINED,
+      );
+    const bugCaughtAggregate =
+      await this.getLifetimePointsAndOccurredAtForUserAndType(
+        user,
+        EventType.BUG_CAUGHT,
+      );
+    const communityContributionAggregate =
+      await this.getLifetimePointsAndOccurredAtForUserAndType(
+        user,
+        EventType.COMMUNITY_CONTRIBUTION,
+      );
+    const pullRequestAggregate =
+      await this.getLifetimePointsAndOccurredAtForUserAndType(
+        user,
+        EventType.PULL_REQUEST_MERGED,
+      );
+    const socialMediaAggregate =
+      await this.getLifetimePointsAndOccurredAtForUserAndType(
+        user,
+        EventType.SOCIAL_MEDIA_PROMOTION,
+      );
+    const totalPoints =
+      blockMinedAggregate.points +
+      bugCaughtAggregate.points +
+      communityContributionAggregate.points +
+      pullRequestAggregate.points +
+      socialMediaAggregate.points;
+    return {
+      userId: user.id,
+      totalPoints,
+      points: {
+        BLOCK_MINED: blockMinedAggregate,
+        BUG_CAUGHT: bugCaughtAggregate,
+        COMMUNITY_CONTRIBUTION: communityContributionAggregate,
+        PULL_REQUEST_MERGED: pullRequestAggregate,
+        SOCIAL_MEDIA_PROMOTION: socialMediaAggregate,
+      },
+    };
+  }
+
+  private async getLifetimePointsAndOccurredAtForUserAndType(
+    { id }: User,
+    type: EventType,
+  ): Promise<{
+    points: number;
+    latestOccurredAt: Date | null;
+  }> {
+    const aggregate = await this.prisma.event.aggregate({
+      _sum: {
+        points: true,
+      },
+      _max: {
+        occurred_at: true,
+      },
+      where: {
+        type,
+        user_id: id,
+        deleted_at: null,
+      },
+    });
+    return {
+      points: aggregate._sum.points ?? 0,
+      latestOccurredAt: aggregate._max.occurred_at,
+    };
+  }
+
   async getLifetimeEventMetricsForUser(
     user: User,
   ): Promise<Record<EventType, SerializedEventMetrics>> {
@@ -445,7 +523,7 @@ export class EventsService {
         deleted_at: null,
       },
     });
-    const latestOccurredAt = occurredAtAggregate._max.occurred_at ?? occurredAt;
+    const latestOccurredAt = occurredAtAggregate._max.occurred_at;
 
     const pointsAggregate = await client.event.aggregate({
       _sum: {
@@ -470,7 +548,7 @@ export class EventsService {
     });
     const totalPoints = totalPointsAggregate._sum.points ?? 0;
 
-    await this.userPointsService.upsert(
+    await this.userPointsService.upsertWithClient(
       {
         userId,
         points: { [type]: { points, latestOccurredAt } },
