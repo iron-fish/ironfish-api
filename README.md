@@ -4,7 +4,7 @@
 
 ## Installing
 
-* Make sure you're running at least node 16 - you may want to avail yourself of a tool like [nvm](https://nvm.sh)
+* Make sure you're running at least Node 16 - you may want to avail yourself of a tool like [nvm](https://nvm.sh)
 * Run `yarn` to install dependencies
 * Run `yarn docker:start` to start docker
 * Run `yarn build` to build things locally

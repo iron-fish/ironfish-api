@@ -13,6 +13,7 @@ import {
 } from '../common/constants';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
+import { UserPointsService } from '../user-points/user-points.service';
 import { UsersService } from '../users/users.service';
 import { EventsService } from './events.service';
 import { EventType } from '.prisma/client';
@@ -22,6 +23,7 @@ describe('EventsService', () => {
   let config: ApiConfigService;
   let eventsService: EventsService;
   let prisma: PrismaService;
+  let userPointsService: UserPointsService;
   let usersService: UsersService;
 
   beforeAll(async () => {
@@ -29,6 +31,7 @@ describe('EventsService', () => {
     config = app.get(ApiConfigService);
     eventsService = app.get(EventsService);
     prisma = app.get(PrismaService);
+    userPointsService = app.get(UserPointsService);
     usersService = app.get(UsersService);
     await app.init();
   });
@@ -671,6 +674,41 @@ describe('EventsService', () => {
 
         expect(event2?.points).toStrictEqual(newPoints);
         expect(event2?.deleted_at).toBeFalsy();
+      });
+    });
+
+    it('updates the points for the user', async () => {
+      const user = await setupUser();
+      const blockMinedEvent = await eventsService.create({
+        type: EventType.BLOCK_MINED,
+        userId: user.id,
+      });
+      assert.ok(blockMinedEvent);
+
+      const points = 50;
+      const type = EventType.PULL_REQUEST_MERGED;
+      const url = `https://github.com/iron-fish/ironfish/pull/${uuid().toString()}`;
+      const upsertPoints = jest.spyOn(userPointsService, 'upsert');
+
+      const event = await eventsService.create({
+        type,
+        userId: user.id,
+        points,
+        url,
+      });
+
+      assert.ok(event);
+      expect(upsertPoints).toHaveBeenCalledTimes(1);
+      assert.ok(upsertPoints.mock.calls);
+      expect(upsertPoints.mock.calls[0][0].userId).toBe(user.id);
+      expect(upsertPoints.mock.calls[0][0].totalPoints).toBe(
+        points + blockMinedEvent.points,
+      );
+      expect(upsertPoints.mock.calls[0][0].points).toEqual({
+        [type]: {
+          points,
+          latestOccurredAt: event.occurred_at,
+        },
       });
     });
   });
