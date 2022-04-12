@@ -18,7 +18,6 @@ export class UserPointsController {
   async refresh(): Promise<void> {
     await this.graphileWorkerService.addJob(
       GraphileWorkerPattern.REFRESH_USERS_POINTS,
-      undefined,
     );
   }
 }
