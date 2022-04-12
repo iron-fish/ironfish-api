@@ -27,6 +27,7 @@ import { MetricsRestModule } from './metrics/metrics.rest.module';
 import { TelemetryRestModule } from './telemetry/telemetry.rest.module';
 import { TransactionsRestModule } from './transactions/transactions.rest.module';
 import { UserPointsJobsModule } from './user-points/user-points.jobs.module';
+import { UserPointsRestModule } from './user-points/user-points.rest.module';
 import { UsersRestModule } from './users/users.rest.module';
 import { VersionsRestModule } from './versions/versions.rest.module';
 
@@ -46,6 +47,7 @@ export const REST_MODULES = [
   MetricsRestModule,
   TelemetryRestModule,
   TransactionsRestModule,
+  UserPointsRestModule,
   UsersRestModule,
   VersionsRestModule,
 ];
