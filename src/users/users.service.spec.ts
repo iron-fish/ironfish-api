@@ -384,7 +384,7 @@ describe('UsersService', () => {
       it('creates a new user points record', async () => {
         const email = faker.internet.email();
         const graffiti = uuid();
-        const upsertPoints = jest.spyOn(userPointsService, 'upsert');
+        const upsertPoints = jest.spyOn(userPointsService, 'upsertWithClient');
 
         const user = await usersService.create({
           email,

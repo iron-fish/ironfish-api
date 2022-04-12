@@ -2,13 +2,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { UpsertUserPointsOptions } from './interfaces/upsert-user-points-options';
 import { EventType, Prisma, UserPoints } from '.prisma/client';
 
 @Injectable()
 export class UserPointsService {
-  async upsert(
+  constructor(private readonly prisma: PrismaService) {}
+
+  async upsert(options: UpsertUserPointsOptions): Promise<UserPoints> {
+    return this.prisma.$transaction(async (prisma) => {
+      return this.upsertWithClient(options, prisma);
+    });
+  }
+
+  async upsertWithClient(
     { userId, totalPoints, points }: UpsertUserPointsOptions,
     client: BasePrismaClient,
   ): Promise<UserPoints> {

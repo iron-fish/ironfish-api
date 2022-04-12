@@ -26,10 +26,15 @@ import { LoggerModule } from './logger/logger.module';
 import { MetricsRestModule } from './metrics/metrics.rest.module';
 import { TelemetryRestModule } from './telemetry/telemetry.rest.module';
 import { TransactionsRestModule } from './transactions/transactions.rest.module';
+import { UserPointsJobsModule } from './user-points/user-points.jobs.module';
 import { UsersRestModule } from './users/users.rest.module';
 import { VersionsRestModule } from './versions/versions.rest.module';
 
-export const JOBS_MODULES = [BlocksDailyJobsModule, EventsJobsModule];
+export const JOBS_MODULES = [
+  BlocksDailyJobsModule,
+  EventsJobsModule,
+  UserPointsJobsModule,
+];
 
 export const REST_MODULES = [
   AuthRestModule,
