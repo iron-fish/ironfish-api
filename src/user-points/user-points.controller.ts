@@ -2,10 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Controller, Post, UseGuards } from '@nestjs/common';
-import {
-  ApiExcludeController,
-  ApiExcludeEndpoint,
-} from '@nestjs/swagger';
+import { ApiExcludeController, ApiExcludeEndpoint } from '@nestjs/swagger';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
 import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
