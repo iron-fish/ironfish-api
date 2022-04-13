@@ -169,6 +169,7 @@ export class EventsService {
       communityContributionAggregate.points +
       pullRequestAggregate.points +
       socialMediaAggregate.points;
+
     return {
       userId: user.id,
       totalPoints,
@@ -213,6 +214,7 @@ export class EventsService {
   ): Promise<Record<EventType, SerializedEventMetrics>> {
     return this.prisma.$transaction(async (prisma) => {
       const ranks = await this.getRanksForEventTypes(user, prisma);
+
       return {
         BLOCK_MINED: await this.getLifetimeEventTypeMetricsForUser(
           user,
@@ -619,61 +621,68 @@ export class EventsService {
         rank: number;
       }[]
     >(
-      `SELECT
-        id,
-        type,
-        rank
-      FROM
-        (
+      `WITH
+        event_types as (
+          SELECT
+            UNNEST(ENUM_RANGE(NULL::event_type)) AS type
+        ),
+        filtered_events as (
+          SELECT
+            user_id,
+            type,
+            occurred_at,
+            points
+          FROM
+            events
+          WHERE
+            points != 0 AND
+            deleted_at IS NULL
+        ),
+        user_event_points as (
+          SELECT
+            user_id,
+            type,
+            SUM(points) AS points,
+            MAX(occurred_at) AS latest_event_occurred_at
+          FROM
+            filtered_events
+          GROUP BY
+            user_id,
+            type
+        ),
+        user_ranks as (
           SELECT
             users.id,
             event_types.type,
-            RANK () OVER ( 
+            RANK () OVER (
               PARTITION BY event_types.type
               ORDER BY
                 COALESCE(user_event_points.points, 0) DESC,
                 COALESCE(user_event_points.latest_event_occurred_at, NOW()) ASC,
                 users.created_at ASC
-            ) AS rank 
+            ) AS rank
           FROM
             users
           CROSS JOIN
-            (
-              SELECT
-                UNNEST(ENUM_RANGE(NULL::event_type)) AS type
-            ) event_types
+            event_types
           LEFT JOIN
-            (
-              SELECT
-                user_id,
-                type,
-                SUM(points) AS points,
-                MAX(occurred_at) AS latest_event_occurred_at
-              FROM
-                (
-                  SELECT
-                    user_id,
-                    type,
-                    occurred_at,
-                    points
-                  FROM
-                    events
-                  WHERE
-                    points != 0 AND
-                    deleted_at IS NULL
-                ) filtered_events
-              GROUP BY
-                user_id,
-                type
-            ) user_event_points
+            user_event_points
           ON
             user_event_points.type = event_types.type AND
             user_event_points.user_id = users.id
-        ) user_ranks
+        )
+
+      SELECT
+        id,
+        type,
+        rank
+      FROM
+        user_ranks
       WHERE
-        id = $1`,
+        id = $1;`,
       user.id,
     );
+
     if (
       !is.array(userRanks) ||
       !is.object(userRanks[0]) ||
@@ -682,6 +691,7 @@ export class EventsService {
     ) {
       throw new Error('Unexpected database response');
     }
+
     const getRankForType = (type: EventType) => {
       const userRankForEvent = userRanks.find((o) => o.type === type);
       if (!userRankForEvent) {
@@ -689,8 +699,10 @@ export class EventsService {
           `Missing rank for user '${user.id}' and type '${type}'`,
         );
       }
+
       return userRankForEvent.rank;
     };
+
     return {
       [EventType.BLOCK_MINED]: getRankForType(EventType.BLOCK_MINED),
       [EventType.BUG_CAUGHT]: getRankForType(EventType.BUG_CAUGHT),
