@@ -7,6 +7,7 @@ import {
   IsArray,
   IsDate,
   IsNotEmpty,
+  IsOptional,
   IsString,
   ValidateNested,
 } from 'class-validator';
@@ -68,4 +69,8 @@ export class WriteTelemetryPointsDto {
   @ValidateNested({ each: true })
   @Type(() => WriteTelemetryPointDto)
   readonly points!: WriteTelemetryPointDto[];
+
+  @IsOptional()
+  @IsString()
+  readonly graffiti?: string;
 }

@@ -2,17 +2,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { HttpStatus, INestApplication } from '@nestjs/common';
+import faker from 'faker';
 import request from 'supertest';
+import { v4 as uuid } from 'uuid';
 import { InfluxDbService } from '../influxdb/influxdb.service';
+import { NodeUptimesService } from '../node-uptimes/node-uptimes.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 
 describe('TelemetryController', () => {
   let app: INestApplication;
   let influxDbService: InfluxDbService;
+  let nodeUptimesService: NodeUptimesService;
+  let prisma: PrismaService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
     influxDbService = app.get(InfluxDbService);
+    nodeUptimesService = app.get(NodeUptimesService);
+    prisma = app.get(PrismaService);
     await app.init();
   });
 
@@ -162,6 +170,28 @@ describe('TelemetryController', () => {
             timestamp,
           },
         ]);
+      });
+
+      it('updates the node uptime', async () => {
+        const nodeUptimeUpsert = jest
+          .spyOn(nodeUptimesService, 'upsert')
+          .mockImplementationOnce(jest.fn());
+
+        const graffiti = uuid();
+        const user = await prisma.user.create({
+          data: {
+            email: faker.internet.email(),
+            graffiti,
+            country_code: faker.address.countryCode(),
+          },
+        });
+        await request(app.getHttpServer())
+          .post('/telemetry')
+          .send({ points: [], graffiti })
+          .expect(HttpStatus.CREATED);
+
+        expect(nodeUptimeUpsert).toHaveBeenCalledTimes(1);
+        expect(nodeUptimeUpsert).toHaveBeenCalledWith(user);
       });
     });
   });

@@ -13,17 +13,23 @@ import { ApiExcludeEndpoint } from '@nestjs/swagger';
 import { Request } from 'express';
 import { gte, valid } from 'semver';
 import { InfluxDbService } from '../influxdb/influxdb.service';
+import { NodeUptimesService } from '../node-uptimes/node-uptimes.service';
+import { UsersService } from '../users/users.service';
 import { WriteTelemetryPointsDto } from './dto/write-telemetry-points.dto';
 
 @Controller('telemetry')
 export class TelemetryController {
   private readonly MINIMUM_TELEMETRY_VERSION = '0.1.24';
 
-  constructor(private readonly influxDbService: InfluxDbService) {}
+  constructor(
+    private readonly influxDbService: InfluxDbService,
+    private readonly nodeUptimes: NodeUptimesService,
+    private readonly usersService: UsersService,
+  ) {}
 
   @ApiExcludeEndpoint()
   @Post()
-  write(
+  async write(
     @Req() request: Request,
     @Body(
       new ValidationPipe({
@@ -31,8 +37,8 @@ export class TelemetryController {
         transform: true,
       }),
     )
-    { points }: WriteTelemetryPointsDto,
-  ): void {
+    { points, graffiti }: WriteTelemetryPointsDto,
+  ): Promise<void> {
     const options = [];
     for (const { fields, measurement, tags, timestamp } of points) {
       const version = tags.find((tag) => tag.name === 'version');
@@ -53,6 +59,13 @@ export class TelemetryController {
     }
 
     this.submitIpWithoutNodeFieldsToTelemetry(request);
+
+    if (graffiti) {
+      const user = await this.usersService.findByGraffiti(graffiti);
+      if (user) {
+        await this.nodeUptimes.upsert(user);
+      }
+    }
   }
 
   private isValidTelemetryVersion(version: string): boolean {
