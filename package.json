@@ -73,7 +73,7 @@
     "class-validator": "0.13.2",
     "cluster": "0.7.7",
     "compression": "1.7.4",
-    "dd-trace": "2.4.2",
+    "dd-trace": "2.5.0",
     "express": "4.17.3",
     "graphile-worker": "0.12.2",
     "helmet": "5.0.2",
