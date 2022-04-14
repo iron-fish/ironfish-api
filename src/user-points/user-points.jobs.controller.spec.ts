@@ -139,6 +139,10 @@ describe('UserPointsJobsController', () => {
             points: 0,
             latestOccurredAt: new Date(),
           },
+          NODE_UPTIME: {
+            points: 0,
+            latestOccurredAt: new Date(),
+          },
         },
       };
       jest
@@ -179,6 +183,10 @@ describe('UserPointsJobsController', () => {
             latestOccurredAt: new Date(),
           },
           SOCIAL_MEDIA_PROMOTION: {
+            points: 0,
+            latestOccurredAt: new Date(),
+          },
+          NODE_UPTIME: {
             points: 0,
             latestOccurredAt: new Date(),
           },

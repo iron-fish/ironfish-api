@@ -163,6 +163,11 @@ export class EventsService {
         user,
         EventType.SOCIAL_MEDIA_PROMOTION,
       );
+    const nodeUptimeAggregate =
+      await this.getLifetimePointsAndOccurredAtForUserAndType(
+        user,
+        EventType.NODE_UPTIME,
+      );
     const totalPoints =
       blockMinedAggregate.points +
       bugCaughtAggregate.points +
@@ -179,6 +184,7 @@ export class EventsService {
         COMMUNITY_CONTRIBUTION: communityContributionAggregate,
         PULL_REQUEST_MERGED: pullRequestAggregate,
         SOCIAL_MEDIA_PROMOTION: socialMediaAggregate,
+        NODE_UPTIME: nodeUptimeAggregate,
       },
     };
   }
@@ -243,6 +249,12 @@ export class EventsService {
         SOCIAL_MEDIA_PROMOTION: await this.getLifetimeEventTypeMetricsForUser(
           user,
           EventType.SOCIAL_MEDIA_PROMOTION,
+          ranks,
+          prisma,
+        ),
+        NODE_UPTIME: await this.getLifetimeEventTypeMetricsForUser(
+          user,
+          EventType.NODE_UPTIME,
           ranks,
           prisma,
         ),
@@ -343,6 +355,13 @@ export class EventsService {
           SOCIAL_MEDIA_PROMOTION: await this.getTotalEventTypeMetricsForUser(
             user,
             EventType.SOCIAL_MEDIA_PROMOTION,
+            start,
+            end,
+            prisma,
+          ),
+          NODE_UPTIME: await this.getTotalEventTypeMetricsForUser(
+            user,
+            EventType.NODE_UPTIME,
             start,
             end,
             prisma,
@@ -715,6 +734,7 @@ export class EventsService {
       [EventType.SOCIAL_MEDIA_PROMOTION]: getRankForType(
         EventType.SOCIAL_MEDIA_PROMOTION,
       ),
+      [EventType.NODE_UPTIME]: getRankForType(EventType.NODE_UPTIME),
     };
   }
 }

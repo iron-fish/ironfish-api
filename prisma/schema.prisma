@@ -164,6 +164,7 @@ enum EventType {
   COMMUNITY_CONTRIBUTION
   PULL_REQUEST_MERGED
   SOCIAL_MEDIA_PROMOTION
+  NODE_UPTIME
 
   @@map("event_type")
 }
@@ -184,6 +185,8 @@ model UserPoints {
   pull_request_merged_last_occurred_at           DateTime? @db.Timestamp(6)
   social_media_promotion_points                  Int       @default(0)
   social_media_promotion_last_occurred_at        DateTime? @db.Timestamp(6)
+  node_uptime_points                             Int       @default(0)
+  node_uptime_last_occurred_at                   DateTime? @db.Timestamp(6)
   user                                           User      @relation(fields: [user_id], references: [id])
 
   @@index([user_id], map: "index_user_points_on_user_id")
