@@ -13,6 +13,8 @@ import { ApiExcludeEndpoint } from '@nestjs/swagger';
 import { Request } from 'express';
 import { gte, valid } from 'semver';
 import { ApiConfigService } from '../api-config/api-config.service';
+import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
+import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { InfluxDbService } from '../influxdb/influxdb.service';
 import { NodeUptimesService } from '../node-uptimes/node-uptimes.service';
 import { UsersService } from '../users/users.service';
@@ -24,6 +26,7 @@ export class TelemetryController {
 
   constructor(
     private readonly config: ApiConfigService,
+    private readonly graphileWorkerService: GraphileWorkerService,
     private readonly influxDbService: InfluxDbService,
     private readonly nodeUptimes: NodeUptimesService,
     private readonly usersService: UsersService,
@@ -65,7 +68,13 @@ export class TelemetryController {
     if (!this.config.isProduction() && graffiti) {
       const user = await this.usersService.findByGraffiti(graffiti);
       if (user) {
-        await this.nodeUptimes.upsert(user);
+        const uptime = await this.nodeUptimes.upsert(user);
+        if (uptime && uptime.total_hours >= 12) {
+          await this.graphileWorkerService.addJob(
+            GraphileWorkerPattern.CREATE_NODE_UPTIME_EVENT,
+            { userId: user.id },
+          );
+        }
       }
     }
   }

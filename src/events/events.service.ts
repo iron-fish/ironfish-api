@@ -816,4 +816,19 @@ export class EventsService {
       [EventType.NODE_UPTIME]: getRankForType(EventType.NODE_UPTIME),
     };
   }
+
+  async createNodeUptimeEventWithClient(
+    user: User,
+    client: BasePrismaClient,
+  ): Promise<Event | null> {
+    return this.createWithClient(
+      {
+        occurredAt: new Date(),
+        points: 100,
+        type: EventType.NODE_UPTIME,
+        userId: user.id,
+      },
+      client,
+    );
+  }
 }

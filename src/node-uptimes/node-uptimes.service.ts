@@ -56,4 +56,20 @@ export class NodeUptimesService {
       },
     });
   }
+
+  async decrementCountedHoursWithClient(
+    user: User,
+    client: BasePrismaClient,
+  ): Promise<NodeUptime | null> {
+    return client.nodeUptime.update({
+      where: {
+        user_id: user.id,
+      },
+      data: {
+        total_hours: {
+          decrement: 12,
+        },
+      },
+    });
+  }
 }
