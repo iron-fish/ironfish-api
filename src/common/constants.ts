@@ -17,6 +17,7 @@ export const WEEKLY_POINT_LIMITS_BY_EVENT_TYPE: Record<EventType, number> = {
   [EventType.COMMUNITY_CONTRIBUTION]: 2000,
   [EventType.PULL_REQUEST_MERGED]: 5000,
   [EventType.SOCIAL_MEDIA_PROMOTION]: 1000,
+  [EventType.NODE_UPTIME]: 140,
 };
 
 export const POINTS_PER_CATEGORY: Record<EventType, number> = {
@@ -25,4 +26,5 @@ export const POINTS_PER_CATEGORY: Record<EventType, number> = {
   [EventType.COMMUNITY_CONTRIBUTION]: 1000,
   [EventType.PULL_REQUEST_MERGED]: 500,
   [EventType.SOCIAL_MEDIA_PROMOTION]: 100,
+  [EventType.NODE_UPTIME]: 10,
 };
