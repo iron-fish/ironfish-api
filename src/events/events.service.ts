@@ -824,9 +824,9 @@ export class EventsService {
     return this.createWithClient(
       {
         occurredAt: new Date(),
-        points: 100,
         type: EventType.NODE_UPTIME,
         userId: user.id,
+        points: POINTS_PER_CATEGORY[EventType.NODE_UPTIME],
       },
       client,
     );

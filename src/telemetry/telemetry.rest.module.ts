@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Module } from '@nestjs/common';
 import { ApiConfigModule } from '../api-config/api-config.module';
+import { GraphileWorkerModule } from '../graphile-worker/graphile-worker.module';
 import { InfluxDbModule } from '../influxdb/influxdb.module';
 import { NodeUptimesModule } from '../node-uptimes/node-uptimes.module';
 import { UsersModule } from '../users/users.module';
@@ -10,6 +11,12 @@ import { TelemetryController } from './telemetry.controller';
 
 @Module({
   controllers: [TelemetryController],
-  imports: [ApiConfigModule, InfluxDbModule, NodeUptimesModule, UsersModule],
+  imports: [
+    ApiConfigModule,
+    GraphileWorkerModule,
+    InfluxDbModule,
+    NodeUptimesModule,
+    UsersModule,
+  ],
 })
 export class TelemetryRestModule {}
