@@ -5,7 +5,6 @@ import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { EventsService } from '../events/events.service';
 import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
-import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { GraphileWorkerHandlerResponse } from '../graphile-worker/interfaces/graphile-worker-handler-response';
 import { LoggerService } from '../logger/logger.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -17,7 +16,6 @@ import { NodeUptimesService } from './node-uptimes.service';
 export class NodeUptimesJobsController {
   constructor(
     private readonly eventsService: EventsService,
-    private readonly graphileWorkerService: GraphileWorkerService,
     private readonly loggerService: LoggerService,
     private readonly nodeUptimesService: NodeUptimesService,
     private readonly prisma: PrismaService,

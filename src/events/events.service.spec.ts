@@ -1067,4 +1067,20 @@ describe('EventsService', () => {
       });
     });
   });
+
+  describe('createNodeUptimeEventWithClient', () => {
+    it('creates a node uptime event', async () => {
+      const user = await setupUser();
+      const record = await eventsService.createNodeUptimeEventWithClient(
+        user,
+        prisma,
+      );
+      expect(record).toMatchObject({
+        type: EventType.NODE_UPTIME,
+        points: POINTS_PER_CATEGORY[EventType.NODE_UPTIME],
+        user_id: user.id,
+        deleted_at: null,
+      });
+    });
+  });
 });

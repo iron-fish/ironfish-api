@@ -5,6 +5,8 @@ import { HttpStatus, INestApplication } from '@nestjs/common';
 import faker from 'faker';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
+import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
+import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { InfluxDbService } from '../influxdb/influxdb.service';
 import { NodeUptimesService } from '../node-uptimes/node-uptimes.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -12,12 +14,14 @@ import { bootstrapTestApp } from '../test/test-app';
 
 describe('TelemetryController', () => {
   let app: INestApplication;
+  let graphileWorkerService: GraphileWorkerService;
   let influxDbService: InfluxDbService;
   let nodeUptimesService: NodeUptimesService;
   let prisma: PrismaService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
+    graphileWorkerService = app.get(GraphileWorkerService);
     influxDbService = app.get(InfluxDbService);
     nodeUptimesService = app.get(NodeUptimesService);
     prisma = app.get(PrismaService);
@@ -192,6 +196,42 @@ describe('TelemetryController', () => {
 
         expect(nodeUptimeUpsert).toHaveBeenCalledTimes(1);
         expect(nodeUptimeUpsert).toHaveBeenCalledWith(user);
+      });
+
+      it('updates users points when user has logged enough hours', async () => {
+        const workerAddJob = jest
+          .spyOn(graphileWorkerService, 'addJob')
+          .mockImplementationOnce(jest.fn());
+
+        const oldCheckin = new Date();
+        oldCheckin.setHours(oldCheckin.getHours() - 2);
+
+        const graffiti = uuid();
+        const user = await prisma.user.create({
+          data: {
+            email: faker.internet.email(),
+            graffiti,
+            country_code: faker.address.countryCode(),
+          },
+        });
+        await prisma.nodeUptime.create({
+          data: {
+            user_id: user.id,
+            total_hours: 12,
+            last_checked_in: oldCheckin,
+          },
+        });
+
+        await request(app.getHttpServer())
+          .post('/telemetry')
+          .send({ points: [], graffiti })
+          .expect(HttpStatus.CREATED);
+
+        expect(workerAddJob).toHaveBeenCalledTimes(1);
+        expect(workerAddJob).toHaveBeenCalledWith(
+          GraphileWorkerPattern.CREATE_NODE_UPTIME_EVENT,
+          { userId: user.id },
+        );
       });
     });
   });
