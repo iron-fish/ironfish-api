@@ -26,6 +26,7 @@ import { MagicLinkGuard } from '../auth/guards/magic-link.guard';
 import { DEFAULT_LIMIT, MAX_LIMIT, MS_PER_DAY } from '../common/constants';
 import { Context } from '../common/decorators/context';
 import { MetricsGranularity } from '../common/enums/metrics-granularity';
+import { MetricsPool } from '../common/enums/metrics-pool';
 import { MagicLinkContext } from '../common/interfaces/magic-link-context';
 import { PaginatedList } from '../common/interfaces/paginated-list';
 import { EventsService } from '../events/events.service';
@@ -126,11 +127,25 @@ export class UsersController {
     let eventMetrics: Record<EventType, SerializedEventMetrics>;
     let points: number;
     const { start, end, granularity } = query;
+    let pools: Record<MetricsPool, SerializedEventMetrics> | undefined;
+
     if (granularity === MetricsGranularity.LIFETIME) {
       const user = await this.usersService.findOrThrow(id);
       eventMetrics = await this.eventsService.getLifetimeEventMetricsForUser(
         user,
       );
+
+      const [main, code] = await Promise.all([
+        this.eventsService.getLifetimeEventsMetricsForUser(user, [
+          EventType.BUG_CAUGHT,
+          EventType.NODE_UPTIME,
+        ]),
+        this.eventsService.getLifetimeEventsMetricsForUser(user, [
+          EventType.PULL_REQUEST_MERGED,
+        ]),
+      ]);
+
+      pools = { main, code };
       points = user.total_points;
     } else {
       if (start === undefined || end === undefined) {
@@ -151,6 +166,7 @@ export class UsersController {
       user_id: id,
       granularity,
       points,
+      pools,
       metrics: {
         blocks_mined: eventMetrics[EventType.BLOCK_MINED],
         bugs_caught: eventMetrics[EventType.BUG_CAUGHT],

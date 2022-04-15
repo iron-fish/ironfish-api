@@ -15,4 +15,8 @@ export interface SerializedUserMetrics {
     pull_requests_merged: SerializedEventMetrics;
     social_media_contributions: SerializedEventMetrics;
   };
+  pools?: {
+    main: SerializedEventMetrics;
+    code: SerializedEventMetrics;
+  };
 }
