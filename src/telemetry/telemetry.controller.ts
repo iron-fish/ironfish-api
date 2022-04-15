@@ -12,6 +12,7 @@ import {
 import { ApiExcludeEndpoint } from '@nestjs/swagger';
 import { Request } from 'express';
 import { gte, valid } from 'semver';
+import { ApiConfigService } from '../api-config/api-config.service';
 import { InfluxDbService } from '../influxdb/influxdb.service';
 import { NodeUptimesService } from '../node-uptimes/node-uptimes.service';
 import { UsersService } from '../users/users.service';
@@ -22,6 +23,7 @@ export class TelemetryController {
   private readonly MINIMUM_TELEMETRY_VERSION = '0.1.24';
 
   constructor(
+    private readonly config: ApiConfigService,
     private readonly influxDbService: InfluxDbService,
     private readonly nodeUptimes: NodeUptimesService,
     private readonly usersService: UsersService,
@@ -60,7 +62,7 @@ export class TelemetryController {
 
     this.submitIpWithoutNodeFieldsToTelemetry(request);
 
-    if (graffiti) {
+    if (!this.config.isProduction() && graffiti) {
       const user = await this.usersService.findByGraffiti(graffiti);
       if (user) {
         await this.nodeUptimes.upsert(user);
