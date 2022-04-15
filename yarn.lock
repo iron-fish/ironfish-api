@@ -492,10 +492,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@datadog/native-appsec@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@datadog/native-appsec/-/native-appsec-1.0.0.tgz#1f4210e0b0ea07f342c7de2dc874e4bc529806db"
-  integrity sha512-PtTy/SRMeXRvUEqvol4Ex4JJ97rJR5hcQbzwTM0KJo+P3/nfYA9HMjdvnYdk/wDOpkApTcu9RhtahniaJDScLA==
+"@datadog/native-appsec@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@datadog/native-appsec/-/native-appsec-1.0.1.tgz#813d93e250f486dc5228c842062391f35e8a8236"
+  integrity sha512-qdRmvgO5gtDnn42XTrTP4MxXUn7jeJqfq4CZmKW9VlFqUhxu8pNcOBaoo92XJUAM6whiyGEkvjWsbHNqESNFpA==
   dependencies:
     detect-libc "^1.0.3"
     minimist "^1.2.6"
@@ -2064,12 +2064,12 @@ data-urls@^2.0.0:
     whatwg-mimetype "^2.3.0"
     whatwg-url "^8.0.0"
 
-dd-trace@2.4.2:
-  version "2.4.2"
-  resolved "https://registry.yarnpkg.com/dd-trace/-/dd-trace-2.4.2.tgz#df6f2c7d8076dee3792a605ac97f5d5803e9831a"
-  integrity sha512-lPjWSUB1F+BbgIOFpRXxuZAPpazz4BhtiaJ2jWkib5kaL6um/BY7MuBYmH9be4SKfaTeBR/vITUtznOYWqFKLA==
+dd-trace@2.5.0:
+  version "2.5.0"
+  resolved "https://registry.yarnpkg.com/dd-trace/-/dd-trace-2.5.0.tgz#69086c995e68535741c625444b05995f9b618d1e"
+  integrity sha512-w/SPQwT0axDGYurpDRiA2M89B9ndK3/t+CL6S4vdbcULt2CiATTeww7aUiLVv319likv1hg2kkW4ZcAQLoml8Q==
   dependencies:
-    "@datadog/native-appsec" "^1.0.0"
+    "@datadog/native-appsec" "^1.0.1"
     "@datadog/native-metrics" "^1.1.0"
     "@datadog/pprof" "^0.3.0"
     "@datadog/sketches-js" "^1.0.4"
@@ -2077,6 +2077,7 @@ dd-trace@2.4.2:
     crypto-randomuuid "^1.0.0"
     diagnostics_channel "^1.1.0"
     form-data "^3.0.0"
+    ignore "^5.2.0"
     import-in-the-middle "^1.2.1"
     koalas "^1.0.2"
     limiter "^1.1.4"
@@ -3089,12 +3090,7 @@ ignore@^4.0.6:
   resolved "https://registry.yarnpkg.com/ignore/-/ignore-4.0.6.tgz#750e3db5862087b4737ebac8207ffd1ef27b25fc"
   integrity sha512-cyFDKrqc/YdcWFniJhzI42+AzS+gNwmUzOSFcRCQYwySuBBBy/KjuxWLZ/FHEH6Moq1NizMOBWyTcv8O4OZIMg==
 
-ignore@^5.1.4, ignore@^5.1.8:
-  version "5.1.8"
-  resolved "https://registry.yarnpkg.com/ignore/-/ignore-5.1.8.tgz#f150a8b50a34289b33e22f5889abd4d8016f0e57"
-  integrity sha512-BMpfD7PpiETpBl/A6S498BaIJ6Y/ABT93ETbby2fP00v4EbvPBXWEoaR1UBPKs3iR53pJY7EtZk5KACI57i1Uw==
-
-ignore@^5.2.0:
+ignore@^5.1.4, ignore@^5.1.8, ignore@^5.2.0:
   version "5.2.0"
   resolved "https://registry.yarnpkg.com/ignore/-/ignore-5.2.0.tgz#6d3bac8fa7fe0d45d9f9be7bac2fc279577e345a"
   integrity sha512-CmxgYGiEPCLhfLnpPp1MoRmifwEIOgjcHXxOBjv7mY96c+eWScsOP9c112ZyLdWHi0FxHjI+4uVhKYp/gcdRmQ==
