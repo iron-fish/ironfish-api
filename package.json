@@ -23,8 +23,8 @@
     "prestart": "bash bin/check_for_dotenv.sh",
     "start": "node build/main.js",
     "start:worker": "node build/worker.js",
-    "test": "jest --runInBand",
-    "test:clean": "prisma migrate reset --force --skip-generate > /dev/null && jest --runInBand",
+    "test": "dotenv -e .env.test -- jest --runInBand",
+    "test:clean": "dotenv -e .env.test -- prisma migrate reset --force --skip-generate > /dev/null && yarn test",
     "db:client:generate": "prisma generate",
     "db:migrate": "prisma migrate dev"
   },
@@ -74,6 +74,7 @@
     "cluster": "0.7.7",
     "compression": "1.7.4",
     "dd-trace": "2.4.2",
+    "dotenv-cli": "5.1.0",
     "express": "4.17.3",
     "graphile-worker": "0.12.2",
     "helmet": "5.0.2",
