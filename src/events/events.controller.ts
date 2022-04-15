@@ -81,9 +81,11 @@ export class EventsController {
       userId: user.id,
       url,
     });
+
     if (!event) {
       return null;
     }
+
     return serializedEventFromRecordWithMetadata(event);
   }
 

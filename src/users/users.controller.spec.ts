@@ -2,11 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { HttpStatus, INestApplication } from '@nestjs/common';
+import { EventType } from '@prisma/client';
 import faker from 'faker';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
 import { MetricsGranularity } from '../common/enums/metrics-granularity';
 import { standardizeEmail } from '../common/utils/email';
+import { EventsService } from '../events/events.service';
 import { MagicLinkService } from '../magic-link/magic-link.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
@@ -19,12 +21,15 @@ describe('UsersController', () => {
   let magicLinkService: MagicLinkService;
   let prisma: PrismaService;
   let usersService: UsersService;
+  let eventsService: EventsService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
     magicLinkService = app.get(MagicLinkService);
     prisma = app.get(PrismaService);
     usersService = app.get(UsersService);
+    eventsService = app.get(EventsService);
+
     await app.init();
   });
 
@@ -265,17 +270,41 @@ describe('UsersController', () => {
             country_code: faker.address.countryCode('alpha-3'),
           },
         });
-        const granularity = MetricsGranularity.LIFETIME;
+
+        await eventsService.create({
+          userId: user.id,
+          type: EventType.BUG_CAUGHT,
+          points: 100,
+        });
+
+        await eventsService.create({
+          userId: user.id,
+          type: EventType.PULL_REQUEST_MERGED,
+          points: 500,
+        });
 
         const { body } = await request(app.getHttpServer())
           .get(`/users/${user.id}/metrics`)
           .query({
-            granularity,
+            granularity: MetricsGranularity.LIFETIME,
           });
+
         expect(body).toMatchObject({
           user_id: user.id,
-          granularity,
+          granularity: MetricsGranularity.LIFETIME,
           points: expect.any(Number),
+          pools: {
+            main: {
+              rank: expect.any(Number),
+              count: expect.any(Number),
+              points: 100,
+            },
+            code: {
+              rank: expect.any(Number),
+              count: expect.any(Number),
+              points: 500,
+            },
+          },
           metrics: {
             blocks_mined: {
               count: expect.any(Number),

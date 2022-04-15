@@ -630,6 +630,79 @@ export class EventsService {
     });
   }
 
+  async getLifetimeEventsMetricsForUser(
+    user: User,
+    events: EventType[],
+  ): Promise<SerializedEventMetrics> {
+    const rank = await this.getLifetimeEventsRankForUser(user, events);
+
+    const count = await this.prisma.event.count({
+      where: {
+        type: {
+          in: events,
+        },
+        user_id: user.id,
+        deleted_at: null,
+      },
+    });
+
+    return {
+      rank: rank.rank,
+      points: rank.points,
+      count: count,
+    };
+  }
+
+  async getLifetimeEventsRankForUser(
+    user: User,
+    events: EventType[],
+  ): Promise<{ points: number; rank: number }> {
+    const query_points = events
+      .map((e) => e.toLowerCase() + '_points')
+      .join(' + ');
+
+    const query_last_occurred_at = events
+      .map((e) => e.toLowerCase() + '_last_occurred_at')
+      .join(', ');
+
+    const query = `
+    with user_ranks as (
+      SELECT
+          users.id as user_id,
+          ${query_points} as points,
+          RANK() OVER (
+            ORDER BY
+              COALESCE(${query_points}, 0) DESC,
+              COALESCE(LEAST(${query_last_occurred_at}), NOW()) ASC,
+              users.created_at ASC
+          ) as rank
+      FROM
+        users
+      LEFT JOIN
+        user_points
+      ON
+        user_points.user_id = users.id
+    )
+
+    select * from user_ranks where user_id = $1 limit 1;`;
+
+    const rank = await this.prisma.$queryRawUnsafe<
+      {
+        points: number;
+        rank: number;
+      }[]
+    >(query, user.id);
+
+    if (rank.length === 0) {
+      throw new Error(`User ${user.id} has no user_points entry`);
+    }
+
+    return {
+      rank: rank[0].rank,
+      points: rank[0].points,
+    };
+  }
+
   async getRanksForEventTypes(
     user: User,
     client: BasePrismaClient,
