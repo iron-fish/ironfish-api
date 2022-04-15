@@ -22,6 +22,11 @@ import { ListEventsOptions } from './interfaces/list-events-options';
 import { SerializedEventMetrics } from './interfaces/serialized-event-metrics';
 import { Block, Event, EventType, Prisma, User } from '.prisma/client';
 
+// 2021 December 1 8 PM UTC
+const PHASE_1_START = new Date(Date.UTC(2021, 11, 1, 20, 0, 0));
+// 2022 March 12 8 PM UTC
+const PHASE_1_END = new Date(Date.UTC(2022, 2, 12, 20, 0, 0));
+
 @Injectable()
 export class EventsService {
   constructor(
@@ -420,19 +425,17 @@ export class EventsService {
     client: BasePrismaClient,
   ): Promise<EventWithMetadata | null> {
     occurredAt = occurredAt || new Date();
-    // 2021 December 1 8 PM UTC
-    const launchDate = new Date(Date.UTC(2021, 11, 1, 20, 0, 0));
-    // 2022 March 12 8 PM UTC
-    const endOfPhaseOne = new Date(Date.UTC(2022, 2, 12, 20, 0, 0));
-    const beforeLaunch = occurredAt < launchDate;
-    const afterPhaseOne = occurredAt > endOfPhaseOne;
+
+    const beforeLaunch = occurredAt < PHASE_1_START;
+    const afterPhaseOne = occurredAt > PHASE_1_END;
+
     // Requests to create events and the event timestamp should both be after launch
     if (this.config.isProduction() && (beforeLaunch || afterPhaseOne)) {
       return null;
     }
 
-    const weeklyLimitForEventType = WEEKLY_POINT_LIMITS_BY_EVENT_TYPE[type];
     const startOfWeek = getMondayFromDate(occurredAt);
+
     const pointsAggregateThisWeek = await client.event.aggregate({
       _sum: {
         points: true,
@@ -447,7 +450,9 @@ export class EventsService {
         },
       },
     });
+
     const pointsThisWeek = pointsAggregateThisWeek._sum.points || 0;
+    const weeklyLimitForEventType = WEEKLY_POINT_LIMITS_BY_EVENT_TYPE[type];
     const adjustedPoints = Math.min(
       Math.max(weeklyLimitForEventType - pointsThisWeek, 0),
       points ?? POINTS_PER_CATEGORY[type],
@@ -474,6 +479,7 @@ export class EventsService {
 
     if (existingEvent) {
       const pointDifference = adjustedPoints - existingEvent.points;
+
       // Only update total user points and event points if necessary
       if (pointDifference !== 0) {
         await client.user.update({
