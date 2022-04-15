@@ -362,6 +362,7 @@ describe('BlocksService', () => {
     describe('with a transaction ID', () => {
       it('returns block(s) that contain said transaction', async () => {
         const transactionId = 5;
+
         const blocks = await blocksService.list({
           transactionId,
           withTransactions: true,
@@ -369,9 +370,12 @@ describe('BlocksService', () => {
 
         for (const record of blocks.data) {
           const block = record as Block & { transactions: Transaction[] };
-          for (const tx of block.transactions) {
-            expect(tx.id).toBe(transactionId);
-          }
+
+          const found = block.transactions.find(
+            (tx) => tx.id === transactionId,
+          );
+
+          expect(found?.id).toBe(transactionId);
         }
       });
     });
