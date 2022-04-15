@@ -124,12 +124,13 @@ export class UsersController {
       throw new UnprocessableEntityException(error);
     }
 
+    const user = await this.usersService.findOrThrow(id);
+
     let eventMetrics: Record<EventType, SerializedEventMetrics>;
     let points: number;
-    const { start, end, granularity } = query;
     let pools: Record<MetricsPool, SerializedEventMetrics> | undefined;
 
-    if (granularity === MetricsGranularity.LIFETIME) {
+    if (query.granularity === MetricsGranularity.LIFETIME) {
       const user = await this.usersService.findOrThrow(id);
       eventMetrics = await this.eventsService.getLifetimeEventMetricsForUser(
         user,
@@ -146,25 +147,26 @@ export class UsersController {
       ]);
 
       pools = { main, code };
+
       points = user.total_points;
     } else {
-      if (start === undefined || end === undefined) {
+      if (query.start === undefined || query.end === undefined) {
         throw new UnprocessableEntityException(
           'Must provide time range for "TOTAL" requests',
         );
       }
-      const user = await this.usersService.findOrThrow(id);
+
       ({ eventMetrics, points } =
         await this.eventsService.getTotalEventMetricsAndPointsForUser(
           user,
-          start,
-          end,
+          query.start,
+          query.end,
         ));
     }
 
     return {
       user_id: id,
-      granularity,
+      granularity: query.granularity,
       points,
       pools,
       metrics: {
