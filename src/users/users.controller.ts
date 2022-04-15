@@ -131,7 +131,6 @@ export class UsersController {
     let pools: Record<MetricsPool, SerializedEventMetrics> | undefined;
 
     if (query.granularity === MetricsGranularity.LIFETIME) {
-      const user = await this.usersService.findOrThrow(id);
       eventMetrics = await this.eventsService.getLifetimeEventMetricsForUser(
         user,
       );

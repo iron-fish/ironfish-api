@@ -235,8 +235,16 @@ describe('UsersController', () => {
 
     describe('with a TOTAL request and no time range', () => {
       it('returns a 422', async () => {
+        const user = await prisma.user.create({
+          data: {
+            email: faker.internet.email(),
+            graffiti: uuid(),
+            country_code: faker.address.countryCode('alpha-3'),
+          },
+        });
+
         const { body } = await request(app.getHttpServer())
-          .get('/users/123/metrics')
+          .get(`/users/${user.id}/metrics`)
           .query({
             granularity: MetricsGranularity.TOTAL,
           })
@@ -251,7 +259,7 @@ describe('UsersController', () => {
         const start = new Date(Date.now() - 1).toISOString();
         const end = new Date().toISOString();
         await request(app.getHttpServer())
-          .get('/users/12345/metrics')
+          .get('/users/123456789/metrics')
           .query({
             start,
             end,
