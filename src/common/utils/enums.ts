@@ -17,10 +17,5 @@ export function isInStrEnum<T extends StrEnum<T>>(
   value: unknown,
   enumType: T,
 ): boolean {
-  for (const enumValue of getEnumStrValues(enumType)) {
-    if (enumValue === value) {
-      return true;
-    }
-  }
-  return false;
+  return getEnumStrValues(enumType).filter((enumValue) => enumValue === value);
 }
