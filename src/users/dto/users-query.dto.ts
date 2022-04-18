@@ -2,14 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform, TransformFnParams } from 'class-transformer';
 import {
   Equals,
-  IsEnum,
   IsISO31661Alpha3,
   IsOptional,
   IsString,
+  Validate,
 } from 'class-validator';
 import { PaginationArgsDto } from '../../common/dto/pagination-args.dto';
+import { IsEventTypesArray } from './validators';
 import { EventType } from '.prisma/client';
 
 export class UsersQueryDto extends PaginationArgsDto {
@@ -32,8 +34,11 @@ export class UsersQueryDto extends PaginationArgsDto {
   @IsString()
   readonly search?: string;
 
-  @ApiPropertyOptional({ description: 'Event type filter', enum: EventType })
+  @ApiPropertyOptional({ description: 'Event types filter', enum: EventType })
   @IsOptional()
-  @IsEnum(EventType)
-  readonly event_type?: EventType;
+  @Transform(({ value }: TransformFnParams): unknown[] => {
+    return Array.isArray(value) ? (value as unknown[]) : [value];
+  })
+  @Validate(IsEventTypesArray)
+  readonly event_type?: EventType[];
 }

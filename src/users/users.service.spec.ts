@@ -221,7 +221,9 @@ describe('UsersService', () => {
         limit,
         search: '7',
       });
+
       expect(records.length).toBeLessThanOrEqual(limit);
+
       for (const record of records) {
         expect(record).toMatchObject({
           id: expect.any(Number),
@@ -290,7 +292,7 @@ describe('UsersService', () => {
       });
 
       const { data: records } = await usersService.listWithRank({
-        eventType: 'BUG_CAUGHT',
+        eventTypes: ['BUG_CAUGHT'],
         search: graffiti,
         limit: 3,
       });
@@ -301,6 +303,10 @@ describe('UsersService', () => {
       expect(records[0].graffiti).toEqual(userB.graffiti);
       expect(records[1].graffiti).toEqual(userA.graffiti);
       expect(records[2].graffiti).toEqual(userC.graffiti);
+      expect(records[0].total_points).toBe(1);
+      expect(records[1].total_points).toBe(1);
+      expect(records[2].total_points).toBe(0);
+
       expect(records[0].rank).toBeLessThan(records[1].rank);
       expect(records[1].rank).toBeLessThan(records[2].rank);
     });
@@ -308,8 +314,9 @@ describe('UsersService', () => {
     describe(`when 'event_type' is provided`, () => {
       it('returns a chunk of users by event when specified', async () => {
         const { data: records } = await usersService.listWithRank({
-          eventType: 'BUG_CAUGHT',
+          eventTypes: ['BUG_CAUGHT'],
         });
+
         records.map((record) =>
           expect(record).toMatchObject({
             id: expect.any(Number),
