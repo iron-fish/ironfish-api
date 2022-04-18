@@ -18,7 +18,7 @@ import { ListUsersWithRankOptions } from './interfaces/list-by-rank-options';
 import { ListUsersOptions } from './interfaces/list-users-options';
 import { SerializedUserWithRank } from './interfaces/serialized-user-with-rank';
 import { UpdateUserOptions } from './interfaces/update-user-options';
-import { EventType, Prisma, User } from '.prisma/client';
+import { Prisma, User } from '.prisma/client';
 
 @Injectable()
 export class UsersService {
