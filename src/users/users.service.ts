@@ -377,12 +377,12 @@ export class UsersService {
         (
           SELECT
             id,
-            RANK () OVER ( 
-              ORDER BY 
+            RANK () OVER (
+              ORDER BY
                 total_points DESC,
                 COALESCE(latest_event_occurred_at, NOW()) ASC,
                 created_at ASC
-            ) AS rank 
+            ) AS rank
           FROM
             users
           LEFT JOIN
