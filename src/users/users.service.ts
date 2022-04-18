@@ -216,84 +216,90 @@ export class UsersService {
       // Ranks start at 1, so get everything after 0
       rankCursor = 0;
     }
+
     const searchFilter = `%${search ?? ''}%`;
-    const query = `
-      SELECT
-        id,
-        graffiti,
-        total_points,
-        country_code,
-        created_at,
-        rank
-      FROM
-        (
+
+    const query = `with filtered_events as (
+          SELECT
+              user_id,
+              occurred_at,
+              points
+          FROM
+              events
+          WHERE
+              points != 0 AND
+              deleted_at IS NULL AND
+              CASE WHEN $6::event_type IS NOT NULL
+              THEN
+                  type = $6
+              ELSE
+                  TRUE
+              END
+      ),
+      user_latest_events as (
+          SELECT
+              user_id,
+              SUM(points) as total_points,
+              MAX(occurred_at) AS latest_event_occurred_at
+          FROM
+              filtered_events
+          GROUP BY
+              user_id
+      ),
+      user_ranks as (
           SELECT
             id,
             graffiti,
             COALESCE(user_latest_events.total_points, 0) as total_points,
             country_code,
             created_at,
-            RANK () OVER ( 
-              ORDER BY 
+            RANK () OVER (
+                ORDER BY
                 COALESCE(user_latest_events.total_points, 0) DESC,
                 COALESCE(latest_event_occurred_at, NOW()) ASC,
                 created_at ASC
-            ) AS rank 
+            ) AS rank
           FROM
             users
           LEFT JOIN
-            (
-              SELECT
-                user_id,
-                SUM(points) as total_points,
-                MAX(occurred_at) AS latest_event_occurred_at
-              FROM
-                (
-                  SELECT
-                    user_id,
-                    occurred_at,
-                    points
-                  FROM
-                    events
-                  WHERE
-                    points != 0 AND
-                    deleted_at IS NULL AND
-                    CASE WHEN $6::event_type IS NOT NULL
-                      THEN
-                        type = $6
-                      ELSE
-                        TRUE
-                    END
-                ) filtered_events
-              GROUP BY
-                user_id
-            ) user_latest_events
+            user_latest_events
           ON
             user_latest_events.user_id = users.id
-        ) user_ranks
-      WHERE
-        graffiti ILIKE $1 AND
-        CASE WHEN $2
-          THEN
-            rank > $3
-          ELSE
-            rank < $3
-        END AND
-        CASE WHEN $5::text IS NOT NULL
-          THEN
-            country_code = $5
-          ELSE
-            TRUE
-        END
-      ORDER BY 
-        CASE WHEN $2
-          THEN 
-            rank 
-          ELSE 
-            -rank 
-        END ASC
-      LIMIT
-        $4`;
+      )
+
+  SELECT
+    id,
+    graffiti,
+    total_points,
+    country_code,
+    created_at,
+    rank
+  FROM
+    user_ranks
+  WHERE
+    graffiti ILIKE $1 AND
+    CASE WHEN $2
+      THEN
+        rank > $3
+      ELSE
+        rank < $3
+    END AND
+    CASE WHEN $5::text IS NOT NULL
+      THEN
+        country_code = $5
+      ELSE
+        TRUE
+    END
+  ORDER BY
+    CASE WHEN $2
+      THEN
+        rank
+      ELSE
+        -rank
+    END ASC
+  LIMIT
+    $4
+  `;
 
     const data = await this.prisma.$queryRawUnsafe<SerializedUserWithRank[]>(
       query,
