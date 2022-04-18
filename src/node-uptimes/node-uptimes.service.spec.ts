@@ -126,4 +126,25 @@ describe('NodeUptimesService', () => {
       expect(result).toEqual(uptime);
     });
   });
+
+  describe('decrementCountedHoursWithClient', () => {
+    it('decrements total hours count', async () => {
+      const user = await createUser();
+
+      await prisma.nodeUptime.create({
+        data: {
+          user_id: user.id,
+          total_hours: 12,
+        },
+      });
+
+      const result = await nodeUptimesService.decrementCountedHoursWithClient(
+        user,
+        prisma,
+      );
+
+      assert(result);
+      expect(result.total_hours).toBe(0);
+    });
+  });
 });

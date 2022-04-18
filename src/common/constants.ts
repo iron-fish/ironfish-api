@@ -10,6 +10,10 @@ export const MS_PER_DAY = 1000 * 60 * 60 * 24;
 export const DEFAULT_LIMIT = 20;
 export const MAX_LIMIT = 100;
 
+// Node uptime
+export const NODE_UPTIME_CHECKIN_HOURS = 1; // Check-in can happen once per hour
+export const NODE_UPTIME_CREDIT_HOURS = 12; // Credit in 12 hour chunks
+
 // Event categories
 export const WEEKLY_POINT_LIMITS_BY_EVENT_TYPE: Record<EventType, number> = {
   [EventType.BLOCK_MINED]: 1000,

@@ -4,6 +4,10 @@
 
 import { Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
+import {
+  NODE_UPTIME_CHECKIN_HOURS,
+  NODE_UPTIME_CREDIT_HOURS,
+} from '../common/constants';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { NodeUptime } from '.prisma/client';
@@ -14,12 +18,16 @@ export class NodeUptimesService {
 
   async upsert(user: User): Promise<NodeUptime | null> {
     const now = new Date();
-    const oneHourAgo = new Date();
-    oneHourAgo.setHours(now.getHours() - 1);
+    const lastCheckinCutoff = new Date();
+    lastCheckinCutoff.setHours(now.getHours() - NODE_UPTIME_CHECKIN_HOURS);
 
     return this.prisma.$transaction(async (prisma) => {
+      await prisma.$executeRawUnsafe(
+        `SELECT pg_advisory_xact_lock(HASHTEXT($1));`,
+        user.id,
+      );
       const nodeUptime = await this.getWithClient(user, prisma);
-      if (nodeUptime && nodeUptime.last_checked_in >= oneHourAgo) {
+      if (nodeUptime && nodeUptime.last_checked_in >= lastCheckinCutoff) {
         return null;
       }
 
@@ -53,6 +61,22 @@ export class NodeUptimesService {
     return client.nodeUptime.findUnique({
       where: {
         user_id: user.id,
+      },
+    });
+  }
+
+  async decrementCountedHoursWithClient(
+    user: User,
+    client: BasePrismaClient,
+  ): Promise<NodeUptime | null> {
+    return client.nodeUptime.update({
+      where: {
+        user_id: user.id,
+      },
+      data: {
+        total_hours: {
+          decrement: NODE_UPTIME_CREDIT_HOURS,
+        },
       },
     });
   }
