@@ -239,7 +239,7 @@ export class UsersController {
       limit,
       order_by: orderBy,
       country_code: countryCode,
-      event_type: eventType,
+      event_type: eventTypes,
       search,
     }: UsersQueryDto,
   ): Promise<PaginatedList<SerializedUser | SerializedUserWithRank>> {
@@ -251,8 +251,9 @@ export class UsersController {
           limit: Math.min(MAX_LIMIT, limit || DEFAULT_LIMIT),
           search,
           countryCode,
-          eventType,
+          eventTypes,
         });
+
       return {
         object: 'list',
         data,
@@ -262,14 +263,16 @@ export class UsersController {
         },
       };
     }
+
     const { data, hasNext, hasPrevious } = await this.usersService.list({
       after,
       before,
       limit,
       search,
       countryCode,
-      eventType,
+      eventTypes,
     });
+
     return {
       object: 'list',
       data: data.map((user) => serializedUserFromRecord(user)),
