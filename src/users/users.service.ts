@@ -310,53 +310,39 @@ export class UsersService {
       countryCode,
       eventType,
     );
+
     // If fetching a previous page, the ranks are sorted in opposite order.
     // Reverse the data so the returned chunk is in ascending order.
     if (before !== undefined) {
       data.reverse();
     }
 
-    return {
-      data,
-      ...(await this.getListWithRankMetadata(
-        data,
-        query,
-        searchFilter,
-        countryCode,
-        eventType,
-      )),
-    };
-  }
-
-  private async getListWithRankMetadata(
-    data: SerializedUserWithRank[],
-    query: string,
-    searchFilter: string,
-    countryCode?: string,
-    eventType?: string,
-  ): Promise<{ hasNext: boolean; hasPrevious: boolean }> {
-    const { length } = data;
-    if (length === 0) {
+    if (data.length === 0) {
       return {
+        data: [],
         hasNext: false,
         hasPrevious: false,
       };
     }
+
     const nextRecords = await this.prisma.$queryRawUnsafe<
       SerializedUserWithRank[]
     >(
       query,
       searchFilter,
       true,
-      data[length - 1].rank,
+      data[data.length - 1].rank,
       1,
       countryCode,
       eventType,
     );
+
     const previousRecords = await this.prisma.$queryRawUnsafe<
       SerializedUserWithRank[]
     >(query, searchFilter, false, data[0].rank, 1, countryCode, eventType);
+
     return {
+      data: data,
       hasNext: nextRecords.length > 0,
       hasPrevious: previousRecords.length > 0,
     };
