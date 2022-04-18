@@ -175,6 +175,7 @@ export class UsersController {
         pull_requests_merged: eventMetrics[EventType.PULL_REQUEST_MERGED],
         social_media_contributions:
           eventMetrics[EventType.SOCIAL_MEDIA_PROMOTION],
+        node_uptime: eventMetrics[EventType.NODE_UPTIME],
       },
     };
   }
