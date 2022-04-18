@@ -315,24 +315,28 @@ describe('UsersController', () => {
           },
           metrics: {
             blocks_mined: {
-              count: expect.any(Number),
-              points: expect.any(Number),
+              count: 0,
+              points: 0,
             },
             bugs_caught: {
-              count: expect.any(Number),
-              points: expect.any(Number),
+              count: 1,
+              points: 100,
             },
             community_contributions: {
-              count: expect.any(Number),
-              points: expect.any(Number),
+              count: 0,
+              points: 0,
             },
             pull_requests_merged: {
-              count: expect.any(Number),
-              points: expect.any(Number),
+              count: 1,
+              points: 500,
             },
             social_media_contributions: {
-              count: expect.any(Number),
-              points: expect.any(Number),
+              count: 0,
+              points: 0,
+            },
+            node_uptime: {
+              count: 0,
+              points: 0,
             },
           },
         });
@@ -348,6 +352,7 @@ describe('UsersController', () => {
             country_code: faker.address.countryCode('alpha-3'),
           },
         });
+
         const start = new Date(Date.now() - 1).toISOString();
         const end = new Date().toISOString();
         const granularity = MetricsGranularity.TOTAL;
@@ -359,30 +364,35 @@ describe('UsersController', () => {
             start,
             end,
           });
+
         expect(body).toMatchObject({
           user_id: user.id,
           granularity,
-          points: expect.any(Number),
+          points: 0,
           metrics: {
             blocks_mined: {
-              count: expect.any(Number),
-              points: expect.any(Number),
+              count: 0,
+              points: 0,
             },
             bugs_caught: {
-              count: expect.any(Number),
-              points: expect.any(Number),
+              count: 0,
+              points: 0,
             },
             community_contributions: {
-              count: expect.any(Number),
-              points: expect.any(Number),
+              count: 0,
+              points: 0,
             },
             pull_requests_merged: {
-              count: expect.any(Number),
-              points: expect.any(Number),
+              count: 0,
+              points: 0,
             },
             social_media_contributions: {
-              count: expect.any(Number),
-              points: expect.any(Number),
+              count: 0,
+              points: 0,
+            },
+            node_uptime: {
+              count: 0,
+              points: 0,
             },
           },
         });
