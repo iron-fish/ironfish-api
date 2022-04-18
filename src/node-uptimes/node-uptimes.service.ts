@@ -22,6 +22,10 @@ export class NodeUptimesService {
     lastCheckinCutoff.setHours(now.getHours() - NODE_UPTIME_CHECKIN_HOURS);
 
     return this.prisma.$transaction(async (prisma) => {
+      await prisma.$executeRawUnsafe(
+        `SELECT pg_advisory_xact_lock(HASHTEXT($1));`,
+        user.id,
+      );
       const nodeUptime = await this.getWithClient(user, prisma);
       if (nodeUptime && nodeUptime.last_checked_in >= lastCheckinCutoff) {
         return null;
