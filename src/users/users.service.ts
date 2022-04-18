@@ -220,7 +220,9 @@ export class UsersService {
 
     const searchFilter = `%${search ?? ''}%`;
 
-    const eventsFilter = eventTypes
+    const useEventFiltering = !!eventTypes?.length;
+
+    const eventsFilter = useEventFiltering
       ? eventTypes.map((e) => `'${String(e)}'::event_type`).join(',')
       : 'NULL';
 
@@ -313,7 +315,7 @@ export class UsersService {
       rankCursor,
       limit,
       countryCode,
-      !!eventTypes?.length,
+      useEventFiltering,
     );
 
     // If fetching a previous page, the ranks are sorted in opposite order.
@@ -339,7 +341,7 @@ export class UsersService {
       data[data.length - 1].rank,
       1,
       countryCode,
-      !!eventTypes?.length,
+      useEventFiltering,
     );
 
     const previousRecords = await this.prisma.$queryRawUnsafe<
@@ -351,7 +353,7 @@ export class UsersService {
       data[0].rank,
       1,
       countryCode,
-      !!eventTypes?.length,
+      useEventFiltering,
     );
 
     return {
