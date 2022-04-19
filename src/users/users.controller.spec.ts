@@ -301,6 +301,10 @@ describe('UsersController', () => {
           user_id: user.id,
           granularity: MetricsGranularity.LIFETIME,
           points: expect.any(Number),
+          node_uptime: {
+            total_hours: 0,
+            last_checked_in: null,
+          },
           pools: {
             main: {
               rank: expect.any(Number),

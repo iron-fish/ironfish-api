@@ -31,6 +31,7 @@ import { MagicLinkContext } from '../common/interfaces/magic-link-context';
 import { PaginatedList } from '../common/interfaces/paginated-list';
 import { EventsService } from '../events/events.service';
 import { SerializedEventMetrics } from '../events/interfaces/serialized-event-metrics';
+import { NodeUptimesService } from '../node-uptimes/node-uptimes.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserMetricsQueryDto } from './dto/user-metrics-query.dto';
@@ -54,6 +55,7 @@ const MAX_SUPPORTED_TIME_RANGE_IN_DAYS = 30;
 export class UsersController {
   constructor(
     private readonly eventsService: EventsService,
+    private readonly nodeUptimeService: NodeUptimesService,
     private readonly usersService: UsersService,
     private readonly usersUpdater: UsersUpdater,
   ) {}
@@ -129,6 +131,7 @@ export class UsersController {
     let eventMetrics: Record<EventType, SerializedEventMetrics>;
     let points: number;
     let pools: Record<MetricsPool, SerializedEventMetrics> | undefined;
+    let node_uptime: SerializedUserMetrics['node_uptime'];
 
     if (query.granularity === MetricsGranularity.LIFETIME) {
       eventMetrics = await this.eventsService.getLifetimeEventMetricsForUser(
@@ -146,6 +149,12 @@ export class UsersController {
       ]);
 
       pools = { main, code };
+
+      const uptime = await this.nodeUptimeService.get(user);
+      node_uptime = {
+        total_hours: uptime?.total_hours ?? 0,
+        last_checked_in: uptime?.last_checked_in?.toISOString() ?? null,
+      };
 
       points = user.total_points;
     } else {
@@ -168,6 +177,7 @@ export class UsersController {
       granularity: query.granularity,
       points,
       pools,
+      node_uptime,
       metrics: {
         blocks_mined: eventMetrics[EventType.BLOCK_MINED],
         bugs_caught: eventMetrics[EventType.BUG_CAUGHT],

@@ -20,4 +20,8 @@ export interface SerializedUserMetrics {
     main: SerializedEventMetrics;
     code: SerializedEventMetrics;
   };
+  node_uptime?: {
+    total_hours: number;
+    last_checked_in: string | null;
+  };
 }
