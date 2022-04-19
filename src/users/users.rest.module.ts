@@ -4,6 +4,7 @@
 import { Module } from '@nestjs/common';
 import { ApiConfigModule } from '../api-config/api-config.module';
 import { EventsModule } from '../events/events.module';
+import { NodeUptimesModule } from '../node-uptimes/node-uptimes.module';
 import { MeController } from './me.controller';
 import { UsersController } from './users.controller';
 import { UsersModule } from './users.module';
@@ -11,6 +12,12 @@ import { UsersUpdaterModule } from './users-updater.module';
 
 @Module({
   controllers: [MeController, UsersController],
-  imports: [ApiConfigModule, EventsModule, UsersModule, UsersUpdaterModule],
+  imports: [
+    ApiConfigModule,
+    EventsModule,
+    UsersModule,
+    UsersUpdaterModule,
+    NodeUptimesModule,
+  ],
 })
 export class UsersRestModule {}
