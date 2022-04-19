@@ -26,6 +26,7 @@ export class NodeUptimesService {
         `SELECT pg_advisory_xact_lock(HASHTEXT($1));`,
         user.id,
       );
+
       const nodeUptime = await this.getWithClient(user, prisma);
       if (nodeUptime && nodeUptime.last_checked_in >= lastCheckinCutoff) {
         return null;
@@ -44,7 +45,7 @@ export class NodeUptimesService {
         create: {
           user_id: user.id,
           last_checked_in: now.toISOString(),
-          total_hours: 0,
+          total_hours: 1,
         },
       });
     });

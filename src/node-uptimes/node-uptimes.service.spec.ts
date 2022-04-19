@@ -45,9 +45,9 @@ describe('NodeUptimesService', () => {
       expect(uptime).toMatchObject({
         user_id: user.id,
         last_checked_in: expect.any(Date),
-        total_hours: 0,
+        total_hours: 1,
       });
-      assert(uptime);
+
       expect(uptime.last_checked_in.getTime()).toBeGreaterThanOrEqual(
         now.getTime(),
       );

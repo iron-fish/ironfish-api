@@ -68,8 +68,10 @@ export class TelemetryController {
 
     if (!this.config.isProduction() && graffiti) {
       const user = await this.usersService.findByGraffiti(graffiti);
+
       if (user) {
         const uptime = await this.nodeUptimes.upsert(user);
+
         if (uptime && uptime.total_hours >= NODE_UPTIME_CREDIT_HOURS) {
           await this.graphileWorkerService.addJob(
             GraphileWorkerPattern.CREATE_NODE_UPTIME_EVENT,
