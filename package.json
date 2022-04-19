@@ -59,7 +59,7 @@
   },
   "dependencies": {
     "@influxdata/influxdb-client": "1.24.0",
-    "@magic-sdk/admin": "1.4.0",
+    "@magic-sdk/admin": "1.4.1",
     "@nestjs/common": "8.4.4",
     "@nestjs/config": "2.0.0",
     "@nestjs/core": "8.4.4",
