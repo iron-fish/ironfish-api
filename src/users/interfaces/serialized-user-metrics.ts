@@ -15,6 +15,7 @@ export interface SerializedUserMetrics {
     pull_requests_merged: SerializedEventMetrics;
     social_media_contributions: SerializedEventMetrics;
     node_uptime: SerializedEventMetrics;
+    send_transaction: SerializedEventMetrics;
   };
   pools?: {
     main: SerializedEventMetrics;

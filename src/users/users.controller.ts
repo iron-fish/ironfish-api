@@ -186,6 +186,7 @@ export class UsersController {
         social_media_contributions:
           eventMetrics[EventType.SOCIAL_MEDIA_PROMOTION],
         node_uptime: eventMetrics[EventType.NODE_UPTIME],
+        send_transaction: eventMetrics[EventType.SEND_TRANSACTION],
       },
     };
   }

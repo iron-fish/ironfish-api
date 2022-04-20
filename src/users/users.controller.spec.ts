@@ -342,6 +342,10 @@ describe('UsersController', () => {
               count: 0,
               points: 0,
             },
+            send_transaction: {
+              count: 0,
+              points: 0,
+            },
           },
         });
       });
