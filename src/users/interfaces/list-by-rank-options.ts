@@ -8,4 +8,5 @@ export interface ListUsersWithRankOptions extends PaginationOptions {
   search?: string;
   countryCode?: string;
   eventTypes?: EventType[];
+  userIds?: number[];
 }
