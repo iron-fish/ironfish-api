@@ -178,7 +178,7 @@ describe('TelemetryController', () => {
 
       it('updates the node uptime', async () => {
         const nodeUptimeUpsert = jest
-          .spyOn(nodeUptimesService, 'upsert')
+          .spyOn(nodeUptimesService, 'addUptime')
           .mockImplementationOnce(jest.fn());
 
         const graffiti = uuid();
@@ -189,6 +189,7 @@ describe('TelemetryController', () => {
             country_code: faker.address.countryCode(),
           },
         });
+
         await request(app.getHttpServer())
           .post('/telemetry')
           .send({ points: [], graffiti })
@@ -206,14 +207,14 @@ describe('TelemetryController', () => {
         const oldCheckin = new Date();
         oldCheckin.setHours(oldCheckin.getHours() - 2);
 
-        const graffiti = uuid();
         const user = await prisma.user.create({
           data: {
             email: faker.internet.email(),
-            graffiti,
+            graffiti: uuid(),
             country_code: faker.address.countryCode(),
           },
         });
+
         await prisma.nodeUptime.create({
           data: {
             user_id: user.id,
@@ -224,7 +225,7 @@ describe('TelemetryController', () => {
 
         await request(app.getHttpServer())
           .post('/telemetry')
-          .send({ points: [], graffiti })
+          .send({ points: [], graffiti: user.graffiti })
           .expect(HttpStatus.CREATED);
 
         expect(workerAddJob).toHaveBeenCalledTimes(1);

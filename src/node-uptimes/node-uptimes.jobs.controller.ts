@@ -27,6 +27,7 @@ export class NodeUptimesJobsController {
     userId,
   }: CreateNodeUptimeEventOptions): Promise<GraphileWorkerHandlerResponse> {
     const user = await this.usersService.find(userId);
+
     if (!user) {
       this.loggerService.error(`No user found for '${userId}'`, '');
       return { requeue: false };
@@ -52,6 +53,7 @@ export class NodeUptimesJobsController {
         throw new Error(`Error updating node uptime table`);
       }
     });
+
     return { requeue: false };
   }
 }
