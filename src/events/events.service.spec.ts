@@ -316,6 +316,7 @@ describe('EventsService', () => {
         PULL_REQUEST_MERGED: 2,
         SOCIAL_MEDIA_PROMOTION: 0,
         NODE_UPTIME: 1,
+        SEND_TRANSACTION: 1,
       };
       const user = await prisma.user.create({
         data: {
@@ -350,6 +351,8 @@ describe('EventsService', () => {
         [EventType.SOCIAL_MEDIA_PROMOTION]:
           lifetimeMetrics[EventType.SOCIAL_MEDIA_PROMOTION].count,
         [EventType.NODE_UPTIME]: lifetimeMetrics[EventType.NODE_UPTIME].count,
+        [EventType.SEND_TRANSACTION]:
+          lifetimeMetrics[EventType.SEND_TRANSACTION].count,
       };
       expect(lifetimeCounts).toEqual(eventCounts);
     });
@@ -372,6 +375,7 @@ describe('EventsService', () => {
         PULL_REQUEST_MERGED: 3,
         SOCIAL_MEDIA_PROMOTION: 0,
         NODE_UPTIME: 0,
+        SEND_TRANSACTION: 0,
       };
       const eventCountsToIgnore: Record<EventType, number> = {
         BLOCK_MINED: 1,
@@ -380,6 +384,7 @@ describe('EventsService', () => {
         PULL_REQUEST_MERGED: 2,
         SOCIAL_MEDIA_PROMOTION: 2,
         NODE_UPTIME: 0,
+        SEND_TRANSACTION: 0,
       };
       let totalPoints = 0;
 
@@ -427,6 +432,8 @@ describe('EventsService', () => {
         [EventType.SOCIAL_MEDIA_PROMOTION]:
           eventMetrics[EventType.SOCIAL_MEDIA_PROMOTION].count,
         [EventType.NODE_UPTIME]: eventMetrics[EventType.NODE_UPTIME].count,
+        [EventType.SEND_TRANSACTION]:
+          eventMetrics[EventType.SEND_TRANSACTION].count,
       };
       expect(eventCounts).toEqual(eventCountsToReturn);
       expect(points).toBe(totalPoints);
