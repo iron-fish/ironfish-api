@@ -215,24 +215,6 @@ describe('UsersService', () => {
   });
 
   describe('listWithRank', () => {
-    it('returns a chunk of users with rank', async () => {
-      const limit = 10;
-      const { data: records } = await usersService.listWithRank({
-        limit,
-        search: '7',
-      });
-
-      expect(records.length).toBeLessThanOrEqual(limit);
-
-      for (const record of records) {
-        expect(record).toMatchObject({
-          id: expect.any(Number),
-          graffiti: expect.any(String),
-          rank: expect.any(Number),
-        });
-      }
-    });
-
     it('returns users ranked correctly', async () => {
       const graffiti = uuid();
       const now = new Date();
@@ -295,20 +277,25 @@ describe('UsersService', () => {
         eventTypes: ['BUG_CAUGHT'],
         search: graffiti,
         limit: 3,
+        userIds: [userA.id, userB.id, userC.id],
       });
 
       // Because userB caught a bug first, we consider userB to be
       // ranked earlier than userA. The last event for userB doesn't
       // count because it has 0 points.
-      expect(records[0].graffiti).toEqual(userB.graffiti);
-      expect(records[1].graffiti).toEqual(userA.graffiti);
-      expect(records[2].graffiti).toEqual(userC.graffiti);
+      expect(records).toHaveLength(3);
+
+      expect(records[0].id).toEqual(userB.id);
+      expect(records[1].id).toEqual(userA.id);
+      expect(records[2].id).toEqual(userC.id);
+
       expect(records[0].total_points).toBe(1);
       expect(records[1].total_points).toBe(1);
       expect(records[2].total_points).toBe(0);
 
-      expect(records[0].rank).toBeLessThan(records[1].rank);
-      expect(records[1].rank).toBeLessThan(records[2].rank);
+      expect(records[0].rank).toBe(1);
+      expect(records[1].rank).toBe(2);
+      expect(records[2].rank).toBe(3);
     });
 
     describe(`when 'event_type' is provided`, () => {

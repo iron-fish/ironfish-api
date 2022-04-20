@@ -204,6 +204,7 @@ export class UsersService {
     search,
     countryCode,
     eventTypes,
+    userIds,
   }: ListUsersWithRankOptions): Promise<{
     data: SerializedUserWithRank[];
     hasNext: boolean;
@@ -221,9 +222,14 @@ export class UsersService {
     const searchFilter = `%${search ?? ''}%`;
 
     const useEventFiltering = !!eventTypes?.length;
+    const useUserFiltering = !!userIds?.length;
 
     const eventsFilter = useEventFiltering
       ? eventTypes.map((e) => `'${String(e)}'::event_type`).join(',')
+      : 'NULL';
+
+    const usersFiltering = useUserFiltering
+      ? userIds.map(String).join(',')
       : 'NULL';
 
     const query = `with filtered_events as (
@@ -272,6 +278,13 @@ export class UsersService {
             user_latest_events
           ON
             user_latest_events.user_id = users.id
+          WHERE
+            CASE WHEN $7 IS TRUE
+            THEN
+                users.id IN (${usersFiltering})
+            ELSE
+                TRUE
+            END
       )
 
   SELECT
@@ -316,6 +329,7 @@ export class UsersService {
       limit,
       countryCode,
       useEventFiltering,
+      useUserFiltering,
     );
 
     // If fetching a previous page, the ranks are sorted in opposite order.
@@ -342,6 +356,7 @@ export class UsersService {
       1,
       countryCode,
       useEventFiltering,
+      useUserFiltering,
     );
 
     const previousRecords = await this.prisma.$queryRawUnsafe<
@@ -354,6 +369,7 @@ export class UsersService {
       1,
       countryCode,
       useEventFiltering,
+      useUserFiltering,
     );
 
     return {
