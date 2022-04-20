@@ -173,6 +173,11 @@ export class EventsService {
         user,
         EventType.NODE_UPTIME,
       );
+    const sendTransactionAggregate =
+      await this.getLifetimePointsAndOccurredAtForUserAndType(
+        user,
+        EventType.SEND_TRANSACTION,
+      );
     const totalPoints =
       blockMinedAggregate.points +
       bugCaughtAggregate.points +
@@ -190,6 +195,7 @@ export class EventsService {
         PULL_REQUEST_MERGED: pullRequestAggregate,
         SOCIAL_MEDIA_PROMOTION: socialMediaAggregate,
         NODE_UPTIME: nodeUptimeAggregate,
+        SEND_TRANSACTION: sendTransactionAggregate,
       },
     };
   }
@@ -260,6 +266,12 @@ export class EventsService {
         NODE_UPTIME: await this.getLifetimeEventTypeMetricsForUser(
           user,
           EventType.NODE_UPTIME,
+          ranks,
+          prisma,
+        ),
+        SEND_TRANSACTION: await this.getLifetimeEventTypeMetricsForUser(
+          user,
+          EventType.SEND_TRANSACTION,
           ranks,
           prisma,
         ),
@@ -367,6 +379,13 @@ export class EventsService {
           NODE_UPTIME: await this.getTotalEventTypeMetricsForUser(
             user,
             EventType.NODE_UPTIME,
+            start,
+            end,
+            prisma,
+          ),
+          SEND_TRANSACTION: await this.getTotalEventTypeMetricsForUser(
+            user,
+            EventType.SEND_TRANSACTION,
             start,
             end,
             prisma,
@@ -814,6 +833,7 @@ export class EventsService {
         EventType.SOCIAL_MEDIA_PROMOTION,
       ),
       [EventType.NODE_UPTIME]: getRankForType(EventType.NODE_UPTIME),
+      [EventType.SEND_TRANSACTION]: getRankForType(EventType.SEND_TRANSACTION),
     };
   }
 
