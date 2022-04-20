@@ -8,16 +8,22 @@ import {
   NODE_UPTIME_CHECKIN_HOURS,
   NODE_UPTIME_CREDIT_HOURS,
 } from '../common/constants';
+import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
+import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { NodeUptime } from '.prisma/client';
 
 @Injectable()
 export class NodeUptimesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly graphileWorkerService: GraphileWorkerService,
+  ) {}
 
-  async upsert(user: User): Promise<NodeUptime | null> {
+  async addUptime(user: User): Promise<{ uptime: NodeUptime; added: boolean }> {
     const now = new Date();
+
     const lastCheckinCutoff = new Date();
     lastCheckinCutoff.setHours(now.getHours() - NODE_UPTIME_CHECKIN_HOURS);
 
@@ -26,12 +32,14 @@ export class NodeUptimesService {
         `SELECT pg_advisory_xact_lock(HASHTEXT($1));`,
         user.id,
       );
-      const nodeUptime = await this.getWithClient(user, prisma);
-      if (nodeUptime && nodeUptime.last_checked_in >= lastCheckinCutoff) {
-        return null;
+
+      let uptime = await this.getWithClient(user, prisma);
+
+      if (uptime && uptime.last_checked_in >= lastCheckinCutoff) {
+        return { uptime: uptime, added: false };
       }
 
-      return prisma.nodeUptime.upsert({
+      uptime = await prisma.nodeUptime.upsert({
         where: {
           user_id: user.id,
         },
@@ -47,6 +55,15 @@ export class NodeUptimesService {
           total_hours: 0,
         },
       });
+
+      if (uptime && uptime.total_hours >= NODE_UPTIME_CREDIT_HOURS) {
+        await this.graphileWorkerService.addJob(
+          GraphileWorkerPattern.CREATE_NODE_UPTIME_EVENT,
+          { userId: user.id },
+        );
+      }
+
+      return { uptime: uptime, added: true };
     });
   }
 

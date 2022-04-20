@@ -40,14 +40,14 @@ describe('NodeUptimesService', () => {
       const now = new Date();
       const user = await createUser();
 
-      const uptime = await nodeUptimesService.upsert(user);
+      const { uptime } = await nodeUptimesService.addUptime(user);
 
       expect(uptime).toMatchObject({
         user_id: user.id,
         last_checked_in: expect.any(Date),
         total_hours: 0,
       });
-      assert(uptime);
+
       expect(uptime.last_checked_in.getTime()).toBeGreaterThanOrEqual(
         now.getTime(),
       );
@@ -66,14 +66,14 @@ describe('NodeUptimesService', () => {
         },
       });
 
-      const uptime = await nodeUptimesService.upsert(user);
+      const { uptime } = await nodeUptimesService.addUptime(user);
 
       expect(uptime).toMatchObject({
         user_id: user.id,
         last_checked_in: expect.any(Date),
         total_hours: 1,
       });
-      assert(uptime);
+
       expect(uptime.last_checked_in.getTime()).toBeGreaterThanOrEqual(
         now.getTime(),
       );
@@ -82,6 +82,7 @@ describe('NodeUptimesService', () => {
     it('does not update node uptime if enough time has not passed', async () => {
       const now = new Date();
       const user = await createUser();
+
       await prisma.nodeUptime.create({
         data: {
           user_id: user.id,
@@ -90,12 +91,11 @@ describe('NodeUptimesService', () => {
         },
       });
 
-      const uptime = await nodeUptimesService.upsert(user);
-      const dbUptime = await nodeUptimesService.get(user);
+      const { uptime, added } = await nodeUptimesService.addUptime(user);
 
-      expect(uptime).toBeNull();
+      expect(added).toBe(false);
 
-      expect(dbUptime).toMatchObject({
+      expect(uptime).toMatchObject({
         user_id: user.id,
         last_checked_in: now,
         total_hours: 0,
