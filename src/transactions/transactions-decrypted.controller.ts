@@ -26,57 +26,33 @@ import {
 export class TransactionsController {
   constructor(private readonly transactionsService: TransactionsService) {}
 
-  @ApiOperation({ summary: `Gets a specific transaction by 'hash'` })
-  @Get('find')
-  async find(
-    @Query(
+  @ApiExcludeEndpoint()
+  @Post()
+  @UseGuards(ApiKeyGuard)
+  async bulkUpsert(
+    @Body(
       new ValidationPipe({
         errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
         transform: true,
       }),
     )
-    { hash, with_blocks }: TransactionQueryDto,
-  ): Promise<SerializedTransaction | SerializedTransactionWithBlocks> {
-    const transaction = await this.transactionsService.find({
-      hash,
-      withBlocks: with_blocks,
-    });
-    if (transaction !== null && 'blocks' in transaction) {
-      return serializedTransactionFromRecordWithBlocks(transaction);
-    } else if (transaction !== null) {
-      return serializedTransactionFromRecord(transaction);
-    } else {
-      throw new NotFoundException();
-    }
-  }
-
-  @ApiOperation({
-    summary: 'Returns a paginated list of transactions from the chain',
-  })
-  @Get()
-  async list(
-    @Query(
-      new ValidationPipe({
-        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-        transform: true,
-      }),
-    )
-    { block_id, search, with_blocks }: TransactionsQueryDto,
-  ): Promise<List<SerializedTransaction | SerializedTransactionWithBlocks>> {
-    const transactions = await this.transactionsService.list({
-      blockId: block_id,
-      search,
-      withBlocks: with_blocks,
-    });
+    upsertBlocksDto: UpsertBlocksDto,
+  ): Promise<List<SerializedBlock>> {
+    const blocks = await this.blocksTransactionsLoader.bulkUpsert(
+      upsertBlocksDto,
+    );
     return {
-      data: transactions.map((transaction) => {
-        if ('blocks' in transaction) {
-          return serializedTransactionFromRecordWithBlocks(transaction);
-        } else {
-          return serializedTransactionFromRecord(transaction);
-        }
-      }),
       object: 'list',
+      data: blocks.map((block) =>
+        serializedBlockFromRecordWithTransactions(block),
+      ),
     };
   }
+
+  @ApiOperation({ summary: 'Gets the head of the chain' })
+  @Get('head')
+  async head(): Promise<SerializedBlock> {
+    return serializedBlockFromRecord(await this.blocksService.head());
+  }
+
 }

@@ -30,11 +30,24 @@ export class TransactionDecryptedDto {
   readonly notes!: NoteDecryptedDto[];
 }
 
-export class UpsertTransactionsDecryptedDto {
+export class BlockDto {
+  @IsString()
+  readonly hash!: string;
+
+  @IsInt()
+  @Type(() => Number)
+  readonly sequence!: number;
+
   @IsArray()
   @ArrayMinSize(1)
   @ArrayMaxSize(3000)
   @ValidateNested({ each: true })
   @Type(() => TransactionDecryptedDto)
   readonly transactions!: TransactionDecryptedDto[];
+}
+
+export class UpsertTransactionsDecryptedDto {
+  @Type(() => BlockDto)
+  readonly block!: BlockDto
+
 }
