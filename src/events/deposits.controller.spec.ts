@@ -6,16 +6,19 @@ import request from 'supertest';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
+import { DepositsService } from './deposits.service';
 
 describe('DepositsController', () => {
   let app: INestApplication;
   let config: ApiConfigService;
   let prisma: PrismaService;
+  let deposits: DepositsService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
     config = app.get(ApiConfigService);
     prisma = app.get(PrismaService);
+    deposits = app.get(DepositsService);
     await app.init();
   });
 
@@ -28,19 +31,15 @@ describe('DepositsController', () => {
       const API_KEY = config.get<string>('IRONFISH_API_KEY');
       const NETWORK_VERSION = config.get<number>('NETWORK_VERSION');
 
-      let response = await request(app.getHttpServer())
-        .get(`/deposits/head`)
-        .set('Authorization', `Bearer ${API_KEY}`)
-        .expect(HttpStatus.OK);
-
-      const latest: number = response.body?.deposit?.block_sequence ?? 0;
+      const latest = await deposits.head();
+      const latestSequence = latest?.block_sequence ?? 0;
 
       // Create a deposit that should not be picked up
       const deposit = await prisma.deposit.create({
         data: {
           transaction_hash: 'foo',
           block_hash: 'bar',
-          block_sequence: latest + 1,
+          block_sequence: latestSequence + 1,
           note_index: 0,
           network_version: NETWORK_VERSION - 1,
           main: false,
@@ -48,12 +47,10 @@ describe('DepositsController', () => {
         },
       });
 
-      response = await request(app.getHttpServer())
+      await request(app.getHttpServer())
         .get(`/deposits/head`)
         .set('Authorization', `Bearer ${API_KEY}`)
-        .expect(HttpStatus.OK);
-
-      expect(response.body.deposit).toBeNull();
+        .expect(HttpStatus.NOT_FOUND);
 
       // The deposit should be picked up now as the latest deposit
       await prisma.deposit.update({
@@ -61,12 +58,12 @@ describe('DepositsController', () => {
         where: { id: deposit.id },
       });
 
-      response = await request(app.getHttpServer())
+      const response = await request(app.getHttpServer())
         .get(`/deposits/head`)
         .set('Authorization', `Bearer ${API_KEY}`)
         .expect(HttpStatus.OK);
 
-      expect(response.body.deposit.id).toEqual(deposit.id);
+      expect(response.body.id).toEqual(deposit.id);
     });
   });
 });
