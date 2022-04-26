@@ -33,7 +33,6 @@ describe('DepositsController', () => {
         .set('Authorization', `Bearer ${API_KEY}`)
         .expect(HttpStatus.OK);
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       const latest: number = response.body?.deposit?.block_sequence ?? 0;
 
       // Create a deposit that should not be picked up
@@ -54,7 +53,6 @@ describe('DepositsController', () => {
         .set('Authorization', `Bearer ${API_KEY}`)
         .expect(HttpStatus.OK);
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(response.body.deposit).toBeNull();
 
       // The deposit should be picked up now as the latest deposit
@@ -68,7 +66,6 @@ describe('DepositsController', () => {
         .set('Authorization', `Bearer ${API_KEY}`)
         .expect(HttpStatus.OK);
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(response.body.deposit.id).toEqual(deposit.id);
     });
   });
