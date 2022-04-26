@@ -8,7 +8,7 @@ import { SortOrder } from '../common/enums/sort-order';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
-export class DepositService {
+export class DepositsService {
   constructor(
     private readonly config: ApiConfigService,
     private readonly prisma: PrismaService,

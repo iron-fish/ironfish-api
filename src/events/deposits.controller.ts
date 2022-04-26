@@ -4,13 +4,13 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
-import { DepositService } from './deposit.service';
+import { DepositsService } from './deposits.service';
 import { SerializedDeposit } from './dto/serialized-deposit.dto';
 
 @ApiTags('Deposit')
 @Controller('deposits')
-export class DepositController {
-  constructor(private readonly depositService: DepositService) {}
+export class DepositsController {
+  constructor(private readonly depositService: DepositsService) {}
 
   @ApiOperation({ summary: 'Gets the head of the chain' })
   @UseGuards(ApiKeyGuard)

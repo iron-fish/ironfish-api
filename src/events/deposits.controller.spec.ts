@@ -7,7 +7,7 @@ import { ApiConfigService } from '../api-config/api-config.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 
-describe('EventsController', () => {
+describe('DepositsController', () => {
   let app: INestApplication;
   let config: ApiConfigService;
   let prisma: PrismaService;

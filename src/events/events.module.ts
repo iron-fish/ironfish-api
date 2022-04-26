@@ -6,12 +6,12 @@ import { ApiConfigModule } from '../api-config/api-config.module';
 import { BlocksModule } from '../blocks/blocks.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { UserPointsModule } from '../user-points/user-points.module';
-import { DepositService } from './deposit.service';
+import { DepositsService } from './deposits.service';
 import { EventsService } from './events.service';
 
 @Module({
-  exports: [EventsService, DepositService],
+  exports: [EventsService, DepositsService],
   imports: [ApiConfigModule, BlocksModule, PrismaModule, UserPointsModule],
-  providers: [EventsService, DepositService],
+  providers: [EventsService, DepositsService],
 })
 export class EventsModule {}
