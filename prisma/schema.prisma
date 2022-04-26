@@ -210,4 +210,6 @@ model Deposit {
   network_version     Int
   main                Boolean
   amount              Int
+
+  @@map("deposits")
 }
