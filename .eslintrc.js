@@ -36,6 +36,7 @@ module.exports = {
       files: ['**/*.{spec,test}.*'],
       extends: ['plugin:jest/recommended'],
       rules: {
+        '@typescript-eslint/no-unsafe-member-access': 'off',
         '@typescript-eslint/no-unsafe-assignment': 'off',
         'jest/expect-expect': [
           'error',
