@@ -1,5 +1,5 @@
 -- CreateTable
-CREATE TABLE "Deposit" (
+CREATE TABLE "deposits" (
     "id" SERIAL NOT NULL,
     "created_at" TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -11,5 +11,5 @@ CREATE TABLE "Deposit" (
     "main" BOOLEAN NOT NULL,
     "amount" INTEGER NOT NULL,
 
-    CONSTRAINT "Deposit_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "deposits_pkey" PRIMARY KEY ("id")
 );
