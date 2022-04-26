@@ -5,7 +5,7 @@ import { Controller, Get, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { DepositsService } from './deposits.service';
-import { SerializedDeposit } from './dto/serialized-deposit.dto';
+import { SerializedDeposit } from './interfaces/serialized-deposit';
 
 @ApiTags('Deposit')
 @Controller('deposits')
