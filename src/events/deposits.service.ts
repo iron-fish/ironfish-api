@@ -17,7 +17,7 @@ export class DepositsService {
   async head(): Promise<Deposit | null> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
 
-    return await this.prisma.deposit.findFirst({
+    return this.prisma.deposit.findFirst({
       where: {
         main: true,
         network_version: networkVersion,
