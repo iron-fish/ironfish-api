@@ -188,6 +188,8 @@ model UserPoints {
   social_media_promotion_last_occurred_at        DateTime? @db.Timestamp(6)
   node_uptime_points                             Int       @default(0)
   node_uptime_last_occurred_at                   DateTime? @db.Timestamp(6)
+  send_transaction_points                        Int       @default(0)
+  send_transaction_last_occurred_at              DateTime? @db.Timestamp(6)
   user                                           User      @relation(fields: [user_id], references: [id])
 
   @@index([user_id], map: "index_user_points_on_user_id")
@@ -196,6 +198,8 @@ model UserPoints {
   @@index([community_contribution_points], map: "index_user_points_on_community_contribution")
   @@index([pull_request_merged_points], map: "index_user_points_on_pull_request_merged")
   @@index([social_media_promotion_points], map: "index_user_points_on_social_media_promotion")
+  @@index([node_uptime_points], map: "index_user_points_on_node_uptime")
+  @@index([send_transaction_points], map: "index_user_points_on_send_transaction")
   @@map("user_points")
 }
 

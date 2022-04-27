@@ -28,6 +28,8 @@ export class UserPointsService {
       const communityContribution = points[EventType.COMMUNITY_CONTRIBUTION];
       const pullRequestMerged = points[EventType.PULL_REQUEST_MERGED];
       const socialMediaPromotion = points[EventType.SOCIAL_MEDIA_PROMOTION];
+      const nodeUptime = points[EventType.NODE_UPTIME];
+      const transactionSent = points[EventType.SEND_TRANSACTION];
 
       if (blockMined) {
         options.block_mined_last_occurred_at = blockMined.latestOccurredAt;
@@ -51,6 +53,15 @@ export class UserPointsService {
         options.social_media_promotion_last_occurred_at =
           socialMediaPromotion.latestOccurredAt;
         options.social_media_promotion_points = socialMediaPromotion.points;
+      }
+      if (nodeUptime) {
+        options.node_uptime_last_occurred_at = nodeUptime.latestOccurredAt;
+        options.node_uptime_points = nodeUptime.points;
+      }
+      if (transactionSent) {
+        options.send_transaction_last_occurred_at =
+          transactionSent.latestOccurredAt;
+        options.send_transaction_points = transactionSent.points;
       }
     }
 
