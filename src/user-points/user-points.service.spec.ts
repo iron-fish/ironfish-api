@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { INestApplication } from '@nestjs/common';
-import assert from 'assert';
 import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { bootstrapTestApp } from '../test/test-app';
@@ -34,38 +33,49 @@ describe('UserPointsService', () => {
         graffiti: uuid(),
         country_code: faker.address.countryCode('alpha-3'),
       });
-      const blockMinedPoints = 100;
-      const pullRequestPoints = 100;
-      const totalPoints = 200;
+      const points = {
+        [EventType.BLOCK_MINED]: {
+          points: 100,
+          latestOccurredAt: new Date(),
+        },
+        [EventType.PULL_REQUEST_MERGED]: {
+          points: 110,
+          latestOccurredAt: new Date(),
+        },
+        [EventType.NODE_UPTIME]: {
+          points: 150,
+          latestOccurredAt: new Date(),
+        },
+        [EventType.SEND_TRANSACTION]: {
+          points: 120,
+          latestOccurredAt: new Date(),
+        },
+      };
+      const totalPoints = Object.values(points).reduce((sum, { points }) => {
+        return sum + points;
+      }, 0);
+
       const options: UpsertUserPointsOptions = {
         userId: user.id,
-        points: {
-          [EventType.BLOCK_MINED]: {
-            points: blockMinedPoints,
-            latestOccurredAt: new Date(),
-          },
-          [EventType.PULL_REQUEST_MERGED]: {
-            points: pullRequestPoints,
-            latestOccurredAt: new Date(),
-          },
-        },
+        points: points,
         totalPoints,
       };
 
       const record = await userPointsService.upsert(options);
 
-      assert.ok(options.points);
-      assert.ok(options.points.BLOCK_MINED);
-      assert.ok(options.points.PULL_REQUEST_MERGED);
       expect(record).toMatchObject({
         user_id: user.id,
         total_points: totalPoints,
-        block_mined_points: blockMinedPoints,
-        block_mined_last_occurred_at:
-          options.points.BLOCK_MINED.latestOccurredAt,
-        pull_request_merged_points: pullRequestPoints,
+        block_mined_points: points.BLOCK_MINED.points,
+        block_mined_last_occurred_at: points.BLOCK_MINED.latestOccurredAt,
+        pull_request_merged_points: points.PULL_REQUEST_MERGED.points,
         pull_request_merged_last_occurred_at:
-          options.points.PULL_REQUEST_MERGED.latestOccurredAt,
+          points.PULL_REQUEST_MERGED.latestOccurredAt,
+        node_uptime_points: points.NODE_UPTIME.points,
+        node_uptime_last_occurred_at: points.NODE_UPTIME.latestOccurredAt,
+        send_transaction_points: points.SEND_TRANSACTION.points,
+        send_transaction_last_occurred_at:
+          points.SEND_TRANSACTION.latestOccurredAt,
       });
     });
   });
