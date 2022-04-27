@@ -66,4 +66,15 @@ describe('DepositsController', () => {
       expect(response.body.id).toEqual(deposit.id);
     });
   });
+
+  describe('GET /deposits/address', () => {
+    it('retuns deposit address from config', async () => {
+      const { body } = await request(app.getHttpServer())
+        .get('/deposits/address')
+        .expect(HttpStatus.OK);
+
+      const { address } = body;
+      expect(address as string).toBe(config.get('DEPOSIT_ADDRESS'));
+    });
+  });
 });

@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Controller, Get, NotFoundException, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiConfigService } from '../api-config/api-config.service';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { DepositsService } from './deposits.service';
 import { SerializedDeposit } from './interfaces/serialized-deposit';
@@ -10,7 +11,10 @@ import { SerializedDeposit } from './interfaces/serialized-deposit';
 @ApiTags('Deposit')
 @Controller('deposits')
 export class DepositsController {
-  constructor(private readonly depositsService: DepositsService) {}
+  constructor(
+    private readonly depositsService: DepositsService,
+    private readonly configService: ApiConfigService,
+  ) {}
 
   @ApiOperation({ summary: 'Gets the head of the chain' })
   @UseGuards(ApiKeyGuard)
@@ -29,5 +33,14 @@ export class DepositsController {
       block_hash: deposit.block_hash,
       object: 'deposit',
     };
+  }
+
+  @ApiOperation({
+    summary: 'Returns the Iron Bank public key',
+  })
+  @Get('address')
+  ironBankPk(): { address: string } {
+    const address = this.configService.get<string>('DEPOSIT_ADDRESS');
+    return { address };
   }
 }
