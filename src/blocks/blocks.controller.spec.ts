@@ -96,7 +96,7 @@ describe('BlocksController', () => {
             transactions_count: 0,
             graffiti: uuid(),
             previous_block_hash: uuid(),
-            size: faker.datatype.number(),
+            size: faker.datatype.number({ min: 1 }),
             transactions: [
               {
                 hash: uuid(),
