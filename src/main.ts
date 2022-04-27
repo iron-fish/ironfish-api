@@ -22,6 +22,13 @@ import { ApiConfigService } from './api-config/api-config.service';
 import { AppModule } from './app.module';
 import { LoggerService } from './logger/logger.service';
 
+declare const module: {
+  hot?: {
+    accept(): void;
+    dispose(callback?: () => void): void;
+  };
+};
+
 async function bootstrap(): Promise<void> {
   const server = express();
   const app = await NestFactory.create<NestExpressApplication>(
@@ -69,7 +76,15 @@ async function bootstrap(): Promise<void> {
 
   const port = config.get<number>('PORT');
   logger.info(`Starting API on PORT ${port}`);
-  http.createServer(server).listen(port);
+  const httpServer = http.createServer(server).listen(port);
+
+  if (module.hot) {
+    module.hot.accept();
+    module.hot.dispose(() => {
+      httpServer.close();
+      void app.close();
+    });
+  }
 }
 
 /* eslint-disable no-console */
