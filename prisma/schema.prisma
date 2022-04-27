@@ -198,3 +198,18 @@ model UserPoints {
   @@index([social_media_promotion_points], map: "index_user_points_on_social_media_promotion")
   @@map("user_points")
 }
+
+model Deposit {
+  id                  Int                @id @default(autoincrement())
+  created_at          DateTime           @default(now()) @db.Timestamp(6)
+  updated_at          DateTime           @default(now()) @updatedAt @db.Timestamp(6)
+  transaction_hash    String             @db.VarChar
+  block_hash          String             @db.VarChar
+  block_sequence      Int
+  note_index          Int
+  network_version     Int
+  main                Boolean
+  amount              Int
+
+  @@map("deposits")
+}

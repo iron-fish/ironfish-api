@@ -3,11 +3,12 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Module } from '@nestjs/common';
 import { UsersModule } from '../users/users.module';
+import { DepositsController } from './deposits.controller';
 import { EventsController } from './events.controller';
 import { EventsModule } from './events.module';
 
 @Module({
-  controllers: [EventsController],
+  controllers: [EventsController, DepositsController],
   imports: [EventsModule, UsersModule],
 })
 export class EventsRestModule {}
