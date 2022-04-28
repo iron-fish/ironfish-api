@@ -12,10 +12,8 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiExcludeEndpoint, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Deposit } from '@prisma/client';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
-import { PrismaService } from '../prisma/prisma.service';
 import { DepositsService } from './deposits.service';
 import { UpsertDepositsDto } from './dto/upsert-deposit.dto';
 import { SerializedDeposit } from './interfaces/serialized-deposit';
@@ -23,9 +21,7 @@ import { SerializedDeposit } from './interfaces/serialized-deposit';
 @Controller('deposits')
 export class DepositsController {
   constructor(
-    private readonly depositsService: DepositsService,
     private readonly configService: ApiConfigService,
-    private readonly prisma: PrismaService,
     private readonly deposits: DepositsService,
   ) {}
 

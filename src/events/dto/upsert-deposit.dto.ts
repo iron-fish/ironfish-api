@@ -4,9 +4,9 @@
 
 import { Type } from 'class-transformer';
 import {
-  ArrayMaxSize,
   ArrayMinSize,
   IsArray,
+  IsDate,
   IsEnum,
   IsInt,
   IsString,
@@ -36,6 +36,10 @@ export class DepositTransactionDto {
 export class UpsertDepositBlockDto {
   @IsString()
   readonly hash!: string;
+
+  @IsDate()
+  @Type(() => Date)
+  readonly timestamp!: Date;
 
   @IsInt()
   @Type(() => Number)

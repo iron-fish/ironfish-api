@@ -439,8 +439,16 @@ export class EventsService {
     });
   }
 
-  private async createWithClient(
-    { blockId, occurredAt, points, type, userId, url }: CreateEventOptions,
+  async createWithClient(
+    {
+      blockId,
+      occurredAt,
+      points,
+      type,
+      userId,
+      url,
+      deposit,
+    }: CreateEventOptions,
     client: BasePrismaClient,
   ): Promise<EventWithMetadata | null> {
     occurredAt = occurredAt || new Date();
@@ -494,6 +502,17 @@ export class EventsService {
         throw new Error('Invalid database response');
       }
       metadata = serializedBlockFromRecord(block);
+    } else if (deposit) {
+      existingEvent = await client.event.findUnique({
+        where: {
+          deposit_id: deposit.id,
+        },
+      });
+
+      metadata = {
+        block_hash: deposit.block_hash,
+        transaction_hash: deposit.transaction_hash,
+      };
     }
 
     if (existingEvent) {
@@ -541,6 +560,7 @@ export class EventsService {
           occurred_at: occurredAt.toISOString(),
           user_id: userId,
           url,
+          deposit_id: deposit?.id,
         },
       });
     }

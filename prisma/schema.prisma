@@ -220,4 +220,5 @@ model Deposit {
   event               Event?
 
   @@map("deposits")
+  @@unique([transaction_hash, graffiti], name: "uq_deposits_on_transaction_hash_and_graffiti", map: "uq_deposits_on_transaction_hash_and_graffiti")
 }

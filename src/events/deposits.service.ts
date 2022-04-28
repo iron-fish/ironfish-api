@@ -2,21 +2,33 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable } from '@nestjs/common';
-import { Deposit } from '@prisma/client';
+import { Deposit, EventType } from '@prisma/client';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { BlockOperation } from '../blocks/enums/block-operation';
+import { SEND_TRANSACTION_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
 import { standardizeHash } from '../common/utils/hash';
 import { PrismaService } from '../prisma/prisma.service';
-import { BasePrismaClient } from '../prisma/types/base-prisma-client';
+import { UsersService } from '../users/users.service';
 import { UpsertDepositsOperationDto } from './dto/upsert-deposit.dto';
+import { EventsService } from './events.service';
 
 @Injectable()
 export class DepositsService {
   constructor(
     private readonly config: ApiConfigService,
     private readonly prisma: PrismaService,
+    private readonly events: EventsService,
+    private readonly users: UsersService,
   ) {}
+
+  async find(id: number): Promise<Deposit | null> {
+    return await this.prisma.deposit.findUnique({
+      where: {
+        id,
+      },
+    });
+  }
 
   async head(): Promise<Deposit | null> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
@@ -45,207 +57,76 @@ export class DepositsService {
       }
     }
 
-    return deposits
+    return deposits;
   }
 
-  async upsert(
-    operation: UpsertDepositsOperationDto,
-  ): Promise<Deposit[]> {
+  async upsert(operation: UpsertDepositsOperationDto): Promise<Deposit[]> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
 
+    return this.prisma.$transaction(async (prisma) => {
+      const deposits = new Array<Deposit>();
 
+      for (const transaction of operation.transactions) {
+        const amounts = new Map<string, number>();
 
-    if(operation.type === BlockOperation.DISCONNECTED) {
-      // upsert all deposits where deposit.block_hash = $1
-      // main = false
-      // delete all events where event in deposit
-    }
-
-    if(operation.type === BlockOperation.CONNECTED) {
-
-      for(const transaction of operation.transactions) {
-        const amounts = new Map<string, number>()
-
-        for(const deposit of transaction.notes) {
-          const amount = amounts.get(deposit.memo) ?? 0
-          amounts.set(deposit.memo, amount + deposit.amount)
+        for (const deposit of transaction.notes) {
+          const amount = amounts.get(deposit.memo) ?? 0;
+          amounts.set(deposit.memo, amount + deposit.amount);
         }
 
-        for(const [graffiti, amount] of amounts) {
-          const params = {
+        for (const [graffiti, amount] of amounts) {
+          const depositParams = {
             transaction_hash: standardizeHash(transaction.hash),
             block_hash: standardizeHash(operation.block.hash),
             block_sequence: operation.block.sequence,
             network_version: networkVersion,
-            main: true,
+            graffiti: graffiti,
+            main: operation.type === BlockOperation.CONNECTED,
             amount: amount,
-          }
+          };
 
           const deposit = await this.prisma.deposit.upsert({
-            create: params,
-            update: params,
+            create: depositParams,
+            update: depositParams,
             where: {
-              transaction: transaction.hash,
-              graffiti: graffiti,
+              uq_deposits_on_transaction_hash_and_graffiti: {
+                transaction_hash: depositParams.transaction_hash,
+                graffiti: depositParams.graffiti,
+              },
             },
           });
 
-          if(!params.main) {
-            this.prisma.event.delete({
+          deposits.push(deposit);
+
+          if (!deposit.main) {
+            const event = await this.prisma.event.findUnique({
               where: {
                 deposit_id: deposit.id,
-              }
-            })
+              },
+            });
+            if (event) {
+              await this.events.deleteWithClient(event, prisma);
+            }
+          }
+
+          if (deposit.main && deposit.amount >= SEND_TRANSACTION_LIMIT) {
+            const user = await this.users.findByGraffiti(deposit.graffiti);
+            if (user) {
+              await this.events.createWithClient(
+                {
+                  occurredAt: operation.block.timestamp,
+                  type: EventType.SEND_TRANSACTION,
+                  userId: user.id,
+                  deposit: deposit,
+                },
+                prisma,
+              );
+            }
           }
         }
       }
-    }
 
-
-    //   Create Map<Graffiti, Ore>
-    //
-    //   For each deposit
-    //      Add amount for each graffit on each decrypted
-    //
-    //   If any amount meets criteria
-    //      Upsert event for this transaction
-
-    await this.prisma.$transaction(async (prisma) => {
-      for (const transaction of block.transactions) {
-        const amounts = new Map<string, number>();
-
-        for (const note of transaction.notes) {
-          const amount = amounts.get(note.memo) ?? 0;
-          amounts.set(note.memo, amount + note.amount);
-        }
-
-        const graffitis = Array.from(amounts.keys());
-
-        const users = await prisma.user.findMany({
-          where: {
-            graffiti: { in: graffitis },
-          },
-        });
-
-        for(const user of users) {
-          // TODO: create event for user
-        }
-
-      prisma.transactionDecrypted.
-    }
-
-    hash = standardizeHash(hash);
-
-    await prisma.transactionDecrypted.upsert({
-      create: {
-        hash,
-        network_version: networkVersion,
-        fee,
-        size,
-        notes: classToPlain(notes),
-        spends: classToPlain(spends),
-      },
-      update: {
-        fee,
-        size,
-        notes: classToPlain(notes),
-        spends: classToPlain(spends),
-      },
-      where: {
-        uq_transactions_on_hash_and_network_version: {
-          hash,
-          network_version: networkVersion,
-        },
-      },
+      return deposits;
     });
-  }
-
-  async find(
-    options: FindTransactionOptions,
-  ): Promise<Transaction | (Transaction & { blocks: Block[] }) | null> {
-    const networkVersion = this.config.get<number>('NETWORK_VERSION');
-    const { withBlocks } = options;
-
-    const where = {
-      hash: standardizeHash(options.hash),
-      network_version: networkVersion,
-    };
-
-    const transaction = await this.prisma.transaction.findFirst({
-      where,
-    });
-
-    if (transaction !== null && withBlocks) {
-      const blocks =
-        await this.blocksTransactionsService.findBlocksByTransaction(
-          transaction,
-        );
-      return { ...transaction, blocks };
-    }
-
-    return transaction;
-  }
-
-  async list(
-    options: ListTransactionOptions,
-  ): Promise<Transaction[] | (Transaction & { blocks: Block[] })[]> {
-    const networkVersion = this.config.get<number>('NETWORK_VERSION');
-    const orderBy = { id: SortOrder.DESC };
-    const direction = options.before !== undefined ? -1 : 1;
-    const limit =
-      direction * Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
-    const withBlocks = options.withBlocks ?? false;
-
-    if (options.search !== undefined) {
-      const where = {
-        hash: standardizeHash(options.search),
-        network_version: networkVersion,
-      };
-      return this.getTransactionsData(orderBy, limit, where, withBlocks);
-    } else if (options.blockId !== undefined) {
-      const blocksTransactions = await this.blocksTransactionsService.list({
-        blockId: options.blockId,
-      });
-      const transactionsIds = blocksTransactions.map(
-        (blockTransaction) => blockTransaction.transaction_id,
-      );
-      const where = {
-        id: { in: transactionsIds },
-        network_version: networkVersion,
-      };
-      return this.getTransactionsData(orderBy, limit, where, withBlocks);
-    } else {
-      return this.getTransactionsData(orderBy, limit, {}, withBlocks);
-    }
-  }
-
-  private async getTransactionsData(
-    orderBy: { id: SortOrder },
-    limit: number,
-    where: Prisma.TransactionWhereInput,
-    includeBlocks: boolean,
-  ): Promise<Transaction[] | (Transaction & { blocks: Block[] })[]> {
-    const transactions = await this.prisma.transaction.findMany({
-      orderBy,
-      take: limit,
-      where,
-    });
-
-    if (includeBlocks) {
-      const transactionsWithBlocks = [];
-      for (const transaction of transactions) {
-        const blocks =
-          await this.blocksTransactionsService.findBlocksByTransaction(
-            transaction,
-          );
-        transactionsWithBlocks.push({
-          ...transaction,
-          blocks,
-        });
-      }
-      return transactionsWithBlocks;
-    }
-
-    return transactions;
   }
 }
