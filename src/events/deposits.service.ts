@@ -4,7 +4,9 @@
 import { Injectable } from '@nestjs/common';
 import { Deposit } from '@prisma/client';
 import { ApiConfigService } from '../api-config/api-config.service';
+import { BlockOperation } from '../blocks/enums/block-operation';
 import { SortOrder } from '../common/enums/sort-order';
+import { standardizeHash } from '../common/utils/hash';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { UpsertDepositsOperationDto } from './dto/upsert-deposit.dto';
@@ -30,21 +32,83 @@ export class DepositsService {
     });
   }
 
+  async upsertBulk(
+    operations: UpsertDepositsOperationDto[],
+  ): Promise<Deposit[]> {
+    const deposits = new Array<Deposit>();
+
+    for (const operation of operations) {
+      const results = await this.upsert(operation);
+
+      for (const result of results) {
+        deposits.push(result);
+      }
+    }
+
+    return deposits
+  }
+
   async upsert(
-    prisma: BasePrismaClient,
     operation: UpsertDepositsOperationDto,
   ): Promise<Deposit[]> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
 
-    // For each block
-    //   For each transaction
-    //      Create Map<Graffiti, Ore>
+
+
+    if(operation.type === BlockOperation.DISCONNECTED) {
+      // upsert all deposits where deposit.block_hash = $1
+      // main = false
+      // delete all events where event in deposit
+    }
+
+    if(operation.type === BlockOperation.CONNECTED) {
+
+      for(const transaction of operation.transactions) {
+        const amounts = new Map<string, number>()
+
+        for(const deposit of transaction.notes) {
+          const amount = amounts.get(deposit.memo) ?? 0
+          amounts.set(deposit.memo, amount + deposit.amount)
+        }
+
+        for(const [graffiti, amount] of amounts) {
+          const params = {
+            transaction_hash: standardizeHash(transaction.hash),
+            block_hash: standardizeHash(operation.block.hash),
+            block_sequence: operation.block.sequence,
+            network_version: networkVersion,
+            main: true,
+            amount: amount,
+          }
+
+          const deposit = await this.prisma.deposit.upsert({
+            create: params,
+            update: params,
+            where: {
+              transaction: transaction.hash,
+              graffiti: graffiti,
+            },
+          });
+
+          if(!params.main) {
+            this.prisma.event.delete({
+              where: {
+                deposit_id: deposit.id,
+              }
+            })
+          }
+        }
+      }
+    }
+
+
+    //   Create Map<Graffiti, Ore>
     //
-    //      For each note
-    //         Add amount for each graffit on each decrypted
+    //   For each deposit
+    //      Add amount for each graffit on each decrypted
     //
-    //      If any amount meets criteria
-    //         Upsert event for this transaction
+    //   If any amount meets criteria
+    //      Upsert event for this transaction
 
     await this.prisma.$transaction(async (prisma) => {
       for (const transaction of block.transactions) {

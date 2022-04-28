@@ -70,17 +70,7 @@ export class DepositsController {
     )
     data: UpsertDepositsDto,
   ): Promise<SerializedDeposit[]> {
-    const deposits = new Array<Deposit>();
-
-    await this.prisma.$transaction(async (prisma) => {
-      for (const operation of data.operations) {
-        const results = await this.deposits.upsert(prisma, operation);
-
-        for (const result of results) {
-          deposits.push(result);
-        }
-      }
-    });
+    const deposits = await this.deposits.upsertBulk(data.operations);
 
     return deposits.map((d) => ({
       id: d.id,

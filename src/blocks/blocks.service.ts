@@ -100,6 +100,7 @@ export class BlocksService {
     const checkUserCreatedAt = this.config.get<boolean>(
       'CHECK_USER_CREATED_AT',
     );
+
     if (user && (!checkUserCreatedAt || timestamp > user.created_at)) {
       if (main) {
         upsertBlockMinedOptions = { block_id: block.id, user_id: user.id };
@@ -485,6 +486,7 @@ export class BlocksService {
 
   async disconnectAfter(sequenceGt: number): Promise<void> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
+
     await this.prisma.$transaction([
       this.prisma.block.updateMany({
         data: {

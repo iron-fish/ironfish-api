@@ -14,21 +14,23 @@ import {
 } from 'class-validator';
 import { BlockOperation } from '../../blocks/enums/block-operation';
 
-export class DepositDto {
-  @IsString()
-  readonly hash!: string;
-
-  @IsString()
-  readonly transaction_hash!: string;
-
+export class UpsertDepositsNoteDto {
   @IsString()
   readonly memo!: string;
 
   @IsInt()
-  readonly note_index!: string;
-
-  @IsInt()
   readonly amount!: number;
+}
+
+export class DepositTransactionDto {
+  @IsString()
+  readonly hash!: string;
+
+  @IsArray()
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => UpsertDepositsNoteDto)
+  readonly notes!: UpsertDepositsNoteDto[];
 }
 
 export class UpsertDepositBlockDto {
@@ -44,16 +46,14 @@ export class UpsertDepositsOperationDto {
   @IsEnum(BlockOperation)
   readonly type!: BlockOperation;
 
-  @IsArray()
   @Type(() => UpsertDepositBlockDto)
-  @ValidateNested({ each: true })
-  readonly block!: UpsertDepositBlockDto[];
+  readonly block!: UpsertDepositBlockDto;
 
   @IsArray()
   @ArrayMinSize(1)
   @ValidateNested({ each: true })
-  @Type(() => DepositDto)
-  readonly deposits!: DepositDto[];
+  @Type(() => DepositTransactionDto)
+  readonly transactions!: DepositTransactionDto[];
 }
 
 export class UpsertDepositsDto {
