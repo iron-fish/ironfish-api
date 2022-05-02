@@ -5,7 +5,7 @@ import { Injectable } from '@nestjs/common';
 import { Deposit, EventType } from '@prisma/client';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { BlockOperation } from '../blocks/enums/block-operation';
-import { SEND_TRANSACTION_LIMIT } from '../common/constants';
+import { SEND_TRANSACTION_LIMIT_ORE } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
 import { standardizeHash } from '../common/utils/hash';
 import { PrismaService } from '../prisma/prisma.service';
@@ -109,7 +109,7 @@ export class DepositsService {
             }
           }
 
-          if (deposit.main && deposit.amount >= SEND_TRANSACTION_LIMIT) {
+          if (deposit.main && deposit.amount >= SEND_TRANSACTION_LIMIT_ORE) {
             const user = await this.users.findByGraffiti(deposit.graffiti);
             if (user) {
               await this.events.createWithClient(
