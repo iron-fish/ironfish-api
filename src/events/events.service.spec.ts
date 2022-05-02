@@ -949,6 +949,7 @@ describe('EventsService', () => {
     it('sets `deleted_at` for the record', async () => {
       const { event } = await setupBlockMinedWithEvent();
       const record = await eventsService.delete(event);
+
       expect(record).toMatchObject({
         ...event,
         deleted_at: expect.any(Date),
@@ -961,6 +962,14 @@ describe('EventsService', () => {
       const { event, user } = await setupBlockMinedWithEvent();
       await eventsService.delete(event);
       const updatedUser = await usersService.findOrThrow(event.user_id);
+      expect(updatedUser.total_points).toBe(user.total_points - event.points);
+    });
+
+    it('subtracts points from user_points total points', async () => {
+      const { event, user } = await setupBlockMinedWithEvent();
+      await eventsService.delete(event);
+
+      const updatedUser = await userPointsService.findOrThrow(event.user_id);
       expect(updatedUser.total_points).toBe(user.total_points - event.points);
     });
   });

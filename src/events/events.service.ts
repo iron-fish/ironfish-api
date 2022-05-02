@@ -633,26 +633,43 @@ export class EventsService {
 
   async delete(event: Event): Promise<Event> {
     return this.prisma.$transaction(async (prisma) => {
-      await prisma.user.update({
-        where: {
-          id: event.user_id,
-        },
-        data: {
-          total_points: {
-            decrement: event.points,
-          },
-        },
-      });
-      return prisma.event.update({
-        data: {
-          deleted_at: new Date().toISOString(),
-          points: 0,
-        },
-        where: {
-          id: event.id,
-        },
-      });
+      return this.deleteWithClient(event, prisma);
     });
+  }
+
+  async deleteWithClient(
+    event: Event,
+    prisma: BasePrismaClient,
+  ): Promise<Event> {
+    await prisma.user.update({
+      where: {
+        id: event.user_id,
+      },
+      data: {
+        total_points: {
+          decrement: event.points,
+        },
+      },
+    });
+
+    const updated = await prisma.event.update({
+      data: {
+        deleted_at: new Date().toISOString(),
+        points: 0,
+      },
+      where: {
+        id: event.id,
+      },
+    });
+
+    await this.updateLatestPoints(
+      event.user_id,
+      event.type,
+      event.occurred_at,
+      prisma,
+    );
+
+    return updated;
   }
 
   async getLifetimeEventsMetricsForUser(

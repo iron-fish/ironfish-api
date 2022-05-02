@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { UpsertUserPointsOptions } from './interfaces/upsert-user-points-options';
@@ -10,6 +10,20 @@ import { EventType, Prisma, UserPoints } from '.prisma/client';
 @Injectable()
 export class UserPointsService {
   constructor(private readonly prisma: PrismaService) {}
+
+  async findOrThrow(userId: number): Promise<UserPoints> {
+    const record = await this.prisma.userPoints.findUnique({
+      where: {
+        user_id: userId,
+      },
+    });
+
+    if (!record) {
+      throw new NotFoundException();
+    }
+
+    return record;
+  }
 
   async upsert(options: UpsertUserPointsOptions): Promise<UserPoints> {
     return this.prisma.$transaction(async (prisma) => {
@@ -70,6 +84,7 @@ export class UserPointsService {
         user_id: userId,
       },
     });
+
     if (!record) {
       record = await client.userPoints.create({
         data: {
@@ -77,6 +92,7 @@ export class UserPointsService {
         },
       });
     }
+
     return client.userPoints.update({
       data: options,
       where: {
