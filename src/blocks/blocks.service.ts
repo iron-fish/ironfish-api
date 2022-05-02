@@ -485,6 +485,7 @@ export class BlocksService {
 
   async disconnectAfter(sequenceGt: number): Promise<void> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
+
     await this.prisma.$transaction([
       this.prisma.block.updateMany({
         data: {

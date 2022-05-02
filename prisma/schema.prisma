@@ -17,11 +17,14 @@ model Event {
   points      Int
   user_id     Int
   deleted_at  DateTime? @db.Timestamp(6)
+  deposit_id  Int?      @unique(map: "uq_events_on_deposit_id")
   block_id    Int?      @unique(map: "uq_events_on_block_id")
+  deposit     Deposit?  @relation(fields: [deposit_id], references: [id])
   block       Block?    @relation(fields: [block_id], references: [id])
   user        User      @relation(fields: [user_id], references: [id])
   url         String?   @db.VarChar
 
+  @@index([deposit_id], name: "index_events_on_deposit_id")
   @@index([block_id], name: "index_events_on_block_id")
   @@index([user_id], name: "index_events_on_user_id")
   @@map("events")
@@ -209,11 +212,13 @@ model Deposit {
   updated_at          DateTime           @default(now()) @updatedAt @db.Timestamp(6)
   transaction_hash    String             @db.VarChar
   block_hash          String             @db.VarChar
+  graffiti            String             @db.VarChar
   block_sequence      Int
-  note_index          Int
   network_version     Int
   main                Boolean
   amount              Int
+  event               Event?
 
   @@map("deposits")
+  @@unique([transaction_hash, graffiti], name: "uq_deposits_on_transaction_hash_and_graffiti", map: "uq_deposits_on_transaction_hash_and_graffiti")
 }
