@@ -26,6 +26,23 @@ describe('UserPointsService', () => {
     await app.close();
   });
 
+  it('should find UserPoints', async () => {
+    await expect(userPointsService.findOrThrow(0)).rejects.toThrow('Not Found');
+
+    const user = await usersService.create({
+      email: faker.internet.email(),
+      graffiti: uuid(),
+      country_code: faker.address.countryCode('alpha-3'),
+    });
+
+    await userPointsService.upsert({
+      userId: user.id,
+    });
+
+    const points = await userPointsService.findOrThrow(user.id);
+    expect(points.user_id).toBe(user.id);
+  });
+
   describe('upsert', () => {
     it('updates user points and timestamps with the payload', async () => {
       const user = await usersService.create({
@@ -33,6 +50,7 @@ describe('UserPointsService', () => {
         graffiti: uuid(),
         country_code: faker.address.countryCode('alpha-3'),
       });
+
       const points = {
         [EventType.BLOCK_MINED]: {
           points: 100,
