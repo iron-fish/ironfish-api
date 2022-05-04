@@ -67,6 +67,7 @@ export const REST_MODULES = [
         DATABASE_CONNECTION_POOL_URL: joi.string().required(),
         DATABASE_URL: joi.string().required(),
         DATADOG_URL: joi.string().required(),
+        DISABLE_FAUCET: joi.boolean().default(false),
         DISABLE_LOGIN: joi.boolean().default(false),
         INCENTIVIZED_TESTNET_URL: joi.string().required(),
         INFLUXDB_API_TOKEN: joi.string().required(),

@@ -6,6 +6,7 @@ import {
   Controller,
   Get,
   HttpCode,
+  HttpException,
   HttpStatus,
   Param,
   ParseIntPipe,
@@ -20,6 +21,7 @@ import {
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
+import { ApiConfigService } from '../api-config/api-config.service';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { List } from '../common/interfaces/list';
 import { CompleteFaucetTransactionDto } from './dto/complete-faucet-transaction.dto';
@@ -34,6 +36,7 @@ import { serializedFaucetTransactionFromRecord } from './utils/faucet-transactio
 @Controller('faucet_transactions')
 export class FaucetTransactionsController {
   constructor(
+    private readonly config: ApiConfigService,
     private readonly faucetTransactionsService: FaucetTransactionsService,
   ) {}
 
@@ -47,6 +50,15 @@ export class FaucetTransactionsController {
     )
     { email, public_key: publicKey }: CreateFaucetTransactionDto,
   ): Promise<SerializedFaucetTransaction> {
+    if (this.config.get<boolean>('DISABLE_FAUCET')) {
+      throw new HttpException(
+        {
+          status: HttpStatus.FORBIDDEN,
+          message: 'The faucet has been disabled, try joining a mining pool!',
+        },
+        HttpStatus.FORBIDDEN,
+      );
+    }
     return serializedFaucetTransactionFromRecord(
       await this.faucetTransactionsService.create({ email, publicKey }),
     );
