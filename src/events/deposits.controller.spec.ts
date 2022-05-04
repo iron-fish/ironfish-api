@@ -255,7 +255,7 @@ describe('DepositsController', () => {
   const transaction = (notes: UpsertDepositsNoteDto[], hash?: string) => {
     return {
       hash: hash || uuid(),
-      notes: notes,
+      notes,
     };
   };
 
@@ -267,14 +267,14 @@ describe('DepositsController', () => {
     sequence?: number,
   ): UpsertDepositsOperationDto => {
     return {
-      type: type,
+      type,
       block: {
         hash: hash || uuid(),
         timestamp: new Date(),
         sequence: sequence || 0,
         previousBlockHash: previousBlockHash || uuid(),
       },
-      transactions: transactions,
+      transactions,
     };
   };
 });
