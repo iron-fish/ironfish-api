@@ -37,6 +37,9 @@ export class UpsertDepositBlockDto {
   @IsString()
   readonly hash!: string;
 
+  @IsString()
+  readonly previousBlockHash!: string;
+
   @IsDate()
   @Type(() => Date)
   readonly timestamp!: Date;

@@ -29,19 +29,15 @@ export class DepositsController {
   @ApiExcludeEndpoint()
   @UseGuards(ApiKeyGuard)
   @Get('head')
-  async head(): Promise<SerializedDeposit> {
-    const deposit = await this.deposits.head();
+  async head(): Promise<{ block_hash: string }> {
+    const depositHead = await this.deposits.head();
 
-    if (!deposit) {
+    if (!depositHead) {
       throw new NotFoundException();
     }
 
     return {
-      id: deposit.id,
-      transaction_hash: deposit.transaction_hash,
-      block_sequence: deposit.block_sequence,
-      block_hash: deposit.block_hash,
-      object: 'deposit',
+      block_hash: depositHead.block_hash,
     };
   }
 
