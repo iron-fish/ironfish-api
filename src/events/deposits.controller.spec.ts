@@ -5,30 +5,37 @@ import { HttpStatus, INestApplication } from '@nestjs/common';
 import { EventType, User } from '@prisma/client';
 import faker from 'faker';
 import request from 'supertest';
+import { v4 as uuid } from 'uuid';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { BlockOperation } from '../blocks/enums/block-operation';
 import { ORE_TO_IRON } from '../common/constants';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
-import { DepositsService } from './deposits.service';
-import { UpsertDepositsDto } from './dto/upsert-deposit.dto';
+import {
+  DepositTransactionDto,
+  UpsertDepositsDto,
+  UpsertDepositsNoteDto,
+  UpsertDepositsOperationDto,
+} from './dto/upsert-deposit.dto';
 
 describe('DepositsController', () => {
   let app: INestApplication;
   let config: ApiConfigService;
   let prisma: PrismaService;
-  let deposits: DepositsService;
   let users: UsersService;
   let user1: User;
   let user2: User;
+  let transaction1: DepositTransactionDto;
+  let transaction2: DepositTransactionDto;
+  let API_KEY: string;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
     config = app.get(ApiConfigService);
     prisma = app.get(PrismaService);
-    deposits = app.get(DepositsService);
     users = app.get(UsersService);
+    API_KEY = config.get<string>('IRONFISH_API_KEY');
     await app.init();
 
     user1 = await users.create({
@@ -42,6 +49,16 @@ describe('DepositsController', () => {
       graffiti: 'user2',
       country_code: faker.address.countryCode(),
     });
+
+    transaction1 = transaction(
+      [...notes([1, 2], user1.graffiti), ...notes([0.1, 3], user2.graffiti)],
+      'transaction1Hash',
+    );
+
+    transaction2 = transaction(
+      [...notes([0.05], user1.graffiti), ...notes([1], user2.graffiti)],
+      'transaction2Hash',
+    );
   });
 
   afterAll(async () => {
@@ -49,43 +66,68 @@ describe('DepositsController', () => {
   });
 
   describe('GET /deposits/head', () => {
-    it('returns the latest deposit', async () => {
-      const API_KEY = config.get<string>('IRONFISH_API_KEY');
-      const NETWORK_VERSION = config.get<number>('NETWORK_VERSION');
+    const block1Hash = uuid();
+    const block2Hash = uuid();
 
-      const latest = await deposits.head();
-      const latestSequence = latest?.block_sequence ?? 0;
-
-      // Create a deposit that should not be picked up
-      const deposit = await prisma.deposit.create({
-        data: {
-          transaction_hash: 'foo',
-          block_hash: 'bar',
-          block_sequence: latestSequence + 1,
-          graffiti: 'mygraffiti',
-          network_version: NETWORK_VERSION - 1,
-          main: false,
-          amount: 13,
-        },
-      });
+    it('returns the latest deposit submitted', async () => {
+      const payload: UpsertDepositsDto = {
+        operations: [
+          depositOperation(
+            [transaction([...notes([1, 2], uuid())])],
+            BlockOperation.CONNECTED,
+            block1Hash,
+            uuid(),
+            1,
+          ),
+          depositOperation(
+            [transaction([...notes([1, 2], uuid())])],
+            BlockOperation.CONNECTED,
+            block2Hash,
+            block1Hash,
+            2,
+          ),
+        ],
+      };
 
       await request(app.getHttpServer())
-        .get(`/deposits/head`)
+        .post(`/deposits`)
+        .send(payload)
         .set('Authorization', `Bearer ${API_KEY}`)
-        .expect(HttpStatus.NOT_FOUND);
-
-      // The deposit should be picked up now as the latest deposit
-      await prisma.deposit.update({
-        data: { main: true, network_version: NETWORK_VERSION },
-        where: { id: deposit.id },
-      });
+        .expect(HttpStatus.CREATED);
 
       const response = await request(app.getHttpServer())
         .get(`/deposits/head`)
         .set('Authorization', `Bearer ${API_KEY}`)
         .expect(HttpStatus.OK);
 
-      expect(response.body.id).toEqual(deposit.id);
+      expect(response.body.block_hash).toEqual(block2Hash);
+    });
+
+    it('returns the latest deposit if a block is disconnected', async () => {
+      const payload: UpsertDepositsDto = {
+        operations: [
+          depositOperation(
+            [transaction([...notes([1, 2], uuid())])],
+            BlockOperation.DISCONNECTED,
+            block2Hash,
+            block1Hash,
+            2,
+          ),
+        ],
+      };
+
+      await request(app.getHttpServer())
+        .post(`/deposits`)
+        .send(payload)
+        .set('Authorization', `Bearer ${API_KEY}`)
+        .expect(HttpStatus.CREATED);
+
+      const response = await request(app.getHttpServer())
+        .get(`/deposits/head`)
+        .set('Authorization', `Bearer ${API_KEY}`)
+        .expect(HttpStatus.OK);
+
+      expect(response.body.block_hash).toEqual(block1Hash);
     });
   });
 
@@ -100,42 +142,15 @@ describe('DepositsController', () => {
     });
   });
 
-  const notes = (amounts: number[], graffiti: string) => {
-    return amounts.map((amount) => {
-      return { memo: graffiti, amount: amount * ORE_TO_IRON };
-    });
-  };
-
   describe('POST /deposits', () => {
     it('upserts new deposit', async () => {
-      const API_KEY = config.get<string>('IRONFISH_API_KEY');
-
       const payload: UpsertDepositsDto = {
         operations: [
-          {
-            type: BlockOperation.CONNECTED,
-            block: {
-              hash: 'block1hash',
-              timestamp: new Date(),
-              sequence: 5,
-            },
-            transactions: [
-              {
-                hash: 'block1transaction1hash',
-                notes: [
-                  ...notes([1, 2], user1.graffiti),
-                  ...notes([0.1, 3], user2.graffiti),
-                ],
-              },
-              {
-                hash: 'block1transaction2hash',
-                notes: [
-                  ...notes([0.05], user1.graffiti),
-                  ...notes([1], user2.graffiti),
-                ],
-              },
-            ],
-          },
+          depositOperation(
+            [transaction1, transaction2],
+            BlockOperation.CONNECTED,
+            'block1Hash',
+          ),
         ],
       };
 
@@ -183,27 +198,13 @@ describe('DepositsController', () => {
     });
 
     it('removes events on DISCONNECTED operation', async () => {
-      const API_KEY = config.get<string>('IRONFISH_API_KEY');
-
       const payload: UpsertDepositsDto = {
         operations: [
-          {
-            type: BlockOperation.DISCONNECTED,
-            block: {
-              hash: 'block1hash',
-              timestamp: new Date(),
-              sequence: 5,
-            },
-            transactions: [
-              {
-                hash: 'block1transaction2hash',
-                notes: [
-                  ...notes([0.05], user1.graffiti),
-                  ...notes([1], user2.graffiti),
-                ],
-              },
-            ],
-          },
+          depositOperation(
+            [transaction2],
+            BlockOperation.DISCONNECTED,
+            'block1Hash',
+          ),
         ],
       };
 
@@ -244,4 +245,36 @@ describe('DepositsController', () => {
       expect(user2Deposits[1].main).toBe(false);
     });
   });
+
+  const notes = (amounts: number[], graffiti: string) => {
+    return amounts.map((amount) => {
+      return { memo: graffiti, amount: amount * ORE_TO_IRON };
+    });
+  };
+
+  const transaction = (notes: UpsertDepositsNoteDto[], hash?: string) => {
+    return {
+      hash: hash || uuid(),
+      notes: notes,
+    };
+  };
+
+  const depositOperation = (
+    transactions: DepositTransactionDto[],
+    type: BlockOperation,
+    hash?: string,
+    previousBlockHash?: string,
+    sequence?: number,
+  ): UpsertDepositsOperationDto => {
+    return {
+      type: type,
+      block: {
+        hash: hash || uuid(),
+        timestamp: new Date(),
+        sequence: sequence || 0,
+        previousBlockHash: previousBlockHash || uuid(),
+      },
+      transactions: transactions,
+    };
+  };
 });

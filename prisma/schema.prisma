@@ -222,3 +222,10 @@ model Deposit {
   @@map("deposits")
   @@unique([transaction_hash, graffiti], name: "uq_deposits_on_transaction_hash_and_graffiti", map: "uq_deposits_on_transaction_hash_and_graffiti")
 }
+
+model DepositHead {
+    id                Int                @id
+    block_hash        String             @db.VarChar
+
+    @@map("deposit_head")
+}

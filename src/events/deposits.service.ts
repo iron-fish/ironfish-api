@@ -2,11 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable } from '@nestjs/common';
-import { Deposit, EventType } from '@prisma/client';
+import { Deposit, DepositHead, EventType } from '@prisma/client';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { BlockOperation } from '../blocks/enums/block-operation';
 import { SEND_TRANSACTION_LIMIT_ORE } from '../common/constants';
-import { SortOrder } from '../common/enums/sort-order';
 import { standardizeHash } from '../common/utils/hash';
 import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
@@ -30,17 +29,9 @@ export class DepositsService {
     });
   }
 
-  async head(): Promise<Deposit | null> {
-    const networkVersion = this.config.get<number>('NETWORK_VERSION');
-
-    return this.prisma.deposit.findFirst({
-      where: {
-        main: true,
-        network_version: networkVersion,
-      },
-      orderBy: {
-        block_sequence: SortOrder.DESC,
-      },
+  async head(): Promise<DepositHead | null> {
+    return this.prisma.depositHead.findFirst({
+      where: { id: 1 },
     });
   }
 
@@ -125,6 +116,22 @@ export class DepositsService {
           }
         }
       }
+
+      const headHash =
+        operation.type === BlockOperation.CONNECTED
+          ? operation.block.hash
+          : operation.block.previousBlockHash;
+
+      const depositHeadParams = {
+        id: 1,
+        block_hash: headHash,
+      };
+
+      await prisma.depositHead.upsert({
+        create: depositHeadParams,
+        update: depositHeadParams,
+        where: { id: 1 },
+      });
 
       return deposits;
     });
