@@ -11,14 +11,16 @@ import { FaucetTransactionsService } from './faucet-transactions.service';
 
 describe('FaucetTransactionsController', () => {
   let app: INestApplication;
+  let config: ApiConfigService;
   let faucetTransactionsService: FaucetTransactionsService;
 
   let API_KEY: string;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
+    config = app.get(ApiConfigService);
     faucetTransactionsService = app.get(FaucetTransactionsService);
-    API_KEY = app.get(ApiConfigService).get<string>('IRONFISH_API_KEY');
+    API_KEY = config.get<string>('IRONFISH_API_KEY');
     await app.init();
   });
 
@@ -27,6 +29,18 @@ describe('FaucetTransactionsController', () => {
   });
 
   describe('POST /faucet_transactions', () => {
+    describe('with DISABLE_FAUCET set', () => {
+      it('returns a 403', async () => {
+        jest.spyOn(config, 'get').mockImplementationOnce(() => true);
+        const { body } = await request(app.getHttpServer())
+          .post('/faucet_transactions')
+          .send({ email: faker.internet.email(), public_key: ulid() })
+          .expect(HttpStatus.FORBIDDEN);
+
+        expect(body).toMatchSnapshot();
+      });
+    });
+
     describe('with missing arguments', () => {
       it('returns a 422', async () => {
         const { body } = await request(app.getHttpServer())

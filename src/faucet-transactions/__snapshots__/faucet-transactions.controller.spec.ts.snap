@@ -7,6 +7,13 @@ Object {
 }
 `;
 
+exports[`FaucetTransactionsController POST /faucet_transactions with DISABLE_FAUCET set returns a 403 1`] = `
+Object {
+  "message": "The faucet has been disabled, try joining a mining pool!",
+  "status": 403,
+}
+`;
+
 exports[`FaucetTransactionsController POST /faucet_transactions with empty arguments returns a 422 1`] = `
 Object {
   "error": "Unprocessable Entity",
