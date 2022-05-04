@@ -34,7 +34,8 @@ You can copy `.env.template` to your own `.env` file
 
 ## Running
 
-* Run `yarn start` to run things once you've built them with `yarn build`
+* Run `yarn start:dev` to run the app with hot reload
+* If you prefer to run without hot reload, run `yarn build` to build the app and then `yarn start` to run it
 
 ## Database
 
