@@ -36,7 +36,6 @@ model User {
   updated_at          DateTime    @default(now()) @updatedAt @db.Timestamp(6)
   email               String      @unique(map: "uq_users_on_email") @db.VarChar
   graffiti            String      @unique(map: "uq_users_on_graffiti") @db.VarChar
-  total_points        Int         @default(0)
   country_code        String      @db.VarChar
   email_notifications Boolean     @default(false)
   last_login_at       DateTime?   @db.Timestamp(6)
