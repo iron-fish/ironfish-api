@@ -518,19 +518,8 @@ export class EventsService {
     if (existingEvent) {
       const pointDifference = adjustedPoints - existingEvent.points;
 
-      // Only update total user points and event points if necessary
+      // Only update event points if necessary
       if (pointDifference !== 0) {
-        await client.user.update({
-          data: {
-            total_points: {
-              increment: adjustedPoints - existingEvent.points,
-            },
-          },
-          where: {
-            id: userId,
-          },
-        });
-
         existingEvent = await client.event.update({
           data: {
             points: adjustedPoints,
@@ -541,17 +530,6 @@ export class EventsService {
         });
       }
     } else {
-      await client.user.update({
-        data: {
-          total_points: {
-            increment: adjustedPoints,
-          },
-        },
-        where: {
-          id: userId,
-        },
-      });
-
       existingEvent = await client.event.create({
         data: {
           type,
@@ -661,17 +639,6 @@ export class EventsService {
     event: Event,
     prisma: BasePrismaClient,
   ): Promise<Event> {
-    await prisma.user.update({
-      where: {
-        id: event.user_id,
-      },
-      data: {
-        total_points: {
-          decrement: event.points,
-        },
-      },
-    });
-
     const updated = await prisma.event.update({
       data: {
         deleted_at: new Date().toISOString(),
