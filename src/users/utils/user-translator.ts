@@ -3,27 +3,31 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { SerializedUser } from '../interfaces/serialized-user';
 import { SerializedUserWithRank } from '../interfaces/serialized-user-with-rank';
-import { User } from '.prisma/client';
+import { User, UserPoints } from '.prisma/client';
 
-export function serializedUserFromRecord(user: User): SerializedUser {
+export function serializedUserFromRecord(
+  user: User,
+  userPoints: UserPoints,
+): SerializedUser {
   return {
     id: user.id,
     country_code: user.country_code,
     graffiti: user.graffiti,
-    total_points: user.total_points,
+    total_points: userPoints.total_points,
     created_at: user.created_at.toISOString(),
   };
 }
 
 export function serializedUserFromRecordWithRank(
   user: User,
+  userPoints: UserPoints,
   rank: number,
 ): SerializedUserWithRank {
   return {
     id: user.id,
     country_code: user.country_code,
     graffiti: user.graffiti,
-    total_points: user.total_points,
+    total_points: userPoints.total_points,
     created_at: user.created_at.toISOString(),
     rank,
   };

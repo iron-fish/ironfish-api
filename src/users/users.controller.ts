@@ -32,6 +32,7 @@ import { PaginatedList } from '../common/interfaces/paginated-list';
 import { EventsService } from '../events/events.service';
 import { SerializedEventMetrics } from '../events/interfaces/serialized-event-metrics';
 import { NodeUptimesService } from '../node-uptimes/node-uptimes.service';
+import { UserPointsService } from '../user-points/user-points.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserMetricsQueryDto } from './dto/user-metrics-query.dto';
@@ -56,6 +57,7 @@ export class UsersController {
   constructor(
     private readonly eventsService: EventsService,
     private readonly nodeUptimeService: NodeUptimesService,
+    private readonly userPointsService: UserPointsService,
     private readonly usersService: UsersService,
     private readonly usersUpdater: UsersUpdater,
   ) {}
@@ -72,14 +74,16 @@ export class UsersController {
     { graffiti, with_rank }: UserQueryDto,
   ): Promise<SerializedUser | SerializedUserWithRank> {
     const user = await this.usersService.findByGraffitiOrThrow(graffiti);
+    const userPoints = await this.userPointsService.findOrThrow(user.id);
 
     if (with_rank) {
       return serializedUserFromRecordWithRank(
         user,
+        userPoints,
         await this.usersService.getRank(user),
       );
     } else {
-      return serializedUserFromRecord(user);
+      return serializedUserFromRecord(user, userPoints);
     }
   }
 
@@ -96,8 +100,10 @@ export class UsersController {
     id: number,
   ): Promise<SerializedUserWithRank> {
     const user = await this.usersService.findOrThrow(id);
+    const userPoints = await this.userPointsService.findOrThrow(user.id);
     return serializedUserFromRecordWithRank(
       user,
+      userPoints,
       await this.usersService.getRank(user),
     );
   }
@@ -156,7 +162,8 @@ export class UsersController {
         last_checked_in: uptime?.last_checked_in?.toISOString() ?? null,
       };
 
-      points = user.total_points;
+      const userPoints = await this.userPointsService.findOrThrow(user.id);
+      points = userPoints.total_points;
     } else {
       if (query.start === undefined || query.end === undefined) {
         throw new UnprocessableEntityException(
@@ -275,7 +282,11 @@ export class UsersController {
       };
     }
 
-    const { data, hasNext, hasPrevious } = await this.usersService.list({
+    const {
+      data: records,
+      hasNext,
+      hasPrevious,
+    } = await this.usersService.list({
       after,
       before,
       limit,
@@ -283,10 +294,15 @@ export class UsersController {
       countryCode,
       eventTypes,
     });
+    const data = [];
+    for (const record of records) {
+      const userPoints = await this.userPointsService.findOrThrow(record.id);
+      data.push(serializedUserFromRecord(record, userPoints));
+    }
 
     return {
       object: 'list',
-      data: data.map((user) => serializedUserFromRecord(user)),
+      data: data,
       metadata: {
         has_next: hasNext,
         has_previous: hasPrevious,

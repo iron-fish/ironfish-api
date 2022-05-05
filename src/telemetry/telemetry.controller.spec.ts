@@ -11,6 +11,7 @@ import { InfluxDbService } from '../influxdb/influxdb.service';
 import { NodeUptimesService } from '../node-uptimes/node-uptimes.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
+import { UsersService } from '../users/users.service';
 
 describe('TelemetryController', () => {
   let app: INestApplication;
@@ -18,6 +19,7 @@ describe('TelemetryController', () => {
   let influxDbService: InfluxDbService;
   let nodeUptimesService: NodeUptimesService;
   let prisma: PrismaService;
+  let usersService: UsersService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
@@ -25,6 +27,7 @@ describe('TelemetryController', () => {
     influxDbService = app.get(InfluxDbService);
     nodeUptimesService = app.get(NodeUptimesService);
     prisma = app.get(PrismaService);
+    usersService = app.get(UsersService);
     await app.init();
   });
 
@@ -182,12 +185,10 @@ describe('TelemetryController', () => {
           .mockImplementationOnce(jest.fn());
 
         const graffiti = uuid();
-        const user = await prisma.user.create({
-          data: {
-            email: faker.internet.email(),
-            graffiti,
-            country_code: faker.address.countryCode(),
-          },
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti,
+          country_code: faker.address.countryCode(),
         });
 
         await request(app.getHttpServer())
@@ -207,12 +208,10 @@ describe('TelemetryController', () => {
         const oldCheckin = new Date();
         oldCheckin.setHours(oldCheckin.getHours() - 2);
 
-        const user = await prisma.user.create({
-          data: {
-            email: faker.internet.email(),
-            graffiti: uuid(),
-            country_code: faker.address.countryCode(),
-          },
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          country_code: faker.address.countryCode(),
         });
 
         await prisma.nodeUptime.create({

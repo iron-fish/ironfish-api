@@ -70,6 +70,7 @@ export class UsersService {
   }
 
   async findByEmail(email: string): Promise<User | null> {
+    email = standardizeEmail(email);
     return this.prisma.user.findFirst({
       where: {
         email,
@@ -407,15 +408,19 @@ export class UsersService {
       FROM
         (
           SELECT
-            id,
+            users.id,
             RANK () OVER (
               ORDER BY
-                total_points DESC,
+                user_points.total_points DESC,
                 COALESCE(latest_event_occurred_at, NOW()) ASC,
-                created_at ASC
+                users.created_at ASC
             ) AS rank
           FROM
             users
+          JOIN
+            user_points
+          ON
+            user_points.user_id = users.id
           LEFT JOIN
             (
               SELECT

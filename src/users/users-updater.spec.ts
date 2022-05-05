@@ -10,6 +10,7 @@ import { BlocksService } from '../blocks/blocks.service';
 import { POINTS_PER_CATEGORY } from '../common/constants';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
+import { UserPointsService } from '../user-points/user-points.service';
 import { UsersService } from './users.service';
 import { UsersUpdater } from './users-updater';
 
@@ -17,6 +18,7 @@ describe('UsersUpdater', () => {
   let app: INestApplication;
   let blocksService: BlocksService;
   let prisma: PrismaService;
+  let userPointsService: UserPointsService;
   let usersService: UsersService;
   let usersUpdater: UsersUpdater;
 
@@ -24,6 +26,7 @@ describe('UsersUpdater', () => {
     app = await bootstrapTestApp();
     blocksService = app.get(BlocksService);
     prisma = app.get(PrismaService);
+    userPointsService = app.get(UserPointsService);
     usersService = app.get(UsersService);
     usersUpdater = app.get(UsersUpdater);
     await app.init();
@@ -52,15 +55,16 @@ describe('UsersUpdater', () => {
         difficulty: faker.datatype.number(),
       },
     });
-    const user = await prisma.user.create({
-      data: {
-        discord: faker.internet.userName(),
-        email: faker.internet.email(),
-        graffiti,
-        country_code: faker.address.countryCode('alpha-3'),
-        telegram: faker.internet.userName(),
-        total_points: points ?? POINTS_PER_CATEGORY.BLOCK_MINED,
-      },
+    const user = await usersService.create({
+      discord: faker.internet.userName(),
+      email: faker.internet.email(),
+      graffiti,
+      country_code: faker.address.countryCode('alpha-3'),
+      telegram: faker.internet.userName(),
+    });
+    await userPointsService.upsert({
+      userId: user.id,
+      totalPoints: points ?? POINTS_PER_CATEGORY.BLOCK_MINED,
     });
     return { block, user };
   };
@@ -78,13 +82,10 @@ describe('UsersUpdater', () => {
     describe('when a user exists for the new discord', () => {
       it('throws an UnprocessableEntityException', async () => {
         const { user: existingUser } = await setupBlockMined();
-        const user = await prisma.user.create({
-          data: {
-            email: faker.internet.email(),
-            graffiti: ulid(),
-            country_code: faker.address.countryCode('alpha-3'),
-            total_points: 0,
-          },
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: ulid(),
+          country_code: faker.address.countryCode('alpha-3'),
         });
 
         assert.ok(existingUser.discord);
@@ -107,21 +108,15 @@ describe('UsersUpdater', () => {
             return blocksService.countByGraffiti(graffiti, client);
           });
 
-        const firstUser = await prisma.user.create({
-          data: {
-            email: faker.internet.email(),
-            graffiti: ulid(),
-            country_code: faker.address.countryCode('alpha-3'),
-            total_points: 0,
-          },
+        const firstUser = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: ulid(),
+          country_code: faker.address.countryCode('alpha-3'),
         });
-        const secondUser = await prisma.user.create({
-          data: {
-            email: faker.internet.email(),
-            graffiti: ulid(),
-            country_code: faker.address.countryCode('alpha-3'),
-            total_points: 0,
-          },
+        const secondUser = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: ulid(),
+          country_code: faker.address.countryCode('alpha-3'),
         });
         const graffiti = ulid();
 
@@ -141,23 +136,17 @@ describe('UsersUpdater', () => {
 
     describe('when a user exists for the new graffiti without blocks mined', () => {
       it('throws an UnprocessableEntityException', async () => {
-        const existingUser = await prisma.user.create({
-          data: {
-            discord: faker.internet.userName(),
-            email: faker.internet.email(),
-            graffiti: ulid(),
-            country_code: faker.address.countryCode('alpha-3'),
-            telegram: faker.internet.userName(),
-            total_points: 0,
-          },
+        const existingUser = await usersService.create({
+          discord: faker.internet.userName(),
+          email: faker.internet.email(),
+          graffiti: ulid(),
+          country_code: faker.address.countryCode('alpha-3'),
+          telegram: faker.internet.userName(),
         });
-        const user = await prisma.user.create({
-          data: {
-            email: faker.internet.email(),
-            graffiti: ulid(),
-            country_code: faker.address.countryCode('alpha-3'),
-            total_points: 0,
-          },
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: ulid(),
+          country_code: faker.address.countryCode('alpha-3'),
         });
 
         await expect(
@@ -169,13 +158,10 @@ describe('UsersUpdater', () => {
     describe('when a user exists for the new telegram', () => {
       it('throws an UnprocessableEntityException', async () => {
         const { user: existingUser } = await setupBlockMined();
-        const user = await prisma.user.create({
-          data: {
-            email: faker.internet.email(),
-            graffiti: ulid(),
-            country_code: faker.address.countryCode('alpha-3'),
-            total_points: 0,
-          },
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: ulid(),
+          country_code: faker.address.countryCode('alpha-3'),
         });
 
         assert.ok(existingUser.telegram);
@@ -192,13 +178,10 @@ describe('UsersUpdater', () => {
           graffiti: ulid(),
           telegram: ulid(),
         };
-        const user = await prisma.user.create({
-          data: {
-            email: faker.internet.email(),
-            graffiti: ulid(),
-            country_code: faker.address.countryCode('alpha-3'),
-            total_points: 0,
-          },
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: ulid(),
+          country_code: faker.address.countryCode('alpha-3'),
         });
 
         const updatedUser = await usersUpdater.update(user, options);

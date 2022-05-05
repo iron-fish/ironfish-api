@@ -7,17 +7,20 @@ import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
+import { UsersService } from '../users/users.service';
 import { NodeUptimesService } from './node-uptimes.service';
 
 describe('NodeUptimesService', () => {
   let app: INestApplication;
   let nodeUptimesService: NodeUptimesService;
   let prisma: PrismaService;
+  let usersService: UsersService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
     nodeUptimesService = app.get(NodeUptimesService);
     prisma = app.get(PrismaService);
+    usersService = app.get(UsersService);
     await app.init();
   });
 
@@ -26,12 +29,10 @@ describe('NodeUptimesService', () => {
   });
 
   const createUser = async () => {
-    return prisma.user.create({
-      data: {
-        email: faker.internet.email(),
-        graffiti: uuid(),
-        country_code: faker.address.countryCode(),
-      },
+    return usersService.create({
+      email: faker.internet.email(),
+      graffiti: uuid(),
+      country_code: faker.address.countryCode(),
     });
   };
 

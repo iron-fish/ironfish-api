@@ -10,7 +10,6 @@ import { MetricsGranularity } from '../common/enums/metrics-granularity';
 import { standardizeEmail } from '../common/utils/email';
 import { EventsService } from '../events/events.service';
 import { MagicLinkService } from '../magic-link/magic-link.service';
-import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from './users.service';
 
@@ -19,14 +18,12 @@ const API_KEY = 'test';
 describe('UsersController', () => {
   let app: INestApplication;
   let magicLinkService: MagicLinkService;
-  let prisma: PrismaService;
   let usersService: UsersService;
   let eventsService: EventsService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
     magicLinkService = app.get(MagicLinkService);
-    prisma = app.get(PrismaService);
     usersService = app.get(UsersService);
     eventsService = app.get(EventsService);
 
@@ -40,12 +37,10 @@ describe('UsersController', () => {
   describe('GET /users/:id', () => {
     describe('with a valid id', () => {
       it('returns the user', async () => {
-        const user = await prisma.user.create({
-          data: {
-            email: faker.internet.email(),
-            graffiti: uuid(),
-            country_code: faker.address.countryCode(),
-          },
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          country_code: faker.address.countryCode(),
         });
         const { body } = await request(app.getHttpServer())
           .get(`/users/${user.id}`)
@@ -75,12 +70,10 @@ describe('UsersController', () => {
       describe('with a valid graffiti', () => {
         it('returns the user', async () => {
           const graffiti = uuid();
-          const user = await prisma.user.create({
-            data: {
-              email: faker.internet.email(),
-              graffiti,
-              country_code: faker.address.countryCode(),
-            },
+          const user = await usersService.create({
+            email: faker.internet.email(),
+            graffiti,
+            country_code: faker.address.countryCode(),
           });
           const { body } = await request(app.getHttpServer())
             .get(`/users/find`)
@@ -102,12 +95,10 @@ describe('UsersController', () => {
       describe('with a valid graffiti', () => {
         it('returns the user', async () => {
           const graffiti = uuid();
-          const user = await prisma.user.create({
-            data: {
-              email: faker.internet.email(),
-              graffiti,
-              country_code: faker.address.countryCode(),
-            },
+          const user = await usersService.create({
+            email: faker.internet.email(),
+            graffiti,
+            country_code: faker.address.countryCode(),
           });
           const { body } = await request(app.getHttpServer())
             .get(`/users/find`)
@@ -235,12 +226,10 @@ describe('UsersController', () => {
 
     describe('with a TOTAL request and no time range', () => {
       it('returns a 422', async () => {
-        const user = await prisma.user.create({
-          data: {
-            email: faker.internet.email(),
-            graffiti: uuid(),
-            country_code: faker.address.countryCode('alpha-3'),
-          },
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          country_code: faker.address.countryCode('alpha-3'),
         });
 
         const { body } = await request(app.getHttpServer())
@@ -271,12 +260,10 @@ describe('UsersController', () => {
 
     describe('with a valid lifetime request', () => {
       it('returns the lifetime metrics for the user', async () => {
-        const user = await prisma.user.create({
-          data: {
-            email: faker.internet.email(),
-            graffiti: uuid(),
-            country_code: faker.address.countryCode('alpha-3'),
-          },
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          country_code: faker.address.countryCode('alpha-3'),
         });
 
         await eventsService.create({
@@ -353,12 +340,10 @@ describe('UsersController', () => {
 
     describe('with a valid total request', () => {
       it('returns the total metrics for the user in the given range', async () => {
-        const user = await prisma.user.create({
-          data: {
-            email: faker.internet.email(),
-            graffiti: uuid(),
-            country_code: faker.address.countryCode('alpha-3'),
-          },
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          country_code: faker.address.countryCode('alpha-3'),
         });
 
         const start = new Date(Date.now() - 1).toISOString();
@@ -532,12 +517,10 @@ describe('UsersController', () => {
 
     describe('with a duplicate email', () => {
       it('returns a 422', async () => {
-        const user = await prisma.user.create({
-          data: {
-            email: faker.internet.email(),
-            graffiti: uuid(),
-            country_code: faker.address.countryCode('alpha-3'),
-          },
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          country_code: faker.address.countryCode('alpha-3'),
         });
         await request(app.getHttpServer())
           .post(`/users`)

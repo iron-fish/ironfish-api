@@ -8,6 +8,7 @@ import { v4 as uuid } from 'uuid';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
+import { UsersService } from '../users/users.service';
 import { EventType } from '.prisma/client';
 
 const API_KEY = 'test';
@@ -16,11 +17,13 @@ describe('EventsController', () => {
   let app: INestApplication;
   let config: ApiConfigService;
   let prisma: PrismaService;
+  let usersService: UsersService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
     config = app.get(ApiConfigService);
     prisma = app.get(PrismaService);
+    usersService = app.get(UsersService);
     await app.init();
   });
 
@@ -48,12 +51,10 @@ describe('EventsController', () => {
 
     describe('with a user filter', () => {
       it('returns events only for that user', async () => {
-        const user = await prisma.user.create({
-          data: {
-            email: faker.internet.email(),
-            graffiti: uuid(),
-            country_code: faker.address.countryCode('alpha-3'),
-          },
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          country_code: faker.address.countryCode('alpha-3'),
         });
         const firstEvent = await prisma.event.create({
           data: {
@@ -142,12 +143,10 @@ describe('EventsController', () => {
 
     describe('with a valid payload', () => {
       it('creates an event record', async () => {
-        const user = await prisma.user.create({
-          data: {
-            email: faker.internet.email(),
-            graffiti: uuid(),
-            country_code: faker.address.countryCode('alpha-3'),
-          },
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          country_code: faker.address.countryCode('alpha-3'),
         });
         const occurredAt = new Date().toISOString();
         const type = EventType.BUG_CAUGHT;
@@ -173,12 +172,10 @@ describe('EventsController', () => {
       });
 
       it('creates an event with url parameter', async () => {
-        const user = await prisma.user.create({
-          data: {
-            email: faker.internet.email(),
-            graffiti: uuid(),
-            country_code: faker.address.countryCode('alpha-3'),
-          },
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          country_code: faker.address.countryCode('alpha-3'),
         });
         const occurredAt = new Date().toISOString();
         const type = EventType.PULL_REQUEST_MERGED;
@@ -236,12 +233,10 @@ describe('EventsController', () => {
 
     describe('with a valid event id', () => {
       it('returns a 204', async () => {
-        const user = await prisma.user.create({
-          data: {
-            email: faker.internet.email(),
-            graffiti: uuid(),
-            country_code: faker.address.countryCode('alpha-3'),
-          },
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          country_code: faker.address.countryCode('alpha-3'),
         });
         const event = await prisma.event.create({
           data: {

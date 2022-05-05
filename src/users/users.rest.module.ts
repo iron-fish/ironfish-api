@@ -5,6 +5,7 @@ import { Module } from '@nestjs/common';
 import { ApiConfigModule } from '../api-config/api-config.module';
 import { EventsModule } from '../events/events.module';
 import { NodeUptimesModule } from '../node-uptimes/node-uptimes.module';
+import { UserPointsModule } from '../user-points/user-points.module';
 import { MeController } from './me.controller';
 import { UsersController } from './users.controller';
 import { UsersModule } from './users.module';
@@ -15,6 +16,7 @@ import { UsersUpdaterModule } from './users-updater.module';
   imports: [
     ApiConfigModule,
     EventsModule,
+    UserPointsModule,
     UsersModule,
     UsersUpdaterModule,
     NodeUptimesModule,

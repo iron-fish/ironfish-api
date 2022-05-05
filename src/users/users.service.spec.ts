@@ -11,6 +11,7 @@ import faker from 'faker';
 import { ulid } from 'ulid';
 import { v4 as uuid } from 'uuid';
 import { standardizeEmail } from '../common/utils/email';
+import { EventsService } from '../events/events.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UserPointsService } from '../user-points/user-points.service';
@@ -19,15 +20,17 @@ import { EventType } from '.prisma/client';
 
 describe('UsersService', () => {
   let app: INestApplication;
+  let eventsService: EventsService;
   let usersService: UsersService;
   let prisma: PrismaService;
   let userPointsService: UserPointsService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
-    usersService = app.get(UsersService);
+    eventsService = app.get(EventsService);
     prisma = app.get(PrismaService);
     userPointsService = app.get(UserPointsService);
+    usersService = app.get(UsersService);
     await app.init();
   });
 
@@ -38,12 +41,10 @@ describe('UsersService', () => {
   describe('find', () => {
     describe('with a valid id', () => {
       it('returns the record', async () => {
-        const user = await prisma.user.create({
-          data: {
-            email: faker.internet.email(),
-            graffiti: uuid(),
-            country_code: faker.address.countryCode('alpha-3'),
-          },
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          country_code: faker.address.countryCode('alpha-3'),
         });
         const record = await usersService.find(user.id);
         expect(record).not.toBeNull();
@@ -61,12 +62,10 @@ describe('UsersService', () => {
   describe('findOrThrow', () => {
     describe('with a valid id', () => {
       it('returns the record', async () => {
-        const user = await prisma.user.create({
-          data: {
-            email: faker.internet.email(),
-            graffiti: uuid(),
-            country_code: faker.address.countryCode('alpha-3'),
-          },
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          country_code: faker.address.countryCode('alpha-3'),
         });
         const record = await usersService.findOrThrow(user.id);
         expect(record).not.toBeNull();
@@ -86,12 +85,10 @@ describe('UsersService', () => {
   describe('findByGraffiti', () => {
     describe('with a valid graffiti', () => {
       it('returns the record', async () => {
-        const user = await prisma.user.create({
-          data: {
-            email: faker.internet.email(),
-            graffiti: uuid(),
-            country_code: faker.address.countryCode('alpha-3'),
-          },
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          country_code: faker.address.countryCode('alpha-3'),
         });
         const record = await usersService.findByGraffiti(user.graffiti);
         expect(record).not.toBeNull();
@@ -109,12 +106,10 @@ describe('UsersService', () => {
   describe('findByGraffitiOrThrow', () => {
     describe('with a valid graffiti', () => {
       it('returns the record', async () => {
-        const user = await prisma.user.create({
-          data: {
-            email: faker.internet.email(),
-            graffiti: uuid(),
-            country_code: faker.address.countryCode('alpha-3'),
-          },
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          country_code: faker.address.countryCode('alpha-3'),
         });
         const record = await usersService.findByGraffitiOrThrow(user.graffiti);
         expect(record).not.toBeNull();
@@ -143,12 +138,10 @@ describe('UsersService', () => {
     describe('with a valid email', () => {
       it('returns the confirmed record', async () => {
         const email = faker.internet.email();
-        const user = await prisma.user.create({
-          data: {
-            email,
-            graffiti: uuid(),
-            country_code: faker.address.countryCode('alpha-3'),
-          },
+        const user = await usersService.create({
+          email,
+          graffiti: uuid(),
+          country_code: faker.address.countryCode('alpha-3'),
         });
 
         const record = await usersService.findByEmailOrThrow(email);
@@ -167,12 +160,10 @@ describe('UsersService', () => {
     describe('with a valid email', () => {
       it('returns the confirmed record', async () => {
         const email = faker.internet.email();
-        const user = await prisma.user.create({
-          data: {
-            email,
-            graffiti: uuid(),
-            country_code: faker.address.countryCode('alpha-3'),
-          },
+        const user = await usersService.create({
+          email,
+          graffiti: uuid(),
+          country_code: faker.address.countryCode('alpha-3'),
         });
 
         const record = await usersService.findByEmail(email);
@@ -219,32 +210,26 @@ describe('UsersService', () => {
       const graffiti = uuid();
       const now = new Date();
 
-      const userA = await prisma.user.create({
-        data: {
-          email: faker.internet.email(),
-          graffiti: graffiti + '-a',
-          country_code: faker.address.countryCode('alpha-3'),
-          total_points: 2,
-        },
+      const userA = await usersService.create({
+        email: faker.internet.email(),
+        graffiti: graffiti + '-a',
+        country_code: faker.address.countryCode('alpha-3'),
       });
+      await userPointsService.upsert({ userId: userA.id, totalPoints: 2 });
 
-      const userB = await prisma.user.create({
-        data: {
-          email: faker.internet.email(),
-          graffiti: graffiti + '-b',
-          country_code: faker.address.countryCode('alpha-3'),
-          total_points: 2,
-        },
+      const userB = await usersService.create({
+        email: faker.internet.email(),
+        graffiti: graffiti + '-b',
+        country_code: faker.address.countryCode('alpha-3'),
       });
+      await userPointsService.upsert({ userId: userB.id, totalPoints: 2 });
 
-      const userC = await prisma.user.create({
-        data: {
-          email: faker.internet.email(),
-          graffiti: graffiti + '-c',
-          country_code: faker.address.countryCode('alpha-3'),
-          total_points: 1,
-        },
+      const userC = await usersService.create({
+        email: faker.internet.email(),
+        graffiti: graffiti + '-c',
+        country_code: faker.address.countryCode('alpha-3'),
       });
+      await userPointsService.upsert({ userId: userC.id, totalPoints: 1 });
 
       await prisma.event.create({
         data: {
@@ -319,12 +304,10 @@ describe('UsersService', () => {
     describe('with a duplicate graffiti', () => {
       it('throws an exception', async () => {
         const graffiti = uuid();
-        await prisma.user.create({
-          data: {
-            email: faker.internet.email(),
-            graffiti,
-            country_code: faker.address.countryCode('alpha-3'),
-          },
+        await usersService.create({
+          email: faker.internet.email(),
+          graffiti,
+          country_code: faker.address.countryCode('alpha-3'),
         });
 
         await expect(
@@ -340,12 +323,10 @@ describe('UsersService', () => {
     describe('with a duplicate email', () => {
       it('throws an exception', async () => {
         const email = faker.internet.email();
-        await prisma.user.create({
-          data: {
-            email: standardizeEmail(email),
-            graffiti: uuid(),
-            country_code: faker.address.countryCode('alpha-3'),
-          },
+        await usersService.create({
+          email: standardizeEmail(email),
+          graffiti: uuid(),
+          country_code: faker.address.countryCode('alpha-3'),
         });
 
         await expect(
@@ -411,68 +392,59 @@ describe('UsersService', () => {
 
   describe('getRank', () => {
     it('returns the correct rank', async () => {
-      const aggregate = await prisma.user.aggregate({
+      const firstUser = await usersService.create({
+        email: faker.internet.email(),
+        graffiti: uuid(),
+        country_code: faker.address.countryCode('alpha-3'),
+      });
+      const secondUser = await usersService.create({
+        email: faker.internet.email(),
+        graffiti: uuid(),
+        country_code: faker.address.countryCode('alpha-3'),
+      });
+      const thirdUser = await usersService.create({
+        email: faker.internet.email(),
+        graffiti: uuid(),
+        country_code: faker.address.countryCode('alpha-3'),
+      });
+
+      const now = new Date();
+      await eventsService.create({
+        type: EventType.BUG_CAUGHT,
+        userId: firstUser.id,
+        occurredAt: now,
+        points: 1,
+      });
+      await eventsService.create({
+        type: EventType.BUG_CAUGHT,
+        userId: secondUser.id,
+        occurredAt: new Date(now.valueOf() - 1000),
+        points: 1,
+      });
+      await eventsService.create({
+        type: EventType.BUG_CAUGHT,
+        userId: secondUser.id,
+        occurredAt: new Date(now.valueOf() + 1000),
+        points: 0,
+      });
+
+      const aggregate = await prisma.userPoints.aggregate({
         _max: {
           total_points: true,
         },
       });
-
       const currentMaxPoints = aggregate._max.total_points || 0;
-
-      const firstUser = await prisma.user.create({
-        data: {
-          email: faker.internet.email(),
-          graffiti: uuid(),
-          country_code: faker.address.countryCode('alpha-3'),
-          total_points: currentMaxPoints + 2,
-        },
+      await userPointsService.upsert({
+        userId: firstUser.id,
+        totalPoints: currentMaxPoints + 2,
       });
-
-      const secondUser = await prisma.user.create({
-        data: {
-          email: faker.internet.email(),
-          graffiti: uuid(),
-          country_code: faker.address.countryCode('alpha-3'),
-          total_points: currentMaxPoints + 2,
-        },
+      await userPointsService.upsert({
+        userId: secondUser.id,
+        totalPoints: currentMaxPoints + 2,
       });
-
-      const thirdUser = await prisma.user.create({
-        data: {
-          email: faker.internet.email(),
-          graffiti: uuid(),
-          country_code: faker.address.countryCode('alpha-3'),
-          total_points: currentMaxPoints + 1,
-        },
-      });
-
-      const now = new Date();
-
-      await prisma.event.create({
-        data: {
-          type: EventType.BUG_CAUGHT,
-          user_id: firstUser.id,
-          occurred_at: now,
-          points: 1,
-        },
-      });
-
-      await prisma.event.create({
-        data: {
-          type: EventType.BUG_CAUGHT,
-          user_id: secondUser.id,
-          occurred_at: new Date(now.valueOf() - 1000),
-          points: 1,
-        },
-      });
-
-      await prisma.event.create({
-        data: {
-          type: EventType.BUG_CAUGHT,
-          user_id: secondUser.id,
-          occurred_at: new Date(now.valueOf() + 1000),
-          points: 0,
-        },
+      await userPointsService.upsert({
+        userId: thirdUser.id,
+        totalPoints: currentMaxPoints + 1,
       });
 
       // Because secondUser caught a bug first, we consider secondUser to be
