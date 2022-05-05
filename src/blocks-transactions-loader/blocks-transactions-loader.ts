@@ -47,7 +47,7 @@ export class BlocksTransactionsLoader {
             timeSinceLastBlockMs =
               block.timestamp.getTime() - prevTimestamp.getTime();
           } else {
-            const previousBlock = await this.prisma.block.findFirst({
+            const previousBlock = await prisma.block.findFirst({
               where: {
                 hash: block.previous_block_hash,
               },
