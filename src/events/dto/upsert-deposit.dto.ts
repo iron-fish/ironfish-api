@@ -57,7 +57,6 @@ export class UpsertDepositsOperationDto {
   readonly block!: UpsertDepositBlockDto;
 
   @IsArray()
-  @ArrayMinSize(1)
   @ValidateNested({ each: true })
   @Type(() => DepositTransactionDto)
   readonly transactions!: DepositTransactionDto[];
