@@ -27,7 +27,6 @@ export class DepositsController {
 
   @ApiOperation({ summary: 'Gets the head of the chain' })
   @ApiExcludeEndpoint()
-  @UseGuards(ApiKeyGuard)
   @Get('head')
   async head(): Promise<{ block_hash: string }> {
     const depositHead = await this.deposits.head();
