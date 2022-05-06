@@ -15,6 +15,7 @@ import { ApiExcludeEndpoint, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { DepositsService } from './deposits.service';
+import { DepositsUpsertService } from './deposits.upsert.service';
 import { UpsertDepositsDto } from './dto/upsert-deposit.dto';
 import { SerializedDeposit } from './interfaces/serialized-deposit';
 @ApiTags('Deposit')
@@ -22,6 +23,7 @@ import { SerializedDeposit } from './interfaces/serialized-deposit';
 export class DepositsController {
   constructor(
     private readonly configService: ApiConfigService,
+    private readonly depositsUpsert: DepositsUpsertService,
     private readonly deposits: DepositsService,
   ) {}
 
@@ -61,7 +63,7 @@ export class DepositsController {
     )
     data: UpsertDepositsDto,
   ): Promise<SerializedDeposit[]> {
-    const deposits = await this.deposits.upsertBulk(data.operations);
+    const deposits = await this.depositsUpsert.upsertBulk(data.operations);
 
     return deposits.map((d) => ({
       id: d.id,

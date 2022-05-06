@@ -8,10 +8,11 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { UserPointsModule } from '../user-points/user-points.module';
 import { UsersModule } from '../users/users.module';
 import { DepositsService } from './deposits.service';
+import { DepositsUpsertService } from './deposits.upsert.service';
 import { EventsService } from './events.service';
 
 @Module({
-  exports: [EventsService, DepositsService],
+  exports: [EventsService, DepositsService, DepositsUpsertService],
   imports: [
     ApiConfigModule,
     BlocksModule,
@@ -19,6 +20,6 @@ import { EventsService } from './events.service';
     UserPointsModule,
     UsersModule,
   ],
-  providers: [EventsService, DepositsService],
+  providers: [EventsService, DepositsService, DepositsUpsertService],
 })
 export class EventsModule {}
