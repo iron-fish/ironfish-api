@@ -3,20 +3,14 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Deposit, DepositHead } from '@prisma/client';
-import { ApiConfigService } from '../api-config/api-config.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class DepositsService {
-  constructor(
-    private readonly config: ApiConfigService,
-    private readonly prisma: PrismaService,
-    private readonly users: UsersService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async find(id: number): Promise<Deposit | null> {
-    return await this.prisma.deposit.findUnique({
+    return this.prisma.deposit.findUnique({
       where: {
         id,
       },
