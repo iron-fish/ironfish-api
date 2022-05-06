@@ -16,6 +16,7 @@ import { getMondayFromDate } from '../common/utils/date';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { UserPointsService } from '../user-points/user-points.service';
+import { DepositsService } from './deposits.service';
 import { CreateEventOptions } from './interfaces/create-event-options';
 import { EventWithMetadata } from './interfaces/event-with-metadata';
 import { ListEventsOptions } from './interfaces/list-events-options';
@@ -34,6 +35,7 @@ export class EventsService {
     private readonly config: ApiConfigService,
     private readonly prisma: PrismaService,
     private readonly userPointsService: UserPointsService,
+    private readonly depositsService: DepositsService,
   ) {}
 
   async findOrThrow(id: number): Promise<Event> {
@@ -94,6 +96,16 @@ export class EventsService {
       }
       if (record.url) {
         metadata = { ...metadata, url: record.url };
+      }
+      if (record.deposit_id) {
+        const deposit = await this.depositsService.findOrThrow(
+          record.deposit_id,
+        );
+
+        metadata = {
+          transaction_hash: deposit.transaction_hash,
+          block_hash: deposit.block_hash,
+        };
       }
       data.push({
         ...record,
