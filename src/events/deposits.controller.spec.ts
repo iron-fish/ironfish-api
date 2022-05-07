@@ -233,7 +233,7 @@ describe('DepositsController', () => {
         },
       });
 
-      expect(user2Events[0].points).toBe(10);
+      expect(user2Events[0].points).toBe(1);
       expect(user2Events[1].points).toBe(0);
       expect(user2Events[1].deposit_id).toEqual(user2Deposits[1].id);
       expect(user2Deposits[1].amount).toEqual(1 * ORE_TO_IRON);
