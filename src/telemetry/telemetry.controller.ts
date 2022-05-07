@@ -64,7 +64,7 @@ export class TelemetryController {
 
     this.submitIpWithoutNodeFieldsToTelemetry(request);
 
-    if (!this.config.isProduction() && graffiti) {
+    if (graffiti) {
       const user = await this.usersService.findByGraffiti(graffiti);
 
       if (user) {
