@@ -36,5 +36,5 @@ export const POINTS_PER_CATEGORY: Record<EventType, number> = {
   [EventType.PULL_REQUEST_MERGED]: 500,
   [EventType.SOCIAL_MEDIA_PROMOTION]: 100,
   [EventType.NODE_UPTIME]: 10,
-  [EventType.SEND_TRANSACTION]: 10,
+  [EventType.SEND_TRANSACTION]: 1,
 };
