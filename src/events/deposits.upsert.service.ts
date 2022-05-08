@@ -62,7 +62,7 @@ export class DepositsUpsertService {
             amount: amount,
           };
 
-          const deposit = await this.prisma.deposit.upsert({
+          const deposit = await prisma.deposit.upsert({
             create: depositParams,
             update: depositParams,
             where: {
@@ -76,7 +76,7 @@ export class DepositsUpsertService {
           deposits.push(deposit);
 
           if (!deposit.main) {
-            const event = await this.prisma.event.findUnique({
+            const event = await prisma.event.findUnique({
               where: {
                 deposit_id: deposit.id,
               },
