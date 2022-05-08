@@ -4,6 +4,7 @@
 import { Module } from '@nestjs/common';
 import { ApiConfigModule } from '../api-config/api-config.module';
 import { BlocksModule } from '../blocks/blocks.module';
+import { LoggerModule } from '../logger/logger.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { UserPointsModule } from '../user-points/user-points.module';
 import { UsersModule } from '../users/users.module';
@@ -19,6 +20,7 @@ import { EventsService } from './events.service';
     PrismaModule,
     UserPointsModule,
     UsersModule,
+    LoggerModule,
   ],
   providers: [EventsService, DepositsService, DepositsUpsertService],
 })

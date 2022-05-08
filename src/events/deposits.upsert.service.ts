@@ -7,6 +7,7 @@ import { ApiConfigService } from '../api-config/api-config.service';
 import { BlockOperation } from '../blocks/enums/block-operation';
 import { SEND_TRANSACTION_LIMIT_ORE } from '../common/constants';
 import { standardizeHash } from '../common/utils/hash';
+import { LoggerService } from '../logger/logger.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
 import { UpsertDepositsOperationDto } from './dto/upsert-deposit.dto';
@@ -19,6 +20,7 @@ export class DepositsUpsertService {
     private readonly prisma: PrismaService,
     private readonly events: EventsService,
     private readonly users: UsersService,
+    private readonly loggerService: LoggerService,
   ) {}
 
   async upsertBulk(
@@ -72,6 +74,9 @@ export class DepositsUpsertService {
               },
             },
           });
+          this.loggerService.info(
+            'upserted deposit: ' + JSON.stringify(deposit),
+          );
 
           deposits.push(deposit);
 
@@ -81,16 +86,23 @@ export class DepositsUpsertService {
                 deposit_id: deposit.id,
               },
             });
+
             if (event) {
-              await this.events.deleteWithClient(event, prisma);
+              const deleted = await this.events.deleteWithClient(event, prisma);
+              this.loggerService.info(
+                'deleted event: ' + JSON.stringify(deleted),
+              );
             }
           }
 
           if (deposit.main && deposit.amount >= SEND_TRANSACTION_LIMIT_ORE) {
             const user = await this.users.findByGraffiti(deposit.graffiti);
+            this.loggerService.info(
+              'found user for deposit: ' + JSON.stringify(user),
+            );
 
             if (user) {
-              await this.events.createWithClient(
+              const created_event = await this.events.createWithClient(
                 {
                   occurredAt: operation.block.timestamp,
                   type: EventType.SEND_TRANSACTION,
@@ -98,6 +110,9 @@ export class DepositsUpsertService {
                   deposit: deposit,
                 },
                 prisma,
+              );
+              this.loggerService.info(
+                'created event: ' + JSON.stringify(created_event),
               );
             }
           }
