@@ -35,6 +35,7 @@ export async function bootstrapTestApp(): Promise<INestApplication> {
           MAGIC_SECRET_KEY: joi.string().required(),
           NETWORK_VERSION: joi.number().required(),
           NODE_ENV: joi.string().required(),
+          NODE_UPTIME_ENABLED: joi.boolean().default(true),
           PORT: joi.number().default(8003),
         }),
       }),
