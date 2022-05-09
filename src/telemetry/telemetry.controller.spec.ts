@@ -5,6 +5,7 @@ import { HttpStatus, INestApplication } from '@nestjs/common';
 import faker from 'faker';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
+import { ApiConfigService } from '../api-config/api-config.service';
 import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
 import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { InfluxDbService } from '../influxdb/influxdb.service';
@@ -15,6 +16,7 @@ import { UsersService } from '../users/users.service';
 
 describe('TelemetryController', () => {
   let app: INestApplication;
+  let config: ApiConfigService;
   let graphileWorkerService: GraphileWorkerService;
   let influxDbService: InfluxDbService;
   let nodeUptimesService: NodeUptimesService;
@@ -23,6 +25,7 @@ describe('TelemetryController', () => {
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
+    config = app.get(ApiConfigService);
     graphileWorkerService = app.get(GraphileWorkerService);
     influxDbService = app.get(InfluxDbService);
     nodeUptimesService = app.get(NodeUptimesService);
@@ -33,6 +36,10 @@ describe('TelemetryController', () => {
 
   afterAll(async () => {
     await app.close();
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   describe('POST /telemetry', () => {
@@ -179,59 +186,85 @@ describe('TelemetryController', () => {
         ]);
       });
 
-      it('updates the node uptime', async () => {
-        const nodeUptimeUpsert = jest
-          .spyOn(nodeUptimesService, 'addUptime')
-          .mockImplementationOnce(jest.fn());
+      describe('when `NODE_UPTIME_ENABLED` is true', () => {
+        it('updates the node uptime', async () => {
+          const nodeUptimeUpsert = jest
+            .spyOn(nodeUptimesService, 'addUptime')
+            .mockImplementationOnce(jest.fn());
 
-        const graffiti = uuid();
-        const user = await usersService.create({
-          email: faker.internet.email(),
-          graffiti,
-          country_code: faker.address.countryCode(),
+          const graffiti = uuid();
+          const user = await usersService.create({
+            email: faker.internet.email(),
+            graffiti,
+            country_code: faker.address.countryCode(),
+          });
+
+          await request(app.getHttpServer())
+            .post('/telemetry')
+            .send({ points: [], graffiti })
+            .expect(HttpStatus.CREATED);
+
+          expect(nodeUptimeUpsert).toHaveBeenCalledTimes(1);
+          expect(nodeUptimeUpsert).toHaveBeenCalledWith(user);
         });
 
-        await request(app.getHttpServer())
-          .post('/telemetry')
-          .send({ points: [], graffiti })
-          .expect(HttpStatus.CREATED);
+        it('updates users points when user has logged enough hours', async () => {
+          const workerAddJob = jest
+            .spyOn(graphileWorkerService, 'addJob')
+            .mockImplementationOnce(jest.fn());
 
-        expect(nodeUptimeUpsert).toHaveBeenCalledTimes(1);
-        expect(nodeUptimeUpsert).toHaveBeenCalledWith(user);
+          const oldCheckin = new Date();
+          oldCheckin.setHours(oldCheckin.getHours() - 2);
+
+          const user = await usersService.create({
+            email: faker.internet.email(),
+            graffiti: uuid(),
+            country_code: faker.address.countryCode(),
+          });
+
+          await prisma.nodeUptime.create({
+            data: {
+              user_id: user.id,
+              total_hours: 12,
+              last_checked_in: oldCheckin,
+            },
+          });
+
+          await request(app.getHttpServer())
+            .post('/telemetry')
+            .send({ points: [], graffiti: user.graffiti })
+            .expect(HttpStatus.CREATED);
+
+          expect(workerAddJob).toHaveBeenCalledTimes(1);
+          expect(workerAddJob).toHaveBeenCalledWith(
+            GraphileWorkerPattern.CREATE_NODE_UPTIME_EVENT,
+            { userId: user.id },
+          );
+        });
       });
 
-      it('updates users points when user has logged enough hours', async () => {
-        const workerAddJob = jest
-          .spyOn(graphileWorkerService, 'addJob')
-          .mockImplementationOnce(jest.fn());
+      describe('when `NODE_UPTIME_ENABLED` is false', () => {
+        it('does not add any uptime', async () => {
+          jest.spyOn(config, 'get').mockImplementationOnce(() => false);
 
-        const oldCheckin = new Date();
-        oldCheckin.setHours(oldCheckin.getHours() - 2);
+          const nodeUptimeUpsert = jest
+            .spyOn(nodeUptimesService, 'addUptime')
+            .mockImplementationOnce(jest.fn());
 
-        const user = await usersService.create({
-          email: faker.internet.email(),
-          graffiti: uuid(),
-          country_code: faker.address.countryCode(),
+          const graffiti = uuid();
+          await usersService.create({
+            email: faker.internet.email(),
+            graffiti,
+            country_code: faker.address.countryCode(),
+          });
+
+          await request(app.getHttpServer())
+            .post('/telemetry')
+            .send({ points: [], graffiti })
+            .expect(HttpStatus.CREATED);
+
+          expect(nodeUptimeUpsert).not.toHaveBeenCalled();
         });
-
-        await prisma.nodeUptime.create({
-          data: {
-            user_id: user.id,
-            total_hours: 12,
-            last_checked_in: oldCheckin,
-          },
-        });
-
-        await request(app.getHttpServer())
-          .post('/telemetry')
-          .send({ points: [], graffiti: user.graffiti })
-          .expect(HttpStatus.CREATED);
-
-        expect(workerAddJob).toHaveBeenCalledTimes(1);
-        expect(workerAddJob).toHaveBeenCalledWith(
-          GraphileWorkerPattern.CREATE_NODE_UPTIME_EVENT,
-          { userId: user.id },
-        );
       });
     });
   });
