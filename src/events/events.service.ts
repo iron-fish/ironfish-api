@@ -469,7 +469,10 @@ export class EventsService {
     const afterPhaseOne = occurredAt > PHASE_1_END;
 
     // Requests to create events and the event timestamp should both be after launch
-    if (this.config.isProduction() && (beforeLaunch || afterPhaseOne)) {
+    const checkEventOccurredAt = this.config.get<boolean>(
+      'CHECK_EVENT_OCCURRED_AT',
+    );
+    if (checkEventOccurredAt && (beforeLaunch || afterPhaseOne)) {
       return null;
     }
 
