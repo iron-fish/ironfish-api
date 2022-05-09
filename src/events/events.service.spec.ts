@@ -435,9 +435,9 @@ describe('EventsService', () => {
   });
 
   describe('create', () => {
-    describe('when the event is before the launch date in production', () => {
+    describe('when the event is before the phase one launch', () => {
       it('returns null', async () => {
-        jest.spyOn(config, 'isProduction').mockImplementationOnce(() => true);
+        jest.spyOn(config, 'get').mockImplementationOnce(() => true);
 
         const user = await usersService.create({
           email: faker.internet.email(),
@@ -458,7 +458,7 @@ describe('EventsService', () => {
 
     describe('when the event is after the end of phase one', () => {
       it('returns null', async () => {
-        jest.spyOn(config, 'isProduction').mockImplementationOnce(() => true);
+        jest.spyOn(config, 'get').mockImplementationOnce(() => true);
 
         const user = await usersService.create({
           email: faker.internet.email(),
@@ -474,6 +474,25 @@ describe('EventsService', () => {
           occurredAt: new Date(Date.UTC(2022, 2, 15)),
         });
         expect(event).toBeNull();
+      });
+    });
+
+    describe('when `CHECK_OCCURRED_AT` is disabled and `occurred_at` is outside phase bounds', () => {
+      it('creates the event', async () => {
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          country_code: faker.address.countryCode('alpha-3'),
+        });
+        const type = EventType.PULL_REQUEST_MERGED;
+
+        const event = await eventsService.create({
+          type,
+          userId: user.id,
+          points: 100,
+          occurredAt: new Date(Date.UTC(2021, 10, 1)),
+        });
+        expect(event).not.toBeNull();
       });
     });
 
