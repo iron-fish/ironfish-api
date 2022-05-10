@@ -137,27 +137,26 @@ export class UsersController {
     let eventMetrics: Record<EventType, SerializedEventMetrics>;
     let points: number;
     let pools: Record<MetricsPool, SerializedEventMetrics> | undefined;
-    let node_uptime: SerializedUserMetrics['node_uptime'];
+    let nodeUptime: SerializedUserMetrics['node_uptime'];
 
     if (query.granularity === MetricsGranularity.LIFETIME) {
       eventMetrics = await this.eventsService.getLifetimeEventMetricsForUser(
         user,
       );
 
-      const [main, code] = await Promise.all([
-        this.eventsService.getLifetimeEventsMetricsForUser(user, [
+      pools = {
+        main: await this.eventsService.getLifetimeEventsMetricsForUser(user, [
           EventType.BUG_CAUGHT,
           EventType.NODE_UPTIME,
+          EventType.SEND_TRANSACTION,
         ]),
-        this.eventsService.getLifetimeEventsMetricsForUser(user, [
+        code: await this.eventsService.getLifetimeEventsMetricsForUser(user, [
           EventType.PULL_REQUEST_MERGED,
         ]),
-      ]);
-
-      pools = { main, code };
+      };
 
       const uptime = await this.nodeUptimeService.get(user);
-      node_uptime = {
+      nodeUptime = {
         total_hours: uptime?.total_hours ?? 0,
         last_checked_in: uptime?.last_checked_in?.toISOString() ?? null,
       };
@@ -184,7 +183,7 @@ export class UsersController {
       granularity: query.granularity,
       points,
       pools,
-      node_uptime,
+      node_uptime: nodeUptime,
       metrics: {
         blocks_mined: eventMetrics[EventType.BLOCK_MINED],
         bugs_caught: eventMetrics[EventType.BUG_CAUGHT],
