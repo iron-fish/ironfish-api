@@ -618,18 +618,20 @@ export class EventsService {
   }
 
   async upsertBlockMined(block: Block, user: User): Promise<Event | null> {
-    // https://ironfish.network/blog/2022/03/07/incentivized-testnet-roadmap
-    const endOfPhaseOneSequence = 150000;
-    if (block.sequence > endOfPhaseOneSequence) {
-      return null;
+    // We used this code for counting points for mining blocks for Phase 1
+    // but we are not counting mining points for Phase 2
+    const COUNT_POINTS_FOR_BLOCK_MINING = false;
+
+    if (COUNT_POINTS_FOR_BLOCK_MINING) {
+      return this.create({
+        blockId: block.id,
+        occurredAt: block.timestamp,
+        type: EventType.BLOCK_MINED,
+        userId: user.id,
+        points: POINTS_PER_CATEGORY[EventType.BLOCK_MINED],
+      });
     }
-    return this.create({
-      blockId: block.id,
-      occurredAt: block.timestamp,
-      type: EventType.BLOCK_MINED,
-      userId: user.id,
-      points: POINTS_PER_CATEGORY[EventType.BLOCK_MINED],
-    });
+    return null;
   }
 
   async deleteBlockMined(block: Block): Promise<Event | null> {
