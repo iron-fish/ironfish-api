@@ -897,8 +897,8 @@ describe('EventsService', () => {
       });
     });
 
-    describe('respects enviornment variables', () => {
-      it('returns null if config returns false for get ALLOW_BLOCK_MINED_POINTS', async () => {
+    describe('when `ALLOW_BLOCK_MINED_POINTS` is false', () => {
+      it('returns null', async () => {
         jest.spyOn(config, 'get').mockImplementationOnce(() => false);
         const { block, user } = await setupBlockMined();
         const event = await eventsService.upsertBlockMined(block, user);
