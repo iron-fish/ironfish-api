@@ -896,6 +896,15 @@ describe('EventsService', () => {
         expect(event).toBeNull();
       });
     });
+
+    describe('respects enviornment variables', () => {
+      it('returns null if config returns false for get ALLOW_BLOCK_MINED_POINTS', async () => {
+        jest.spyOn(config, 'get').mockImplementationOnce(() => false);
+        const { block, user } = await setupBlockMined();
+        const event = await eventsService.upsertBlockMined(block, user);
+        expect(event).toBeNull();
+      });
+    });
   });
 
   describe('deleteBlockMined', () => {

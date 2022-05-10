@@ -61,6 +61,7 @@ export const REST_MODULES = [
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: joi.object({
+        ALLOW_BLOCK_MINED_POINTS: joi.boolean().default(false),
         API_URL: joi.string().required(),
         BLOCK_EXPLORER_URL: joi.string().required(),
         CHECK_EVENT_OCCURRED_AT: joi.boolean().default(true),
