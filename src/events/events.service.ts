@@ -705,34 +705,43 @@ export class EventsService {
     user: User,
     events: EventType[],
   ): Promise<{ points: number; rank: number }> {
-    const query_points = events
+    const queryPoints = events
       .map((e) => e.toLowerCase() + '_points')
       .join(' + ');
 
-    const query_last_occurred_at = events
+    const queryLastOccurredAt = events
       .map((e) => e.toLowerCase() + '_last_occurred_at')
       .join(', ');
 
     const query = `
-    with user_ranks as (
-      SELECT
+      WITH user_ranks AS (
+        SELECT
           users.id as user_id,
-          ${query_points} as points,
+          ${queryPoints} as points,
           RANK() OVER (
             ORDER BY
-              COALESCE(${query_points}, 0) DESC,
-              COALESCE(LEAST(${query_last_occurred_at}), NOW()) ASC,
+              COALESCE(${queryPoints}, 0) DESC,
+              COALESCE(LEAST(${queryLastOccurredAt}), NOW()) ASC,
               users.created_at ASC
           ) as rank
-      FROM
-        users
-      LEFT JOIN
-        user_points
-      ON
-        user_points.user_id = users.id
-    )
+        FROM
+          users
+        LEFT JOIN
+          user_points
+        ON
+          user_points.user_id = users.id
+      )
 
-    select * from user_ranks where user_id = $1 limit 1;`;
+      SELECT
+        user_id,
+        points,
+        rank
+      FROM
+        user_ranks
+      WHERE
+        user_id = $1
+      LIMIT
+        1;`;
 
     const rank = await this.prisma.$queryRawUnsafe<
       {
