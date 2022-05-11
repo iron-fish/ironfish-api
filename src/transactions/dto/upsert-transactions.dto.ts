@@ -9,6 +9,7 @@ import {
   IsArray,
   IsInt,
   IsString,
+  Max,
   ValidateNested,
 } from 'class-validator';
 import { NoteDto } from './note.dto';
@@ -18,10 +19,12 @@ export class TransactionDto {
   @IsString()
   readonly hash!: string;
 
+  @Max(Number.MAX_SAFE_INTEGER)
   @IsInt()
   @Type(() => Number)
   readonly fee!: number;
 
+  @Max(Number.MAX_SAFE_INTEGER)
   @IsInt()
   @Type(() => Number)
   readonly size!: number;

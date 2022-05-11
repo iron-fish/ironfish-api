@@ -8,6 +8,7 @@ import {
   IsInt,
   IsOptional,
   IsString,
+  Max,
   Min,
 } from 'class-validator';
 import { EventType } from '.prisma/client';
@@ -18,6 +19,7 @@ export class CreateEventDto {
 
   @IsOptional()
   @IsInt()
+  @Max(Number.MAX_SAFE_INTEGER)
   @Min(0)
   @Type(() => Number)
   readonly points?: number;

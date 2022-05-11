@@ -3,7 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, TransformFnParams, Type } from 'class-transformer';
-import { IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 import { PaginationArgsDto } from '../../common/dto/pagination-args.dto';
 import { stringToBoolean } from '../../common/utils/boolean';
 
@@ -23,6 +23,7 @@ export class BlocksQueryDto extends PaginationArgsDto {
   @ApiPropertyOptional({
     description: 'Greater than or equal to filter for Block sequence',
   })
+  @Max(Number.MAX_SAFE_INTEGER)
   @Min(1)
   @IsOptional()
   @IsInt()
@@ -30,6 +31,7 @@ export class BlocksQueryDto extends PaginationArgsDto {
   readonly sequence_gte?: number;
 
   @ApiPropertyOptional({ description: 'Less than filter for Block sequence' })
+  @Max(Number.MAX_SAFE_INTEGER)
   @Min(1)
   @IsOptional()
   @IsInt()
@@ -37,6 +39,7 @@ export class BlocksQueryDto extends PaginationArgsDto {
   readonly sequence_lt?: number;
 
   @ApiPropertyOptional({ description: 'Unique Transaction identifier' })
+  @Max(Number.MAX_SAFE_INTEGER)
   @IsOptional()
   @IsInt()
   @Type(() => Number)

@@ -8,7 +8,6 @@ import {
   Get,
   HttpStatus,
   Param,
-  ParseIntPipe,
   Post,
   Put,
   Query,
@@ -29,6 +28,7 @@ import { MetricsGranularity } from '../common/enums/metrics-granularity';
 import { MetricsPool } from '../common/enums/metrics-pool';
 import { MagicLinkContext } from '../common/interfaces/magic-link-context';
 import { PaginatedList } from '../common/interfaces/paginated-list';
+import { IntIsSafeForPrismaPipe } from '../common/pipes/int-is-safe-for-prisma.pipe';
 import { EventsService } from '../events/events.service';
 import { SerializedEventMetrics } from '../events/interfaces/serialized-event-metrics';
 import { NodeUptimesService } from '../node-uptimes/node-uptimes.service';
@@ -91,12 +91,7 @@ export class UsersController {
   @ApiParam({ description: 'Unique User identifier', name: 'id' })
   @Get(':id')
   async get(
-    @Param(
-      'id',
-      new ParseIntPipe({
-        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-      }),
-    )
+    @Param('id', new IntIsSafeForPrismaPipe())
     id: number,
   ): Promise<SerializedUserWithRank> {
     const user = await this.usersService.findOrThrow(id);
@@ -112,12 +107,7 @@ export class UsersController {
   @ApiParam({ description: 'Unique User identifier', name: 'id' })
   @Get(':id/metrics')
   async metrics(
-    @Param(
-      'id',
-      new ParseIntPipe({
-        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-      }),
-    )
+    @Param('id', new IntIsSafeForPrismaPipe())
     id: number,
     @Query(
       new ValidationPipe({
@@ -328,12 +318,7 @@ export class UsersController {
   @UseGuards(MagicLinkGuard)
   async update(
     @Context() { user }: MagicLinkContext,
-    @Param(
-      'id',
-      new ParseIntPipe({
-        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-      }),
-    )
+    @Param('id', new IntIsSafeForPrismaPipe())
     id: number,
     @Body(
       new ValidationPipe({

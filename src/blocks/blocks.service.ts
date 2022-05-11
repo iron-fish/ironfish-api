@@ -13,6 +13,7 @@ import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
 import { getNextDate } from '../common/utils/date';
 import { standardizeHash } from '../common/utils/hash';
+import { assertValueIsSafeForPrisma } from '../common/utils/prisma';
 import { DeleteBlockMinedEventOptions } from '../events/interfaces/delete-block-mined-event-options';
 import { UpsertBlockMinedEventOptions } from '../events/interfaces/upsert-block-mined-event-options';
 import { PrismaService } from '../prisma/prisma.service';
@@ -179,11 +180,7 @@ export class BlocksService {
         ];
       } else {
         const sequence = Number(search);
-        if (sequence >= Number.MAX_SAFE_INTEGER) {
-          throw new UnprocessableEntityException(
-            `Sequence '${sequence}' too large to use in query`,
-          );
-        }
+        assertValueIsSafeForPrisma(sequence);
 
         filter = [
           {

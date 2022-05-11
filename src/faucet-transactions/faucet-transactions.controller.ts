@@ -9,7 +9,6 @@ import {
   HttpException,
   HttpStatus,
   Param,
-  ParseIntPipe,
   Post,
   Query,
   UseGuards,
@@ -24,6 +23,7 @@ import {
 import { ApiConfigService } from '../api-config/api-config.service';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { List } from '../common/interfaces/list';
+import { IntIsSafeForPrismaPipe } from '../common/pipes/int-is-safe-for-prisma.pipe';
 import { CompleteFaucetTransactionDto } from './dto/complete-faucet-transaction.dto';
 import { CreateFaucetTransactionDto } from './dto/create-faucet-transaction.dto';
 import { NextFaucetTransactionsDto } from './dto/next-faucet-transactions.dto';
@@ -98,12 +98,7 @@ export class FaucetTransactionsController {
   @ApiParam({ description: 'Unique Faucet Transaction identifier', name: 'id' })
   @Get(':id')
   async find(
-    @Param(
-      'id',
-      new ParseIntPipe({
-        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-      }),
-    )
+    @Param('id', new IntIsSafeForPrismaPipe())
     id: number,
   ): Promise<SerializedFaucetTransaction> {
     const record = await this.faucetTransactionsService.findOrThrow(id);
@@ -115,12 +110,7 @@ export class FaucetTransactionsController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(ApiKeyGuard)
   async start(
-    @Param(
-      'id',
-      new ParseIntPipe({
-        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-      }),
-    )
+    @Param('id', new IntIsSafeForPrismaPipe())
     id: number,
   ): Promise<SerializedFaucetTransaction> {
     const record = await this.faucetTransactionsService.findOrThrow(id);
@@ -134,12 +124,7 @@ export class FaucetTransactionsController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(ApiKeyGuard)
   async complete(
-    @Param(
-      'id',
-      new ParseIntPipe({
-        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-      }),
-    )
+    @Param('id', new IntIsSafeForPrismaPipe())
     id: number,
     @Body(
       new ValidationPipe({
