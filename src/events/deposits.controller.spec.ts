@@ -244,6 +244,57 @@ describe('DepositsController', () => {
       expect(user1Deposits[1].main).toBe(false);
       expect(user2Deposits[1].main).toBe(false);
     });
+
+    it('does not delete events on FORK operations', async () => {
+      const transaction3 = transaction(
+        [...notes([0.1], user2.graffiti)],
+        'transaction3Hash',
+      );
+
+      const payload: UpsertDepositsDto = {
+        operations: [
+          depositOperation(
+            [transaction3],
+            BlockOperation.CONNECTED,
+            'block3Hash',
+          ),
+        ],
+      };
+
+      await request(app.getHttpServer())
+        .post(`/deposits`)
+        .send(payload)
+        .set('Authorization', `Bearer ${API_KEY}`)
+        .expect(HttpStatus.CREATED);
+
+      const user2EventsBefore = await prisma.event.findMany({
+        where: {
+          user_id: user2.id,
+          type: EventType.SEND_TRANSACTION,
+        },
+      });
+
+      const forkPayload: UpsertDepositsDto = {
+        operations: [
+          depositOperation([transaction3], BlockOperation.FORK, 'block3Hash'),
+        ],
+      };
+
+      await request(app.getHttpServer())
+        .post(`/deposits`)
+        .send(forkPayload)
+        .set('Authorization', `Bearer ${API_KEY}`)
+        .expect(HttpStatus.CREATED);
+
+      const user2EventsAfter = await prisma.event.findMany({
+        where: {
+          user_id: user2.id,
+          type: EventType.SEND_TRANSACTION,
+        },
+      });
+
+      expect(user2EventsBefore).toEqual(user2EventsAfter);
+    });
   });
 
   const notes = (amounts: number[], graffiti: string) => {
