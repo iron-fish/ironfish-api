@@ -241,63 +241,53 @@ export class EventsService {
   async getLifetimeEventMetricsForUser(
     user: User,
   ): Promise<Record<EventType, SerializedEventMetrics>> {
-    return this.prisma.$transaction(async (prisma) => {
-      const ranks = await this.getRanksForEventTypes(user, prisma);
+    const ranks = await this.getRanksForEventTypes(user);
 
-      return {
-        BLOCK_MINED: await this.getLifetimeEventTypeMetricsForUser(
-          user,
-          EventType.BLOCK_MINED,
-          ranks,
-          prisma,
-        ),
-        BUG_CAUGHT: await this.getLifetimeEventTypeMetricsForUser(
-          user,
-          EventType.BUG_CAUGHT,
-          ranks,
-          prisma,
-        ),
-        COMMUNITY_CONTRIBUTION: await this.getLifetimeEventTypeMetricsForUser(
-          user,
-          EventType.COMMUNITY_CONTRIBUTION,
-          ranks,
-          prisma,
-        ),
-        PULL_REQUEST_MERGED: await this.getLifetimeEventTypeMetricsForUser(
-          user,
-          EventType.PULL_REQUEST_MERGED,
-          ranks,
-          prisma,
-        ),
-        SOCIAL_MEDIA_PROMOTION: await this.getLifetimeEventTypeMetricsForUser(
-          user,
-          EventType.SOCIAL_MEDIA_PROMOTION,
-          ranks,
-          prisma,
-        ),
-        NODE_UPTIME: await this.getLifetimeEventTypeMetricsForUser(
-          user,
-          EventType.NODE_UPTIME,
-          ranks,
-          prisma,
-        ),
-        SEND_TRANSACTION: await this.getLifetimeEventTypeMetricsForUser(
-          user,
-          EventType.SEND_TRANSACTION,
-          ranks,
-          prisma,
-        ),
-      };
-    });
+    return {
+      BLOCK_MINED: await this.getLifetimeEventTypeMetricsForUser(
+        user,
+        EventType.BLOCK_MINED,
+        ranks,
+      ),
+      BUG_CAUGHT: await this.getLifetimeEventTypeMetricsForUser(
+        user,
+        EventType.BUG_CAUGHT,
+        ranks,
+      ),
+      COMMUNITY_CONTRIBUTION: await this.getLifetimeEventTypeMetricsForUser(
+        user,
+        EventType.COMMUNITY_CONTRIBUTION,
+        ranks,
+      ),
+      PULL_REQUEST_MERGED: await this.getLifetimeEventTypeMetricsForUser(
+        user,
+        EventType.PULL_REQUEST_MERGED,
+        ranks,
+      ),
+      SOCIAL_MEDIA_PROMOTION: await this.getLifetimeEventTypeMetricsForUser(
+        user,
+        EventType.SOCIAL_MEDIA_PROMOTION,
+        ranks,
+      ),
+      NODE_UPTIME: await this.getLifetimeEventTypeMetricsForUser(
+        user,
+        EventType.NODE_UPTIME,
+        ranks,
+      ),
+      SEND_TRANSACTION: await this.getLifetimeEventTypeMetricsForUser(
+        user,
+        EventType.SEND_TRANSACTION,
+        ranks,
+      ),
+    };
   }
 
   private async getLifetimeEventTypeMetricsForUser(
     { id }: User,
     type: EventType,
     ranks: Record<EventType, number>,
-    client: BasePrismaClient,
   ): Promise<SerializedEventMetrics> {
-    const aggregate = await client.event.aggregate({
+    const aggregate = await this.prisma.event.aggregate({
       _sum: {
         points: true,
       },
@@ -308,7 +298,7 @@ export class EventsService {
       },
     });
     return {
-      count: await client.event.count({
+      count: await this.prisma.event.count({
         where: {
           type,
           user_id: id,
@@ -760,11 +750,8 @@ export class EventsService {
     };
   }
 
-  async getRanksForEventTypes(
-    user: User,
-    client: BasePrismaClient,
-  ): Promise<Record<EventType, number>> {
-    const userRanks = await client.$queryRawUnsafe<
+  async getRanksForEventTypes(user: User): Promise<Record<EventType, number>> {
+    const userRanks = await this.prisma.$queryRawUnsafe<
       {
         type: EventType;
         rank: number;
