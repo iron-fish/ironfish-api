@@ -1062,7 +1062,6 @@ describe('EventsService', () => {
 
       const firstUserRanks = await eventsService.getRanksForEventTypes(
         firstUser,
-        prisma,
       );
       expect(firstUserRanks).toMatchObject({
         [EventType.COMMUNITY_CONTRIBUTION]: 2,
@@ -1071,7 +1070,6 @@ describe('EventsService', () => {
 
       const secondUserRanks = await eventsService.getRanksForEventTypes(
         secondUser,
-        prisma,
       );
       expect(secondUserRanks).toMatchObject({
         [EventType.COMMUNITY_CONTRIBUTION]: 1,
