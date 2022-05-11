@@ -88,7 +88,10 @@ export class DepositsUpsertService {
             }
 
             if (deposit.main && deposit.amount >= SEND_TRANSACTION_LIMIT_ORE) {
-              const user = await this.users.findByGraffiti(deposit.graffiti);
+              const user = await this.users.findByGraffiti(
+                deposit.graffiti,
+                prisma,
+              );
 
               if (user) {
                 await this.events.createWithClient(
