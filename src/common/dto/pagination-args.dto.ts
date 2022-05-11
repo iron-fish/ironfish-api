@@ -10,6 +10,7 @@ export class PaginationArgsDto {
     description:
       'An object identifier to use as a cursor pagination to fetch records after',
   })
+  @Max(Number.MAX_SAFE_INTEGER)
   @IsNumber()
   @IsOptional()
   @Type(() => Number)
@@ -19,6 +20,7 @@ export class PaginationArgsDto {
     description:
       'An object identifier to use as a cursor pagination to fetch records before',
   })
+  @Max(Number.MAX_SAFE_INTEGER)
   @ApiPropertyOptional()
   @IsNumber()
   @IsOptional()

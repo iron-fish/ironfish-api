@@ -2,11 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Transform, TransformFnParams, Type } from 'class-transformer';
-import { IsInt, IsOptional, IsString } from 'class-validator';
+import { IsInt, IsOptional, IsString, Max } from 'class-validator';
 import { PaginationArgsDto } from '../../common/dto/pagination-args.dto';
 import { stringToBoolean } from '../../common/utils/boolean';
 
 export class TransactionsQueryDto extends PaginationArgsDto {
+  @Max(Number.MAX_SAFE_INTEGER)
   @IsOptional()
   @IsInt()
   @Type(() => Number)

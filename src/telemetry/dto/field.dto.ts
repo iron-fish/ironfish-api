@@ -10,6 +10,7 @@ import {
   IsNotEmpty,
   IsNumber,
   IsString,
+  Max,
   Min,
 } from 'class-validator';
 
@@ -36,6 +37,7 @@ export class FloatFieldDto extends BaseFieldDto {
   readonly type!: 'float';
 
   @IsNumber()
+  @Max(Number.MAX_SAFE_INTEGER)
   @Min(0)
   @Type(() => Number)
   readonly value!: number;
@@ -46,6 +48,7 @@ export class IntegerFieldDto extends BaseFieldDto {
   readonly type!: 'integer';
 
   @IsInt()
+  @Max(Number.MAX_SAFE_INTEGER)
   @Min(0)
   @Type(() => Number)
   readonly value!: number;

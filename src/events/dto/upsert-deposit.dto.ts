@@ -10,6 +10,7 @@ import {
   IsEnum,
   IsInt,
   IsString,
+  Max,
   ValidateNested,
 } from 'class-validator';
 import { BlockOperation } from '../../blocks/enums/block-operation';
@@ -44,6 +45,7 @@ export class UpsertDepositBlockDto {
   @Type(() => Date)
   readonly timestamp!: Date;
 
+  @Max(Number.MAX_SAFE_INTEGER)
   @IsInt()
   @Type(() => Number)
   readonly sequence!: number;

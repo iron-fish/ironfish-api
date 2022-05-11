@@ -8,6 +8,7 @@ import {
   IsInt,
   IsOptional,
   IsString,
+  Max,
   Min,
   ValidateIf,
 } from 'class-validator';
@@ -30,6 +31,7 @@ export class BlockQueryDto {
   @IsDefined({
     message: '"hash" or "sequence" required to query for single block',
   })
+  @Max(Number.MAX_SAFE_INTEGER)
   @Min(1)
   @IsInt()
   @Type(() => Number)

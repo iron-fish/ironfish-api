@@ -9,7 +9,6 @@ import {
   HttpCode,
   HttpStatus,
   Param,
-  ParseIntPipe,
   Post,
   Query,
   UseGuards,
@@ -18,6 +17,7 @@ import {
 import { ApiExcludeEndpoint, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { PaginatedList } from '../common/interfaces/paginated-list';
+import { IntIsSafeForPrismaPipe } from '../common/pipes/int-is-safe-for-prisma.pipe';
 import { EventsService } from '../events/events.service';
 import { UsersService } from '../users/users.service';
 import { CreateEventDto } from './dto/create-event.dto';
@@ -93,12 +93,7 @@ export class EventsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(ApiKeyGuard)
   async delete(
-    @Param(
-      'id',
-      new ParseIntPipe({
-        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-      }),
-    )
+    @Param('id', new IntIsSafeForPrismaPipe())
     id: number,
   ): Promise<void> {
     const event = await this.eventsService.findOrThrow(id);

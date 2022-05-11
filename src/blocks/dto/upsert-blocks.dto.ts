@@ -12,6 +12,7 @@ import {
   IsOptional,
   IsPositive,
   IsString,
+  Max,
   ValidateNested,
 } from 'class-validator';
 import { TransactionDto } from '../../transactions/dto/upsert-transactions.dto';
@@ -21,10 +22,12 @@ export class BlockDto {
   @IsString()
   readonly hash!: string;
 
+  @Max(Number.MAX_SAFE_INTEGER)
   @IsInt()
   @Type(() => Number)
   readonly sequence!: number;
 
+  @Max(Number.MAX_SAFE_INTEGER)
   @IsInt()
   @Type(() => Number)
   readonly difficulty!: number;
@@ -43,6 +46,7 @@ export class BlockDto {
   @IsString()
   readonly previous_block_hash?: string;
 
+  @Max(Number.MAX_SAFE_INTEGER)
   @IsInt()
   @IsPositive()
   @Type(() => Number)

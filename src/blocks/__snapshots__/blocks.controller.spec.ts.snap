@@ -43,6 +43,7 @@ Object {
     "\\"hash\\" or \\"sequence\\" required to query for single block",
     "sequence must be an integer number",
     "sequence must not be less than 1",
+    "sequence must not be greater than 9007199254740991",
   ],
   "statusCode": 422,
 }
@@ -97,12 +98,15 @@ Object {
   "message": Array [
     "blocks.0.hash must be a string",
     "blocks.0.sequence must be an integer number",
+    "blocks.0.sequence must not be greater than 9007199254740991",
     "blocks.0.difficulty must be an integer number",
+    "blocks.0.difficulty must not be greater than 9007199254740991",
     "blocks.0.type must be a valid enum value",
     "blocks.0.timestamp must be a Date instance",
     "blocks.0.graffiti must be a string",
     "blocks.0.size must be a positive number",
     "blocks.0.size must be an integer number",
+    "blocks.0.size must not be greater than 9007199254740991",
     "blocks.0.transactions must contain at least 1 elements",
     "blocks.0.transactions must be an array",
   ],
@@ -133,6 +137,7 @@ Object {
   "message": Array [
     "sequence_gt must be an integer number",
     "sequence_gt must not be less than 1",
+    "sequence_gt must not be greater than 9007199254740991",
   ],
   "statusCode": 422,
 }
