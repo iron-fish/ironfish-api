@@ -1,7 +1,11 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { INestApplication, NotFoundException } from '@nestjs/common';
+import {
+  INestApplication,
+  NotFoundException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { ApiConfigService } from '../api-config/api-config.service';
@@ -302,6 +306,17 @@ describe('BlocksService', () => {
   });
 
   describe('list', () => {
+    describe('with a large sequence', () => {
+      it('throws an UnprocessableEntityException', async () => {
+        await expect(
+          blocksService.list({
+            search:
+              '0x048e71a62a584909dffa5f59e1bd3d4524b1aa554df13127f2560e8543202a01',
+          }),
+        ).rejects.toThrow(UnprocessableEntityException);
+      });
+    });
+
     describe('with a valid sequence range', () => {
       it('returns blocks within the range', async () => {
         const start = 1;

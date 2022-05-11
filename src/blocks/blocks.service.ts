@@ -178,12 +178,19 @@ export class BlocksService {
           },
         ];
       } else {
+        const sequence = Number(search);
+        if (sequence >= Number.MAX_SAFE_INTEGER) {
+          throw new UnprocessableEntityException(
+            `Sequence '${sequence}' too large to use in query`,
+          );
+        }
+
         filter = [
           {
             graffiti: search,
           },
           {
-            sequence: Number(search),
+            sequence,
           },
         ];
       }
