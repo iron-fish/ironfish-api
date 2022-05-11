@@ -27,10 +27,17 @@ export class DepositsUpsertService {
     const deposits = new Array<Deposit>();
 
     for (const operation of operations) {
-      const results = await this.upsert(operation);
+      // We only want to handle deposits that deal with the main chain
+      // (not forks). This will only be connected and disconnected events
+      const shouldUpsertDeposits =
+        operation.type === BlockOperation.CONNECTED ||
+        operation.type === BlockOperation.DISCONNECTED;
 
-      for (const result of results) {
-        deposits.push(result);
+      if (shouldUpsertDeposits) {
+        const results = await this.upsert(operation);
+        for (const result of results) {
+          deposits.push(result);
+        }
       }
     }
 
