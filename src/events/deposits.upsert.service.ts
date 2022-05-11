@@ -40,87 +40,90 @@ export class DepositsUpsertService {
   async upsert(operation: UpsertDepositsOperationDto): Promise<Deposit[]> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
 
-    return this.prisma.$transaction(async (prisma) => {
-      const deposits = new Array<Deposit>();
+    return this.prisma.$transaction(
+      async (prisma) => {
+        const deposits = new Array<Deposit>();
 
-      for (const transaction of operation.transactions) {
-        const amounts = new Map<string, number>();
+        for (const transaction of operation.transactions) {
+          const amounts = new Map<string, number>();
 
-        for (const deposit of transaction.notes) {
-          const amount = amounts.get(deposit.memo) ?? 0;
-          amounts.set(deposit.memo, amount + deposit.amount);
-        }
+          for (const deposit of transaction.notes) {
+            const amount = amounts.get(deposit.memo) ?? 0;
+            amounts.set(deposit.memo, amount + deposit.amount);
+          }
 
-        for (const [graffiti, amount] of amounts) {
-          const depositParams = {
-            transaction_hash: standardizeHash(transaction.hash),
-            block_hash: standardizeHash(operation.block.hash),
-            block_sequence: operation.block.sequence,
-            network_version: networkVersion,
-            graffiti: graffiti,
-            main: operation.type === BlockOperation.CONNECTED,
-            amount: amount,
-          };
+          for (const [graffiti, amount] of amounts) {
+            const depositParams = {
+              transaction_hash: standardizeHash(transaction.hash),
+              block_hash: standardizeHash(operation.block.hash),
+              block_sequence: operation.block.sequence,
+              network_version: networkVersion,
+              graffiti: graffiti,
+              main: operation.type === BlockOperation.CONNECTED,
+              amount: amount,
+            };
 
-          const deposit = await prisma.deposit.upsert({
-            create: depositParams,
-            update: depositParams,
-            where: {
-              uq_deposits_on_transaction_hash_and_graffiti: {
-                transaction_hash: depositParams.transaction_hash,
-                graffiti: depositParams.graffiti,
-              },
-            },
-          });
-
-          deposits.push(deposit);
-
-          if (!deposit.main) {
-            const event = await prisma.event.findUnique({
+            const deposit = await prisma.deposit.upsert({
+              create: depositParams,
+              update: depositParams,
               where: {
-                deposit_id: deposit.id,
+                uq_deposits_on_transaction_hash_and_graffiti: {
+                  transaction_hash: depositParams.transaction_hash,
+                  graffiti: depositParams.graffiti,
+                },
               },
             });
-            if (event) {
-              await this.events.deleteWithClient(event, prisma);
-            }
-          }
 
-          if (deposit.main && deposit.amount >= SEND_TRANSACTION_LIMIT_ORE) {
-            const user = await this.users.findByGraffiti(deposit.graffiti);
+            deposits.push(deposit);
 
-            if (user) {
-              await this.events.createWithClient(
-                {
-                  occurredAt: operation.block.timestamp,
-                  type: EventType.SEND_TRANSACTION,
-                  userId: user.id,
-                  deposit: deposit,
+            if (!deposit.main) {
+              const event = await prisma.event.findUnique({
+                where: {
+                  deposit_id: deposit.id,
                 },
-                prisma,
-              );
+              });
+              if (event) {
+                await this.events.deleteWithClient(event, prisma);
+              }
+            }
+
+            if (deposit.main && deposit.amount >= SEND_TRANSACTION_LIMIT_ORE) {
+              const user = await this.users.findByGraffiti(deposit.graffiti);
+
+              if (user) {
+                await this.events.createWithClient(
+                  {
+                    occurredAt: operation.block.timestamp,
+                    type: EventType.SEND_TRANSACTION,
+                    userId: user.id,
+                    deposit: deposit,
+                  },
+                  prisma,
+                );
+              }
             }
           }
         }
-      }
 
-      const headHash =
-        operation.type === BlockOperation.CONNECTED
-          ? operation.block.hash
-          : operation.block.previousBlockHash;
+        const headHash =
+          operation.type === BlockOperation.CONNECTED
+            ? operation.block.hash
+            : operation.block.previousBlockHash;
 
-      const depositHeadParams = {
-        id: 1,
-        block_hash: headHash,
-      };
+        const depositHeadParams = {
+          id: 1,
+          block_hash: headHash,
+        };
 
-      await prisma.depositHead.upsert({
-        create: depositHeadParams,
-        update: depositHeadParams,
-        where: { id: 1 },
-      });
+        await prisma.depositHead.upsert({
+          create: depositHeadParams,
+          update: depositHeadParams,
+          where: { id: 1 },
+        });
 
-      return deposits;
-    });
+        return deposits;
+      },
+      { timeout: 20000 },
+    );
   }
 }
