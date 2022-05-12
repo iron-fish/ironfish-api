@@ -13,6 +13,8 @@ import {
   WEEKLY_POINT_LIMITS_BY_EVENT_TYPE,
 } from '../common/constants';
 import { getMondayFromDate } from '../common/utils/date';
+import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
+import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { UserPointsService } from '../user-points/user-points.service';
@@ -36,6 +38,7 @@ export class EventsService {
     private readonly prisma: PrismaService,
     private readonly userPointsService: UserPointsService,
     private readonly depositsService: DepositsService,
+    private readonly graphileWorkerService: GraphileWorkerService,
   ) {}
 
   async findOrThrow(id: number): Promise<Event> {
@@ -548,7 +551,13 @@ export class EventsService {
       });
     }
 
-    await this.updateLatestPoints(userId, type, occurredAt, client);
+    await this.graphileWorkerService.addJob(
+      GraphileWorkerPattern.UPDATE_LATEST_POINTS,
+      { userId: userId, type: type },
+      {
+        queueName: 'update_latest_points',
+      },
+    );
 
     return {
       ...existingEvent,
@@ -658,11 +667,12 @@ export class EventsService {
       },
     });
 
-    await this.updateLatestPoints(
-      event.user_id,
-      event.type,
-      event.occurred_at,
-      prisma,
+    await this.graphileWorkerService.addJob(
+      GraphileWorkerPattern.UPDATE_LATEST_POINTS,
+      { userId: event.user_id, type: event.type },
+      {
+        queueName: 'update_latest_points',
+      },
     );
 
     return updated;

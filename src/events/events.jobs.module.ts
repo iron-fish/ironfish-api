@@ -4,12 +4,21 @@
 import { Module } from '@nestjs/common';
 import { BlocksModule } from '../blocks/blocks.module';
 import { LoggerModule } from '../logger/logger.module';
+import { PrismaModule } from '../prisma/prisma.module';
+import { UserPointsModule } from '../user-points/user-points.module';
 import { UsersModule } from '../users/users.module';
 import { EventsJobsController } from './events.jobs.controller';
 import { EventsModule } from './events.module';
 
 @Module({
   controllers: [EventsJobsController],
-  imports: [BlocksModule, EventsModule, LoggerModule, UsersModule],
+  imports: [
+    BlocksModule,
+    EventsModule,
+    LoggerModule,
+    UsersModule,
+    UserPointsModule,
+    PrismaModule,
+  ],
 })
 export class EventsJobsModule {}

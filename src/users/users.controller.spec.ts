@@ -8,6 +8,7 @@ import request from 'supertest';
 import { v4 as uuid } from 'uuid';
 import { MetricsGranularity } from '../common/enums/metrics-granularity';
 import { standardizeEmail } from '../common/utils/email';
+import { EventsJobsController } from '../events/events.jobs.controller';
 import { EventsService } from '../events/events.service';
 import { MagicLinkService } from '../magic-link/magic-link.service';
 import { bootstrapTestApp } from '../test/test-app';
@@ -20,12 +21,14 @@ describe('UsersController', () => {
   let magicLinkService: MagicLinkService;
   let usersService: UsersService;
   let eventsService: EventsService;
+  let eventsJobsController: EventsJobsController;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
     magicLinkService = app.get(MagicLinkService);
     usersService = app.get(UsersService);
     eventsService = app.get(EventsService);
+    eventsJobsController = app.get(EventsJobsController);
 
     await app.init();
   });
@@ -276,6 +279,16 @@ describe('UsersController', () => {
           userId: user.id,
           type: EventType.PULL_REQUEST_MERGED,
           points: 500,
+        });
+
+        await eventsJobsController.updateLatestPoints({
+          userId: user.id,
+          type: EventType.PULL_REQUEST_MERGED,
+        });
+
+        await eventsJobsController.updateLatestPoints({
+          userId: user.id,
+          type: EventType.BUG_CAUGHT,
         });
 
         const { body } = await request(app.getHttpServer())

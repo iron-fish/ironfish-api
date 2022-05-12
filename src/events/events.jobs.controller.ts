@@ -7,10 +7,13 @@ import { BlocksService } from '../blocks/blocks.service';
 import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
 import { GraphileWorkerHandlerResponse } from '../graphile-worker/interfaces/graphile-worker-handler-response';
 import { LoggerService } from '../logger/logger.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { UserPointsService } from '../user-points/user-points.service';
 import { UsersService } from '../users/users.service';
 import { EventsService } from './events.service';
 import { DeleteBlockMinedEventOptions } from './interfaces/delete-block-mined-event-options';
 import { UpsertBlockMinedEventOptions } from './interfaces/upsert-block-mined-event-options';
+import { EventType } from '.prisma/client';
 
 @Controller()
 export class EventsJobsController {
@@ -19,6 +22,8 @@ export class EventsJobsController {
     private readonly eventsService: EventsService,
     private readonly loggerService: LoggerService,
     private readonly usersService: UsersService,
+    private readonly userPointsService: UserPointsService,
+    private readonly prisma: PrismaService,
   ) {}
 
   @MessagePattern(GraphileWorkerPattern.UPSERT_BLOCK_MINED_EVENT)
@@ -54,5 +59,60 @@ export class EventsJobsController {
 
     await this.eventsService.deleteBlockMined(block);
     return { requeue: false };
+  }
+
+  @MessagePattern(GraphileWorkerPattern.UPDATE_LATEST_POINTS)
+  async updateLatestPoints({
+    userId,
+    type,
+  }: {
+    userId: number;
+    type: EventType;
+  }): Promise<void> {
+    await this.prisma.$transaction(async (prisma) => {
+      const occurredAtAggregate = await prisma.event.aggregate({
+        _max: {
+          occurred_at: true,
+        },
+        where: {
+          type,
+          user_id: userId,
+          deleted_at: null,
+        },
+      });
+      const latestOccurredAt = occurredAtAggregate._max.occurred_at;
+
+      const pointsAggregate = await prisma.event.aggregate({
+        _sum: {
+          points: true,
+        },
+        where: {
+          type,
+          user_id: userId,
+          deleted_at: null,
+        },
+      });
+      const points = pointsAggregate._sum.points ?? 0;
+
+      const totalPointsAggregate = await prisma.event.aggregate({
+        _sum: {
+          points: true,
+        },
+        where: {
+          user_id: userId,
+          deleted_at: null,
+        },
+      });
+      const totalPoints = totalPointsAggregate._sum.points ?? 0;
+
+      await this.userPointsService.upsertWithClient(
+        {
+          userId,
+          points: { [type]: { points, latestOccurredAt } },
+          totalPoints,
+        },
+        prisma,
+      );
+    });
   }
 }

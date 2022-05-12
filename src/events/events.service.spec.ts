@@ -11,6 +11,9 @@ import {
   POINTS_PER_CATEGORY,
   WEEKLY_POINT_LIMITS_BY_EVENT_TYPE,
 } from '../common/constants';
+import { EventsJobsController } from '../events/events.jobs.controller';
+import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
+import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UserPointsService } from '../user-points/user-points.service';
@@ -25,6 +28,9 @@ describe('EventsService', () => {
   let prisma: PrismaService;
   let userPointsService: UserPointsService;
   let usersService: UsersService;
+  let graphileWorkerService: GraphileWorkerService;
+  let addJob: jest.SpyInstance;
+  let eventsJobsController: EventsJobsController;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
@@ -33,7 +39,15 @@ describe('EventsService', () => {
     prisma = app.get(PrismaService);
     userPointsService = app.get(UserPointsService);
     usersService = app.get(UsersService);
+    graphileWorkerService = app.get(GraphileWorkerService);
+    eventsJobsController = app.get(EventsJobsController);
     await app.init();
+  });
+
+  beforeEach(() => {
+    addJob = jest
+      .spyOn(graphileWorkerService, 'addJob')
+      .mockImplementationOnce(jest.fn());
   });
 
   afterEach(() => {
@@ -513,6 +527,20 @@ describe('EventsService', () => {
         });
 
         await eventsService.create({ type, userId: user.id, points: 100 });
+        await eventsJobsController.updateLatestPoints({
+          userId: user.id,
+          type: EventType.PULL_REQUEST_MERGED,
+        });
+
+        expect(addJob).toHaveBeenCalledWith(
+          GraphileWorkerPattern.UPDATE_LATEST_POINTS,
+          {
+            userId: user.id,
+            type,
+          },
+          expect.anything(),
+        );
+
         const userPoints = await userPointsService.findOrThrow(user.id);
         expect(userPoints.total_points).toBe(points);
       });
@@ -565,6 +593,20 @@ describe('EventsService', () => {
 
         const points = 200;
         await eventsService.create({ type, userId: user.id, points });
+        await eventsJobsController.updateLatestPoints({
+          userId: user.id,
+          type: EventType.PULL_REQUEST_MERGED,
+        });
+
+        expect(addJob).toHaveBeenCalledWith(
+          GraphileWorkerPattern.UPDATE_LATEST_POINTS,
+          {
+            userId: user.id,
+            type,
+          },
+          expect.anything(),
+        );
+
         const userPoints = await userPointsService.findOrThrow(user.id);
         expect(userPoints.total_points).toBe(
           WEEKLY_POINT_LIMITS_BY_EVENT_TYPE[type],
@@ -636,6 +678,20 @@ describe('EventsService', () => {
         userId: user.id,
         points,
       });
+      await eventsJobsController.updateLatestPoints({
+        userId: user.id,
+        type: EventType.BLOCK_MINED,
+      });
+
+      expect(addJob).toHaveBeenCalledWith(
+        GraphileWorkerPattern.UPDATE_LATEST_POINTS,
+        {
+          userId: user.id,
+          type: EventType.BLOCK_MINED,
+        },
+        expect.anything(),
+      );
+
       const userPoints = await userPointsService.findOrThrow(user.id);
       expect(userPoints.total_points).toBe(points);
     });
@@ -761,6 +817,19 @@ describe('EventsService', () => {
         points,
         url,
       });
+      await eventsJobsController.updateLatestPoints({
+        userId: user.id,
+        type: EventType.PULL_REQUEST_MERGED,
+      });
+
+      expect(addJob).toHaveBeenCalledWith(
+        GraphileWorkerPattern.UPDATE_LATEST_POINTS,
+        {
+          userId: user.id,
+          type: EventType.PULL_REQUEST_MERGED,
+        },
+        expect.anything(),
+      );
 
       assert.ok(event);
       expect(upsertPoints).toHaveBeenCalledTimes(1);
@@ -828,6 +897,7 @@ describe('EventsService', () => {
         const createdEventsBeforeLimit =
           WEEKLY_POINT_LIMITS_BY_EVENT_TYPE.BLOCK_MINED /
           POINTS_PER_CATEGORY.BLOCK_MINED;
+
         for (let i = 0; i < createdEventsBeforeLimit; i++) {
           await eventsService.create({
             occurredAt: new Date(),
@@ -836,17 +906,29 @@ describe('EventsService', () => {
             userId: user.id,
           });
         }
+
+        const aggregateBlockMinedEvents = (userId: number) => {
+          return prisma.event.aggregate({
+            _sum: {
+              points: true,
+            },
+            where: {
+              type: EventType.BLOCK_MINED,
+              user_id: userId,
+              deleted_at: null,
+            },
+          });
+        };
+
+        const blockMinedPointsBefore = await aggregateBlockMinedEvents(user.id);
+
         const { block } = await setupBlockMinedWithEvent();
-        const userPoints = await userPointsService.findOrThrow(user.id);
-        expect(userPoints.total_points).toBe(
-          createdEventsBeforeLimit * POINTS_PER_CATEGORY.BLOCK_MINED,
-        );
 
         await eventsService.upsertBlockMined(block, user);
-        const updatedUserPoints = await userPointsService.findOrThrow(user.id);
-        expect(updatedUserPoints.total_points).toBe(
-          createdEventsBeforeLimit * POINTS_PER_CATEGORY.BLOCK_MINED,
-        );
+
+        const blockMinedPointsAfter = await aggregateBlockMinedEvents(user.id);
+
+        expect(blockMinedPointsBefore).toEqual(blockMinedPointsAfter);
       });
     });
 
@@ -865,6 +947,19 @@ describe('EventsService', () => {
       it('adds points to the user', async () => {
         const { block, user } = await setupBlockMinedWithEvent(0);
         await eventsService.upsertBlockMined(block, user);
+        await eventsJobsController.updateLatestPoints({
+          userId: user.id,
+          type: EventType.BLOCK_MINED,
+        });
+
+        expect(addJob).toHaveBeenCalledWith(
+          GraphileWorkerPattern.UPDATE_LATEST_POINTS,
+          {
+            userId: user.id,
+            type: EventType.BLOCK_MINED,
+          },
+          expect.anything(),
+        );
 
         const userPoints = await userPointsService.findOrThrow(user.id);
         expect(userPoints.total_points).toBe(POINTS_PER_CATEGORY.BLOCK_MINED);
@@ -931,6 +1026,20 @@ describe('EventsService', () => {
         const { block, event, user } = await setupBlockMinedWithEvent();
         const currentUserPoints = await userPointsService.findOrThrow(user.id);
         await eventsService.deleteBlockMined(block);
+        await eventsJobsController.updateLatestPoints({
+          userId: user.id,
+          type: EventType.BLOCK_MINED,
+        });
+
+        expect(addJob).toHaveBeenCalledWith(
+          GraphileWorkerPattern.UPDATE_LATEST_POINTS,
+          {
+            userId: user.id,
+            type: EventType.BLOCK_MINED,
+          },
+          expect.anything(),
+        );
+
         const userPoints = await userPointsService.findOrThrow(user.id);
         expect(userPoints.total_points).toBe(
           currentUserPoints.total_points - event.points,
@@ -956,6 +1065,20 @@ describe('EventsService', () => {
       const { event, user } = await setupBlockMinedWithEvent();
       const currentUserPoints = await userPointsService.findOrThrow(user.id);
       await eventsService.delete(event);
+      await eventsJobsController.updateLatestPoints({
+        userId: user.id,
+        type: EventType.BLOCK_MINED,
+      });
+
+      expect(addJob).toHaveBeenCalledWith(
+        GraphileWorkerPattern.UPDATE_LATEST_POINTS,
+        {
+          userId: user.id,
+          type: EventType.BLOCK_MINED,
+        },
+        expect.anything(),
+      );
+
       const userPoints = await userPointsService.findOrThrow(user.id);
       expect(userPoints.total_points).toBe(
         currentUserPoints.total_points - event.points,
@@ -966,6 +1089,19 @@ describe('EventsService', () => {
       const { event, user } = await setupBlockMinedWithEvent();
       const currentUserPoints = await userPointsService.findOrThrow(user.id);
       await eventsService.delete(event);
+      await eventsJobsController.updateLatestPoints({
+        userId: user.id,
+        type: EventType.BLOCK_MINED,
+      });
+
+      expect(addJob).toHaveBeenCalledWith(
+        GraphileWorkerPattern.UPDATE_LATEST_POINTS,
+        {
+          userId: user.id,
+          type: EventType.BLOCK_MINED,
+        },
+        expect.anything(),
+      );
 
       const updatedUserPoints = await userPointsService.findOrThrow(user.id);
       expect(updatedUserPoints.total_points).toBe(
