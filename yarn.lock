@@ -822,14 +822,14 @@
   resolved "https://registry.yarnpkg.com/@nestjs/mapped-types/-/mapped-types-1.0.1.tgz#78b62041c7a407db4a90eb140567321602bed18e"
   integrity sha512-NFvofzSinp00j5rzUd4tf+xi9od6383iY0JP7o0Bnu1fuItAUkWBgc4EKuIQ3D+c2QI3i9pG1kDWAeY27EMGtg==
 
-"@nestjs/microservices@8.4.4":
-  version "8.4.4"
-  resolved "https://registry.yarnpkg.com/@nestjs/microservices/-/microservices-8.4.4.tgz#466f860dd8997f61518bdeef871168796df7904a"
-  integrity sha512-V1xBs5mBFaWGF7RuLSQBG9ydcvX+j8RxHnk9pYF2I5kBdWt7AyTuG2qMt7es06HXEbgUmavw/zn+P6Q2WQIS5A==
+"@nestjs/microservices@8.4.5":
+  version "8.4.5"
+  resolved "https://registry.yarnpkg.com/@nestjs/microservices/-/microservices-8.4.5.tgz#2514dc1256ac7b619c7c2057e8b9777e673cf22b"
+  integrity sha512-WiHCRT50V7J++sfTNzk4fKfxaaqbJ06W9LsXjdLEkWX0mx3KPAjbMV1G8FR/6kahOA9D3BttwMlNpm1VHikmrw==
   dependencies:
     iterare "1.2.1"
     json-socket "0.3.0"
-    tslib "2.3.1"
+    tslib "2.4.0"
 
 "@nestjs/passport@8.2.1":
   version "8.2.1"
