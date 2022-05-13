@@ -11,6 +11,7 @@ import { UsersService } from '../users/users.service';
 import { EventsService } from './events.service';
 import { DeleteBlockMinedEventOptions } from './interfaces/delete-block-mined-event-options';
 import { UpsertBlockMinedEventOptions } from './interfaces/upsert-block-mined-event-options';
+import { EventType } from '.prisma/client';
 
 @Controller()
 export class EventsJobsController {
@@ -54,5 +55,16 @@ export class EventsJobsController {
 
     await this.eventsService.deleteBlockMined(block);
     return { requeue: false };
+  }
+
+  @MessagePattern(GraphileWorkerPattern.UPDATE_LATEST_POINTS)
+  async updateLatestPoints({
+    userId,
+    type,
+  }: {
+    userId: number;
+    type: EventType;
+  }): Promise<void> {
+    await this.eventsService.updateLatestPoints(userId, type);
   }
 }
