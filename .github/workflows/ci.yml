@@ -1,6 +1,6 @@
 name: API CI
 
-on: [push]
+on: [push, pull_request]
 
 env:
   API_URL: http://localhost:8003
