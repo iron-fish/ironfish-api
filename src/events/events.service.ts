@@ -564,7 +564,6 @@ export class EventsService {
     userId: number,
     type: EventType,
   ): Promise<Job> {
-    const jobKey = 'ulp:' + userId.toString() + ':' + type.toString();
     return this.graphileWorkerService.addJob(
       GraphileWorkerPattern.UPDATE_LATEST_POINTS,
       { userId, type },
