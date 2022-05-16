@@ -4,4 +4,5 @@
 export interface GraphileWorkerJobOptions {
   queueName?: string;
   runAt?: Date;
+  jobKey?: string;
 }

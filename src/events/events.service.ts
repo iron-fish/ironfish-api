@@ -551,11 +551,13 @@ export class EventsService {
       });
     }
 
+    const jobKey = 'ulp:' + userId.toString() + ':' + type.toString();
     await this.graphileWorkerService.addJob(
       GraphileWorkerPattern.UPDATE_LATEST_POINTS,
       { userId, type },
       {
         queueName: 'update_latest_points',
+        jobKey,
       },
     );
 
@@ -664,11 +666,13 @@ export class EventsService {
       },
     });
 
+    const jobKey =
+      'ulp:' + event.user_id.toString() + ':' + event.type.toString();
     await this.graphileWorkerService.addJob(
       GraphileWorkerPattern.UPDATE_LATEST_POINTS,
       { userId: event.user_id, type: event.type },
       {
-        queueName: 'update_latest_points',
+        jobKey,
       },
     );
 
