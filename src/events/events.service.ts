@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import is from '@sindresorhus/is';
+import { Job } from 'graphile-worker';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { BlocksService } from '../blocks/blocks.service';
 import { serializedBlockFromRecord } from '../blocks/utils/block-translator';
@@ -551,18 +552,25 @@ export class EventsService {
       });
     }
 
-    await this.graphileWorkerService.addJob(
-      GraphileWorkerPattern.UPDATE_LATEST_POINTS,
-      { userId, type },
-      {
-        queueName: 'update_latest_points',
-      },
-    );
+    await this.addUpdateLatestPointsJob(userId, type);
 
     return {
       ...existingEvent,
       metadata,
     };
+  }
+
+  private addUpdateLatestPointsJob(
+    userId: number,
+    type: EventType,
+  ): Promise<Job> {
+    return this.graphileWorkerService.addJob(
+      GraphileWorkerPattern.UPDATE_LATEST_POINTS,
+      { userId, type },
+      {
+        jobKey: `ulp:${userId}:${type}`,
+      },
+    );
   }
 
   async updateLatestPoints(userId: number, type: EventType): Promise<void> {
@@ -664,13 +672,7 @@ export class EventsService {
       },
     });
 
-    await this.graphileWorkerService.addJob(
-      GraphileWorkerPattern.UPDATE_LATEST_POINTS,
-      { userId: event.user_id, type: event.type },
-      {
-        queueName: 'update_latest_points',
-      },
-    );
+    await this.addUpdateLatestPointsJob(event.user_id, event.type);
 
     return updated;
   }
