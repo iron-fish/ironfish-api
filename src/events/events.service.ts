@@ -869,11 +869,12 @@ export class EventsService {
 
   async createNodeUptimeEventWithClient(
     user: User,
+    occurredAt: Date,
     client: BasePrismaClient,
   ): Promise<Event | null> {
     return this.createWithClient(
       {
-        occurredAt: new Date(),
+        occurredAt,
         type: EventType.NODE_UPTIME,
         userId: user.id,
         points: POINTS_PER_CATEGORY[EventType.NODE_UPTIME],

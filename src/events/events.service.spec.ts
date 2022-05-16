@@ -1213,6 +1213,7 @@ describe('EventsService', () => {
       const user = await setupUser();
       const record = await eventsService.createNodeUptimeEventWithClient(
         user,
+        new Date(),
         prisma,
       );
       expect(record).toMatchObject({

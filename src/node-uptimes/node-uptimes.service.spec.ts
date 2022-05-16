@@ -41,7 +41,7 @@ describe('NodeUptimesService', () => {
       const now = new Date();
       const user = await createUser();
 
-      const { uptime } = await nodeUptimesService.addUptime(user);
+      const uptime = await nodeUptimesService.addUptime(user);
 
       expect(uptime).toMatchObject({
         user_id: user.id,
@@ -67,7 +67,7 @@ describe('NodeUptimesService', () => {
         },
       });
 
-      const { uptime } = await nodeUptimesService.addUptime(user);
+      const uptime = await nodeUptimesService.addUptime(user);
 
       expect(uptime).toMatchObject({
         user_id: user.id,
@@ -84,7 +84,7 @@ describe('NodeUptimesService', () => {
       const now = new Date();
       const user = await createUser();
 
-      await prisma.nodeUptime.create({
+      const existingUptime = await prisma.nodeUptime.create({
         data: {
           user_id: user.id,
           last_checked_in: now,
@@ -92,15 +92,8 @@ describe('NodeUptimesService', () => {
         },
       });
 
-      const { uptime, added } = await nodeUptimesService.addUptime(user);
-
-      expect(added).toBe(false);
-
-      expect(uptime).toMatchObject({
-        user_id: user.id,
-        last_checked_in: now,
-        total_hours: 0,
-      });
+      const uptime = await nodeUptimesService.addUptime(user);
+      expect(uptime).toEqual(existingUptime);
     });
   });
 
@@ -131,8 +124,7 @@ describe('NodeUptimesService', () => {
   describe('decrementCountedHoursWithClient', () => {
     it('decrements total hours count', async () => {
       const user = await createUser();
-
-      await prisma.nodeUptime.create({
+      const uptime = await prisma.nodeUptime.create({
         data: {
           user_id: user.id,
           total_hours: 12,
@@ -140,7 +132,7 @@ describe('NodeUptimesService', () => {
       });
 
       const result = await nodeUptimesService.decrementCountedHoursWithClient(
-        user,
+        uptime,
         prisma,
       );
 
