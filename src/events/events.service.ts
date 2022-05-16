@@ -24,6 +24,7 @@ import { EventWithMetadata } from './interfaces/event-with-metadata';
 import { ListEventsOptions } from './interfaces/list-events-options';
 import { SerializedEventMetrics } from './interfaces/serialized-event-metrics';
 import { Block, Event, EventType, Prisma, User } from '.prisma/client';
+import { Job } from 'graphile-worker';
 
 // 2021 December 1 8 PM UTC
 const PHASE_1_START = new Date(Date.UTC(2021, 11, 1, 20, 0, 0));
@@ -551,19 +552,26 @@ export class EventsService {
       });
     }
 
+    await this.addUpdateLatestPointsJob(userId, type);
+
+    return {
+      ...existingEvent,
+      metadata,
+    };
+  }
+
+  private addUpdateLatestPointsJob(
+    userId: number,
+    type: EventType,
+  ): Promise<Job> {
     const jobKey = 'ulp:' + userId.toString() + ':' + type.toString();
-    await this.graphileWorkerService.addJob(
+    return this.graphileWorkerService.addJob(
       GraphileWorkerPattern.UPDATE_LATEST_POINTS,
       { userId, type },
       {
         jobKey,
       },
     );
-
-    return {
-      ...existingEvent,
-      metadata,
-    };
   }
 
   async updateLatestPoints(userId: number, type: EventType): Promise<void> {
@@ -665,15 +673,7 @@ export class EventsService {
       },
     });
 
-    const jobKey =
-      'ulp:' + event.user_id.toString() + ':' + event.type.toString();
-    await this.graphileWorkerService.addJob(
-      GraphileWorkerPattern.UPDATE_LATEST_POINTS,
-      { userId: event.user_id, type: event.type },
-      {
-        jobKey,
-      },
-    );
+    await this.addUpdateLatestPointsJob(event.user_id, event.type);
 
     return updated;
   }
