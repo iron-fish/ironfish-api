@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import is from '@sindresorhus/is';
+import { Job } from 'graphile-worker';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { BlocksService } from '../blocks/blocks.service';
 import { serializedBlockFromRecord } from '../blocks/utils/block-translator';
@@ -24,7 +25,6 @@ import { EventWithMetadata } from './interfaces/event-with-metadata';
 import { ListEventsOptions } from './interfaces/list-events-options';
 import { SerializedEventMetrics } from './interfaces/serialized-event-metrics';
 import { Block, Event, EventType, Prisma, User } from '.prisma/client';
-import { Job } from 'graphile-worker';
 
 // 2021 December 1 8 PM UTC
 const PHASE_1_START = new Date(Date.UTC(2021, 11, 1, 20, 0, 0));
