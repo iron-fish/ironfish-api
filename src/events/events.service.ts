@@ -762,65 +762,77 @@ export class EventsService {
   async getRanksForEventTypes(user: User): Promise<Record<EventType, number>> {
     const userRanks = await this.prisma.$queryRawUnsafe<
       {
-        type: EventType;
-        rank: number;
+        block_mined_rank: number;
+        bug_caught_rank: number;
+        community_contribution_rank: number;
+        node_uptime_rank: number;
+        pull_request_merged_rank: number;
+        send_transaction_rank: number;
+        social_media_promotion_rank: number;
       }[]
     >(
-      `WITH
-        event_types as (
-          SELECT
-            UNNEST(ENUM_RANGE(NULL::event_type)) AS type
-        ),
-        filtered_events as (
-          SELECT
-            user_id,
-            type,
-            occurred_at,
-            points
-          FROM
-            events
-          WHERE
-            points != 0 AND
-            deleted_at IS NULL
-        ),
-        user_event_points as (
-          SELECT
-            user_id,
-            type,
-            SUM(points) AS points,
-            MAX(occurred_at) AS latest_event_occurred_at
-          FROM
-            filtered_events
-          GROUP BY
-            user_id,
-            type
-        ),
-        user_ranks as (
-          SELECT
-            users.id,
-            event_types.type,
-            RANK () OVER (
-              PARTITION BY event_types.type
-              ORDER BY
-                COALESCE(user_event_points.points, 0) DESC,
-                COALESCE(user_event_points.latest_event_occurred_at, NOW()) ASC,
-                users.created_at ASC
-            ) AS rank
-          FROM
-            users
-          CROSS JOIN
-            event_types
-          LEFT JOIN
-            user_event_points
-          ON
-            user_event_points.type = event_types.type AND
-            user_event_points.user_id = users.id
-        )
+      `WITH user_ranks AS (
+        SELECT
+          user_id AS id,
+          RANK() OVER (
+            ORDER BY
+              block_mined_points DESC,
+              COALESCE(block_mined_last_occurred_at, NOW()) ASC,
+              users.created_at ASC
+          ) AS block_mined_rank,
+          RANK() OVER (
+            ORDER BY
+              bug_caught_points DESC,
+              COALESCE(bug_caught_last_occurred_at, NOW()) ASC,
+              users.created_at ASC
+          ) AS bug_caught_rank,
+          RANK() OVER (
+            ORDER BY
+              community_contribution_points DESC,
+              COALESCE(community_contribution_last_occurred_at, NOW()) ASC,
+              users.created_at ASC
+          ) AS community_contribution_rank,
+          RANK() OVER (
+            ORDER BY
+              node_uptime_points DESC,
+              COALESCE(node_uptime_last_occurred_at, NOW()) ASC,
+              users.created_at ASC
+          ) AS node_uptime_rank,
+          RANK() OVER (
+            ORDER BY
+              pull_request_merged_points DESC,
+              COALESCE(pull_request_merged_last_occurred_at, NOW()) ASC,
+              users.created_at ASC
+          ) AS pull_request_merged_rank,
+          RANK() OVER (
+            ORDER BY
+              send_transaction_points DESC,
+              COALESCE(send_transaction_last_occurred_at, NOW()) ASC,
+              users.created_at ASC
+          ) AS send_transaction_rank,
+          RANK() OVER (
+            ORDER BY
+              social_media_promotion_points DESC,
+              COALESCE(social_media_promotion_last_occurred_at, NOW()) ASC,
+              users.created_at ASC
+          ) AS social_media_promotion_rank
+        FROM
+          user_points
+        JOIN
+          users
+        ON
+          users.id = user_points.user_id
+      )
 
       SELECT
         id,
-        type,
-        rank
+        block_mined_rank,
+        bug_caught_rank,
+        community_contribution_rank,
+        node_uptime_rank,
+        pull_request_merged_rank,
+        send_transaction_rank,
+        social_media_promotion_rank
       FROM
         user_ranks
       WHERE
@@ -831,37 +843,27 @@ export class EventsService {
     if (
       !is.array(userRanks) ||
       !is.object(userRanks[0]) ||
-      !('type' in userRanks[0]) ||
-      !('rank' in userRanks[0])
+      !('block_mined_rank' in userRanks[0]) ||
+      !('bug_caught_rank' in userRanks[0]) ||
+      !('community_contribution_rank' in userRanks[0]) ||
+      !('node_uptime_rank' in userRanks[0]) ||
+      !('pull_request_merged_rank' in userRanks[0]) ||
+      !('send_transaction_rank' in userRanks[0]) ||
+      !('social_media_promotion_rank' in userRanks[0])
     ) {
       throw new Error('Unexpected database response');
     }
 
-    const getRankForType = (type: EventType) => {
-      const userRankForEvent = userRanks.find((o) => o.type === type);
-      if (!userRankForEvent) {
-        throw new Error(
-          `Missing rank for user '${user.id}' and type '${type}'`,
-        );
-      }
-
-      return userRankForEvent.rank;
-    };
-
     return {
-      [EventType.BLOCK_MINED]: getRankForType(EventType.BLOCK_MINED),
-      [EventType.BUG_CAUGHT]: getRankForType(EventType.BUG_CAUGHT),
-      [EventType.COMMUNITY_CONTRIBUTION]: getRankForType(
-        EventType.COMMUNITY_CONTRIBUTION,
-      ),
-      [EventType.PULL_REQUEST_MERGED]: getRankForType(
-        EventType.PULL_REQUEST_MERGED,
-      ),
-      [EventType.SOCIAL_MEDIA_PROMOTION]: getRankForType(
-        EventType.SOCIAL_MEDIA_PROMOTION,
-      ),
-      [EventType.NODE_UPTIME]: getRankForType(EventType.NODE_UPTIME),
-      [EventType.SEND_TRANSACTION]: getRankForType(EventType.SEND_TRANSACTION),
+      [EventType.BLOCK_MINED]: userRanks[0].block_mined_rank,
+      [EventType.BUG_CAUGHT]: userRanks[0].bug_caught_rank,
+      [EventType.COMMUNITY_CONTRIBUTION]:
+        userRanks[0].community_contribution_rank,
+      [EventType.NODE_UPTIME]: userRanks[0].node_uptime_rank,
+      [EventType.PULL_REQUEST_MERGED]: userRanks[0].pull_request_merged_rank,
+      [EventType.SEND_TRANSACTION]: userRanks[0].send_transaction_rank,
+      [EventType.SOCIAL_MEDIA_PROMOTION]:
+        userRanks[0].social_media_promotion_rank,
     };
   }
 
