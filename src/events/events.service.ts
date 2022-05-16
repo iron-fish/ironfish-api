@@ -555,7 +555,7 @@ export class EventsService {
       GraphileWorkerPattern.UPDATE_LATEST_POINTS,
       { userId, type },
       {
-        queueName: 'update_latest_points',
+        queueName: `update_latest_points_for_${userId}`,
       },
     );
 
@@ -664,11 +664,12 @@ export class EventsService {
       },
     });
 
+    const userId = event.user_id;
     await this.graphileWorkerService.addJob(
       GraphileWorkerPattern.UPDATE_LATEST_POINTS,
-      { userId: event.user_id, type: event.type },
+      { userId, type: event.type },
       {
-        queueName: 'update_latest_points',
+        queueName: `update_latest_points_for_${userId}`,
       },
     );
 
