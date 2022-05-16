@@ -569,7 +569,7 @@ export class EventsService {
       GraphileWorkerPattern.UPDATE_LATEST_POINTS,
       { userId, type },
       {
-        jobKey,
+        jobKey: `ulp:${userId}:${type}`,
       },
     );
   }
