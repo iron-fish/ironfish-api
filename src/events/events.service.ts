@@ -556,7 +556,6 @@ export class EventsService {
       GraphileWorkerPattern.UPDATE_LATEST_POINTS,
       { userId, type },
       {
-        queueName: 'update_latest_points',
         jobKey,
       },
     );
