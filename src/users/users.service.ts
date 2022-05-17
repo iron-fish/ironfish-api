@@ -412,7 +412,18 @@ export class UsersService {
             RANK () OVER (
               ORDER BY
                 user_points.total_points DESC,
-                COALESCE(latest_event_occurred_at, NOW()) ASC,
+                COALESCE(
+                  GREATEST(
+                    block_mined_last_occurred_at,
+                    bug_caught_last_occurred_at,
+                    community_contribution_last_occurred_at,
+                    node_uptime_last_occurred_at,
+                    pull_request_merged_last_occurred_at,
+                    send_transaction_last_occurred_at,
+                    social_media_promotion_last_occurred_at
+                  ), 
+                  NOW()
+                ) ASC,
                 users.created_at ASC
             ) AS rank
           FROM
@@ -421,27 +432,6 @@ export class UsersService {
             user_points
           ON
             user_points.user_id = users.id
-          LEFT JOIN
-            (
-              SELECT
-                user_id,
-                MAX(occurred_at) AS latest_event_occurred_at
-              FROM
-                (
-                  SELECT
-                    user_id,
-                    occurred_at
-                  FROM
-                    events
-                  WHERE
-                    points != 0 AND
-                    deleted_at IS NULL
-                ) filtered_events
-              GROUP BY
-                user_id
-            ) user_latest_events
-          ON
-            user_latest_events.user_id = users.id
         ) user_ranks
       WHERE
         id = $1`,
