@@ -7,6 +7,5 @@ import { EventType } from '.prisma/client';
 export interface ListUsersWithRankOptions extends PaginationOptions {
   search?: string;
   countryCode?: string;
-  eventTypes?: EventType[];
-  userIds?: number[];
+  eventType?: EventType;
 }

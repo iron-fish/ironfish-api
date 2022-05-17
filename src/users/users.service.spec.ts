@@ -215,54 +215,53 @@ describe('UsersService', () => {
         graffiti: graffiti + '-a',
         country_code: faker.address.countryCode('alpha-3'),
       });
-      await userPointsService.upsert({ userId: userA.id, totalPoints: 2 });
 
       const userB = await usersService.create({
         email: faker.internet.email(),
         graffiti: graffiti + '-b',
         country_code: faker.address.countryCode('alpha-3'),
       });
-      await userPointsService.upsert({ userId: userB.id, totalPoints: 2 });
 
       const userC = await usersService.create({
         email: faker.internet.email(),
         graffiti: graffiti + '-c',
         country_code: faker.address.countryCode('alpha-3'),
       });
-      await userPointsService.upsert({ userId: userC.id, totalPoints: 1 });
 
-      await prisma.event.create({
-        data: {
-          type: EventType.BUG_CAUGHT,
-          user_id: userA.id,
-          occurred_at: now,
-          points: 1,
-        },
+      await eventsService.create({
+        type: EventType.SOCIAL_MEDIA_PROMOTION,
+        userId: userA.id,
+        occurredAt: now,
+        points: 5,
       });
+      await userPointsService.upsert(
+        await eventsService.getUpsertPointsOptions(userA),
+      );
 
-      await prisma.event.create({
-        data: {
-          type: EventType.BUG_CAUGHT,
-          user_id: userB.id,
-          occurred_at: new Date(now.valueOf() - 1000),
-          points: 1,
-        },
+      await eventsService.create({
+        type: EventType.SOCIAL_MEDIA_PROMOTION,
+        userId: userB.id,
+        occurredAt: new Date(now.valueOf() - 1000),
+        points: 5,
       });
+      await userPointsService.upsert(
+        await eventsService.getUpsertPointsOptions(userB),
+      );
 
-      await prisma.event.create({
-        data: {
-          type: EventType.BUG_CAUGHT,
-          user_id: userB.id,
-          occurred_at: new Date(now.valueOf() + 1000),
-          points: 0,
-        },
+      await eventsService.create({
+        type: EventType.SOCIAL_MEDIA_PROMOTION,
+        userId: userC.id,
+        occurredAt: new Date(now.valueOf() + 1000),
+        points: 5,
       });
+      await userPointsService.upsert(
+        await eventsService.getUpsertPointsOptions(userC),
+      );
 
       const { data: records } = await usersService.listWithRank({
-        eventTypes: ['BUG_CAUGHT'],
+        eventType: 'SOCIAL_MEDIA_PROMOTION',
         search: graffiti,
         limit: 3,
-        userIds: [userA.id, userB.id, userC.id],
       });
 
       // Because userB caught a bug first, we consider userB to be
@@ -274,9 +273,9 @@ describe('UsersService', () => {
       expect(records[1].id).toEqual(userA.id);
       expect(records[2].id).toEqual(userC.id);
 
-      expect(records[0].total_points).toBe(1);
-      expect(records[1].total_points).toBe(1);
-      expect(records[2].total_points).toBe(0);
+      expect(records[0].total_points).toBe(5);
+      expect(records[1].total_points).toBe(5);
+      expect(records[2].total_points).toBe(5);
 
       expect(records[0].rank).toBe(1);
       expect(records[1].rank).toBe(2);
@@ -286,7 +285,7 @@ describe('UsersService', () => {
     describe(`when 'event_type' is provided`, () => {
       it('returns a chunk of users by event when specified', async () => {
         const { data: records } = await usersService.listWithRank({
-          eventTypes: ['BUG_CAUGHT'],
+          eventType: 'BUG_CAUGHT',
         });
 
         records.map((record) =>
