@@ -308,7 +308,8 @@ describe('EventsService', () => {
           eventB.points +
           eventC.points +
           eventD.points +
-          eventE.points,
+          eventE.points +
+          eventF.points,
         points: {
           BLOCK_MINED: {
             points: 0,
@@ -331,8 +332,8 @@ describe('EventsService', () => {
             latestOccurredAt: eventB.occurred_at,
           },
           SEND_TRANSACTION: {
-            points: eventE.points,
-            latestOccurredAt: eventE.occurred_at,
+            points: eventF.points,
+            latestOccurredAt: eventF.occurred_at,
           },
           SOCIAL_MEDIA_PROMOTION: {
             points: eventD.points,
