@@ -423,10 +423,19 @@ describe('UsersService', () => {
       });
       await eventsService.create({
         type: EventType.BUG_CAUGHT,
-        userId: secondUser.id,
+        userId: thirdUser.id,
         occurredAt: new Date(now.valueOf() + 1000),
         points: 0,
       });
+      await userPointsService.upsert(
+        await eventsService.getUpsertPointsOptions(firstUser),
+      );
+      await userPointsService.upsert(
+        await eventsService.getUpsertPointsOptions(secondUser),
+      );
+      await userPointsService.upsert(
+        await eventsService.getUpsertPointsOptions(thirdUser),
+      );
 
       const aggregate = await prisma.userPoints.aggregate({
         _max: {
