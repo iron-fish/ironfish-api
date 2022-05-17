@@ -18,7 +18,7 @@ import { ListUsersWithRankOptions } from './interfaces/list-by-rank-options';
 import { ListUsersOptions } from './interfaces/list-users-options';
 import { SerializedUserWithRank } from './interfaces/serialized-user-with-rank';
 import { UpdateUserOptions } from './interfaces/update-user-options';
-import { Prisma, User } from '.prisma/client';
+import { EventType, Prisma, User } from '.prisma/client';
 
 @Injectable()
 export class UsersService {
@@ -204,8 +204,7 @@ export class UsersService {
     limit,
     search,
     countryCode,
-    eventTypes,
-    userIds,
+    eventType,
   }: ListUsersWithRankOptions): Promise<{
     data: SerializedUserWithRank[];
     hasNext: boolean;
@@ -222,105 +221,71 @@ export class UsersService {
 
     const searchFilter = `%${search ?? ''}%`;
 
-    const useEventFiltering = !!eventTypes?.length;
-    const useUserFiltering = !!userIds?.length;
-
-    const eventsFilter = useEventFiltering
-      ? eventTypes.map((e) => `'${String(e)}'::event_type`).join(',')
-      : 'NULL';
-
-    const usersFiltering = useUserFiltering
-      ? userIds.map(String).join(',')
-      : 'NULL';
-
-    const query = `with filtered_events as (
+    const query = `
+      WITH 
+        user_latest_events AS (
           SELECT
-              user_id,
-              occurred_at,
-              points
+            user_id,
+            ${this.totalPointsAtForUserPoints(eventType)} AS total_points,
+            ${this.latestEventOccurredAtForUserPoints(
+              eventType,
+            )} AS latest_event_occurred_at
           FROM
-              events
-          WHERE
-              points != 0 AND
-              deleted_at IS NULL AND
-              CASE WHEN $6 IS TRUE
-              THEN
-                  type IN (${eventsFilter})
-              ELSE
-                  TRUE
-              END
-      ),
-      user_latest_events as (
-          SELECT
-              user_id,
-              SUM(points) as total_points,
-              MAX(occurred_at) AS latest_event_occurred_at
-          FROM
-              filtered_events
-          GROUP BY
-              user_id
-      ),
-      user_ranks as (
+            user_points
+        ),
+        user_ranks as (
           SELECT
             id,
             graffiti,
-            COALESCE(user_latest_events.total_points, 0) as total_points,
+            total_points,
             country_code,
             created_at,
             RANK () OVER (
-                ORDER BY
-                COALESCE(user_latest_events.total_points, 0) DESC,
+              ORDER BY
+                total_points DESC,
                 COALESCE(latest_event_occurred_at, NOW()) ASC,
                 created_at ASC
             ) AS rank
           FROM
             users
-          LEFT JOIN
+          JOIN
             user_latest_events
           ON
             user_latest_events.user_id = users.id
-          WHERE
-            CASE WHEN $7 IS TRUE
-            THEN
-                users.id IN (${usersFiltering})
-            ELSE
-                TRUE
-            END
-      )
+        )
 
-  SELECT
-    id,
-    graffiti,
-    total_points,
-    country_code,
-    created_at,
-    rank
-  FROM
-    user_ranks
-  WHERE
-    graffiti ILIKE $1 AND
-    CASE WHEN $2
-      THEN
-        rank > $3
-      ELSE
-        rank < $3
-    END AND
-    CASE WHEN $5::text IS NOT NULL
-      THEN
-        country_code = $5
-      ELSE
-        TRUE
-    END
-  ORDER BY
-    CASE WHEN $2
-      THEN
+      SELECT
+        id,
+        graffiti,
+        total_points,
+        country_code,
+        created_at,
         rank
-      ELSE
-        -rank
-    END ASC
-  LIMIT
-    $4
-  `;
+      FROM
+        user_ranks
+      WHERE
+        graffiti ILIKE $1 AND
+        CASE WHEN $2
+          THEN
+            rank > $3
+          ELSE
+            rank < $3
+        END AND
+        CASE WHEN $5::text IS NOT NULL
+          THEN
+            country_code = $5
+          ELSE
+            TRUE
+        END
+      ORDER BY
+        CASE WHEN $2
+          THEN
+            rank
+          ELSE
+            -rank
+        END ASC
+      LIMIT
+        $4`;
 
     const data = await this.prisma.$queryRawUnsafe<SerializedUserWithRank[]>(
       query,
@@ -329,8 +294,6 @@ export class UsersService {
       rankCursor,
       limit,
       countryCode,
-      useEventFiltering,
-      useUserFiltering,
     );
 
     // If fetching a previous page, the ranks are sorted in opposite order.
@@ -349,35 +312,70 @@ export class UsersService {
 
     const nextRecords = await this.prisma.$queryRawUnsafe<
       SerializedUserWithRank[]
-    >(
-      query,
-      searchFilter,
-      true,
-      data[data.length - 1].rank,
-      1,
-      countryCode,
-      useEventFiltering,
-      useUserFiltering,
-    );
+    >(query, searchFilter, true, data[data.length - 1].rank, 1, countryCode);
 
     const previousRecords = await this.prisma.$queryRawUnsafe<
       SerializedUserWithRank[]
-    >(
-      query,
-      searchFilter,
-      false,
-      data[0].rank,
-      1,
-      countryCode,
-      useEventFiltering,
-      useUserFiltering,
-    );
+    >(query, searchFilter, false, data[0].rank, 1, countryCode);
 
     return {
       data: data,
       hasNext: nextRecords.length > 0,
       hasPrevious: previousRecords.length > 0,
     };
+  }
+
+  private totalPointsAtForUserPoints(type?: EventType): string {
+    if (!type) {
+      return 'total_points';
+    }
+    switch (type) {
+      case EventType.BLOCK_MINED:
+        return 'block_mined_points';
+      case EventType.BUG_CAUGHT:
+        return 'bug_caught_points';
+      case EventType.COMMUNITY_CONTRIBUTION:
+        return 'community_contribution_points';
+      case EventType.NODE_UPTIME:
+        return 'node_uptime_points';
+      case EventType.PULL_REQUEST_MERGED:
+        return 'pull_request_merged_points';
+      case EventType.SEND_TRANSACTION:
+        return 'send_transaction_points';
+      case EventType.SOCIAL_MEDIA_PROMOTION:
+        return 'social_media_promotion_points';
+    }
+  }
+
+  private latestEventOccurredAtForUserPoints(type?: EventType): string {
+    if (!type) {
+      return `
+        GREATEST(
+          block_mined_last_occurred_at,
+          bug_caught_last_occurred_at,
+          community_contribution_last_occurred_at,
+          node_uptime_last_occurred_at,
+          pull_request_merged_last_occurred_at,
+          send_transaction_last_occurred_at,
+          social_media_promotion_last_occurred_at
+        )`;
+    }
+    switch (type) {
+      case EventType.BLOCK_MINED:
+        return 'block_mined_last_occurred_at';
+      case EventType.BUG_CAUGHT:
+        return 'bug_caught_last_occurred_at';
+      case EventType.COMMUNITY_CONTRIBUTION:
+        return 'community_contribution_last_occurred_at';
+      case EventType.NODE_UPTIME:
+        return 'node_uptime_last_occurred_at';
+      case EventType.PULL_REQUEST_MERGED:
+        return 'pull_request_merged_last_occurred_at';
+      case EventType.SEND_TRANSACTION:
+        return 'send_transaction_last_occurred_at';
+      case EventType.SOCIAL_MEDIA_PROMOTION:
+        return 'social_media_promotion_last_occurred_at';
+    }
   }
 
   async updateLastLoginAt(user: User): Promise<User> {

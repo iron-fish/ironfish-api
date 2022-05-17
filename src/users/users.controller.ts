@@ -246,7 +246,7 @@ export class UsersController {
       limit,
       order_by: orderBy,
       country_code: countryCode,
-      event_type: eventTypes,
+      event_type: eventType,
       search,
     }: UsersQueryDto,
   ): Promise<PaginatedList<SerializedUser | SerializedUserWithRank>> {
@@ -258,7 +258,7 @@ export class UsersController {
           limit: Math.min(MAX_LIMIT, limit || DEFAULT_LIMIT),
           search,
           countryCode,
-          eventTypes,
+          eventType,
         });
 
       return {
@@ -281,7 +281,6 @@ export class UsersController {
       limit,
       search,
       countryCode,
-      eventTypes,
     });
     const data = [];
     for (const record of records) {
