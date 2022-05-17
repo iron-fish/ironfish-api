@@ -199,7 +199,9 @@ export class EventsService {
       bugCaughtAggregate.points +
       communityContributionAggregate.points +
       pullRequestAggregate.points +
-      socialMediaAggregate.points;
+      socialMediaAggregate.points +
+      nodeUptimeAggregate.points +
+      sendTransactionAggregate.points;
 
     return {
       userId: user.id,
