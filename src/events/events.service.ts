@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable, NotFoundException } from '@nestjs/common';
-import is from '@sindresorhus/is';
 import { Job } from 'graphile-worker';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { BlocksService } from '../blocks/blocks.service';
@@ -245,43 +244,34 @@ export class EventsService {
   async getLifetimeEventMetricsForUser(
     user: User,
   ): Promise<Record<EventType, SerializedEventMetrics>> {
-    const ranks = await this.getRanksForEventTypes(user);
-
     return {
       BLOCK_MINED: await this.getLifetimeEventTypeMetricsForUser(
         user,
         EventType.BLOCK_MINED,
-        ranks,
       ),
       BUG_CAUGHT: await this.getLifetimeEventTypeMetricsForUser(
         user,
         EventType.BUG_CAUGHT,
-        ranks,
       ),
       COMMUNITY_CONTRIBUTION: await this.getLifetimeEventTypeMetricsForUser(
         user,
         EventType.COMMUNITY_CONTRIBUTION,
-        ranks,
       ),
       PULL_REQUEST_MERGED: await this.getLifetimeEventTypeMetricsForUser(
         user,
         EventType.PULL_REQUEST_MERGED,
-        ranks,
       ),
       SOCIAL_MEDIA_PROMOTION: await this.getLifetimeEventTypeMetricsForUser(
         user,
         EventType.SOCIAL_MEDIA_PROMOTION,
-        ranks,
       ),
       NODE_UPTIME: await this.getLifetimeEventTypeMetricsForUser(
         user,
         EventType.NODE_UPTIME,
-        ranks,
       ),
       SEND_TRANSACTION: await this.getLifetimeEventTypeMetricsForUser(
         user,
         EventType.SEND_TRANSACTION,
-        ranks,
       ),
     };
   }
@@ -289,7 +279,6 @@ export class EventsService {
   private async getLifetimeEventTypeMetricsForUser(
     { id }: User,
     type: EventType,
-    ranks: Record<EventType, number>,
   ): Promise<SerializedEventMetrics> {
     const aggregate = await this.prisma.event.aggregate({
       _sum: {
@@ -310,7 +299,6 @@ export class EventsService {
         },
       }),
       points: aggregate._sum.points || 0,
-      rank: ranks[type],
     };
   }
 
@@ -756,114 +744,6 @@ export class EventsService {
     return {
       rank: rank[0].rank,
       points: rank[0].points,
-    };
-  }
-
-  async getRanksForEventTypes(user: User): Promise<Record<EventType, number>> {
-    const userRanks = await this.prisma.$queryRawUnsafe<
-      {
-        block_mined_rank: number;
-        bug_caught_rank: number;
-        community_contribution_rank: number;
-        node_uptime_rank: number;
-        pull_request_merged_rank: number;
-        send_transaction_rank: number;
-        social_media_promotion_rank: number;
-      }[]
-    >(
-      `WITH user_ranks AS (
-        SELECT
-          user_id AS id,
-          RANK() OVER (
-            ORDER BY
-              block_mined_points DESC,
-              COALESCE(block_mined_last_occurred_at, NOW()) ASC,
-              users.created_at ASC
-          ) AS block_mined_rank,
-          RANK() OVER (
-            ORDER BY
-              bug_caught_points DESC,
-              COALESCE(bug_caught_last_occurred_at, NOW()) ASC,
-              users.created_at ASC
-          ) AS bug_caught_rank,
-          RANK() OVER (
-            ORDER BY
-              community_contribution_points DESC,
-              COALESCE(community_contribution_last_occurred_at, NOW()) ASC,
-              users.created_at ASC
-          ) AS community_contribution_rank,
-          RANK() OVER (
-            ORDER BY
-              node_uptime_points DESC,
-              COALESCE(node_uptime_last_occurred_at, NOW()) ASC,
-              users.created_at ASC
-          ) AS node_uptime_rank,
-          RANK() OVER (
-            ORDER BY
-              pull_request_merged_points DESC,
-              COALESCE(pull_request_merged_last_occurred_at, NOW()) ASC,
-              users.created_at ASC
-          ) AS pull_request_merged_rank,
-          RANK() OVER (
-            ORDER BY
-              send_transaction_points DESC,
-              COALESCE(send_transaction_last_occurred_at, NOW()) ASC,
-              users.created_at ASC
-          ) AS send_transaction_rank,
-          RANK() OVER (
-            ORDER BY
-              social_media_promotion_points DESC,
-              COALESCE(social_media_promotion_last_occurred_at, NOW()) ASC,
-              users.created_at ASC
-          ) AS social_media_promotion_rank
-        FROM
-          user_points
-        JOIN
-          users
-        ON
-          users.id = user_points.user_id
-      )
-
-      SELECT
-        id,
-        block_mined_rank,
-        bug_caught_rank,
-        community_contribution_rank,
-        node_uptime_rank,
-        pull_request_merged_rank,
-        send_transaction_rank,
-        social_media_promotion_rank
-      FROM
-        user_ranks
-      WHERE
-        id = $1;`,
-      user.id,
-    );
-
-    if (
-      !is.array(userRanks) ||
-      !is.object(userRanks[0]) ||
-      !('block_mined_rank' in userRanks[0]) ||
-      !('bug_caught_rank' in userRanks[0]) ||
-      !('community_contribution_rank' in userRanks[0]) ||
-      !('node_uptime_rank' in userRanks[0]) ||
-      !('pull_request_merged_rank' in userRanks[0]) ||
-      !('send_transaction_rank' in userRanks[0]) ||
-      !('social_media_promotion_rank' in userRanks[0])
-    ) {
-      throw new Error('Unexpected database response');
-    }
-
-    return {
-      [EventType.BLOCK_MINED]: userRanks[0].block_mined_rank,
-      [EventType.BUG_CAUGHT]: userRanks[0].bug_caught_rank,
-      [EventType.COMMUNITY_CONTRIBUTION]:
-        userRanks[0].community_contribution_rank,
-      [EventType.NODE_UPTIME]: userRanks[0].node_uptime_rank,
-      [EventType.PULL_REQUEST_MERGED]: userRanks[0].pull_request_merged_rank,
-      [EventType.SEND_TRANSACTION]: userRanks[0].send_transaction_rank,
-      [EventType.SOCIAL_MEDIA_PROMOTION]:
-        userRanks[0].social_media_promotion_rank,
     };
   }
 
