@@ -21,22 +21,21 @@ export class NodeUptimesService {
     private readonly graphileWorkerService: GraphileWorkerService,
   ) {}
 
-  async addUptime(user: User): Promise<{ uptime: NodeUptime; added: boolean }> {
+  async addUptime(user: User): Promise<NodeUptime> {
     const now = new Date();
 
     const lastCheckinCutoff = new Date();
     lastCheckinCutoff.setHours(now.getHours() - NODE_UPTIME_CHECKIN_HOURS);
 
-    return this.prisma.$transaction(async (prisma) => {
+    const uptime = await this.prisma.$transaction(async (prisma) => {
       await prisma.$executeRawUnsafe(
         `SELECT pg_advisory_xact_lock(HASHTEXT($1));`,
         user.id,
       );
 
       let uptime = await this.getWithClient(user, prisma);
-
       if (uptime && uptime.last_checked_in >= lastCheckinCutoff) {
-        return { uptime: uptime, added: false };
+        return uptime;
       }
 
       uptime = await prisma.nodeUptime.upsert({
@@ -56,15 +55,19 @@ export class NodeUptimesService {
         },
       });
 
-      if (uptime && uptime.total_hours >= NODE_UPTIME_CREDIT_HOURS) {
-        await this.graphileWorkerService.addJob(
-          GraphileWorkerPattern.CREATE_NODE_UPTIME_EVENT,
-          { userId: user.id },
-        );
-      }
-
-      return { uptime: uptime, added: true };
+      return uptime;
     });
+
+    if (uptime.total_hours >= NODE_UPTIME_CREDIT_HOURS) {
+      const userId = user.id;
+      await this.graphileWorkerService.addJob(
+        GraphileWorkerPattern.CREATE_NODE_UPTIME_EVENT,
+        { userId, occurredAt: now },
+        { queueName: `update_node_uptime_for_${userId}` },
+      );
+    }
+
+    return uptime;
   }
 
   async get(user: User): Promise<NodeUptime | null> {
@@ -83,12 +86,12 @@ export class NodeUptimesService {
   }
 
   async decrementCountedHoursWithClient(
-    user: User,
+    uptime: NodeUptime,
     client: BasePrismaClient,
-  ): Promise<NodeUptime | null> {
+  ): Promise<NodeUptime> {
     return client.nodeUptime.update({
       where: {
-        user_id: user.id,
+        id: uptime.id,
       },
       data: {
         total_hours: {
