@@ -298,7 +298,11 @@ describe('EventsService', () => {
       const options = await eventsService.getUpsertPointsOptions(user);
       expect(options).toMatchObject({
         totalPoints:
-          eventA.points + eventB.points + eventC.points + eventD.points,
+          eventA.points +
+          eventB.points +
+          eventC.points +
+          eventD.points +
+          eventE.points,
         points: {
           BLOCK_MINED: {
             points: 0,
