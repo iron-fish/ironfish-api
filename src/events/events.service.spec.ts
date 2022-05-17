@@ -289,11 +289,17 @@ describe('EventsService', () => {
         userId: user.id,
         points: 300,
       });
+      const eventF = await eventsService.create({
+        type: EventType.SEND_TRANSACTION,
+        userId: user.id,
+        points: 300,
+      });
       assert.ok(eventA);
       assert.ok(eventB);
       assert.ok(eventC);
       assert.ok(eventD);
       assert.ok(eventE);
+      assert.ok(eventF);
 
       const options = await eventsService.getUpsertPointsOptions(user);
       expect(options).toMatchObject({
@@ -302,7 +308,8 @@ describe('EventsService', () => {
           eventB.points +
           eventC.points +
           eventD.points +
-          eventE.points,
+          eventE.points +
+          eventF.points,
         points: {
           BLOCK_MINED: {
             points: 0,
@@ -323,6 +330,10 @@ describe('EventsService', () => {
           PULL_REQUEST_MERGED: {
             points: eventA.points + eventB.points,
             latestOccurredAt: eventB.occurred_at,
+          },
+          SEND_TRANSACTION: {
+            points: eventF.points,
+            latestOccurredAt: eventF.occurred_at,
           },
           SOCIAL_MEDIA_PROMOTION: {
             points: eventD.points,
