@@ -31,76 +31,66 @@ export class BlocksTransactionsLoader {
     const deleteBlockMinedPayloads: DeleteBlockMinedEventOptions[] = [];
     const upsertBlockMinedPayloads: UpsertBlockMinedEventOptions[] = [];
 
-    const response = await this.prisma.$transaction(
-      async (prisma) => {
-        const records: (Block & { transactions: Transaction[] })[] = [];
-        const previousHashes = new Map<string, BlockDto>();
-        for (const block of blocks) {
-          previousHashes.set(block.hash, block);
-        }
+    const response: (Block & { transactions: Transaction[] })[] = [];
+    const previousHashes = new Map<string, BlockDto>();
+    for (const block of blocks) {
+      previousHashes.set(block.hash, block);
+    }
 
-        for (const block of blocks) {
-          let timeSinceLastBlockMs = undefined;
-          if (block.previous_block_hash !== undefined) {
-            const previousBlock = previousHashes.get(block.previous_block_hash);
-            if (previousBlock) {
-              const prevTimestamp = previousBlock.timestamp;
-              timeSinceLastBlockMs =
-                block.timestamp.getTime() - prevTimestamp.getTime();
-            } else {
-              const previousBlock = await prisma.block.findFirst({
-                where: {
-                  hash: block.previous_block_hash,
-                },
-              });
-              if (previousBlock) {
-                timeSinceLastBlockMs =
-                  block.timestamp.getTime() - previousBlock.timestamp.getTime();
-              }
-            }
-          }
-
-          const {
-            block: createdBlock,
-            deleteBlockMinedOptions,
-            upsertBlockMinedOptions,
-          } = await this.blocksService.upsert(prisma, {
-            ...block,
-            timeSinceLastBlockMs,
-            previousBlockHash: block.previous_block_hash,
-            transactionsCount: block.transactions.length,
+    for (const block of blocks) {
+      let timeSinceLastBlockMs = undefined;
+      if (block.previous_block_hash !== undefined) {
+        const previousBlock = previousHashes.get(block.previous_block_hash);
+        if (previousBlock) {
+          const prevTimestamp = previousBlock.timestamp;
+          timeSinceLastBlockMs =
+            block.timestamp.getTime() - prevTimestamp.getTime();
+        } else {
+          const previousBlock = await this.prisma.block.findFirst({
+            where: {
+              hash: block.previous_block_hash,
+            },
           });
-
-          if (deleteBlockMinedOptions) {
-            deleteBlockMinedPayloads.push(deleteBlockMinedOptions);
+          if (previousBlock) {
+            timeSinceLastBlockMs =
+              block.timestamp.getTime() - previousBlock.timestamp.getTime();
           }
-
-          if (upsertBlockMinedOptions) {
-            upsertBlockMinedPayloads.push(upsertBlockMinedOptions);
-          }
-
-          const transactions = await this.transactionsService.bulkUpsert(
-            prisma,
-            block.transactions,
-          );
-
-          for (const transaction of transactions) {
-            await this.blocksTransactionsService.upsert(
-              prisma,
-              createdBlock,
-              transaction,
-            );
-          }
-          records.push({ ...createdBlock, transactions });
         }
-        return records;
-      },
-      {
-        // We increased this from the default of 5000 because the transactions were
-        // timing out and failing to upsert blocks
-        timeout: 20000,
-      },
-    );
+      }
+
+      const {
+        block: createdBlock,
+        deleteBlockMinedOptions,
+        upsertBlockMinedOptions,
+      } = await this.blocksService.upsert(this.prisma, {
+        ...block,
+        timeSinceLastBlockMs,
+        previousBlockHash: block.previous_block_hash,
+        transactionsCount: block.transactions.length,
+      });
+
+      if (deleteBlockMinedOptions) {
+        deleteBlockMinedPayloads.push(deleteBlockMinedOptions);
+      }
+
+      if (upsertBlockMinedOptions) {
+        upsertBlockMinedPayloads.push(upsertBlockMinedOptions);
+      }
+
+      const transactions = await this.transactionsService.bulkUpsert(
+        this.prisma,
+        block.transactions,
+      );
+
+      for (const transaction of transactions) {
+        await this.blocksTransactionsService.upsert(
+          this.prisma,
+          createdBlock,
+          transaction,
+        );
+      }
+      response.push({ ...createdBlock, transactions });
+    }
 
     for (const payload of deleteBlockMinedPayloads) {
       await this.graphileWorkerService.addJob(
