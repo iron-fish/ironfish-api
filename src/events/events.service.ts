@@ -447,7 +447,7 @@ export class EventsService {
     }: CreateEventOptions,
     client: BasePrismaClient,
   ): Promise<EventWithMetadata | null> {
-    occurredAt = occurredAt || new Date();
+    occurredAt = occurredAt ? new Date(occurredAt) : new Date();
 
     const beforeLaunch = occurredAt < PHASE_1_START;
     const afterPhaseOne = occurredAt > PHASE_1_END;
