@@ -37,6 +37,9 @@ export class BlocksTransactionsLoader {
       previousHashes.set(block.hash, block);
     }
 
+    //TODO IRO-1984
+    //This used to be in a huge DB transaction, but that was removed due to performance concerns
+    //If this causes any data consistency issues, find a more surgical way to keep things synced
     for (const block of blocks) {
       let timeSinceLastBlockMs = undefined;
       if (block.previous_block_hash !== undefined) {
