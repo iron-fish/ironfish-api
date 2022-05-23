@@ -7,6 +7,9 @@ import { ApiConfigService } from '../api-config/api-config.service';
 import { BlockOperation } from '../blocks/enums/block-operation';
 import { SEND_TRANSACTION_LIMIT_ORE } from '../common/constants';
 import { standardizeHash } from '../common/utils/hash';
+import { DepositHeadsService } from '../deposit-heads/deposit-heads.service';
+import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
+import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
 import { UpsertDepositsOperationDto } from './dto/upsert-deposit.dto';
@@ -16,16 +19,14 @@ import { EventsService } from './events.service';
 export class DepositsUpsertService {
   constructor(
     private readonly config: ApiConfigService,
+    private readonly depositHeadsService: DepositHeadsService,
+    private readonly eventsService: EventsService,
+    private readonly graphileWorkerService: GraphileWorkerService,
     private readonly prisma: PrismaService,
-    private readonly events: EventsService,
-    private readonly users: UsersService,
+    private readonly usersService: UsersService,
   ) {}
 
-  async upsertBulk(
-    operations: UpsertDepositsOperationDto[],
-  ): Promise<Deposit[]> {
-    const deposits = new Array<Deposit>();
-
+  async bulkUpsert(operations: UpsertDepositsOperationDto[]): Promise<void> {
     for (const operation of operations) {
       // We only want to handle deposits that deal with the main chain
       // (not forks). This will only be connected and disconnected events
@@ -34,14 +35,21 @@ export class DepositsUpsertService {
         operation.type === BlockOperation.DISCONNECTED;
 
       if (shouldUpsertDeposits) {
-        const results = await this.upsert(operation);
-        for (const result of results) {
-          deposits.push(result);
-        }
+        await this.graphileWorkerService.addJob<UpsertDepositsOperationDto>(
+          GraphileWorkerPattern.UPSERT_DEPOSIT,
+          operation,
+          {
+            jobKey: `upsert_deposit:${operation.block.hash}:${operation.type}`,
+          },
+        );
+
+        const headHash =
+          operation.type === BlockOperation.CONNECTED
+            ? operation.block.hash
+            : operation.block.previousBlockHash;
+        await this.depositHeadsService.upsert(headHash);
       }
     }
-
-    return deposits;
   }
 
   async upsert(operation: UpsertDepositsOperationDto): Promise<Deposit[]> {
@@ -52,6 +60,13 @@ export class DepositsUpsertService {
         const deposits = new Array<Deposit>();
 
         for (const transaction of operation.transactions) {
+          const shouldUpsertDeposit =
+            operation.type === BlockOperation.CONNECTED ||
+            operation.type === BlockOperation.DISCONNECTED;
+          if (!shouldUpsertDeposit) {
+            continue;
+          }
+
           const amounts = new Map<string, number>();
 
           for (const deposit of transaction.notes) {
@@ -65,9 +80,9 @@ export class DepositsUpsertService {
               block_hash: standardizeHash(operation.block.hash),
               block_sequence: operation.block.sequence,
               network_version: networkVersion,
-              graffiti: graffiti,
+              graffiti,
               main: operation.type === BlockOperation.CONNECTED,
-              amount: amount,
+              amount,
             };
 
             const deposit = await prisma.deposit.upsert({
@@ -90,23 +105,23 @@ export class DepositsUpsertService {
                 },
               });
               if (event) {
-                await this.events.deleteWithClient(event, prisma);
+                await this.eventsService.deleteWithClient(event, prisma);
               }
             }
 
             if (deposit.main && deposit.amount >= SEND_TRANSACTION_LIMIT_ORE) {
-              const user = await this.users.findByGraffiti(
+              const user = await this.usersService.findByGraffiti(
                 deposit.graffiti,
                 prisma,
               );
 
               if (user) {
-                await this.events.createWithClient(
+                await this.eventsService.createWithClient(
                   {
                     occurredAt: operation.block.timestamp,
                     type: EventType.SEND_TRANSACTION,
                     userId: user.id,
-                    deposit: deposit,
+                    deposit,
                   },
                   prisma,
                 );
@@ -114,22 +129,6 @@ export class DepositsUpsertService {
             }
           }
         }
-
-        const headHash =
-          operation.type === BlockOperation.CONNECTED
-            ? operation.block.hash
-            : operation.block.previousBlockHash;
-
-        const depositHeadParams = {
-          id: 1,
-          block_hash: headHash,
-        };
-
-        await prisma.depositHead.upsert({
-          create: depositHeadParams,
-          update: depositHeadParams,
-          where: { id: 1 },
-        });
 
         return deposits;
       },

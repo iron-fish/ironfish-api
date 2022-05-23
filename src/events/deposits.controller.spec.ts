@@ -2,16 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import { EventType, User } from '@prisma/client';
 import faker from 'faker';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { BlockOperation } from '../blocks/enums/block-operation';
 import { ORE_TO_IRON } from '../common/constants';
-import { PrismaService } from '../prisma/prisma.service';
+import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
+import { DepositsUpsertService } from './deposits.upsert.service';
 import {
   DepositTransactionDto,
   UpsertDepositsDto,
@@ -22,47 +22,31 @@ import {
 describe('DepositsController', () => {
   let app: INestApplication;
   let config: ApiConfigService;
-  let prisma: PrismaService;
-  let users: UsersService;
-  let user1: User;
-  let user2: User;
-  let transaction1: DepositTransactionDto;
-  let transaction2: DepositTransactionDto;
+  let depositsUpsertsService: DepositsUpsertService;
+  let graphileWorkerService: GraphileWorkerService;
+  let usersService: UsersService;
   let API_KEY: string;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
     config = app.get(ApiConfigService);
-    prisma = app.get(PrismaService);
-    users = app.get(UsersService);
+    depositsUpsertsService = app.get(DepositsUpsertService);
+    graphileWorkerService = app.get(GraphileWorkerService);
+    usersService = app.get(UsersService);
     API_KEY = config.get<string>('IRONFISH_API_KEY');
     await app.init();
-
-    user1 = await users.create({
-      email: faker.internet.email(),
-      graffiti: 'user1',
-      country_code: faker.address.countryCode(),
-    });
-
-    user2 = await users.create({
-      email: faker.internet.email(),
-      graffiti: 'user2',
-      country_code: faker.address.countryCode(),
-    });
-
-    transaction1 = transaction(
-      [...notes([1, 2], user1.graffiti), ...notes([0.1, 3], user2.graffiti)],
-      'transaction1Hash',
-    );
-
-    transaction2 = transaction(
-      [...notes([0.05], user1.graffiti), ...notes([1], user2.graffiti)],
-      'transaction2Hash',
-    );
   });
 
   afterAll(async () => {
     await app.close();
+  });
+
+  beforeEach(() => {
+    jest.spyOn(graphileWorkerService, 'addJob').mockImplementation(jest.fn());
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   describe('GET /deposits/head', () => {
@@ -70,30 +54,22 @@ describe('DepositsController', () => {
     const block2Hash = uuid();
 
     it('returns the latest deposit submitted', async () => {
-      const payload: UpsertDepositsDto = {
-        operations: [
-          depositOperation(
-            [transaction([...notes([1, 2], uuid())])],
-            BlockOperation.CONNECTED,
-            block1Hash,
-            uuid(),
-            1,
-          ),
-          depositOperation(
-            [transaction([...notes([1, 2], uuid())])],
-            BlockOperation.CONNECTED,
-            block2Hash,
-            block1Hash,
-            2,
-          ),
-        ],
-      };
-
-      await request(app.getHttpServer())
-        .post(`/deposits`)
-        .send(payload)
-        .set('Authorization', `Bearer ${API_KEY}`)
-        .expect(HttpStatus.CREATED);
+      await depositsUpsertsService.bulkUpsert([
+        depositOperation(
+          [transaction([...notes([1, 2], uuid())])],
+          BlockOperation.CONNECTED,
+          block1Hash,
+          uuid(),
+          1,
+        ),
+        depositOperation(
+          [transaction([...notes([1, 2], uuid())])],
+          BlockOperation.CONNECTED,
+          block2Hash,
+          block1Hash,
+          2,
+        ),
+      ]);
 
       const response = await request(app.getHttpServer())
         .get(`/deposits/head`)
@@ -104,23 +80,15 @@ describe('DepositsController', () => {
     });
 
     it('returns the latest deposit if a block is disconnected', async () => {
-      const payload: UpsertDepositsDto = {
-        operations: [
-          depositOperation(
-            [transaction([...notes([1, 2], uuid())])],
-            BlockOperation.DISCONNECTED,
-            block2Hash,
-            block1Hash,
-            2,
-          ),
-        ],
-      };
-
-      await request(app.getHttpServer())
-        .post(`/deposits`)
-        .send(payload)
-        .set('Authorization', `Bearer ${API_KEY}`)
-        .expect(HttpStatus.CREATED);
+      await depositsUpsertsService.bulkUpsert([
+        depositOperation(
+          [transaction([...notes([1, 2], uuid())])],
+          BlockOperation.DISCONNECTED,
+          block2Hash,
+          block1Hash,
+          2,
+        ),
+      ]);
 
       const response = await request(app.getHttpServer())
         .get(`/deposits/head`)
@@ -144,6 +112,29 @@ describe('DepositsController', () => {
 
   describe('POST /deposits', () => {
     it('upserts new deposit', async () => {
+      const bulkUpsert = jest
+        .spyOn(depositsUpsertsService, 'bulkUpsert')
+        .mockImplementationOnce(jest.fn());
+
+      const user1 = await usersService.create({
+        email: faker.internet.email(),
+        graffiti: uuid(),
+        country_code: faker.address.countryCode(),
+      });
+      const user2 = await usersService.create({
+        email: faker.internet.email(),
+        graffiti: uuid(),
+        country_code: faker.address.countryCode(),
+      });
+      const transaction1 = transaction(
+        [...notes([1, 2], user1.graffiti), ...notes([0.1, 3], user2.graffiti)],
+        'transaction1Hash',
+      );
+      const transaction2 = transaction(
+        [...notes([0.05], user1.graffiti), ...notes([1], user2.graffiti)],
+        'transaction2Hash',
+      );
+
       const payload: UpsertDepositsDto = {
         operations: [
           depositOperation(
@@ -158,142 +149,9 @@ describe('DepositsController', () => {
         .post(`/deposits`)
         .send(payload)
         .set('Authorization', `Bearer ${API_KEY}`)
-        .expect(HttpStatus.CREATED);
+        .expect(HttpStatus.ACCEPTED);
 
-      const user1Events = await prisma.event.findMany({
-        where: {
-          user_id: user1.id,
-          type: EventType.SEND_TRANSACTION,
-        },
-      });
-
-      const user2Events = await prisma.event.findMany({
-        where: {
-          user_id: user2.id,
-          type: EventType.SEND_TRANSACTION,
-        },
-      });
-
-      expect(user1Events).toHaveLength(1);
-      expect(user2Events).toHaveLength(2);
-
-      const user1Deposits = await prisma.deposit.findMany({
-        where: {
-          graffiti: user1.graffiti,
-        },
-      });
-
-      const user2Deposits = await prisma.deposit.findMany({
-        where: {
-          graffiti: user2.graffiti,
-        },
-      });
-
-      expect(user1Deposits).toHaveLength(2);
-      expect(user2Deposits).toHaveLength(2);
-
-      expect(user1Events[0].deposit_id).toEqual(user1Deposits[0].id);
-      expect(user2Events[0].deposit_id).toEqual(user2Deposits[0].id);
-      expect(user2Events[1].deposit_id).toEqual(user2Deposits[1].id);
-    });
-
-    it('removes events on DISCONNECTED operation', async () => {
-      const payload: UpsertDepositsDto = {
-        operations: [
-          depositOperation(
-            [transaction2],
-            BlockOperation.DISCONNECTED,
-            'block1Hash',
-          ),
-        ],
-      };
-
-      await request(app.getHttpServer())
-        .post(`/deposits`)
-        .send(payload)
-        .set('Authorization', `Bearer ${API_KEY}`)
-        .expect(HttpStatus.CREATED);
-
-      const user2Events = await prisma.event.findMany({
-        where: {
-          user_id: user2.id,
-          type: EventType.SEND_TRANSACTION,
-        },
-      });
-
-      const user1Deposits = await prisma.deposit.findMany({
-        where: {
-          graffiti: user1.graffiti,
-        },
-      });
-
-      const user2Deposits = await prisma.deposit.findMany({
-        where: {
-          graffiti: user2.graffiti,
-        },
-      });
-
-      expect(user2Events[0].points).toBe(1);
-      expect(user2Events[1].points).toBe(0);
-      expect(user2Events[1].deposit_id).toEqual(user2Deposits[1].id);
-      expect(user2Deposits[1].amount).toEqual(1 * ORE_TO_IRON);
-
-      expect(user1Deposits).toHaveLength(2);
-      expect(user2Deposits).toHaveLength(2);
-
-      expect(user1Deposits[1].main).toBe(false);
-      expect(user2Deposits[1].main).toBe(false);
-    });
-
-    it('does not delete events on FORK operations', async () => {
-      const transaction3 = transaction(
-        [...notes([0.1], user2.graffiti)],
-        'transaction3Hash',
-      );
-
-      const payload: UpsertDepositsDto = {
-        operations: [
-          depositOperation(
-            [transaction3],
-            BlockOperation.CONNECTED,
-            'block3Hash',
-          ),
-        ],
-      };
-
-      await request(app.getHttpServer())
-        .post(`/deposits`)
-        .send(payload)
-        .set('Authorization', `Bearer ${API_KEY}`)
-        .expect(HttpStatus.CREATED);
-
-      const user2EventsBefore = await prisma.event.findMany({
-        where: {
-          user_id: user2.id,
-          type: EventType.SEND_TRANSACTION,
-        },
-      });
-
-      const forkPayload: UpsertDepositsDto = {
-        operations: [
-          depositOperation([transaction3], BlockOperation.FORK, 'block3Hash'),
-        ],
-      };
-
-      await request(app.getHttpServer())
-        .post(`/deposits`)
-        .send(forkPayload)
-        .set('Authorization', `Bearer ${API_KEY}`)
-        .expect(HttpStatus.CREATED);
-
-      const user2EventsAfter = await prisma.event.findMany({
-        where: {
-          user_id: user2.id,
-          type: EventType.SEND_TRANSACTION,
-        },
-      });
-
-      expect(user2EventsBefore).toEqual(user2EventsAfter);
+      expect(bulkUpsert).toHaveBeenCalledWith(payload.operations);
     });
   });
 
