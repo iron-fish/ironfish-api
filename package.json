@@ -92,7 +92,7 @@
     "rxjs": "7.5.5",
     "semver": "7.3.7",
     "swagger-ui-express": "4.4.0",
-    "type-fest": "2.12.2",
+    "type-fest": "2.13.0",
     "ulid": "2.3.0"
   }
 }
