@@ -13,6 +13,37 @@ import { NodeUptimesService } from '../node-uptimes/node-uptimes.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
+import { VersionsService } from '../versions/versions.service';
+
+function mockTelemetryPoints() {
+  const fields = [
+    {
+      name: 'online',
+      type: 'boolean',
+      value: true,
+    },
+    {
+      name: 'memory',
+      type: 'float',
+      value: 1.23,
+    },
+    {
+      name: 'mempool',
+      type: 'integer',
+      value: 1,
+    },
+    {
+      name: 'name',
+      type: 'string',
+      value: 'howdy',
+    },
+  ];
+  const measurement = 'node';
+  const tags = [{ name: 'version', value: '0.1.24' }];
+  const timestamp = new Date();
+
+  return [{ fields, measurement, tags, timestamp }];
+}
 
 describe('TelemetryController', () => {
   let app: INestApplication;
@@ -22,6 +53,7 @@ describe('TelemetryController', () => {
   let nodeUptimesService: NodeUptimesService;
   let prisma: PrismaService;
   let usersService: UsersService;
+  let versionsService: VersionsService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
@@ -31,6 +63,7 @@ describe('TelemetryController', () => {
     nodeUptimesService = app.get(NodeUptimesService);
     prisma = app.get(PrismaService);
     usersService = app.get(UsersService);
+    versionsService = app.get(VersionsService);
     await app.init();
   });
 
@@ -144,50 +177,57 @@ describe('TelemetryController', () => {
         const writePoints = jest
           .spyOn(influxDbService, 'writePoints')
           .mockImplementationOnce(jest.fn());
-        const fields = [
-          {
-            name: 'online',
-            type: 'boolean',
-            value: true,
-          },
-          {
-            name: 'memory',
-            type: 'float',
-            value: 1.23,
-          },
-          {
-            name: 'mempool',
-            type: 'integer',
-            value: 1,
-          },
-          {
-            name: 'name',
-            type: 'string',
-            value: 'howdy',
-          },
-        ];
-        const measurement = 'node';
-        const tags = [{ name: 'version', value: '0.1.24' }];
-        const timestamp = new Date();
+
+        const points = mockTelemetryPoints();
 
         await request(app.getHttpServer())
           .post('/telemetry')
-          .send({ points: [{ fields, measurement, tags, timestamp }] })
+          .send({ points })
           .expect(HttpStatus.CREATED);
 
         expect(writePoints).toHaveBeenCalledTimes(1);
-        expect(writePoints).toHaveBeenCalledWith([
-          {
-            fields,
-            measurement,
-            tags,
-            timestamp,
-          },
-        ]);
+        expect(writePoints).toHaveBeenCalledWith(points);
       });
 
       describe('when `NODE_UPTIME_ENABLED` is true', () => {
         it('updates the node uptime', async () => {
+          jest
+            .spyOn(influxDbService, 'writePoints')
+            .mockImplementationOnce(jest.fn());
+
+          const nodeUptimeUpsert = jest
+            .spyOn(nodeUptimesService, 'addUptime')
+            .mockImplementationOnce(jest.fn());
+
+          jest.spyOn(versionsService, 'getLatestAtDate').mockResolvedValue({
+            id: 1,
+            version: '0.1.24',
+            created_at: new Date(),
+          });
+
+          const graffiti = uuid();
+          const user = await usersService.create({
+            email: faker.internet.email(),
+            graffiti,
+            country_code: faker.address.countryCode(),
+          });
+
+          const points = mockTelemetryPoints();
+
+          await request(app.getHttpServer())
+            .post('/telemetry')
+            .send({ points, graffiti })
+            .expect(HttpStatus.CREATED);
+
+          expect(nodeUptimeUpsert).toHaveBeenCalledTimes(1);
+          expect(nodeUptimeUpsert).toHaveBeenCalledWith(user);
+        });
+
+        it('updates the node uptime if the api returns no version', async () => {
+          jest
+            .spyOn(influxDbService, 'writePoints')
+            .mockImplementationOnce(jest.fn());
+
           const nodeUptimeUpsert = jest
             .spyOn(nodeUptimesService, 'addUptime')
             .mockImplementationOnce(jest.fn());
@@ -199,9 +239,11 @@ describe('TelemetryController', () => {
             country_code: faker.address.countryCode(),
           });
 
+          const points = mockTelemetryPoints();
+
           await request(app.getHttpServer())
             .post('/telemetry')
-            .send({ points: [], graffiti })
+            .send({ points, graffiti })
             .expect(HttpStatus.CREATED);
 
           expect(nodeUptimeUpsert).toHaveBeenCalledTimes(1);
@@ -209,6 +251,10 @@ describe('TelemetryController', () => {
         });
 
         it('updates users points when user has logged enough hours', async () => {
+          jest
+            .spyOn(influxDbService, 'writePoints')
+            .mockImplementationOnce(jest.fn());
+
           const workerAddJob = jest
             .spyOn(graphileWorkerService, 'addJob')
             .mockImplementationOnce(jest.fn());
@@ -230,9 +276,11 @@ describe('TelemetryController', () => {
             },
           });
 
+          const points = mockTelemetryPoints();
+
           await request(app.getHttpServer())
             .post('/telemetry')
-            .send({ points: [], graffiti: user.graffiti })
+            .send({ points, graffiti: user.graffiti })
             .expect(HttpStatus.CREATED);
 
           expect(workerAddJob).toHaveBeenCalledTimes(1);
@@ -241,6 +289,41 @@ describe('TelemetryController', () => {
             { userId: user.id, occurredAt: expect.any(Date) },
             expect.anything(),
           );
+        });
+
+        it('does not update the node uptime if provided version is too old', async () => {
+          jest
+            .spyOn(influxDbService, 'writePoints')
+            .mockImplementationOnce(jest.fn());
+
+          const nodeUptimeUpsert = jest
+            .spyOn(nodeUptimesService, 'addUptime')
+            .mockImplementationOnce(jest.fn());
+
+          jest.spyOn(versionsService, 'getLatestAtDate').mockResolvedValue({
+            id: 1,
+            version: '0.1.30',
+            created_at: new Date(),
+          });
+
+          const graffiti = uuid();
+          await usersService.create({
+            email: faker.internet.email(),
+            graffiti,
+            country_code: faker.address.countryCode(),
+          });
+
+          const points = mockTelemetryPoints();
+
+          await request(app.getHttpServer())
+            .post('/telemetry')
+            .send({
+              points,
+              graffiti,
+            })
+            .expect(HttpStatus.CREATED);
+
+          expect(nodeUptimeUpsert).toHaveBeenCalledTimes(0);
         });
       });
 

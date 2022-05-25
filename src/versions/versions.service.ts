@@ -27,4 +27,17 @@ export class VersionsService {
       },
     });
   }
+
+  async getLatestAtDate(date: Date): Promise<Version | null> {
+    return this.prisma.version.findFirst({
+      orderBy: {
+        version: 'desc',
+      },
+      where: {
+        created_at: {
+          lte: date,
+        },
+      },
+    });
+  }
 }

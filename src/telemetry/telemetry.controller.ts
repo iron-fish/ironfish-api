@@ -16,6 +16,7 @@ import { ApiConfigService } from '../api-config/api-config.service';
 import { InfluxDbService } from '../influxdb/influxdb.service';
 import { NodeUptimesService } from '../node-uptimes/node-uptimes.service';
 import { UsersService } from '../users/users.service';
+import { VersionsService } from '../versions/versions.service';
 import { WriteTelemetryPointsDto } from './dto/write-telemetry-points.dto';
 
 @Controller('telemetry')
@@ -27,6 +28,7 @@ export class TelemetryController {
     private readonly influxDbService: InfluxDbService,
     private readonly nodeUptimes: NodeUptimesService,
     private readonly usersService: UsersService,
+    private readonly versionsService: VersionsService,
   ) {}
 
   @ApiExcludeEndpoint()
@@ -42,11 +44,13 @@ export class TelemetryController {
     { points, graffiti }: WriteTelemetryPointsDto,
   ): Promise<void> {
     const options = [];
+    let nodeVersion;
     for (const { fields, measurement, tags, timestamp } of points) {
       const version = tags.find((tag) => tag.name === 'version');
       if (!version || !this.isValidTelemetryVersion(version.value)) {
         continue;
       }
+      nodeVersion = version.value;
 
       options.push({
         fields,
@@ -62,8 +66,22 @@ export class TelemetryController {
 
     this.submitIpWithoutNodeFieldsToTelemetry(request);
 
+    if (!graffiti || !nodeVersion) {
+      return;
+    }
+
     const nodeUptimeEnabled = this.config.get<boolean>('NODE_UPTIME_ENABLED');
-    if (nodeUptimeEnabled && graffiti) {
+    if (!nodeUptimeEnabled) {
+      return;
+    }
+
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+    const minVersion = await this.versionsService.getLatestAtDate(oneWeekAgo);
+
+    // If the API fails to fetch a version, we don't want to punish the user
+    if (!minVersion || gte(nodeVersion, minVersion.version)) {
       const user = await this.usersService.findByGraffiti(graffiti);
 
       if (user) {
