@@ -42,12 +42,6 @@ export class DepositsUpsertService {
             jobKey: `upsert_deposit:${operation.block.hash}:${operation.type}`,
           },
         );
-
-        const headHash =
-          operation.type === BlockOperation.CONNECTED
-            ? operation.block.hash
-            : operation.block.previousBlockHash;
-        await this.depositHeadsService.upsert(headHash);
       }
     }
   }
@@ -128,6 +122,12 @@ export class DepositsUpsertService {
               }
             }
           }
+
+          const headHash =
+            operation.type === BlockOperation.CONNECTED
+              ? operation.block.hash
+              : operation.block.previousBlockHash;
+          await this.depositHeadsService.upsert(headHash, prisma);
         }
 
         return deposits;
