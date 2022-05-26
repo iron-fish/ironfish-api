@@ -213,7 +213,7 @@ export class UsersService {
     let rankCursor: number;
     const cursorId = before ?? after;
     if (cursorId !== undefined) {
-      rankCursor = await this.getRank(cursorId);
+      rankCursor = await this.getRank(cursorId, eventType);
     } else {
       // Ranks start at 1, so get everything after 0
       rankCursor = 0;
@@ -391,7 +391,10 @@ export class UsersService {
     });
   }
 
-  async getRank(userOrId: User | number): Promise<number> {
+  async getRank(
+    userOrId: User | number,
+    eventType?: EventType,
+  ): Promise<number> {
     let id: number;
     if (typeof userOrId === 'number') {
       const record = await this.findOrThrow(userOrId);
@@ -409,17 +412,9 @@ export class UsersService {
             users.id,
             RANK () OVER (
               ORDER BY
-                user_points.total_points DESC,
+                ${this.totalPointsAtForUserPoints(eventType)} DESC,
                 COALESCE(
-                  GREATEST(
-                    block_mined_last_occurred_at,
-                    bug_caught_last_occurred_at,
-                    community_contribution_last_occurred_at,
-                    node_uptime_last_occurred_at,
-                    pull_request_merged_last_occurred_at,
-                    send_transaction_last_occurred_at,
-                    social_media_promotion_last_occurred_at
-                  ), 
+                  ${this.latestEventOccurredAtForUserPoints(eventType)}, 
                   NOW()
                 ) ASC,
                 users.created_at ASC
