@@ -54,7 +54,7 @@ describe('DepositsController', () => {
     const block2Hash = uuid();
 
     it('returns the latest deposit submitted', async () => {
-      await depositsUpsertsService.bulkUpsert([
+      await depositsUpsertsService.upsert(
         depositOperation(
           [transaction([...notes([1, 2], uuid())])],
           BlockOperation.CONNECTED,
@@ -62,6 +62,8 @@ describe('DepositsController', () => {
           uuid(),
           1,
         ),
+      );
+      await depositsUpsertsService.upsert(
         depositOperation(
           [transaction([...notes([1, 2], uuid())])],
           BlockOperation.CONNECTED,
@@ -69,7 +71,7 @@ describe('DepositsController', () => {
           block1Hash,
           2,
         ),
-      ]);
+      );
 
       const response = await request(app.getHttpServer())
         .get(`/deposits/head`)
@@ -80,7 +82,7 @@ describe('DepositsController', () => {
     });
 
     it('returns the latest deposit if a block is disconnected', async () => {
-      await depositsUpsertsService.bulkUpsert([
+      await depositsUpsertsService.upsert(
         depositOperation(
           [transaction([...notes([1, 2], uuid())])],
           BlockOperation.DISCONNECTED,
@@ -88,7 +90,7 @@ describe('DepositsController', () => {
           block1Hash,
           2,
         ),
-      ]);
+      );
 
       const response = await request(app.getHttpServer())
         .get(`/deposits/head`)

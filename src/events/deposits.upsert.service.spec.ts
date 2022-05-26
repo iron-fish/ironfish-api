@@ -106,38 +106,6 @@ describe('DepositsUpsertService', () => {
         expect(addJob.mock.calls[i][1]).toEqual(payload.operations[i]);
       }
     });
-
-    it('updates the deposit head', async () => {
-      const updateHead = jest
-        .spyOn(depositHeadsService, 'upsert')
-        .mockImplementation(jest.fn());
-      jest.spyOn(graphileWorkerService, 'addJob').mockImplementation(jest.fn());
-
-      const payload = {
-        operations: [
-          depositOperation(
-            [transaction1],
-            BlockOperation.CONNECTED,
-            'block1Hash',
-          ),
-          depositOperation(
-            [transaction2],
-            BlockOperation.CONNECTED,
-            'block2Hash',
-          ),
-        ],
-      };
-
-      await depositsUpsertService.bulkUpsert(payload.operations);
-
-      expect(updateHead).toHaveBeenCalledTimes(payload.operations.length);
-      assert.ok(updateHead.mock.calls);
-      for (let i = 0; i < payload.operations.length; i++) {
-        expect(updateHead.mock.calls[i][0]).toBe(
-          payload.operations[i].block.hash,
-        );
-      }
-    });
   });
 
   describe('upsert', () => {
@@ -227,6 +195,22 @@ describe('DepositsUpsertService', () => {
         expect(user1Deposits[1].main).toBe(false);
         expect(user2Deposits[1].main).toBe(false);
       });
+    });
+
+    it('updates the deposit head', async () => {
+      const updateHead = jest
+        .spyOn(depositHeadsService, 'upsert')
+        .mockImplementation(jest.fn());
+
+      const operation = depositOperation(
+        [transaction1],
+        BlockOperation.CONNECTED,
+        'block1Hash',
+      );
+      await depositsUpsertService.upsert(operation);
+
+      assert.ok(updateHead.mock.calls);
+      expect(updateHead.mock.calls[0][0]).toBe(operation.block.hash);
     });
 
     describe('on FORK operations', () => {
