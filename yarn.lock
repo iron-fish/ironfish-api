@@ -492,10 +492,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@datadog/native-appsec@^1.1.1":
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/@datadog/native-appsec/-/native-appsec-1.1.1.tgz#a9aff685217d47b1444f10529c7d442351b98486"
-  integrity sha512-Aez74nNpfUlvJ5RyHuycy7tyl4BLCESPH8xG9INDIplIvgGIWGwlZRhhkQ/33623m6JpwsHqw9I9kvvgoiJTqQ==
+"@datadog/native-appsec@^1.2.0":
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/@datadog/native-appsec/-/native-appsec-1.2.0.tgz#724621cfcab7d92a0780deb6046f9d52740262a6"
+  integrity sha512-Brv9m8eKeJG8meeHd37V0Cz513TSce52nGRTEQ7O6/fmvlKGg64Z4HYasEZ1dRYwif0KPYPnZGvWHcnDld4ilA==
   dependencies:
     detect-libc "^1.0.3"
     minimist "^1.2.6"
@@ -2258,12 +2258,12 @@ data-urls@^2.0.0:
     whatwg-mimetype "^2.3.0"
     whatwg-url "^8.0.0"
 
-dd-trace@2.7.1:
-  version "2.7.1"
-  resolved "https://registry.yarnpkg.com/dd-trace/-/dd-trace-2.7.1.tgz#cac9a7a02dd3b6554cefea7b0e4e9667c23aee18"
-  integrity sha512-s2QSqC9ascm9VjHzQKG6Tpe71ydYH/VjBmTeu7zPgFYDXvkAx7fv3kcMYIkmPvvABdm1znmAqKeOBF1uqlZO/w==
+dd-trace@2.8.0:
+  version "2.8.0"
+  resolved "https://registry.yarnpkg.com/dd-trace/-/dd-trace-2.8.0.tgz#d82d2d71fcdec79f7bb035e3d607c987aa21203f"
+  integrity sha512-O5xl1elC70Om7VMJ95lOyqu6xZnjqX1zP1PkzUP0M4H2IMPo7VYzNOETzHqlxYX++vHtOfFoImgOV8lP6k0ItA==
   dependencies:
-    "@datadog/native-appsec" "^1.1.1"
+    "@datadog/native-appsec" "^1.2.0"
     "@datadog/native-metrics" "^1.2.0"
     "@datadog/pprof" "^0.4.0"
     "@datadog/sketches-js" "^1.0.4"
@@ -2281,7 +2281,6 @@ dd-trace@2.7.1:
     lodash.uniq "^4.5.0"
     methods "^1.1.2"
     module-details-from-path "^1.0.3"
-    multer "^1.4.2"
     opentracing ">=0.12.1"
     path-to-regexp "^0.1.2"
     performance-now "^2.1.0"
@@ -4403,7 +4402,7 @@ ms@2.1.3:
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.1.3.tgz#574c8138ce1d2b5861f0b44579dbadd60c6615b2"
   integrity sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==
 
-multer@1.4.4, multer@^1.4.2:
+multer@1.4.4:
   version "1.4.4"
   resolved "https://registry.yarnpkg.com/multer/-/multer-1.4.4.tgz#e2bc6cac0df57a8832b858d7418ccaa8ebaf7d8c"
   integrity sha512-2wY2+xD4udX612aMqMcB8Ws2Voq6NIUPEtD1be6m411T4uDH/VtL9i//xvcyFlTVfRdaBsk7hV5tgrGQqhuBiw==
