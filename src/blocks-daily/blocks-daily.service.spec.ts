@@ -93,7 +93,7 @@ describe('BlocksDailyService', () => {
         uniqueGraffiti: 0,
       };
 
-      const blockDaily = await blocksDailyService.upsert(prisma, options);
+      const blockDaily = await blocksDailyService.upsert(options);
       expect(blockDaily).toMatchObject({
         id: expect.any(Number),
         average_block_time_ms: options.averageBlockTimeMs,
@@ -123,7 +123,7 @@ describe('BlocksDailyService', () => {
         uniqueGraffiti: 0,
       };
 
-      const blockDaily = await blocksDailyService.upsert(prisma, options);
+      const blockDaily = await blocksDailyService.upsert(options);
       const nextSyncDate = await blocksDailyService.getNextDateToSync();
       expect(nextSyncDate).toEqual(getNextDate(blockDaily.date));
     });
