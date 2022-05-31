@@ -69,7 +69,7 @@
     "@nestjs/common": "8.4.6",
     "@nestjs/config": "2.0.1",
     "@nestjs/core": "8.4.6",
-    "@nestjs/microservices": "8.4.5",
+    "@nestjs/microservices": "8.4.6",
     "@nestjs/passport": "8.2.1",
     "@nestjs/platform-express": "8.4.6",
     "@nestjs/swagger": "5.2.1",
