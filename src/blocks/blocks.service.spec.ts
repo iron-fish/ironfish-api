@@ -431,7 +431,7 @@ describe('BlocksService', () => {
         size: faker.datatype.number(),
       });
 
-      const metrics = await blocksService.getDateMetrics(prisma, date);
+      const metrics = await blocksService.getDateMetrics(date);
       expect(metrics).toMatchObject({
         averageBlockTimeMs: expect.any(Number),
         averageDifficultyMillis: expect.any(Number),

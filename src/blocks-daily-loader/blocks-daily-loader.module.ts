@@ -4,12 +4,11 @@
 import { Module } from '@nestjs/common';
 import { BlocksModule } from '../blocks/blocks.module';
 import { BlocksDailyModule } from '../blocks-daily/blocks-daily.module';
-import { PrismaModule } from '../prisma/prisma.module';
 import { BlocksDailyLoader } from './blocks-daily-loader';
 
 @Module({
   exports: [BlocksDailyLoader],
-  imports: [BlocksDailyModule, BlocksModule, PrismaModule],
+  imports: [BlocksDailyModule, BlocksModule],
   providers: [BlocksDailyLoader],
 })
 export class BlocksDailyLoaderModule {}

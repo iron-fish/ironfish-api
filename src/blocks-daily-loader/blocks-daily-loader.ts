@@ -4,7 +4,6 @@
 import { Injectable } from '@nestjs/common';
 import { BlocksService } from '../blocks/blocks.service';
 import { BlocksDailyService } from '../blocks-daily/blocks-daily.service';
-import { PrismaService } from '../prisma/prisma.service';
 import { BlockDaily } from '.prisma/client';
 
 @Injectable()
@@ -12,13 +11,10 @@ export class BlocksDailyLoader {
   constructor(
     private readonly blocksDailyService: BlocksDailyService,
     private readonly blocksService: BlocksService,
-    private readonly prisma: PrismaService,
   ) {}
 
   async loadDateMetrics(date: Date): Promise<BlockDaily> {
-    return this.prisma.$transaction(async (prisma) => {
-      const dateMetrics = await this.blocksService.getDateMetrics(prisma, date);
-      return this.blocksDailyService.upsert(prisma, { date, ...dateMetrics });
-    });
+    const dateMetrics = await this.blocksService.getDateMetrics(date);
+    return this.blocksDailyService.upsert({ date, ...dateMetrics });
   }
 }
