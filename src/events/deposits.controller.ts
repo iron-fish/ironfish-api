@@ -8,16 +8,17 @@ import {
   HttpStatus,
   NotFoundException,
   Post,
+  Res,
   UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiExcludeEndpoint, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Response } from 'express';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { DepositsService } from './deposits.service';
 import { DepositsUpsertService } from './deposits.upsert.service';
 import { UpsertDepositsDto } from './dto/upsert-deposit.dto';
-import { SerializedDeposit } from './interfaces/serialized-deposit';
 @ApiTags('Deposit')
 @Controller('deposits')
 export class DepositsController {
@@ -62,15 +63,9 @@ export class DepositsController {
       }),
     )
     data: UpsertDepositsDto,
-  ): Promise<SerializedDeposit[]> {
-    const deposits = await this.depositsUpsert.upsertBulk(data.operations);
-
-    return deposits.map((d) => ({
-      id: d.id,
-      transaction_hash: d.transaction_hash,
-      block_sequence: d.block_sequence,
-      block_hash: d.block_hash,
-      object: 'deposit',
-    }));
+    @Res() res: Response,
+  ): Promise<void> {
+    await this.depositsUpsert.bulkUpsert(data.operations);
+    res.sendStatus(HttpStatus.ACCEPTED);
   }
 }

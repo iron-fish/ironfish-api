@@ -4,6 +4,7 @@
 import { Module } from '@nestjs/common';
 import { ApiConfigModule } from '../api-config/api-config.module';
 import { BlocksModule } from '../blocks/blocks.module';
+import { DepositHeadsModule } from '../deposit-heads/deposit-heads.module';
 import { GraphileWorkerModule } from '../graphile-worker/graphile-worker.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { UserPointsModule } from '../user-points/user-points.module';
@@ -17,10 +18,11 @@ import { EventsService } from './events.service';
   imports: [
     ApiConfigModule,
     BlocksModule,
+    DepositHeadsModule,
+    GraphileWorkerModule,
     PrismaModule,
     UserPointsModule,
     UsersModule,
-    GraphileWorkerModule,
   ],
   providers: [EventsService, DepositsService, DepositsUpsertService],
 })
