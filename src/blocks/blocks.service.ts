@@ -254,13 +254,10 @@ export class BlocksService {
     }
   }
 
-  async getDateMetrics(
-    prisma: BasePrismaClient,
-    date: Date,
-  ): Promise<BlocksDateMetrics> {
+  async getDateMetrics(date: Date): Promise<BlocksDateMetrics> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
     const end = getNextDate(date);
-    const dateMetricsResponse = await prisma.$queryRawUnsafe<
+    const dateMetricsResponse = await this.prisma.$queryRawUnsafe<
       {
         average_block_time_ms: number;
         average_difficulty_millis: number;
