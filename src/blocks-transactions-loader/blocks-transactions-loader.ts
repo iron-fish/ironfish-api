@@ -31,35 +31,37 @@ export class BlocksTransactionsLoader {
     const deleteBlockMinedPayloads: DeleteBlockMinedEventOptions[] = [];
     const upsertBlockMinedPayloads: UpsertBlockMinedEventOptions[] = [];
 
-    const response = await this.prisma.$transaction(
-      async (prisma) => {
-        const records: (Block & { transactions: Transaction[] })[] = [];
-        const previousHashes = new Map<string, BlockDto>();
-        for (const block of blocks) {
-          previousHashes.set(block.hash, block);
-        }
+    const previousHashes = new Map<string, BlockDto>();
+    for (const block of blocks) {
+      previousHashes.set(block.hash, block);
+    }
 
-        for (const block of blocks) {
-          let timeSinceLastBlockMs = undefined;
-          if (block.previous_block_hash !== undefined) {
-            const previousBlock = previousHashes.get(block.previous_block_hash);
-            if (previousBlock) {
-              const prevTimestamp = previousBlock.timestamp;
-              timeSinceLastBlockMs =
-                block.timestamp.getTime() - prevTimestamp.getTime();
-            } else {
-              const previousBlock = await prisma.block.findFirst({
-                where: {
-                  hash: block.previous_block_hash,
-                },
-              });
-              if (previousBlock) {
-                timeSinceLastBlockMs =
-                  block.timestamp.getTime() - previousBlock.timestamp.getTime();
-              }
-            }
+    const records: (Block & { transactions: Transaction[] })[] = [];
+
+    for (const block of blocks) {
+      let timeSinceLastBlockMs: number | undefined = undefined;
+      if (block.previous_block_hash !== undefined) {
+        const seenPreviousBlock = previousHashes.get(block.previous_block_hash);
+        if (seenPreviousBlock) {
+          const prevTimestamp = seenPreviousBlock.timestamp;
+          timeSinceLastBlockMs =
+            block.timestamp.getTime() - prevTimestamp.getTime();
+        } else {
+          const unseenPreviousBlock = await this.prisma.block.findFirst({
+            where: {
+              hash: block.previous_block_hash,
+            },
+          });
+          if (unseenPreviousBlock) {
+            timeSinceLastBlockMs =
+              block.timestamp.getTime() -
+              unseenPreviousBlock.timestamp.getTime();
           }
+        }
+      }
 
+      await this.prisma.$transaction(
+        async (prisma) => {
           const {
             block: createdBlock,
             deleteBlockMinedOptions,
@@ -92,15 +94,14 @@ export class BlocksTransactionsLoader {
             );
           }
           records.push({ ...createdBlock, transactions });
-        }
-        return records;
-      },
-      {
-        // We increased this from the default of 5000 because the transactions were
-        // timing out and failing to upsert blocks
-        timeout: 20000,
-      },
-    );
+        },
+        {
+          // We increased this from the default of 5000 because the transactions were
+          // timing out and failing to upsert blocks
+          timeout: 20000,
+        },
+      );
+    }
 
     for (const payload of deleteBlockMinedPayloads) {
       await this.graphileWorkerService.addJob(
@@ -129,6 +130,6 @@ export class BlocksTransactionsLoader {
       },
     );
 
-    return response;
+    return records;
   }
 }
