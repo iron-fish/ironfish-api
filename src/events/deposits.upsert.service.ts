@@ -48,91 +48,86 @@ export class DepositsUpsertService {
 
   async upsert(operation: UpsertDepositsOperationDto): Promise<Deposit[]> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
+    const deposits = new Array<Deposit>();
 
-    return this.prisma.$transaction(
-      async (prisma) => {
-        const deposits = new Array<Deposit>();
+    for (const transaction of operation.transactions) {
+      const shouldUpsertDeposit =
+        operation.type === BlockOperation.CONNECTED ||
+        operation.type === BlockOperation.DISCONNECTED;
+      if (!shouldUpsertDeposit) {
+        continue;
+      }
 
-        for (const transaction of operation.transactions) {
-          const shouldUpsertDeposit =
-            operation.type === BlockOperation.CONNECTED ||
-            operation.type === BlockOperation.DISCONNECTED;
-          if (!shouldUpsertDeposit) {
-            continue;
-          }
+      await this.prisma.$transaction(async (prisma) => {
+        const amounts = new Map<string, number>();
 
-          const amounts = new Map<string, number>();
-
-          for (const deposit of transaction.notes) {
-            const amount = amounts.get(deposit.memo) ?? 0;
-            amounts.set(deposit.memo, amount + deposit.amount);
-          }
-
-          for (const [graffiti, amount] of amounts) {
-            const depositParams = {
-              transaction_hash: standardizeHash(transaction.hash),
-              block_hash: standardizeHash(operation.block.hash),
-              block_sequence: operation.block.sequence,
-              network_version: networkVersion,
-              graffiti,
-              main: operation.type === BlockOperation.CONNECTED,
-              amount,
-            };
-
-            const deposit = await prisma.deposit.upsert({
-              create: depositParams,
-              update: depositParams,
-              where: {
-                uq_deposits_on_transaction_hash_and_graffiti: {
-                  transaction_hash: depositParams.transaction_hash,
-                  graffiti: depositParams.graffiti,
-                },
-              },
-            });
-
-            deposits.push(deposit);
-
-            if (!deposit.main) {
-              const event = await prisma.event.findUnique({
-                where: {
-                  deposit_id: deposit.id,
-                },
-              });
-              if (event) {
-                await this.eventsService.deleteWithClient(event, prisma);
-              }
-            }
-
-            if (deposit.main && deposit.amount >= SEND_TRANSACTION_LIMIT_ORE) {
-              const user = await this.usersService.findByGraffiti(
-                deposit.graffiti,
-                prisma,
-              );
-
-              if (user) {
-                await this.eventsService.createWithClient(
-                  {
-                    occurredAt: operation.block.timestamp,
-                    type: EventType.SEND_TRANSACTION,
-                    userId: user.id,
-                    deposit,
-                  },
-                  prisma,
-                );
-              }
-            }
-          }
-
-          const headHash =
-            operation.type === BlockOperation.CONNECTED
-              ? operation.block.hash
-              : operation.block.previousBlockHash;
-          await this.depositHeadsService.upsert(headHash, prisma);
+        for (const deposit of transaction.notes) {
+          const amount = amounts.get(deposit.memo) ?? 0;
+          amounts.set(deposit.memo, amount + deposit.amount);
         }
 
-        return deposits;
-      },
-      { timeout: 20000 },
-    );
+        for (const [graffiti, amount] of amounts) {
+          const depositParams = {
+            transaction_hash: standardizeHash(transaction.hash),
+            block_hash: standardizeHash(operation.block.hash),
+            block_sequence: operation.block.sequence,
+            network_version: networkVersion,
+            graffiti,
+            main: operation.type === BlockOperation.CONNECTED,
+            amount,
+          };
+
+          const deposit = await prisma.deposit.upsert({
+            create: depositParams,
+            update: depositParams,
+            where: {
+              uq_deposits_on_transaction_hash_and_graffiti: {
+                transaction_hash: depositParams.transaction_hash,
+                graffiti: depositParams.graffiti,
+              },
+            },
+          });
+          deposits.push(deposit);
+
+          if (!deposit.main) {
+            const event = await prisma.event.findUnique({
+              where: {
+                deposit_id: deposit.id,
+              },
+            });
+            if (event) {
+              await this.eventsService.deleteWithClient(event, prisma);
+            }
+          }
+
+          if (deposit.main && deposit.amount >= SEND_TRANSACTION_LIMIT_ORE) {
+            const user = await this.usersService.findByGraffiti(
+              deposit.graffiti,
+              prisma,
+            );
+
+            if (user) {
+              await this.eventsService.createWithClient(
+                {
+                  occurredAt: operation.block.timestamp,
+                  type: EventType.SEND_TRANSACTION,
+                  userId: user.id,
+                  deposit,
+                },
+                prisma,
+              );
+            }
+          }
+        }
+
+        const headHash =
+          operation.type === BlockOperation.CONNECTED
+            ? operation.block.hash
+            : operation.block.previousBlockHash;
+        await this.depositHeadsService.upsert(headHash, prisma);
+      });
+    }
+
+    return deposits;
   }
 }
