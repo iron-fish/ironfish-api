@@ -41,20 +41,21 @@ export class BlocksTransactionsLoader {
     for (const block of blocks) {
       let timeSinceLastBlockMs: number | undefined = undefined;
       if (block.previous_block_hash !== undefined) {
-        const previousBlock = previousHashes.get(block.previous_block_hash);
-        if (previousBlock) {
-          const prevTimestamp = previousBlock.timestamp;
+        const seenPreviousBlock = previousHashes.get(block.previous_block_hash);
+        if (seenPreviousBlock) {
+          const prevTimestamp = seenPreviousBlock.timestamp;
           timeSinceLastBlockMs =
             block.timestamp.getTime() - prevTimestamp.getTime();
         } else {
-          const previousBlock = await this.prisma.block.findFirst({
+          const unseenPreviousBlock = await this.prisma.block.findFirst({
             where: {
               hash: block.previous_block_hash,
             },
           });
-          if (previousBlock) {
+          if (unseenPreviousBlock) {
             timeSinceLastBlockMs =
-              block.timestamp.getTime() - previousBlock.timestamp.getTime();
+              block.timestamp.getTime() -
+              unseenPreviousBlock.timestamp.getTime();
           }
         }
       }
