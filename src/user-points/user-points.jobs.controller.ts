@@ -1,11 +1,12 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { Controller } from '@nestjs/common';
+import { Controller, UseFilters } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { EventsService } from '../events/events.service';
 import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
 import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
+import { GraphileWorkerException } from '../graphile-worker/graphile-worker-exception';
 import { GraphileWorkerHandlerResponse } from '../graphile-worker/interfaces/graphile-worker-handler-response';
 import { LoggerService } from '../logger/logger.service';
 import { UsersService } from '../users/users.service';
@@ -24,6 +25,7 @@ export class UserPointsJobsController {
   ) {}
 
   @MessagePattern(GraphileWorkerPattern.REFRESH_USERS_POINTS)
+  @UseFilters(new GraphileWorkerException())
   async refreshUsersPoints(): Promise<GraphileWorkerHandlerResponse> {
     for await (const user of this.usersGenerator()) {
       await this.graphileWorkerService.addJob<RefreshUserPointsOptions>(
@@ -52,6 +54,7 @@ export class UserPointsJobsController {
   }
 
   @MessagePattern(GraphileWorkerPattern.REFRESH_USER_POINTS)
+  @UseFilters(new GraphileWorkerException())
   async refreshUserPoints({
     userId,
   }: RefreshUserPointsOptions): Promise<GraphileWorkerHandlerResponse> {

@@ -1,10 +1,11 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { Controller } from '@nestjs/common';
+import { Controller, UseFilters } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { BlocksService } from '../blocks/blocks.service';
 import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
+import { GraphileWorkerException } from '../graphile-worker/graphile-worker-exception';
 import { GraphileWorkerHandlerResponse } from '../graphile-worker/interfaces/graphile-worker-handler-response';
 import { LoggerService } from '../logger/logger.service';
 import { UsersService } from '../users/users.service';
@@ -23,6 +24,7 @@ export class EventsJobsController {
   ) {}
 
   @MessagePattern(GraphileWorkerPattern.UPSERT_BLOCK_MINED_EVENT)
+  @UseFilters(new GraphileWorkerException())
   async upsertBlockMinedEvent({
     block_id: blockId,
     user_id: userId,
@@ -44,6 +46,7 @@ export class EventsJobsController {
   }
 
   @MessagePattern(GraphileWorkerPattern.DELETE_BLOCK_MINED_EVENT)
+  @UseFilters(new GraphileWorkerException())
   async deleteBlockMinedEvent({
     block_id: blockId,
   }: DeleteBlockMinedEventOptions): Promise<GraphileWorkerHandlerResponse> {
@@ -58,6 +61,7 @@ export class EventsJobsController {
   }
 
   @MessagePattern(GraphileWorkerPattern.UPDATE_LATEST_POINTS)
+  @UseFilters(new GraphileWorkerException())
   async updateLatestPoints({
     userId,
     type,

@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { Controller } from '@nestjs/common';
+import { Controller, UseFilters } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { BlocksService } from '../blocks/blocks.service';
 import { BlocksDailyLoader } from '../blocks-daily-loader/blocks-daily-loader';
@@ -9,6 +9,7 @@ import { MS_PER_DAY } from '../common/constants';
 import { getNextDate } from '../common/utils/date';
 import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
 import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
+import { GraphileWorkerException } from '../graphile-worker/graphile-worker-exception';
 import { GraphileWorkerHandlerResponse } from '../graphile-worker/interfaces/graphile-worker-handler-response';
 import { SyncBlocksDailyOptions } from './interfaces/sync-blocks-daily-options';
 
@@ -21,6 +22,7 @@ export class BlocksDailyJobsController {
   ) {}
 
   @MessagePattern(GraphileWorkerPattern.SYNC_BLOCKS_DAILY)
+  @UseFilters(new GraphileWorkerException())
   async sync({
     date,
   }: SyncBlocksDailyOptions): Promise<GraphileWorkerHandlerResponse> {
