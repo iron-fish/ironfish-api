@@ -148,25 +148,11 @@ describe('BlocksController', () => {
             },
           ],
         };
-        const block = payload.blocks[0];
-        const { body } = await request(app.getHttpServer())
+        await request(app.getHttpServer())
           .post(`/blocks`)
           .set('Authorization', `Bearer ${API_KEY}`)
           .send(payload)
           .expect(HttpStatus.CREATED);
-
-        const { data } = body;
-        expect((data as unknown[]).length).toBeGreaterThan(0);
-        expect((data as unknown[])[0]).toMatchObject({
-          id: expect.any(Number),
-          hash: block.hash,
-          difficulty: block.difficulty,
-          sequence: block.sequence,
-          timestamp: block.timestamp.toISOString(),
-          transactions_count: 1,
-          previous_block_hash: block.previous_block_hash,
-          size: block.size,
-        });
       });
     });
   });

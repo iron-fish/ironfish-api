@@ -62,16 +62,9 @@ export class BlocksController {
       }),
     )
     upsertBlocksDto: UpsertBlocksDto,
-  ): Promise<List<SerializedBlock>> {
-    const blocks = await this.blocksTransactionsLoader.bulkUpsert(
-      upsertBlocksDto,
-    );
-    return {
-      object: 'list',
-      data: blocks.map((block) =>
-        serializedBlockFromRecordWithTransactions(block),
-      ),
-    };
+  ): Promise<void> {
+    await this.blocksTransactionsLoader.bulkUpsert(upsertBlocksDto);
+    return;
   }
 
   @ApiOperation({ summary: 'Gets the head of the chain' })

@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable } from '@nestjs/common';
-import { Block, Transaction } from '@prisma/client';
 import { BlocksService } from '../blocks/blocks.service';
 import { BlockDto, UpsertBlocksDto } from '../blocks/dto/upsert-blocks.dto';
 import { BlocksDailyService } from '../blocks-daily/blocks-daily.service';
@@ -25,41 +24,38 @@ export class BlocksTransactionsLoader {
     private readonly transactionsService: TransactionsService,
   ) {}
 
-  async bulkUpsert({
-    blocks,
-  }: UpsertBlocksDto): Promise<(Block & { transactions: Transaction[] })[]> {
+  async bulkUpsert({ blocks }: UpsertBlocksDto): Promise<void> {
     const deleteBlockMinedPayloads: DeleteBlockMinedEventOptions[] = [];
     const upsertBlockMinedPayloads: UpsertBlockMinedEventOptions[] = [];
 
-    const response = await this.prisma.$transaction(
-      async (prisma) => {
-        const records: (Block & { transactions: Transaction[] })[] = [];
-        const previousHashes = new Map<string, BlockDto>();
-        for (const block of blocks) {
-          previousHashes.set(block.hash, block);
-        }
+    const previousHashes = new Map<string, BlockDto>();
+    for (const block of blocks) {
+      previousHashes.set(block.hash, block);
+    }
 
-        for (const block of blocks) {
-          let timeSinceLastBlockMs = undefined;
-          if (block.previous_block_hash !== undefined) {
-            const previousBlock = previousHashes.get(block.previous_block_hash);
-            if (previousBlock) {
-              const prevTimestamp = previousBlock.timestamp;
-              timeSinceLastBlockMs =
-                block.timestamp.getTime() - prevTimestamp.getTime();
-            } else {
-              const previousBlock = await prisma.block.findFirst({
-                where: {
-                  hash: block.previous_block_hash,
-                },
-              });
-              if (previousBlock) {
-                timeSinceLastBlockMs =
-                  block.timestamp.getTime() - previousBlock.timestamp.getTime();
-              }
-            }
+    for (const block of blocks) {
+      let timeSinceLastBlockMs: number | undefined = undefined;
+      if (block.previous_block_hash !== undefined) {
+        const previousBlock = previousHashes.get(block.previous_block_hash);
+        if (previousBlock) {
+          const prevTimestamp = previousBlock.timestamp;
+          timeSinceLastBlockMs =
+            block.timestamp.getTime() - prevTimestamp.getTime();
+        } else {
+          const previousBlock = await this.prisma.block.findFirst({
+            where: {
+              hash: block.previous_block_hash,
+            },
+          });
+          if (previousBlock) {
+            timeSinceLastBlockMs =
+              block.timestamp.getTime() - previousBlock.timestamp.getTime();
           }
+        }
+      }
 
+      await this.prisma.$transaction(
+        async (prisma) => {
           const {
             block: createdBlock,
             deleteBlockMinedOptions,
@@ -91,16 +87,12 @@ export class BlocksTransactionsLoader {
               transaction,
             );
           }
-          records.push({ ...createdBlock, transactions });
-        }
-        return records;
-      },
-      {
-        // We increased this from the default of 5000 because the transactions were
-        // timing out and failing to upsert blocks
-        timeout: 20000,
-      },
-    );
+        },
+        {
+          timeout: 20000,
+        },
+      );
+    }
 
     for (const payload of deleteBlockMinedPayloads) {
       await this.graphileWorkerService.addJob(
@@ -129,6 +121,6 @@ export class BlocksTransactionsLoader {
       },
     );
 
-    return response;
+    return;
   }
 }
