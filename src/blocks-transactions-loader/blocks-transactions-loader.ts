@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable } from '@nestjs/common';
+import { Block, Transaction } from '@prisma/client';
 import { BlocksService } from '../blocks/blocks.service';
 import { BlockDto, UpsertBlocksDto } from '../blocks/dto/upsert-blocks.dto';
 import { BlocksDailyService } from '../blocks-daily/blocks-daily.service';
@@ -24,7 +25,9 @@ export class BlocksTransactionsLoader {
     private readonly transactionsService: TransactionsService,
   ) {}
 
-  async bulkUpsert({ blocks }: UpsertBlocksDto): Promise<void> {
+  async bulkUpsert({
+    blocks,
+  }: UpsertBlocksDto): Promise<(Block & { transactions: Transaction[] })[]> {
     const deleteBlockMinedPayloads: DeleteBlockMinedEventOptions[] = [];
     const upsertBlockMinedPayloads: UpsertBlockMinedEventOptions[] = [];
 
@@ -32,6 +35,8 @@ export class BlocksTransactionsLoader {
     for (const block of blocks) {
       previousHashes.set(block.hash, block);
     }
+
+    const records: (Block & { transactions: Transaction[] })[] = [];
 
     for (const block of blocks) {
       let timeSinceLastBlockMs: number | undefined = undefined;
@@ -87,6 +92,7 @@ export class BlocksTransactionsLoader {
               transaction,
             );
           }
+          records.push({ ...createdBlock, transactions });
         },
         {
           // We increased this from the default of 5000 because the transactions were
@@ -123,6 +129,6 @@ export class BlocksTransactionsLoader {
       },
     );
 
-    return;
+    return records;
   }
 }

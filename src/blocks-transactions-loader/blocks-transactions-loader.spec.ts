@@ -2,14 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { INestApplication } from '@nestjs/common';
-import assert from 'assert';
 import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { BlockOperation } from '../blocks/enums/block-operation';
 import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
 import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
 import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
-import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
 import { BlocksTransactionsLoader } from './blocks-transactions-loader';
@@ -19,7 +17,6 @@ describe('BlocksTransactionsLoader', () => {
   let blocksTransactionsLoader: BlocksTransactionsLoader;
   let blocksTransactionsService: BlocksTransactionsService;
   let graphileWorkerService: GraphileWorkerService;
-  let prismaService: PrismaService;
   let usersService: UsersService;
 
   let addJob: jest.SpyInstance;
@@ -29,7 +26,6 @@ describe('BlocksTransactionsLoader', () => {
     blocksTransactionsLoader = app.get(BlocksTransactionsLoader);
     blocksTransactionsService = app.get(BlocksTransactionsService);
     graphileWorkerService = app.get(GraphileWorkerService);
-    prismaService = app.get(PrismaService);
     usersService = app.get(UsersService);
     await app.init();
   });
@@ -62,7 +58,7 @@ describe('BlocksTransactionsLoader', () => {
         notes: [{ commitment: uuid() }],
         spends: [{ nullifier: uuid() }],
       };
-      await blocksTransactionsLoader.bulkUpsert({
+      const blocks = await blocksTransactionsLoader.bulkUpsert({
         blocks: [
           {
             hash: blockHash1,
@@ -89,13 +85,7 @@ describe('BlocksTransactionsLoader', () => {
         ],
       });
 
-      const block1 = await prismaService.block.findFirst({
-        where: {
-          hash: blockHash1,
-        },
-      });
-      assert(block1);
-      expect(block1).toMatchObject({
+      expect(blocks[0]).toMatchObject({
         id: expect.any(Number),
         hash: blockHash1,
         sequence: expect.any(Number),
@@ -109,13 +99,7 @@ describe('BlocksTransactionsLoader', () => {
         time_since_last_block_ms: null,
       });
 
-      const block2 = await prismaService.block.findFirst({
-        where: {
-          hash: blockHash2,
-        },
-      });
-      assert(block2);
-      expect(block2).toMatchObject({
+      expect(blocks[1]).toMatchObject({
         id: expect.any(Number),
         hash: blockHash2,
         sequence: expect.any(Number),
@@ -129,13 +113,7 @@ describe('BlocksTransactionsLoader', () => {
         time_since_last_block_ms: timestamp2.getTime() - timestamp1.getTime(),
       });
 
-      const tx1 = await prismaService.transaction.findFirst({
-        where: {
-          hash: transaction.hash,
-        },
-      });
-      assert(tx1);
-      expect(tx1).toMatchObject({
+      expect(blocks[0].transactions[0]).toMatchObject({
         hash: transaction.hash,
         fee: transaction.fee,
         size: transaction.size,
@@ -144,28 +122,27 @@ describe('BlocksTransactionsLoader', () => {
       });
 
       const blockTransaction = await blocksTransactionsService.find(
-        block1.id,
-        tx1.id,
+        blocks[0].id,
+        blocks[0].transactions[0].id,
       );
       expect(blockTransaction).toMatchObject({
-        block_id: block1.id,
-        transaction_id: tx1.id,
+        block_id: blocks[0].id,
+        transaction_id: blocks[0].transactions[0].id,
       });
     });
 
     describe('when the blocks are associated with a registered user', () => {
       it('queues delete jobs for disconnected blocks', async () => {
-        const blockHash = uuid();
         const graffiti = uuid();
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti,
           country_code: faker.address.countryCode('alpha-3'),
         });
-        await blocksTransactionsLoader.bulkUpsert({
+        const blocks = await blocksTransactionsLoader.bulkUpsert({
           blocks: [
             {
-              hash: blockHash,
+              hash: uuid(),
               sequence: faker.datatype.number(),
               difficulty: faker.datatype.number(),
               timestamp: new Date(),
@@ -178,34 +155,27 @@ describe('BlocksTransactionsLoader', () => {
           ],
         });
 
-        const block = await prismaService.block.findFirst({
-          where: {
-            hash: blockHash,
-          },
-        });
-        assert(block);
         expect(addJob).toHaveBeenCalledTimes(2);
         expect(addJob).toHaveBeenCalledWith(
           GraphileWorkerPattern.DELETE_BLOCK_MINED_EVENT,
           {
-            block_id: block.id,
+            block_id: blocks[0].id,
           },
           expect.anything(),
         );
       });
 
       it('queues upsert jobs for disconnected blocks', async () => {
-        const blockHash = uuid();
         const graffiti = uuid();
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti,
           country_code: faker.address.countryCode('alpha-3'),
         });
-        await blocksTransactionsLoader.bulkUpsert({
+        const blocks = await blocksTransactionsLoader.bulkUpsert({
           blocks: [
             {
-              hash: blockHash,
+              hash: uuid(),
               sequence: faker.datatype.number(),
               difficulty: faker.datatype.number(),
               timestamp: new Date(),
@@ -218,17 +188,11 @@ describe('BlocksTransactionsLoader', () => {
           ],
         });
 
-        const block = await prismaService.block.findFirst({
-          where: {
-            hash: blockHash,
-          },
-        });
-        assert(block);
         expect(addJob).toHaveBeenCalledTimes(2);
         expect(addJob).toHaveBeenCalledWith(
           GraphileWorkerPattern.UPSERT_BLOCK_MINED_EVENT,
           {
-            block_id: block.id,
+            block_id: blocks[0].id,
             user_id: user.id,
           },
           expect.anything(),
