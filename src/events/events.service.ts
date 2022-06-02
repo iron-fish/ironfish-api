@@ -321,75 +321,66 @@ export class EventsService {
     eventMetrics: Record<EventType, SerializedEventMetrics>;
     points: number;
   }> {
-    return this.prisma.$transaction(async (prisma) => {
-      const pointsAggregate = await prisma.event.aggregate({
-        _sum: {
-          points: true,
+    const pointsAggregate = await this.prisma.event.aggregate({
+      _sum: {
+        points: true,
+      },
+      where: {
+        occurred_at: {
+          gte: start,
+          lt: end,
         },
-        where: {
-          occurred_at: {
-            gte: start,
-            lt: end,
-          },
-          user_id: user.id,
-          deleted_at: null,
-        },
-      });
-      return {
-        eventMetrics: {
-          BLOCK_MINED: await this.getTotalEventTypeMetricsForUser(
-            user,
-            EventType.BLOCK_MINED,
-            start,
-            end,
-            prisma,
-          ),
-          BUG_CAUGHT: await this.getTotalEventTypeMetricsForUser(
-            user,
-            EventType.BUG_CAUGHT,
-            start,
-            end,
-            prisma,
-          ),
-          COMMUNITY_CONTRIBUTION: await this.getTotalEventTypeMetricsForUser(
-            user,
-            EventType.COMMUNITY_CONTRIBUTION,
-            start,
-            end,
-            prisma,
-          ),
-          PULL_REQUEST_MERGED: await this.getTotalEventTypeMetricsForUser(
-            user,
-            EventType.PULL_REQUEST_MERGED,
-            start,
-            end,
-            prisma,
-          ),
-          SOCIAL_MEDIA_PROMOTION: await this.getTotalEventTypeMetricsForUser(
-            user,
-            EventType.SOCIAL_MEDIA_PROMOTION,
-            start,
-            end,
-            prisma,
-          ),
-          NODE_UPTIME: await this.getTotalEventTypeMetricsForUser(
-            user,
-            EventType.NODE_UPTIME,
-            start,
-            end,
-            prisma,
-          ),
-          SEND_TRANSACTION: await this.getTotalEventTypeMetricsForUser(
-            user,
-            EventType.SEND_TRANSACTION,
-            start,
-            end,
-            prisma,
-          ),
-        },
-        points: pointsAggregate._sum.points || 0,
-      };
+        user_id: user.id,
+        deleted_at: null,
+      },
     });
+    return {
+      eventMetrics: {
+        BLOCK_MINED: await this.getTotalEventTypeMetricsForUser(
+          user,
+          EventType.BLOCK_MINED,
+          start,
+          end,
+        ),
+        BUG_CAUGHT: await this.getTotalEventTypeMetricsForUser(
+          user,
+          EventType.BUG_CAUGHT,
+          start,
+          end,
+        ),
+        COMMUNITY_CONTRIBUTION: await this.getTotalEventTypeMetricsForUser(
+          user,
+          EventType.COMMUNITY_CONTRIBUTION,
+          start,
+          end,
+        ),
+        PULL_REQUEST_MERGED: await this.getTotalEventTypeMetricsForUser(
+          user,
+          EventType.PULL_REQUEST_MERGED,
+          start,
+          end,
+        ),
+        SOCIAL_MEDIA_PROMOTION: await this.getTotalEventTypeMetricsForUser(
+          user,
+          EventType.SOCIAL_MEDIA_PROMOTION,
+          start,
+          end,
+        ),
+        NODE_UPTIME: await this.getTotalEventTypeMetricsForUser(
+          user,
+          EventType.NODE_UPTIME,
+          start,
+          end,
+        ),
+        SEND_TRANSACTION: await this.getTotalEventTypeMetricsForUser(
+          user,
+          EventType.SEND_TRANSACTION,
+          start,
+          end,
+        ),
+      },
+      points: pointsAggregate._sum.points || 0,
+    };
   }
 
   private async getTotalEventTypeMetricsForUser(
@@ -397,7 +388,6 @@ export class EventsService {
     type: EventType,
     start: Date,
     end: Date,
-    client: BasePrismaClient,
   ): Promise<SerializedEventMetrics> {
     const dateFilter = {
       occurred_at: {
@@ -405,7 +395,7 @@ export class EventsService {
         lt: end,
       },
     };
-    const aggregate = await client.event.aggregate({
+    const aggregate = await this.prisma.event.aggregate({
       _sum: {
         points: true,
       },
@@ -417,7 +407,7 @@ export class EventsService {
       },
     });
     return {
-      count: await client.event.count({
+      count: await this.prisma.event.count({
         where: {
           type,
           user_id: id,
