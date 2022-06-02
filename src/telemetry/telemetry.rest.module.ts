@@ -6,10 +6,17 @@ import { ApiConfigModule } from '../api-config/api-config.module';
 import { InfluxDbModule } from '../influxdb/influxdb.module';
 import { NodeUptimesModule } from '../node-uptimes/node-uptimes.module';
 import { UsersModule } from '../users/users.module';
+import { VersionsModule } from '../versions/versions.module';
 import { TelemetryController } from './telemetry.controller';
 
 @Module({
   controllers: [TelemetryController],
-  imports: [ApiConfigModule, InfluxDbModule, NodeUptimesModule, UsersModule],
+  imports: [
+    ApiConfigModule,
+    InfluxDbModule,
+    NodeUptimesModule,
+    UsersModule,
+    VersionsModule,
+  ],
 })
 export class TelemetryRestModule {}
