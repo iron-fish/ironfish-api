@@ -2,17 +2,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import {
+  Body,
   Controller,
   Get,
   HttpStatus,
   NotFoundException,
+  Post,
   Query,
+  UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiExcludeEndpoint, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { List } from '../common/interfaces/list';
 import { TransactionQueryDto } from './dto/transaction-query.dto';
 import { TransactionsQueryDto } from './dto/transactions-query.dto';
+import { UpsertTransactionsDto } from './dto/upsert-transactions.dto';
 import { SerializedTransaction } from './interfaces/serialized-transaction';
 import { SerializedTransactionWithBlocks } from './interfaces/serialized-transaction-with-blocks';
 import { TransactionsService } from './transactions.service';
@@ -48,6 +53,29 @@ export class TransactionsController {
     } else {
       throw new NotFoundException();
     }
+  }
+
+  @ApiExcludeEndpoint()
+  @Post()
+  @UseGuards(ApiKeyGuard)
+  async bulkUpsert(
+    @Body(
+      new ValidationPipe({
+        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        transform: true,
+      }),
+    )
+    upsertTransactionsDto: UpsertTransactionsDto,
+  ): Promise<List<SerializedTransaction>> {
+    const transactions = await this.transactionsService.bulkUpsert(
+      upsertTransactionsDto.transactions,
+    );
+    return {
+      object: 'list',
+      data: transactions.map((transaction) =>
+        serializedTransactionFromRecord(transaction),
+      ),
+    };
   }
 
   @ApiOperation({
