@@ -81,10 +81,11 @@ export class BlocksTransactionsLoader {
             upsertBlockMinedPayloads.push(upsertBlockMinedOptions);
           }
 
-          const transactions = await this.transactionsService.bulkUpsert(
-            prisma,
-            block.transactions,
-          );
+          const transactions =
+            await this.transactionsService.bulkUpsertWithClient(
+              prisma,
+              block.transactions,
+            );
 
           for (const transaction of transactions) {
             await this.blocksTransactionsService.upsert(

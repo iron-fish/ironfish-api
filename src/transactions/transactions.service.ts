@@ -24,7 +24,7 @@ export class TransactionsService {
     private readonly prisma: PrismaService,
   ) {}
 
-  async bulkUpsert(
+  async bulkUpsertWithClient(
     prisma: BasePrismaClient,
     transactions: UpsertTransactionOptions[],
   ): Promise<Transaction[]> {
@@ -33,6 +33,14 @@ export class TransactionsService {
       records.push(await this.upsert(prisma, transaction));
     }
     return records;
+  }
+
+  async bulkUpsert(
+    transactions: UpsertTransactionOptions[],
+  ): Promise<Transaction[]> {
+    return this.prisma.$transaction(async (prisma) => {
+      return this.bulkUpsertWithClient(prisma, transactions);
+    });
   }
 
   private async upsert(
