@@ -52,7 +52,7 @@
     "faker": "5.5.3",
     "jest": "27.5.1",
     "prettier": "2.7.1",
-    "prisma": "3.15.1",
+    "prisma": "3.15.2",
     "run-script-webpack-plugin": "0.1.0",
     "supertest": "6.2.3",
     "ts-jest": "27.1.4",
