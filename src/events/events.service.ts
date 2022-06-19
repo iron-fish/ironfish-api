@@ -10,9 +10,7 @@ import {
   DEFAULT_LIMIT,
   MAX_LIMIT,
   POINTS_PER_CATEGORY,
-  WEEKLY_POINT_LIMITS_BY_EVENT_TYPE,
 } from '../common/constants';
-import { getMondayFromDate } from '../common/utils/date';
 import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
 import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -450,29 +448,7 @@ export class EventsService {
       return null;
     }
 
-    const startOfWeek = getMondayFromDate(occurredAt);
-
-    const pointsAggregateThisWeek = await client.event.aggregate({
-      _sum: {
-        points: true,
-      },
-      where: {
-        type,
-        user_id: userId,
-        deleted_at: null,
-        occurred_at: {
-          lt: occurredAt,
-          gte: startOfWeek,
-        },
-      },
-    });
-
-    const pointsThisWeek = pointsAggregateThisWeek._sum.points || 0;
-    const weeklyLimitForEventType = WEEKLY_POINT_LIMITS_BY_EVENT_TYPE[type];
-    const adjustedPoints = Math.min(
-      Math.max(weeklyLimitForEventType - pointsThisWeek, 0),
-      points ?? POINTS_PER_CATEGORY[type],
-    );
+    const adjustedPoints = points ?? POINTS_PER_CATEGORY[type];
 
     let metadata = {};
     let existingEvent;
