@@ -26,6 +26,7 @@ export class GraphileWorkerMicroservice
 
   async listen(): Promise<void> {
     this.runner = await run({
+      concurrency: this.config.get<number>('GRAPHILE_CONCURRENCY'),
       noHandleSignals: false,
       pgPool: new Pool(this.getPostgresPoolConfig()),
       taskList: this.getTaskHandlers(),
