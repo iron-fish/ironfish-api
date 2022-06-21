@@ -24,7 +24,7 @@ export class HealthController {
     jobQueueCount: number;
   }> {
     return {
-      jobQueueCount: await this.graphileService.queuedJobCount(),
+      queued_jobs: await this.graphileService.queuedJobCount(),
     };
   }
 }
