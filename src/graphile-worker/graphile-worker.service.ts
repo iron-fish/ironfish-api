@@ -37,7 +37,7 @@ export class GraphileWorkerService {
 
     return this.workerUtils.withPgClient(async (pgClient) => {
       const result = await pgClient.query<{ count: string }>(
-        'select count(*) from graphile_worker.jobs where locked_at IS NULL;',
+        'SELECT COUNT(*) FROM graphile_worker.jobs WHERE locked_at IS NULL;',
       );
 
       return Number(result.rows[0].count);
