@@ -30,6 +30,20 @@ export class GraphileWorkerService {
     });
   }
 
+  async queuedJobCount(): Promise<number> {
+    if (!this.workerUtils) {
+      await this.initWorkerUtils();
+    }
+
+    return this.workerUtils.withPgClient(async (pgClient) => {
+      const result = await pgClient.query<{ count: string }>(
+        'select count(*) from graphile_worker.jobs where locked_at IS NULL;',
+      );
+
+      return Number(result.rows[0].count);
+    });
+  }
+
   private async initWorkerUtils(): Promise<void> {
     this.workerUtils = await makeWorkerUtils({
       pgPool: new Pool(this.getPostgresPoolConfig()),
