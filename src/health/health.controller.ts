@@ -21,7 +21,7 @@ export class HealthController {
   @UseGuards(ApiKeyGuard)
   @Get('admin')
   async admin(): Promise<{
-    jobQueueCount: number;
+    queued_jobs: number;
   }> {
     return {
       queued_jobs: await this.graphileService.queuedJobCount(),

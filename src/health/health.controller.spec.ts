@@ -35,7 +35,7 @@ describe('HealthController', () => {
         .expect(HttpStatus.OK);
 
       expect(body).toMatchObject({
-        jobQueueCount: expect.any(Number),
+        queued_jobs: expect.any(Number),
       });
     });
   });
