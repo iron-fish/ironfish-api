@@ -49,6 +49,7 @@ export class GraphileWorkerService {
 
     if (this.workerUtilsPromise) {
       await this.workerUtilsPromise;
+      return;
     }
 
     this.workerUtilsPromise = makeWorkerUtils({
