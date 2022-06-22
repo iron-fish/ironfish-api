@@ -2,16 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable } from '@nestjs/common';
-import { BasePrismaClient } from '../prisma/types/base-prisma-client';
+import { PrismaService } from '../prisma/prisma.service';
 import { DepositHead } from '.prisma/client';
 
 @Injectable()
 export class DepositHeadsService {
-  async upsert(
-    blockHash: string,
-    client: BasePrismaClient,
-  ): Promise<DepositHead> {
-    return client.depositHead.upsert({
+  constructor(private readonly prisma: PrismaService) {}
+
+  async upsert(blockHash: string): Promise<DepositHead> {
+    return this.prisma.depositHead.upsert({
       create: {
         id: 1,
         block_hash: blockHash,
