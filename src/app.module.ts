@@ -75,6 +75,7 @@ export const REST_MODULES = [
         DISABLE_LOGIN: joi.boolean().default(false),
         GRAPHILE_CONCURRENCY: joi.number().required(),
         INCENTIVIZED_TESTNET_URL: joi.string().required(),
+        INFLUXDB_ORG: joi.string().required(),
         INFLUXDB_API_TOKEN: joi.string().required(),
         INFLUXDB_BUCKET: joi.string().required(),
         INFLUXDB_URL: joi.string().required(),

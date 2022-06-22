@@ -8,6 +8,7 @@ env:
   DATABASE_CONNECTION_POOL_URL: postgres://postgres:password@localhost:5432/ironfish_api_test
   DATABASE_URL: postgres://postgres:password@localhost:5432/ironfish_api_test
   DATADOG_URL: 127.0.0.1
+  INFLUXDB_ORG: Iron Fish
   INFLUXDB_API_TOKEN: test
   INFLUXDB_BUCKET: test
   INFLUXDB_URL: http://localhost:8004 

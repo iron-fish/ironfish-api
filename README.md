@@ -21,6 +21,7 @@ You'll need a `.env` file with the following keys:
 * `DATABASE_URL`
 * `DATADOG_URL`
 * `INCENTIVIZED_TESTNET_URL`
+* `INFLUXDB_ORG`
 * `INFLUXDB_API_TOKEN`
 * `INFLUXDB_BUCKET`
 * `INFLUXDB_URL`
