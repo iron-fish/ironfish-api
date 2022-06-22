@@ -530,50 +530,45 @@ export class EventsService {
   }
 
   async updateLatestPoints(userId: number, type: EventType): Promise<void> {
-    await this.prisma.$transaction(async (client) => {
-      const occurredAtAggregate = await client.event.aggregate({
-        _max: {
-          occurred_at: true,
-        },
-        where: {
-          type,
-          user_id: userId,
-          deleted_at: null,
-        },
-      });
-      const latestOccurredAt = occurredAtAggregate._max.occurred_at;
+    const occurredAtAggregate = await this.prisma.event.aggregate({
+      _max: {
+        occurred_at: true,
+      },
+      where: {
+        type,
+        user_id: userId,
+        deleted_at: null,
+      },
+    });
+    const latestOccurredAt = occurredAtAggregate._max.occurred_at;
 
-      const pointsAggregate = await client.event.aggregate({
-        _sum: {
-          points: true,
-        },
-        where: {
-          type,
-          user_id: userId,
-          deleted_at: null,
-        },
-      });
-      const points = pointsAggregate._sum.points ?? 0;
+    const pointsAggregate = await this.prisma.event.aggregate({
+      _sum: {
+        points: true,
+      },
+      where: {
+        type,
+        user_id: userId,
+        deleted_at: null,
+      },
+    });
+    const points = pointsAggregate._sum.points ?? 0;
 
-      const totalPointsAggregate = await client.event.aggregate({
-        _sum: {
-          points: true,
-        },
-        where: {
-          user_id: userId,
-          deleted_at: null,
-        },
-      });
-      const totalPoints = totalPointsAggregate._sum.points ?? 0;
+    const totalPointsAggregate = await this.prisma.event.aggregate({
+      _sum: {
+        points: true,
+      },
+      where: {
+        user_id: userId,
+        deleted_at: null,
+      },
+    });
+    const totalPoints = totalPointsAggregate._sum.points ?? 0;
 
-      await this.userPointsService.upsertWithClient(
-        {
-          userId,
-          points: { [type]: { points, latestOccurredAt } },
-          totalPoints,
-        },
-        client,
-      );
+    await this.userPointsService.upsert({
+      userId,
+      points: { [type]: { points, latestOccurredAt } },
+      totalPoints,
     });
   }
 
