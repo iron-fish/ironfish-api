@@ -5,8 +5,8 @@ import { Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   IsArray,
-  IsDate,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
   ValidateNested,
@@ -52,9 +52,9 @@ class WriteTelemetryPointDto {
   @IsString()
   readonly measurement!: string;
 
-  @IsDate()
-  @Type(() => Date)
-  readonly timestamp!: Date;
+  @IsNotEmpty()
+  @IsNumber()
+  readonly timestamp!: number;
 
   @IsArray()
   @ArrayMaxSize(3000)

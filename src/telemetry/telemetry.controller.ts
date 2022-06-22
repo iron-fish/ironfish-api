@@ -115,7 +115,7 @@ export class TelemetryController {
               },
             ],
             tags: [],
-            timestamp: new Date(),
+            timestamp: Date.now(),
           },
         ]);
       }

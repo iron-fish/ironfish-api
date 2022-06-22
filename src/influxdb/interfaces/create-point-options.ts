@@ -8,5 +8,5 @@ export interface CreatePointOptions {
   fields: Field[];
   measurement: string;
   tags: Tag[];
-  timestamp: Date;
+  timestamp: number;
 }

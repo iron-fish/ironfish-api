@@ -40,7 +40,7 @@ function mockTelemetryPoints() {
   ];
   const measurement = 'node';
   const tags = [{ name: 'version', value: '0.1.24' }];
-  const timestamp = new Date();
+  const timestamp = Date.now();
 
   return [{ fields, measurement, tags, timestamp }];
 }
@@ -164,7 +164,7 @@ describe('TelemetryController', () => {
         await request(app.getHttpServer())
           .post('/telemetry')
           .send({
-            points: [{ fields, measurement, tags, timestamp: new Date() }],
+            points: [{ fields, measurement, tags, timestamp: Date.now() }],
           })
           .expect(HttpStatus.CREATED);
 

@@ -42,7 +42,7 @@ describe('InfluxDbService', () => {
         fields: [{ name: 'memory', type: 'float', value: 1 }],
         measurement: 'node',
         tags: [{ name: 'user_agent', value: '0.0.0' }],
-        timestamp: new Date(),
+        timestamp: Date.now(),
       };
       influxDbService.writePoints([options]);
 
