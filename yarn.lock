@@ -3226,10 +3226,10 @@ hexoid@1.0.0:
   resolved "https://registry.yarnpkg.com/hexoid/-/hexoid-1.0.0.tgz#ad10c6573fb907de23d9ec63a711267d9dc9bc18"
   integrity sha512-QFLV0taWQOZtvIRIAdBChesmogZrtuXvVWsFHZTk2SU+anspqZ2vMnoLg7IE1+Uk16N19APic1BuF8bC8c2m5g==
 
-hot-shots@9.0.0:
-  version "9.0.0"
-  resolved "https://registry.yarnpkg.com/hot-shots/-/hot-shots-9.0.0.tgz#b88421aa81c1ef37f4cc53ade7f1e3daaa584b5e"
-  integrity sha512-fpljto22PvfzDGznnzUpWgFMgccyZRtWo+fY8R4ktwipkv3ywDyeaTLijYaM629DEZvtnEDAN00yV6zxzivnpQ==
+hot-shots@9.1.0:
+  version "9.1.0"
+  resolved "https://registry.yarnpkg.com/hot-shots/-/hot-shots-9.1.0.tgz#05373e832cc44f8467bcd41da73e8f123f4a7189"
+  integrity sha512-CbNGD3/mn8yhVafjATd5/c3LeX1EMJ4IChOyEmC2WUT414TvnjD/O5LvEAPgbkBLHsjpTH1XJqVbQpZuMo+n1g==
   optionalDependencies:
     unix-dgram "2.0.x"
 
