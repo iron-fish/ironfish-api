@@ -12,6 +12,7 @@ import { GraphileWorkerJobOptions } from './interfaces/graphile-worker-job-optio
 @Injectable()
 export class GraphileWorkerService {
   private workerUtils!: WorkerUtils;
+  private workerUtilsPromise: Promise<WorkerUtils> | null = null;
 
   constructor(private readonly config: ApiConfigService) {}
 
@@ -20,9 +21,8 @@ export class GraphileWorkerService {
     payload?: T,
     { queueName, runAt, jobKey }: GraphileWorkerJobOptions = {},
   ): Promise<Job> {
-    if (!this.workerUtils) {
-      await this.initWorkerUtils();
-    }
+    await this.initWorkerUtils();
+
     return this.workerUtils.addJob(pattern.toString(), payload, {
       jobKey: jobKey || `job_${uuid()}`,
       queueName,
@@ -31,9 +31,7 @@ export class GraphileWorkerService {
   }
 
   async queuedJobCount(): Promise<number> {
-    if (!this.workerUtils) {
-      await this.initWorkerUtils();
-    }
+    await this.initWorkerUtils();
 
     return this.workerUtils.withPgClient(async (pgClient) => {
       const result = await pgClient.query<{ count: string }>(
@@ -45,9 +43,20 @@ export class GraphileWorkerService {
   }
 
   private async initWorkerUtils(): Promise<void> {
-    this.workerUtils = await makeWorkerUtils({
+    if (this.workerUtils) {
+      return;
+    }
+
+    if (this.workerUtilsPromise) {
+      await this.workerUtilsPromise;
+      return;
+    }
+
+    this.workerUtilsPromise = makeWorkerUtils({
       pgPool: new Pool(this.getPostgresPoolConfig()),
     });
+
+    this.workerUtils = await this.workerUtilsPromise;
   }
 
   private getPostgresPoolConfig(): PoolConfig {
