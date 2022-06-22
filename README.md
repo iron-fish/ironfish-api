@@ -23,6 +23,7 @@ You'll need a `.env` file with the following keys:
 * `INCENTIVIZED_TESTNET_URL`
 * `INFLUXDB_API_TOKEN`
 * `INFLUXDB_BUCKET`
+* `INFLUXDB_ORG`
 * `INFLUXDB_URL`
 * `IRONFISH_API_KEY`
 * `MAGIC_SECRET_KEY`

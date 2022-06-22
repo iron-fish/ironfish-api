@@ -6,8 +6,6 @@ import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { CreatePointOptions } from './interfaces/create-point-options';
 
-const INFLUXDB_ORG = 'Iron Fish';
-
 @Injectable()
 export class InfluxDbService implements OnModuleDestroy {
   private writeClient: WriteApi;
@@ -18,7 +16,7 @@ export class InfluxDbService implements OnModuleDestroy {
       url: config.get<string>('INFLUXDB_URL'),
     });
     this.writeClient = client.getWriteApi(
-      INFLUXDB_ORG,
+      config.get<string>('INFLUXDB_ORG'),
       config.get<string>('INFLUXDB_BUCKET'),
       'ms',
     );

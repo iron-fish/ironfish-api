@@ -10,6 +10,7 @@ env:
   DATADOG_URL: 127.0.0.1
   INFLUXDB_API_TOKEN: test
   INFLUXDB_BUCKET: test
+  INFLUXDB_ORG: Iron Fish
   INFLUXDB_URL: http://localhost:8004 
   INCENTIVIZED_TESTNET_URL: http://localhost:3001
   IRONFISH_API_KEY: test

@@ -31,6 +31,7 @@ export async function bootstrapTestApp(): Promise<INestApplication> {
           INCENTIVIZED_TESTNET_URL: joi.string().required(),
           INFLUXDB_API_TOKEN: joi.string().required(),
           INFLUXDB_BUCKET: joi.string().required(),
+          INFLUXDB_ORG: joi.string().required(),
           INFLUXDB_URL: joi.string().required(),
           IRONFISH_API_KEY: joi.string().required(),
           MAGIC_SECRET_KEY: joi.string().required(),
