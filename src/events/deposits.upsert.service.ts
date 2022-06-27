@@ -58,15 +58,15 @@ export class DepositsUpsertService {
         continue;
       }
 
-      await this.prisma.$transaction(async (prisma) => {
-        const amounts = new Map<string, number>();
+      const amounts = new Map<string, number>();
 
-        for (const deposit of transaction.notes) {
-          const amount = amounts.get(deposit.memo) ?? 0;
-          amounts.set(deposit.memo, amount + deposit.amount);
-        }
+      for (const deposit of transaction.notes) {
+        const amount = amounts.get(deposit.memo) ?? 0;
+        amounts.set(deposit.memo, amount + deposit.amount);
+      }
 
-        for (const [graffiti, amount] of amounts) {
+      for (const [graffiti, amount] of amounts) {
+        await this.prisma.$transaction(async (prisma) => {
           const depositParams = {
             transaction_hash: standardizeHash(transaction.hash),
             block_hash: standardizeHash(operation.block.hash),
@@ -118,14 +118,14 @@ export class DepositsUpsertService {
               );
             }
           }
-        }
+        });
+      }
 
-        const headHash =
-          operation.type === BlockOperation.CONNECTED
-            ? operation.block.hash
-            : operation.block.previousBlockHash;
-        await this.depositHeadsService.upsert(headHash, prisma);
-      });
+      const headHash =
+        operation.type === BlockOperation.CONNECTED
+          ? operation.block.hash
+          : operation.block.previousBlockHash;
+      await this.depositHeadsService.upsert(headHash);
     }
 
     return deposits;
