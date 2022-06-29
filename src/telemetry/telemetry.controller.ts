@@ -15,8 +15,10 @@ import { gte, valid } from 'semver';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { InfluxDbService } from '../influxdb/influxdb.service';
 import { NodeUptimesService } from '../node-uptimes/node-uptimes.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
 import { VersionsService } from '../versions/versions.service';
+import { WritePeerListDto } from './dto/write-peer-list.dto';
 import { WriteTelemetryPointsDto } from './dto/write-telemetry-points.dto';
 
 @Controller('telemetry')
@@ -29,6 +31,7 @@ export class TelemetryController {
     private readonly nodeUptimes: NodeUptimesService,
     private readonly usersService: UsersService,
     private readonly versionsService: VersionsService,
+    private readonly prisma: PrismaService,
   ) {}
 
   @ApiExcludeEndpoint()
@@ -88,6 +91,36 @@ export class TelemetryController {
         await this.nodeUptimes.addUptime(user);
       }
     }
+  }
+
+  @ApiExcludeEndpoint()
+  @Post('peers')
+  async writePeerList(
+    @Body(
+      new ValidationPipe({
+        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        transform: true,
+      }),
+    )
+    { nodeId, peers, timestamp }: WritePeerListDto,
+  ): Promise<void> {
+    const promises = peers.map((peer) => {
+      const upload = {
+        sourceId: nodeId,
+        destinationId: peer,
+        timestamp: timestamp,
+      };
+
+      return this.prisma.peerConnection.upsert({
+        create: upload,
+        update: upload,
+        where: {
+          uq_peer_connection_on_source_dest_time: upload,
+        },
+      });
+    });
+
+    await Promise.all(promises);
   }
 
   private isValidTelemetryVersion(version: string): boolean {

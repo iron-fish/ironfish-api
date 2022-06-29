@@ -228,3 +228,13 @@ model DepositHead {
 
     @@map("deposit_head")
 }
+
+model PeerConnection {
+  sourceId          String
+  destinationId     String
+  timestamp         DateTime @db.Timestamp(6)
+
+  @@unique([sourceId, destinationId, timestamp], name: "uq_peer_connection_on_source_dest_time")
+  @@index([timestamp], map: "index_peer_connections_on_timestamp")
+  @@map("peer_connections")
+}

@@ -352,4 +352,30 @@ describe('TelemetryController', () => {
       });
     });
   });
+
+  describe('POST /telemetry/peers', () => {
+    it('uploads peer lists to database', async () => {
+      const payload = {
+        peers: [uuid(), uuid(), uuid()],
+        nodeId: uuid(),
+        timestamp: Date.now(),
+      };
+
+      await request(app.getHttpServer())
+        .post('/telemetry/peers')
+        .send(payload)
+        .expect(HttpStatus.CREATED);
+
+      const peerConnections = await prisma.peerConnection.findMany({
+        where: { sourceId: payload.nodeId },
+      });
+
+      expect(peerConnections).toHaveLength(3);
+
+      const destinations = peerConnections.map((conn) => conn.destinationId);
+      expect(payload.peers).toContain(destinations[0]);
+      expect(payload.peers).toContain(destinations[1]);
+      expect(payload.peers).toContain(destinations[2]);
+    });
+  });
 });
