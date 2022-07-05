@@ -40,6 +40,7 @@ export class DepositsUpsertService {
           operation,
           {
             jobKey: `upsert_deposit:${operation.block.hash}:${operation.type}`,
+            queueName: 'upsert_deposit',
           },
         );
       }
