@@ -1,5 +1,5 @@
 -- soft-delete events for overcounted deposits
-UPDATE events SET deleted_at = current_timestamp
+UPDATE events SET deleted_at = current_timestamp, points = 0
 WHERE
   deposit_id IN (
   SELECT 
@@ -28,7 +28,7 @@ JOIN
   (
     SELECT
       deposits.id AS deposit_id,
-      deposits.graffiti AS deposit_graffiti
+      deposits.graffiti AS deposit_graffiti,
       blocks.timestamp AS block_timestamp
     FROM
       deposits
@@ -40,7 +40,8 @@ JOIN
       deposits.main = false AND blocks.main = true AND deposits.amount >= 10000000
   ) missing_events
 ON
-  users.graffiti = missing_events.deposit_graffiti;
+  users.graffiti = missing_events.deposit_graffiti
+ON CONFLICT (deposit_id) DO UPDATE SET deleted_at = NULL, points = 1;
 
 -- set deposits.main to match blocks.main
 UPDATE deposits SET main = blocks.main
