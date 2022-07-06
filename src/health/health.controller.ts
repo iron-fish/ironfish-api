@@ -4,12 +4,16 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import { ApiExcludeEndpoint, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
+import { DepositsUpsertService } from '../events/deposits.upsert.service';
 import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 
 @ApiTags('Health')
 @Controller('health')
 export class HealthController {
-  constructor(private readonly graphileService: GraphileWorkerService) {}
+  constructor(
+    private readonly graphileWorkerService: GraphileWorkerService,
+    private readonly depositsUpsertService: DepositsUpsertService,
+  ) {}
 
   @ApiOperation({ summary: 'Gets the health of the Iron Fish API' })
   @Get()
@@ -22,9 +26,15 @@ export class HealthController {
   @Get('admin')
   async admin(): Promise<{
     queued_jobs: number;
+    mismatched_deposits: number;
   }> {
+    const [queuedJobs, mismatchedDeposits] = await Promise.all([
+      this.graphileWorkerService.queuedJobCount(),
+      this.depositsUpsertService.mismatchedDepositCount(),
+    ]);
     return {
-      queued_jobs: await this.graphileService.queuedJobCount(),
+      queued_jobs: queuedJobs,
+      mismatched_deposits: mismatchedDeposits,
     };
   }
 }

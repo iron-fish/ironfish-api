@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable } from '@nestjs/common';
 import { Deposit, EventType } from '@prisma/client';
+import is from '@sindresorhus/is';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { BlockOperation } from '../blocks/enums/block-operation';
 import { SEND_TRANSACTION_LIMIT_ORE } from '../common/constants';
@@ -130,5 +131,24 @@ export class DepositsUpsertService {
     }
 
     return deposits;
+  }
+
+  async mismatchedDepositCount(): Promise<number> {
+    const result = await this.prisma.$queryRawUnsafe<{ count: number }[]>(
+      `
+      SELECT
+        COUNT(*)
+      FROM
+        deposits
+      LEFT JOIN
+        blocks
+      ON blocks.hash = deposits.block_hash
+      WHERE blocks.hash IS NULL OR blocks.main <> deposits.main
+      `,
+    );
+    if (!is.array(result) || result.length !== 1 || !is.object(result[0])) {
+      throw new Error('Unexpected database response');
+    }
+    return result[0].count;
   }
 }
