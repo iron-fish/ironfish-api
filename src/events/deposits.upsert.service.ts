@@ -137,7 +137,7 @@ export class DepositsUpsertService {
     const result = await this.prisma.$queryRawUnsafe<{ count: number }[]>(
       `
       SELECT
-        COUNT(*) AS count
+        COUNT(*)
       FROM
         blocks
       RIGHT OUTER JOIN
