@@ -11,7 +11,7 @@ import { GraphileWorkerService } from '../graphile-worker/graphile-worker.servic
 @Controller('health')
 export class HealthController {
   constructor(
-    private readonly graphileService: GraphileWorkerService,
+    private readonly graphileWorkerService: GraphileWorkerService,
     private readonly depositsUpsertService: DepositsUpsertService,
   ) {}
 
@@ -29,7 +29,7 @@ export class HealthController {
     mismatched_deposits: number;
   }> {
     const [queuedJobs, mismatchedDeposits] = await Promise.all([
-      this.graphileService.queuedJobCount(),
+      this.graphileWorkerService.queuedJobCount(),
       this.depositsUpsertService.mismatchedDepositCount(),
     ]);
     return {

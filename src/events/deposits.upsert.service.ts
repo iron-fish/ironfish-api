@@ -139,9 +139,9 @@ export class DepositsUpsertService {
       SELECT
         COUNT(*)
       FROM
-        blocks
-      RIGHT OUTER JOIN
         deposits
+      LEFT JOIN
+        blocks
       ON blocks.hash = deposits.block_hash
       WHERE blocks.hash IS NULL OR blocks.main <> deposits.main
       `,
