@@ -133,7 +133,7 @@ describe('BlocksTransactionsService', () => {
               spends,
             },
           });
-          await blocksTransactionsService.upsert(prisma, block, transaction, 0);
+          await blocksTransactionsService.upsert(prisma, block, transaction, i);
         }
 
         const blocksTransactions = await blocksTransactionsService.list({
