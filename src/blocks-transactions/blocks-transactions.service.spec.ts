@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { INestApplication } from '@nestjs/common';
+import assert from 'assert';
 import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { PrismaService } from '../prisma/prisma.service';
@@ -66,7 +67,7 @@ describe('BlocksTransactionsService', () => {
             spends: [{ nullifier: uuid() }],
           },
         });
-        await blocksTransactionsService.upsert(prisma, block, transaction);
+        await blocksTransactionsService.upsert(prisma, block, transaction, 0);
 
         const record = await blocksTransactionsService.find(
           block.id,
@@ -103,6 +104,7 @@ describe('BlocksTransactionsService', () => {
           prisma,
           block,
           transaction,
+          0,
         );
 
         expect(blockTransaction).toMatchObject({
@@ -131,7 +133,7 @@ describe('BlocksTransactionsService', () => {
               spends,
             },
           });
-          await blocksTransactionsService.upsert(prisma, block, transaction);
+          await blocksTransactionsService.upsert(prisma, block, transaction, i);
         }
 
         const blocksTransactions = await blocksTransactionsService.list({
@@ -160,7 +162,7 @@ describe('BlocksTransactionsService', () => {
 
         for (let i = 0; i < 10; i++) {
           const { block } = await seedBlock();
-          await blocksTransactionsService.upsert(prisma, block, transaction);
+          await blocksTransactionsService.upsert(prisma, block, transaction, i);
         }
 
         const blocksTransactions = await blocksTransactionsService.list({
@@ -189,7 +191,7 @@ describe('BlocksTransactionsService', () => {
 
       for (let i = 0; i < 10; i++) {
         const { block } = await seedBlock();
-        await blocksTransactionsService.upsert(prisma, block, transaction);
+        await blocksTransactionsService.upsert(prisma, block, transaction, i);
       }
 
       const blocks = await blocksTransactionsService.findBlocksByTransaction(
@@ -217,15 +219,30 @@ describe('BlocksTransactionsService', () => {
             spends: [{ nullifier: uuid() }],
           },
         });
-        await blocksTransactionsService.upsert(prisma, block, transaction);
+
+        const blockTransaction = await blocksTransactionsService.upsert(
+          prisma,
+          block,
+          transaction,
+          i,
+        );
+
+        expect(blockTransaction.index).toEqual(i);
       }
 
       const transactions =
         await blocksTransactionsService.findTransactionsByBlock(block);
-      for (const transaction of transactions) {
-        expect(
-          await blocksTransactionsService.find(block.id, transaction.id),
-        ).not.toBeNull();
+
+      for (let i = 0; i < transactions.length; ++i) {
+        const transaction = transactions[i];
+
+        const blockTransaction = await blocksTransactionsService.find(
+          block.id,
+          transaction.id,
+        );
+
+        assert.ok(blockTransaction);
+        expect(blockTransaction.index).toBe(i);
       }
     });
   });

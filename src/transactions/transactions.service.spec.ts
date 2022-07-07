@@ -155,6 +155,7 @@ describe('TransactionsService', () => {
             prisma,
             block,
             testTransaction,
+            0,
           );
 
           let receivedTransaction = await transactionsService.find({
@@ -276,8 +277,9 @@ describe('TransactionsService', () => {
           ],
         );
 
-        for (const transaction of transactions) {
-          await blocksTransactionsService.upsert(prisma, block, transaction);
+        for (let i = 0; i < transactions.length; ++i) {
+          const transaction = transactions[i];
+          await blocksTransactionsService.upsert(prisma, block, transaction, i);
         }
 
         const receivedTransactions = await transactionsService.list({
