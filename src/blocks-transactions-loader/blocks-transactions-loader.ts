@@ -87,13 +87,17 @@ export class BlocksTransactionsLoader {
               block.transactions,
             );
 
-          for (const transaction of transactions) {
+          for (let i = 0; i < transactions.length; ++i) {
+            const transaction = transactions[i];
+
             await this.blocksTransactionsService.upsert(
               prisma,
               createdBlock,
               transaction,
+              i,
             );
           }
+
           records.push({ ...createdBlock, transactions });
         },
         {

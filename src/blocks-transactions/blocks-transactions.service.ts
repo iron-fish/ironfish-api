@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { Block, BlockTransaction, Transaction } from '@prisma/client';
+import { SortOrder } from '../common/enums/sort-order';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { ListBlockTransactionOptions } from './interfaces/list-block-transactions-options';
@@ -29,15 +30,18 @@ export class BlocksTransactionsService {
     prisma: BasePrismaClient,
     block: Block,
     transaction: Transaction,
+    index: number,
   ): Promise<BlockTransaction> {
     return prisma.blockTransaction.upsert({
       create: {
         block_id: block.id,
         transaction_id: transaction.id,
+        index,
       },
       update: {
         block_id: block.id,
         transaction_id: transaction.id,
+        index,
       },
       where: {
         block_id_transaction_id: {
@@ -87,6 +91,9 @@ export class BlocksTransactionsService {
       },
       include: {
         transaction: true,
+      },
+      orderBy: {
+        index: SortOrder.ASC,
       },
     });
     return blocksTransactions.map(
