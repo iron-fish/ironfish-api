@@ -21,4 +21,11 @@ export class DepositsJobsController {
     await this.depositsUpsertService.upsert(options);
     return { requeue: false };
   }
+
+  @MessagePattern(GraphileWorkerPattern.FIX_MISMATCHED_DEPOSITS)
+  @UseFilters(new GraphileWorkerException())
+  async fixMismatchedDeposits(): Promise<GraphileWorkerHandlerResponse> {
+    await this.depositsUpsertService.fixMismatchedDeposits();
+    return { requeue: false };
+  }
 }

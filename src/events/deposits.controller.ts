@@ -68,4 +68,12 @@ export class DepositsController {
     await this.depositsUpsert.bulkUpsert(data.operations);
     res.sendStatus(HttpStatus.ACCEPTED);
   }
+
+  @ApiExcludeEndpoint()
+  @Post('fix_mismatches')
+  @UseGuards(ApiKeyGuard)
+  async fixMismatches(@Res() res: Response): Promise<void> {
+    await this.depositsUpsert.enqueueFixMismatchedDeposits();
+    res.sendStatus(HttpStatus.ACCEPTED);
+  }
 }

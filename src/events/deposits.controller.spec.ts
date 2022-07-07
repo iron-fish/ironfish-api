@@ -188,4 +188,20 @@ describe('DepositsController', () => {
       transactions,
     };
   };
+
+  describe('POST /deposits/fix_mismatches', () => {
+    it('enqueues a worker job to fix deposits', async () => {
+      const enqueueFixMismatchedDeposits = jest
+        .spyOn(depositsUpsertsService, 'enqueueFixMismatchedDeposits')
+        .mockImplementationOnce(jest.fn());
+
+      await request(app.getHttpServer())
+        .post(`/deposits/fix_mismatches`)
+        .send()
+        .set('Authorization', `Bearer ${API_KEY}`)
+        .expect(HttpStatus.ACCEPTED);
+
+      expect(enqueueFixMismatchedDeposits).toHaveBeenCalled();
+    });
+  });
 });
