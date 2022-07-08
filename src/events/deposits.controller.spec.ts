@@ -190,19 +190,19 @@ describe('DepositsController', () => {
     };
   };
 
-  describe('POST /deposits/fix_mismatches', () => {
+  describe('POST /deposits/refresh', () => {
     it('enqueues a worker job to fix deposits', async () => {
       const addJob = jest
         .spyOn(graphileWorkerService, 'addJob')
         .mockImplementationOnce(jest.fn());
 
       await request(app.getHttpServer())
-        .post('/deposits/fix_mismatches')
+        .post('/deposits/refresh')
         .set('Authorization', `Bearer ${API_KEY}`)
         .expect(HttpStatus.CREATED);
 
       expect(addJob).toHaveBeenCalledWith(
-        GraphileWorkerPattern.FIX_MISMATCHED_DEPOSITS,
+        GraphileWorkerPattern.REFRESH_DEPOSITS,
       );
     });
   });

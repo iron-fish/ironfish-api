@@ -22,10 +22,10 @@ export class DepositsJobsController {
     return { requeue: false };
   }
 
-  @MessagePattern(GraphileWorkerPattern.FIX_MISMATCHED_DEPOSITS)
+  @MessagePattern(GraphileWorkerPattern.REFRESH_DEPOSITS)
   @UseFilters(new GraphileWorkerException())
-  async fixMismatchedDeposits(): Promise<GraphileWorkerHandlerResponse> {
-    await this.depositsUpsertService.fixMismatchedDeposits();
+  async refreshDeposits(): Promise<GraphileWorkerHandlerResponse> {
+    await this.depositsUpsertService.refreshDeposits();
     return { requeue: false };
   }
 }

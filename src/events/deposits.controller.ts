@@ -73,11 +73,11 @@ export class DepositsController {
   }
 
   @ApiExcludeEndpoint()
-  @Post('fix_mismatches')
+  @Post('refresh')
   @UseGuards(ApiKeyGuard)
-  async fixMismatches(): Promise<void> {
+  async refresh(): Promise<void> {
     await this.graphileWorkerService.addJob(
-      GraphileWorkerPattern.FIX_MISMATCHED_DEPOSITS,
+      GraphileWorkerPattern.REFRESH_DEPOSITS,
     );
   }
 }

@@ -172,7 +172,7 @@ export class DepositsUpsertService {
   > {
     const blocksHead = await this.blocksService.head();
 
-    return await this.prisma.$queryRawUnsafe<
+    return this.prisma.$queryRawUnsafe<
       (Deposit & { block_main: boolean | null; block_timestamp: Date | null })[]
     >(
       `
@@ -196,7 +196,7 @@ export class DepositsUpsertService {
     );
   }
 
-  async fixMismatchedDeposits(): Promise<void> {
+  async refreshDeposits(): Promise<void> {
     const mismatchedDeposits = await this.mismatchedDeposits(50);
 
     for (const deposit of mismatchedDeposits) {
