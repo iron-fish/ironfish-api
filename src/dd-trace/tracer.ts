@@ -11,3 +11,5 @@ export function initializeTracer(service: string): void {
     version: process.env.HEROKU_SLUG_COMMIT,
   });
 }
+
+export { tracer };
