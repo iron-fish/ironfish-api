@@ -2,9 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable } from '@nestjs/common';
-import { Deposit, EventType } from '@prisma/client';
+import { Deposit, EventType, Prisma } from '@prisma/client';
+import { join } from '@prisma/client/runtime';
 import is from '@sindresorhus/is';
+import assert from 'assert';
 import { ApiConfigService } from '../api-config/api-config.service';
+import { BlocksService } from '../blocks/blocks.service';
 import { BlockOperation } from '../blocks/enums/block-operation';
 import { SEND_TRANSACTION_LIMIT_ORE } from '../common/constants';
 import { standardizeHash } from '../common/utils/hash';
@@ -25,6 +28,7 @@ export class DepositsUpsertService {
     private readonly graphileWorkerService: GraphileWorkerService,
     private readonly prisma: PrismaService,
     private readonly usersService: UsersService,
+    private readonly blocksService: BlocksService,
   ) {}
 
   async bulkUpsert(operations: UpsertDepositsOperationDto[]): Promise<void> {
@@ -91,35 +95,7 @@ export class DepositsUpsertService {
           });
           deposits.push(deposit);
 
-          if (!deposit.main) {
-            const event = await prisma.event.findUnique({
-              where: {
-                deposit_id: deposit.id,
-              },
-            });
-            if (event) {
-              await this.eventsService.deleteWithClient(event, prisma);
-            }
-          }
-
-          if (deposit.main && deposit.amount >= SEND_TRANSACTION_LIMIT_ORE) {
-            const user = await this.usersService.findByGraffiti(
-              deposit.graffiti,
-              prisma,
-            );
-
-            if (user) {
-              await this.eventsService.createWithClient(
-                {
-                  occurredAt: operation.block.timestamp,
-                  type: EventType.SEND_TRANSACTION,
-                  userId: user.id,
-                  deposit,
-                },
-                prisma,
-              );
-            }
-          }
+          await this.processDeposit(prisma, deposit, operation.block.timestamp);
         });
       }
 
@@ -131,6 +107,44 @@ export class DepositsUpsertService {
     }
 
     return deposits;
+  }
+
+  async processDeposit(
+    prisma: Prisma.TransactionClient,
+    deposit: Deposit,
+    blockTimestamp: Date | null,
+  ): Promise<void> {
+    if (!deposit.main) {
+      const event = await prisma.event.findUnique({
+        where: {
+          deposit_id: deposit.id,
+        },
+      });
+      if (event) {
+        await this.eventsService.deleteWithClient(event, prisma);
+      }
+    }
+
+    if (deposit.main && deposit.amount >= SEND_TRANSACTION_LIMIT_ORE) {
+      const user = await this.usersService.findByGraffiti(
+        deposit.graffiti,
+        prisma,
+      );
+
+      if (user) {
+        assert.ok(blockTimestamp);
+
+        await this.eventsService.createWithClient(
+          {
+            occurredAt: blockTimestamp,
+            type: EventType.SEND_TRANSACTION,
+            userId: user.id,
+            deposit,
+          },
+          prisma,
+        );
+      }
+    }
   }
 
   async mismatchedDepositCount(): Promise<number> {
@@ -152,95 +166,54 @@ export class DepositsUpsertService {
     return Number(result[0].count);
   }
 
-  async enqueueFixMismatchedDeposits(): Promise<void> {
-    await this.graphileWorkerService.addJob(
-      GraphileWorkerPattern.FIX_MISMATCHED_DEPOSITS,
+  async mismatchedDeposits(beforeSequence: number = 0): Promise<
+    (Deposit & { block_main: boolean | null; block_timestamp: Date | null })[]
+  > {
+    const blocksHead = await this.blocksService.head();
+    return await this.prisma.$queryRawUnsafe<
+      (Deposit & { block_main: boolean | null; block_timestamp: Date | null })[]
+    >(
+      `
+      SELECT
+        deposits.*,
+        blocks.main AS block_main,
+        blocks.timestamp AS block_timestamp
+      FROM
+        deposits
+      LEFT JOIN
+        blocks
+      ON blocks.hash = deposits.block_hash
+      WHERE
+        blocks.hash IS NULL OR
+        blocks.main <> deposits.main AND
+        (
+          blocks.hash IS NULL OR
+          blocks.sequence < ${blocksHead.sequence - beforeSequence}
+        )
+      `,
     );
   }
 
   async fixMismatchedDeposits(): Promise<void> {
-    await this.prisma.$transaction(async (prisma) => {
-      // soft-delete events for overcounted deposits
-      await prisma.$executeRawUnsafe(
-        `
-        UPDATE events SET deleted_at = current_timestamp, points = 0
-        WHERE
-          deposit_id IN (
-          SELECT
-            deposits.id
-          FROM
-            deposits
-          LEFT JOIN
-            blocks
-          ON
-            deposits.block_hash = blocks.hash
-          WHERE
-            deposits.main = true AND (blocks.main IS NULL OR blocks.main = false)
+    const mismatchedDeposits = await this.mismatchedDeposits(10);
+
+    for (const deposit of mismatchedDeposits) {
+      await this.prisma.$transaction(async (prisma) => {
+        const updatedDeposit = await this.prisma.deposit.update({
+          data: {
+            main: deposit.block_main ?? false,
+          },
+          where: {
+            id: deposit.id,
+          },
+        });
+
+        await this.processDeposit(
+          prisma,
+          updatedDeposit,
+          deposit.block_timestamp,
         );
-        `,
-      );
-
-      // upsert events for undercounted mismatched deposits
-      await prisma.$executeRawUnsafe(
-        `
-        INSERT INTO events (type, occurred_at, points, user_id, deposit_id)
-        SELECT
-          'SEND_TRANSACTION' AS type,
-          missing_events.block_timestamp AS occurred_at,
-          1 AS points,
-          users.id AS user_id,
-          missing_events.deposit_id AS deposit_id
-        FROM
-          users
-        JOIN
-          (
-            SELECT
-              deposits.id AS deposit_id,
-              deposits.graffiti AS deposit_graffiti,
-              blocks.timestamp AS block_timestamp
-            FROM
-              deposits
-            JOIN
-              blocks
-            ON
-              deposits.block_hash = blocks.hash
-            WHERE
-              deposits.main = false AND blocks.main = true AND deposits.amount >= 10000000
-          ) missing_events
-        ON
-          users.graffiti = missing_events.deposit_graffiti
-        ON CONFLICT (deposit_id) DO UPDATE SET deleted_at = NULL, points = 1;
-        `,
-      );
-
-      // set deposits.main to match blocks.main
-      await prisma.$executeRawUnsafe(
-        `
-        UPDATE deposits SET main = blocks.main
-        FROM blocks
-        WHERE deposits.block_hash = blocks.hash AND deposits.main <> blocks.main;
-        `,
-      );
-
-      // set main to false for deposits without blocks
-      await prisma.$executeRawUnsafe(
-        `
-        UPDATE deposits SET main = false
-        WHERE
-          deposits.id IN (
-          SELECT
-            deposits.id
-          FROM
-            deposits
-          LEFT JOIN
-            blocks
-          ON
-            deposits.block_hash = blocks.hash
-          WHERE
-            blocks.hash IS NULL
-        );
-        `,
-      );
-    });
+      });
+    }
   }
 }
