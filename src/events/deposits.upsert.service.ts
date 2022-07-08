@@ -203,7 +203,7 @@ export class DepositsUpsertService {
       await this.graphileWorkerService.addJob(
         GraphileWorkerPattern.REFRESH_DEPOSIT,
         {
-          mismatchedDeposits: deposit,
+          mismatchedDeposit: deposit,
         },
       );
     }
