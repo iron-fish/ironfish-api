@@ -3,7 +3,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable } from '@nestjs/common';
 import { Deposit, EventType, Prisma } from '@prisma/client';
-import { join } from '@prisma/client/runtime';
 import is from '@sindresorhus/is';
 import assert from 'assert';
 import { ApiConfigService } from '../api-config/api-config.service';
@@ -166,10 +165,13 @@ export class DepositsUpsertService {
     return Number(result[0].count);
   }
 
-  async mismatchedDeposits(beforeSequence: number = 0): Promise<
+  async mismatchedDeposits(
+    beforeSequence = 0,
+  ): Promise<
     (Deposit & { block_main: boolean | null; block_timestamp: Date | null })[]
   > {
     const blocksHead = await this.blocksService.head();
+
     return await this.prisma.$queryRawUnsafe<
       (Deposit & { block_main: boolean | null; block_timestamp: Date | null })[]
     >(
@@ -188,14 +190,14 @@ export class DepositsUpsertService {
         blocks.main <> deposits.main AND
         (
           blocks.hash IS NULL OR
-          blocks.sequence < ${blocksHead.sequence - beforeSequence}
+          blocks.sequence <= ${blocksHead.sequence - beforeSequence}
         )
       `,
     );
   }
 
   async fixMismatchedDeposits(): Promise<void> {
-    const mismatchedDeposits = await this.mismatchedDeposits(10);
+    const mismatchedDeposits = await this.mismatchedDeposits(50);
 
     for (const deposit of mismatchedDeposits) {
       await this.prisma.$transaction(async (prisma) => {

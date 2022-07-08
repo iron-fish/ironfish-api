@@ -8,6 +8,7 @@ import { v4 as uuid } from 'uuid';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { BlockOperation } from '../blocks/enums/block-operation';
 import { ORE_TO_IRON } from '../common/constants';
+import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
 import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
@@ -191,17 +192,18 @@ describe('DepositsController', () => {
 
   describe('POST /deposits/fix_mismatches', () => {
     it('enqueues a worker job to fix deposits', async () => {
-      const enqueueFixMismatchedDeposits = jest
-        .spyOn(depositsUpsertsService, 'enqueueFixMismatchedDeposits')
+      const addJob = jest
+        .spyOn(graphileWorkerService, 'addJob')
         .mockImplementationOnce(jest.fn());
 
       await request(app.getHttpServer())
-        .post(`/deposits/fix_mismatches`)
-        .send()
+        .post('/deposits/fix_mismatches')
         .set('Authorization', `Bearer ${API_KEY}`)
-        .expect(HttpStatus.ACCEPTED);
+        .expect(HttpStatus.CREATED);
 
-      expect(enqueueFixMismatchedDeposits).toHaveBeenCalled();
+      expect(addJob).toHaveBeenCalledWith(
+        GraphileWorkerPattern.FIX_MISMATCHED_DEPOSITS,
+      );
     });
   });
 });
