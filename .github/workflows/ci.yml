@@ -1,6 +1,12 @@
 name: API CI
 
-on: [push, pull_request]
+on:
+  pull_request:
+    branches:
+      - '*'
+  push:
+    branches:
+      - master
 
 env:
   API_URL: http://localhost:8003
