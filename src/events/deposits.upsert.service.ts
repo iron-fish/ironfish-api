@@ -200,22 +200,36 @@ export class DepositsUpsertService {
     const mismatchedDeposits = await this.mismatchedDeposits(50);
 
     for (const deposit of mismatchedDeposits) {
-      await this.prisma.$transaction(async (prisma) => {
-        const updatedDeposit = await this.prisma.deposit.update({
-          data: {
-            main: deposit.block_main ?? false,
-          },
-          where: {
-            id: deposit.id,
-          },
-        });
-
-        await this.processDeposit(
-          prisma,
-          updatedDeposit,
-          deposit.block_timestamp,
-        );
-      });
+      await this.graphileWorkerService.addJob(
+        GraphileWorkerPattern.REFRESH_DEPOSIT,
+        {
+          mismatchedDeposits: deposit,
+        },
+      );
     }
+  }
+
+  async refreshDeposit(
+    mismatchedDeposit: Deposit & {
+      block_main: boolean | null;
+      block_timestamp: Date | null;
+    },
+  ): Promise<void> {
+    await this.prisma.$transaction(async (prisma) => {
+      const updatedDeposit = await this.prisma.deposit.update({
+        data: {
+          main: mismatchedDeposit.block_main ?? false,
+        },
+        where: {
+          id: mismatchedDeposit.id,
+        },
+      });
+
+      await this.processDeposit(
+        prisma,
+        updatedDeposit,
+        mismatchedDeposit.block_timestamp,
+      );
+    });
   }
 }

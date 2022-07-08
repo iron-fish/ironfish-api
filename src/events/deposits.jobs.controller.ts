@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Controller, UseFilters } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
+import { Deposit } from '@prisma/client';
 import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
 import { GraphileWorkerException } from '../graphile-worker/graphile-worker-exception';
 import { GraphileWorkerHandlerResponse } from '../graphile-worker/interfaces/graphile-worker-handler-response';
@@ -26,6 +27,18 @@ export class DepositsJobsController {
   @UseFilters(new GraphileWorkerException())
   async refreshDeposits(): Promise<GraphileWorkerHandlerResponse> {
     await this.depositsUpsertService.refreshDeposits();
+    return { requeue: false };
+  }
+
+  @MessagePattern(GraphileWorkerPattern.REFRESH_DEPOSIT)
+  @UseFilters(new GraphileWorkerException())
+  async refreshDeposit(
+    mismatchedDeposit: Deposit & {
+      block_main: boolean | null;
+      block_timestamp: Date | null;
+    },
+  ): Promise<GraphileWorkerHandlerResponse> {
+    await this.depositsUpsertService.refreshDeposit(mismatchedDeposit);
     return { requeue: false };
   }
 }
