@@ -260,7 +260,7 @@ export class UsersService {
         total_points,
         country_code,
         created_at,
-        rank
+        rank::INTEGER
       FROM
         user_ranks
       WHERE
@@ -405,7 +405,7 @@ export class UsersService {
     const rankResponse = await this.prisma.$queryRawUnsafe<{ rank: number }[]>(
       `SELECT
         id,
-        rank
+        rank::INTEGER
       FROM
         (
           SELECT
