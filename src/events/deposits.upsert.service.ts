@@ -172,8 +172,11 @@ export class DepositsUpsertService {
   > {
     const blocksHead = await this.blocksService.head();
 
-    return this.prisma.$queryRawUnsafe<
-      (Deposit & { block_main: boolean | null; block_timestamp: Date | null })[]
+    const results = await this.prisma.$queryRawUnsafe<
+      (Deposit & {
+        block_main: boolean | null;
+        block_timestamp: string | null;
+      })[]
     >(
       `
       SELECT
@@ -194,6 +197,15 @@ export class DepositsUpsertService {
         )
       `,
     );
+
+    // results of raw queries are not subject to prisma type conversions, and
+    // dates are returned as strings
+    return results.map((r) => ({
+      ...r,
+      created_at: new Date(r.created_at),
+      updated_at: new Date(r.updated_at),
+      block_timestamp: r.block_timestamp ? new Date(r.block_timestamp) : null,
+    }));
   }
 
   async refreshDeposits(): Promise<void> {
