@@ -67,24 +67,14 @@ describe('DepositsUpsertService', () => {
       [...notes([0.05], user1.graffiti), ...notes([1], user2.graffiti)],
       'transaction2Hash',
     );
-
-    await prisma.transaction.deleteMany();
-    await prisma.block.deleteMany();
-    await prisma.deposit.deleteMany();
-    await prisma.event.deleteMany();
   });
 
   afterAll(async () => {
     await app.close();
   });
 
-  afterEach(async () => {
+  afterEach(() => {
     jest.clearAllMocks();
-
-    await prisma.transaction.deleteMany();
-    await prisma.block.deleteMany();
-    await prisma.deposit.deleteMany();
-    await prisma.event.deleteMany();
   });
 
   describe('bulkUpsert', () => {
@@ -278,64 +268,51 @@ describe('DepositsUpsertService', () => {
 
   describe('mismatchedDeposits', () => {
     it('finds deposits where deposits.main does not match block.main', async () => {
-      const { deposits, block } = await createMismatchedDepositsAndBlock();
+      const operation = depositOperation(
+        [transaction1],
+        BlockOperation.DISCONNECTED,
+        'block1Hash',
+      );
 
-      expect(deposits[0].block_hash).toBe(block.hash);
-      expect(deposits[0].main).not.toBe(block.main);
+      const deposits = await depositsUpsertService.upsert(operation);
 
-      const mismatched = await depositsUpsertService.mismatchedDeposits(0);
-      const expected = [
-        {
-          ...deposits[0],
-          block_main: block.main,
-          block_timestamp: block.timestamp,
-        },
-        {
-          ...deposits[1],
-          block_main: block.main,
-          block_timestamp: block.timestamp,
-        },
-      ];
-
-      expect(mismatched).toHaveLength(deposits.length);
-      expect(mismatched).toStrictEqual(expected);
-    });
-
-    it('finds deposits where no block exists', async () => {
-      const { deposits, block } = await createMismatchedDepositsAndBlock(false);
-
-      expect(deposits[0].block_hash).not.toBe(block.hash);
+      const { block } = await blockWithMismatch(operation);
 
       const mismatched = await depositsUpsertService.mismatchedDeposits(0);
-      const expected = [
-        {
-          ...deposits[0],
-          block_main: null,
-          block_timestamp: null,
-        },
-        {
-          ...deposits[1],
-          block_main: null,
-          block_timestamp: null,
-        },
-      ];
 
-      expect(mismatched).toHaveLength(deposits.length);
-      expect(mismatched).toStrictEqual(expected);
+      for (const deposit of deposits) {
+        expect(deposit.block_hash).toBe(block.hash);
+        expect(deposit.main).not.toBe(block.main);
+        expect(mismatched).toContainEqual({
+          ...deposit,
+          block_main: block.main,
+          block_timestamp: block.timestamp,
+        });
+      }
     });
 
-    it('ignores mismatches on blocks with beforeSequence blocks of the head', async () => {
-      await createMismatchedDepositsAndBlock();
+    it('ignores mismatches on blocks within beforeSequence blocks of the head', async () => {
+      const blockHead = await blocksService.head();
+      const mismatched = await depositsUpsertService.mismatchedDeposits(
+        blockHead.sequence + 1,
+      );
 
-      const mismatched = await depositsUpsertService.mismatchedDeposits(1);
-
-      expect(mismatched).toHaveLength(0);
+      // only deposits with no matching block are found
+      for (const deposit of mismatched) {
+        expect(deposit.block_timestamp).toBeNull();
+      }
     });
   });
 
   describe('refreshDeposits', () => {
     it('enqueues refreshDeposit jobs', async () => {
-      const { deposits } = await createMismatchedDepositsAndBlock(false);
+      const operation = depositOperation(
+        [transaction1],
+        BlockOperation.DISCONNECTED,
+        'block1Hash',
+      );
+
+      await depositsUpsertService.upsert(operation);
 
       const addJob = jest
         .spyOn(graphileWorkerService, 'addJob')
@@ -343,27 +320,21 @@ describe('DepositsUpsertService', () => {
 
       await depositsUpsertService.refreshDeposits();
 
-      expect(addJob).toHaveBeenCalledTimes(2);
-      expect(addJob).toHaveBeenCalledWith('REFRESH_DEPOSIT', {
-        mismatchedDeposit: {
-          ...deposits[0],
-          block_main: null,
-          block_timestamp: null,
-        },
-      });
-      expect(addJob).toHaveBeenCalledWith('REFRESH_DEPOSIT', {
-        mismatchedDeposit: {
-          ...deposits[1],
-          block_main: null,
-          block_timestamp: null,
-        },
-      });
+      expect(addJob).toHaveBeenCalledWith('REFRESH_DEPOSIT', expect.anything());
     });
   });
 
   describe('refreshDeposit', () => {
     it('updates deposit.main to match block.main', async () => {
-      const { deposits, block } = await createMismatchedDepositsAndBlock(false);
+      const operation = depositOperation(
+        [transaction1],
+        BlockOperation.DISCONNECTED,
+        'block1Hash',
+      );
+
+      const deposits = await depositsUpsertService.upsert(operation);
+
+      const { block } = await blockWithMismatch(operation);
 
       expect(deposits[0].main).not.toBe(block.main);
 
@@ -413,29 +384,22 @@ describe('DepositsUpsertService', () => {
     };
   };
 
-  const createMismatchedDepositsAndBlock = async (matchBlockHash = true) => {
-    const operation = depositOperation(
-      [transaction1],
-      BlockOperation.DISCONNECTED,
-      'block1Hash',
-    );
-
-    const deposits = await depositsUpsertService.upsert(operation);
-
+  const blockWithMismatch = (operation: UpsertDepositsOperationDto) => {
     const blockOptions = {
-      hash: matchBlockHash ? operation.block.hash : uuid(),
+      hash: operation.block.hash,
       sequence: operation.block.sequence,
       difficulty: faker.datatype.number(),
       timestamp: operation.block.timestamp,
       transactionsCount: transaction1.notes.length,
-      type: BlockOperation.CONNECTED,
+      type:
+        operation.type === BlockOperation.CONNECTED
+          ? BlockOperation.DISCONNECTED
+          : BlockOperation.CONNECTED,
       graffiti: user1.graffiti,
       previousBlockHash: operation.block.previousBlockHash,
       size: faker.datatype.number(),
     };
 
-    const { block } = await blocksService.upsert(prisma, blockOptions);
-
-    return { deposits, block };
+    return blocksService.upsert(prisma, blockOptions);
   };
 });
