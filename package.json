@@ -89,7 +89,7 @@
     "passport": "0.6.0",
     "pino": "8.1.0",
     "reflect-metadata": "0.1.13",
-    "rxjs": "7.5.5",
+    "rxjs": "7.5.6",
     "semver": "7.3.7",
     "swagger-ui-express": "4.4.0",
     "type-fest": "2.16.0",
