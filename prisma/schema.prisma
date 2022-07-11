@@ -110,6 +110,7 @@ model BlockTransaction {
   block_id       Int
   transaction    Transaction @relation(fields: [transaction_id], references: [id])
   transaction_id Int
+  index          Int?
 
   @@id([block_id, transaction_id])
   @@index([block_id], name: "index_blocks_transactions_on_block_id")

@@ -2,11 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Module } from '@nestjs/common';
+import { EventsModule } from '../events/events.module';
 import { GraphileWorkerModule } from '../graphile-worker/graphile-worker.module';
 import { HealthController } from './health.controller';
 
 @Module({
   controllers: [HealthController],
-  imports: [GraphileWorkerModule],
+  imports: [GraphileWorkerModule, EventsModule],
 })
 export class HealthRestModule {}

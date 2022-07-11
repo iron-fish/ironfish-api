@@ -36,6 +36,7 @@ describe('HealthController', () => {
 
       expect(body).toMatchObject({
         queued_jobs: expect.any(Number),
+        mismatched_deposits: expect.any(Number),
       });
     });
   });
