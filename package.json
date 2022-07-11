@@ -52,7 +52,7 @@
     "faker": "5.5.3",
     "jest": "27.5.1",
     "prettier": "2.7.1",
-    "prisma": "3.15.2",
+    "prisma": "4.0.0",
     "run-script-webpack-plugin": "0.1.1",
     "supertest": "6.2.4",
     "ts-jest": "27.1.4",
@@ -64,7 +64,7 @@
     "webpack-node-externals": "3.0.0"
   },
   "dependencies": {
-    "@influxdata/influxdb-client": "1.26.0",
+    "@influxdata/influxdb-client": "1.27.0",
     "@magic-sdk/admin": "1.4.1",
     "@nestjs/common": "8.4.7",
     "@nestjs/config": "2.2.0",
@@ -89,7 +89,7 @@
     "passport": "0.6.0",
     "pino": "8.1.0",
     "reflect-metadata": "0.1.13",
-    "rxjs": "7.5.5",
+    "rxjs": "7.5.6",
     "semver": "7.3.7",
     "swagger-ui-express": "4.4.0",
     "type-fest": "2.16.0",

@@ -25,6 +25,7 @@ describe('InfluxDbService', () => {
         flush: jest.fn(),
         close: jest.fn(),
         dispose: jest.fn(),
+        path: '/api/v2/write',
       }));
 
     app = await bootstrapTestApp();
