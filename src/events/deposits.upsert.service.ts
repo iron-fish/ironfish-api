@@ -134,7 +134,7 @@ export class DepositsUpsertService {
   }
 
   async mismatchedDepositCount(): Promise<number> {
-    const result = await this.prisma.$queryRawUnsafe<{ count: number }[]>(
+    const result = await this.prisma.$queryRawUnsafe<{ count: BigInt }[]>(
       `
       SELECT
         COUNT(*)
@@ -149,6 +149,6 @@ export class DepositsUpsertService {
     if (!is.array(result) || result.length !== 1 || !is.object(result[0])) {
       throw new Error('Unexpected database response');
     }
-    return result[0].count;
+    return Number(result[0].count);
   }
 }

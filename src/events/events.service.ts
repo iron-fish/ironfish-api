@@ -685,7 +685,7 @@ export class EventsService {
       SELECT
         user_id,
         points,
-        rank
+        rank::INTEGER
       FROM
         user_ranks
       WHERE

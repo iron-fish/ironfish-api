@@ -30,7 +30,7 @@ export class NodeUptimesService {
     const uptime = await this.prisma.$transaction(async (prisma) => {
       await prisma.$executeRawUnsafe(
         `SELECT pg_advisory_xact_lock(HASHTEXT($1));`,
-        user.id,
+        user.id.toString(),
       );
 
       let uptime = await this.getWithClient(user, prisma);
