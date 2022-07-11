@@ -6,6 +6,7 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
+import { Decimal } from '@prisma/client/runtime';
 import is from '@sindresorhus/is';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
@@ -260,12 +261,12 @@ export class BlocksService {
     const dateMetricsResponse = await this.prisma.$queryRawUnsafe<
       {
         average_block_time_ms: number;
-        average_difficulty_millis: number;
-        blocks_count: number;
-        blocks_with_graffiti_count: number;
+        average_difficulty_millis: Decimal;
+        blocks_count: BigInt;
+        blocks_with_graffiti_count: BigInt;
         chain_sequence: number;
-        transactions_count: number;
-        unique_graffiti_count: number;
+        transactions_count: BigInt;
+        unique_graffiti_count: BigInt;
       }[]
     >(
       `
@@ -296,7 +297,7 @@ export class BlocksService {
     }
 
     const cumulativeMetricsResponse = await this.prisma.$queryRawUnsafe<
-      { cumulative_unique_graffiti: number }[]
+      { cumulative_unique_graffiti: BigInt }[]
     >(
       `
       SELECT
@@ -324,15 +325,18 @@ export class BlocksService {
 
     return {
       averageBlockTimeMs: dateMetricsResponse[0].average_block_time_ms,
-      averageDifficultyMillis: dateMetricsResponse[0].average_difficulty_millis,
-      blocksCount: dateMetricsResponse[0].blocks_count,
-      blocksWithGraffitiCount:
+      averageDifficultyMillis:
+        dateMetricsResponse[0].average_difficulty_millis.toNumber(),
+      blocksCount: Number(dateMetricsResponse[0].blocks_count),
+      blocksWithGraffitiCount: Number(
         dateMetricsResponse[0].blocks_with_graffiti_count,
+      ),
       chainSequence: dateMetricsResponse[0].chain_sequence,
-      cumulativeUniqueGraffiti:
+      cumulativeUniqueGraffiti: Number(
         cumulativeMetricsResponse[0].cumulative_unique_graffiti,
-      transactionsCount: dateMetricsResponse[0].transactions_count,
-      uniqueGraffiti: dateMetricsResponse[0].unique_graffiti_count,
+      ),
+      transactionsCount: Number(dateMetricsResponse[0].transactions_count),
+      uniqueGraffiti: Number(dateMetricsResponse[0].unique_graffiti_count),
     };
   }
 
