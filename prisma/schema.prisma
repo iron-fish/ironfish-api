@@ -54,7 +54,7 @@ model User {
 model NodeUptime {
   id              Int      @id @default(autoincrement())
   user            User     @relation(fields: [user_id], references: [id])
-  user_id         Int
+  user_id         Int      @unique 
   total_hours     Int      @default(0)
   last_checked_in DateTime @default(now()) @db.Timestamp(6)
 
