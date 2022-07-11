@@ -369,7 +369,7 @@ export class BlocksService {
     return {
       chainHeight,
       percentageMarked,
-      uniqueGraffiti: Number(uniqueGraffiti)
+      uniqueGraffiti: Number(uniqueGraffiti),
     };
   }
 
