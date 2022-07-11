@@ -360,7 +360,7 @@ export class BlocksService {
     // in count despite it being included in the documentation.
     // See more: https://github.com/prisma/prisma/issues/4228
     const uniqueGraffiti = (
-      await this.prisma.$queryRawUnsafe<{ count: number }[]>(
+      await this.prisma.$queryRawUnsafe<{ count: BigInt }[]>(
         'SELECT COUNT(*) FROM (SELECT DISTINCT graffiti FROM blocks WHERE main = true AND network_version = $1) AS main_blocks;',
         networkVersion,
       )
@@ -369,7 +369,7 @@ export class BlocksService {
     return {
       chainHeight,
       percentageMarked,
-      uniqueGraffiti,
+      uniqueGraffiti: Number(uniqueGraffiti)
     };
   }
 
