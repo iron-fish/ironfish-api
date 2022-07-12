@@ -214,9 +214,7 @@ export class DepositsUpsertService {
     for (const deposit of mismatchedDeposits) {
       await this.graphileWorkerService.addJob(
         GraphileWorkerPattern.REFRESH_DEPOSIT,
-        {
-          mismatchedDeposit: deposit,
-        },
+        deposit,
       );
     }
   }

@@ -308,8 +308,8 @@ describe('DepositsUpsertService', () => {
     it('enqueues refreshDeposit jobs', async () => {
       const operation = depositOperation(
         [transaction1],
-        BlockOperation.DISCONNECTED,
-        'block1Hash',
+        BlockOperation.CONNECTED,
+        uuid(),
       );
 
       await depositsUpsertService.upsert(operation);
@@ -320,7 +320,23 @@ describe('DepositsUpsertService', () => {
 
       await depositsUpsertService.refreshDeposits();
 
-      expect(addJob).toHaveBeenCalledWith('REFRESH_DEPOSIT', expect.anything());
+      expect(addJob).toHaveBeenCalledWith(
+        'REFRESH_DEPOSIT',
+        expect.objectContaining({
+          id: expect.any(Number),
+          created_at: expect.any(Date),
+          updated_at: expect.any(Date),
+          transaction_hash: expect.any(String),
+          block_hash: expect.any(String),
+          graffiti: expect.any(String),
+          block_sequence: expect.any(Number),
+          network_version: expect.any(Number),
+          main: expect.any(Boolean),
+          amount: expect.any(Number),
+          block_main: null,
+          block_timestamp: null,
+        }),
+      );
     });
   });
 
