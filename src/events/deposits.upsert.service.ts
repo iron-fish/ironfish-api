@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable } from '@nestjs/common';
-import { Deposit, EventType, Prisma } from '@prisma/client';
+import { Deposit, Event, EventType, Prisma, User } from '@prisma/client';
 import is from '@sindresorhus/is';
 import assert from 'assert';
 import { ApiConfigService } from '../api-config/api-config.service';
@@ -87,9 +87,9 @@ export class DepositsUpsertService {
           };
 
           const deposit: Deposit = await tracer.trace(
-            'DepositUpsertService.upsert.upsert_deposit',
+            'DepositUpsertService.upsert.upsertDeposit',
             async (): Promise<Deposit> => {
-              return await prisma.deposit.upsert({
+              return prisma.deposit.upsert({
                 create: depositParams,
                 update: depositParams,
                 where: {
@@ -124,8 +124,8 @@ export class DepositsUpsertService {
   ): Promise<void> {
     if (!deposit.main) {
       const event = await tracer.trace(
-        'DepositUpserService.processDeposit.find_event',
-        async () => {
+        'DepositUpsertService.processDeposit.findEvent',
+        async (): Promise<Event | null> => {
           return prisma.event.findUnique({
             where: {
               deposit_id: deposit.id,
@@ -136,8 +136,8 @@ export class DepositsUpsertService {
 
       if (event) {
         await tracer.trace(
-          'DepositUpsertService.processDeposit.delete_event',
-          async () => {
+          'DepositUpsertService.processDeposit.deleteEvent',
+          async (): Promise<void> => {
             await this.eventsService.deleteWithClient(event, prisma);
           },
         );
@@ -146,8 +146,8 @@ export class DepositsUpsertService {
 
     if (deposit.main && deposit.amount >= SEND_TRANSACTION_LIMIT_ORE) {
       const user = await tracer.trace(
-        'DepositUpsertService.processDeposit.find_user',
-        async () => {
+        'DepositUpsertService.processDeposit.findUser',
+        async (): Promise<User | null> => {
           return this.usersService.findByGraffiti(deposit.graffiti, prisma);
         },
       );
@@ -156,8 +156,8 @@ export class DepositsUpsertService {
         assert.ok(blockTimestamp);
 
         await tracer.trace(
-          'DepositsUpsertService.processDeposit.create_event',
-          async () => {
+          'DepositsUpsertService.processDeposit.createEvent',
+          async (): Promise<void> => {
             await this.eventsService.createWithClient(
               {
                 occurredAt: blockTimestamp,
