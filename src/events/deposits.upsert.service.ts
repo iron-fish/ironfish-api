@@ -156,7 +156,7 @@ export class DepositsUpsertService {
       LEFT JOIN
         blocks
       ON blocks.hash = deposits.block_hash
-      WHERE blocks.hash IS NULL OR blocks.main <> deposits.main
+      WHERE (blocks.hash IS NULL AND deposits.main) OR blocks.main <> deposits.main
       `,
     );
     if (!is.array(result) || result.length !== 1 || !is.object(result[0])) {
@@ -189,7 +189,7 @@ export class DepositsUpsertService {
         blocks
       ON blocks.hash = deposits.block_hash
       WHERE
-        blocks.hash IS NULL OR
+        (blocks.hash IS NULL AND deposits.main) OR
         blocks.main <> deposits.main AND
         (
           blocks.hash IS NULL OR
