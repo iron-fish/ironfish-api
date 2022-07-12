@@ -8,6 +8,7 @@ import { v4 as uuid } from 'uuid';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { BlockOperation } from '../blocks/enums/block-operation';
 import { ORE_TO_IRON } from '../common/constants';
+import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
 import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
@@ -188,4 +189,21 @@ describe('DepositsController', () => {
       transactions,
     };
   };
+
+  describe('POST /deposits/refresh', () => {
+    it('enqueues a worker job to fix deposits', async () => {
+      const addJob = jest
+        .spyOn(graphileWorkerService, 'addJob')
+        .mockImplementationOnce(jest.fn());
+
+      await request(app.getHttpServer())
+        .post('/deposits/refresh')
+        .set('Authorization', `Bearer ${API_KEY}`)
+        .expect(HttpStatus.CREATED);
+
+      expect(addJob).toHaveBeenCalledWith(
+        GraphileWorkerPattern.REFRESH_DEPOSITS,
+      );
+    });
+  });
 });

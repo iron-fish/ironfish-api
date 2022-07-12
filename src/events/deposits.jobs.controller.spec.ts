@@ -96,4 +96,24 @@ describe('DepositsJobsController', () => {
       expect(requeue).toBe(false);
     });
   });
+
+  describe('refreshDeposits', () => {
+    it('fixes mismatched deposits using the service', async () => {
+      const refreshDeposits = jest
+        .spyOn(depositsUpsertService, 'refreshDeposits')
+        .mockImplementationOnce(jest.fn());
+
+      await depositsJobsController.refreshDeposits();
+      expect(refreshDeposits).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not requeue', async () => {
+      jest
+        .spyOn(depositsUpsertService, 'refreshDeposits')
+        .mockImplementationOnce(jest.fn());
+
+      const { requeue } = await depositsJobsController.refreshDeposits();
+      expect(requeue).toBe(false);
+    });
+  });
 });

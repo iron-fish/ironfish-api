@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Module } from '@nestjs/common';
 import { ApiConfigModule } from '../api-config/api-config.module';
+import { GraphileWorkerModule } from '../graphile-worker/graphile-worker.module';
 import { UsersModule } from '../users/users.module';
 import { DepositsController } from './deposits.controller';
 import { EventsController } from './events.controller';
@@ -10,6 +11,6 @@ import { EventsModule } from './events.module';
 
 @Module({
   controllers: [EventsController, DepositsController],
-  imports: [EventsModule, UsersModule, ApiConfigModule],
+  imports: [EventsModule, UsersModule, ApiConfigModule, GraphileWorkerModule],
 })
 export class EventsRestModule {}

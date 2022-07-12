@@ -16,6 +16,8 @@ import { ApiExcludeEndpoint, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
+import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
+import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { DepositsService } from './deposits.service';
 import { DepositsUpsertService } from './deposits.upsert.service';
 import { UpsertDepositsDto } from './dto/upsert-deposit.dto';
@@ -26,6 +28,7 @@ export class DepositsController {
     private readonly configService: ApiConfigService,
     private readonly depositsUpsert: DepositsUpsertService,
     private readonly deposits: DepositsService,
+    private readonly graphileWorkerService: GraphileWorkerService,
   ) {}
 
   @ApiOperation({ summary: 'Gets the head of the chain' })
@@ -67,5 +70,14 @@ export class DepositsController {
   ): Promise<void> {
     await this.depositsUpsert.bulkUpsert(data.operations);
     res.sendStatus(HttpStatus.ACCEPTED);
+  }
+
+  @ApiExcludeEndpoint()
+  @Post('refresh')
+  @UseGuards(ApiKeyGuard)
+  async refresh(): Promise<void> {
+    await this.graphileWorkerService.addJob(
+      GraphileWorkerPattern.REFRESH_DEPOSITS,
+    );
   }
 }
