@@ -209,6 +209,7 @@ export class DepositsUpsertService {
   }
 
   async refreshDeposits(): Promise<void> {
+    const refreshDepositQueues = 4;
     const mismatchedDeposits = await this.mismatchedDeposits(50);
 
     let queueNumber = 0;
@@ -220,7 +221,7 @@ export class DepositsUpsertService {
           queueName: `refresh_deposit_${queueNumber}`,
         },
       );
-      queueNumber = (queueNumber + 1) % 4;
+      queueNumber = (queueNumber + 1) % refreshDepositQueues;
     }
   }
 
