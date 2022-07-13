@@ -336,6 +336,9 @@ describe('DepositsUpsertService', () => {
           block_main: null,
           block_timestamp: null,
         }),
+        expect.objectContaining({
+          queueName: expect.stringMatching('refresh_deposit_[0-9]+'),
+        }),
       );
     });
   });
