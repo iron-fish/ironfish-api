@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable } from '@nestjs/common';
-import { Deposit, EventType, Prisma } from '@prisma/client';
+import { Deposit, Event, EventType, Prisma, User } from '@prisma/client';
 import is from '@sindresorhus/is';
 import assert from 'assert';
 import { ApiConfigService } from '../api-config/api-config.service';
@@ -10,6 +10,7 @@ import { BlocksService } from '../blocks/blocks.service';
 import { BlockOperation } from '../blocks/enums/block-operation';
 import { SEND_TRANSACTION_LIMIT_ORE } from '../common/constants';
 import { standardizeHash } from '../common/utils/hash';
+import { tracer } from '../dd-trace/tracer';
 import { DepositHeadsService } from '../deposit-heads/deposit-heads.service';
 import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
 import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
@@ -54,8 +55,11 @@ export class DepositsUpsertService {
   async upsert(operation: UpsertDepositsOperationDto): Promise<Deposit[]> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
     const deposits = new Array<Deposit>();
+    const blockHash = standardizeHash(operation.block.hash);
 
     for (const transaction of operation.transactions) {
+      const transactionHash = standardizeHash(transaction.hash);
+
       const shouldUpsertDeposit =
         operation.type === BlockOperation.CONNECTED ||
         operation.type === BlockOperation.DISCONNECTED;
@@ -73,8 +77,8 @@ export class DepositsUpsertService {
       for (const [graffiti, amount] of amounts) {
         await this.prisma.$transaction(async (prisma) => {
           const depositParams = {
-            transaction_hash: standardizeHash(transaction.hash),
-            block_hash: standardizeHash(operation.block.hash),
+            transaction_hash: transactionHash,
+            block_hash: blockHash,
             block_sequence: operation.block.sequence,
             network_version: networkVersion,
             graffiti,
@@ -82,16 +86,21 @@ export class DepositsUpsertService {
             amount,
           };
 
-          const deposit = await prisma.deposit.upsert({
-            create: depositParams,
-            update: depositParams,
-            where: {
-              uq_deposits_on_transaction_hash_and_graffiti: {
-                transaction_hash: depositParams.transaction_hash,
-                graffiti: depositParams.graffiti,
-              },
+          const deposit: Deposit = await tracer.trace(
+            'DepositUpsertService.upsert.upsertDeposit',
+            async (): Promise<Deposit> => {
+              return prisma.deposit.upsert({
+                create: depositParams,
+                update: depositParams,
+                where: {
+                  uq_deposits_on_transaction_hash_and_graffiti: {
+                    transaction_hash: depositParams.transaction_hash,
+                    graffiti: depositParams.graffiti,
+                  },
+                },
+              });
             },
-          });
+          );
           deposits.push(deposit);
 
           await this.processDeposit(prisma, deposit, operation.block.timestamp);
@@ -114,33 +123,51 @@ export class DepositsUpsertService {
     blockTimestamp: Date | null,
   ): Promise<void> {
     if (!deposit.main) {
-      const event = await prisma.event.findUnique({
-        where: {
-          deposit_id: deposit.id,
+      const event = await tracer.trace(
+        'DepositUpsertService.processDeposit.findEvent',
+        async (): Promise<Event | null> => {
+          return prisma.event.findUnique({
+            where: {
+              deposit_id: deposit.id,
+            },
+          });
         },
-      });
+      );
+
       if (event) {
-        await this.eventsService.deleteWithClient(event, prisma);
+        await tracer.trace(
+          'DepositUpsertService.processDeposit.deleteEvent',
+          async (): Promise<void> => {
+            await this.eventsService.deleteWithClient(event, prisma);
+          },
+        );
       }
     }
 
     if (deposit.main && deposit.amount >= SEND_TRANSACTION_LIMIT_ORE) {
-      const user = await this.usersService.findByGraffiti(
-        deposit.graffiti,
-        prisma,
+      const user = await tracer.trace(
+        'DepositUpsertService.processDeposit.findUser',
+        async (): Promise<User | null> => {
+          return this.usersService.findByGraffiti(deposit.graffiti, prisma);
+        },
       );
 
       if (user) {
         assert.ok(blockTimestamp);
 
-        await this.eventsService.createWithClient(
-          {
-            occurredAt: blockTimestamp,
-            type: EventType.SEND_TRANSACTION,
-            userId: user.id,
-            deposit,
+        await tracer.trace(
+          'DepositsUpsertService.processDeposit.createEvent',
+          async (): Promise<void> => {
+            await this.eventsService.createWithClient(
+              {
+                occurredAt: blockTimestamp,
+                type: EventType.SEND_TRANSACTION,
+                userId: user.id,
+                deposit,
+              },
+              prisma,
+            );
           },
-          prisma,
         );
       }
     }
