@@ -520,11 +520,14 @@ export class EventsService {
     userId: number,
     type: EventType,
   ): Promise<Job> {
+    const updateLatestPointsQueues = 4;
+    const queueNumber = Math.floor(Math.random() * updateLatestPointsQueues);
     return this.graphileWorkerService.addJob(
       GraphileWorkerPattern.UPDATE_LATEST_POINTS,
       { userId, type },
       {
         jobKey: `ulp:${userId}:${type}`,
+        queueName: `update_latest_points_${queueNumber}`,
       },
     );
   }

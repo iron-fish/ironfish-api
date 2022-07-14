@@ -578,7 +578,10 @@ describe('EventsService', () => {
           userId: user.id,
           type: EventType.BLOCK_MINED,
         },
-        expect.anything(),
+        expect.objectContaining({
+          jobKey: expect.any(String),
+          queueName: expect.any(String),
+        }),
       );
 
       const userPoints = await userPointsService.findOrThrow(user.id);
@@ -717,7 +720,10 @@ describe('EventsService', () => {
           userId: user.id,
           type: EventType.PULL_REQUEST_MERGED,
         },
-        expect.anything(),
+        expect.objectContaining({
+          jobKey: expect.any(String),
+          queueName: expect.any(String),
+        }),
       );
 
       assert.ok(event);
@@ -823,7 +829,10 @@ describe('EventsService', () => {
             userId: user.id,
             type: EventType.BLOCK_MINED,
           },
-          expect.anything(),
+          expect.objectContaining({
+            jobKey: expect.any(String),
+            queueName: expect.any(String),
+          }),
         );
 
         const userPoints = await userPointsService.findOrThrow(user.id);
@@ -862,7 +871,10 @@ describe('EventsService', () => {
           userId: user.id,
           type: EventType.BLOCK_MINED,
         },
-        expect.anything(),
+        expect.objectContaining({
+          jobKey: expect.any(String),
+          queueName: expect.any(String),
+        }),
       );
 
       const userPoints = await userPointsService.findOrThrow(user.id);
@@ -886,7 +898,10 @@ describe('EventsService', () => {
           userId: user.id,
           type: EventType.BLOCK_MINED,
         },
-        expect.anything(),
+        expect.objectContaining({
+          jobKey: expect.any(String),
+          queueName: expect.any(String),
+        }),
       );
 
       const updatedUserPoints = await userPointsService.findOrThrow(user.id);
