@@ -534,7 +534,7 @@ export class EventsService {
         jobKey: `ulp:${userId}:${type}`,
         jobKeyMode: `preserve_run_at`,
         queueName: `update_latest_points_${queueNumber}`,
-        runAt: runAt,
+        runAt,
       },
     );
   }
