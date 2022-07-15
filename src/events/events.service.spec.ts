@@ -580,7 +580,9 @@ describe('EventsService', () => {
         },
         expect.objectContaining({
           jobKey: expect.any(String),
+          jobKeyMode: expect.any(String),
           queueName: expect.any(String),
+          runAt: expect.any(Date),
         }),
       );
 
@@ -722,7 +724,9 @@ describe('EventsService', () => {
         },
         expect.objectContaining({
           jobKey: expect.any(String),
+          jobKeyMode: expect.any(String),
           queueName: expect.any(String),
+          runAt: expect.any(Date),
         }),
       );
 
@@ -831,7 +835,9 @@ describe('EventsService', () => {
           },
           expect.objectContaining({
             jobKey: expect.any(String),
+            jobKeyMode: expect.any(String),
             queueName: expect.any(String),
+            runAt: expect.any(Date),
           }),
         );
 
@@ -873,7 +879,9 @@ describe('EventsService', () => {
         },
         expect.objectContaining({
           jobKey: expect.any(String),
+          jobKeyMode: expect.any(String),
           queueName: expect.any(String),
+          runAt: expect.any(Date),
         }),
       );
 
@@ -900,7 +908,9 @@ describe('EventsService', () => {
         },
         expect.objectContaining({
           jobKey: expect.any(String),
+          jobKeyMode: expect.any(String),
           queueName: expect.any(String),
+          runAt: expect.any(Date),
         }),
       );
 
