@@ -5,4 +5,5 @@ export interface GraphileWorkerJobOptions {
   queueName?: string;
   runAt?: Date;
   jobKey?: string;
+  jobKeyMode?: 'replace' | 'preserve_run_at' | 'unsafe_dedupe';
 }
