@@ -19,12 +19,13 @@ export class GraphileWorkerService {
   async addJob<T = unknown>(
     pattern: GraphileWorkerPattern,
     payload?: T,
-    { queueName, runAt, jobKey }: GraphileWorkerJobOptions = {},
+    { queueName, runAt, jobKey, jobKeyMode }: GraphileWorkerJobOptions = {},
   ): Promise<Job> {
     await this.initWorkerUtils();
 
     return this.workerUtils.addJob(pattern.toString(), payload, {
       jobKey: jobKey || `job_${uuid()}`,
+      jobKeyMode,
       queueName,
       runAt,
     });
