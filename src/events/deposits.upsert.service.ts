@@ -226,8 +226,10 @@ export class DepositsUpsertService {
       ON deposits.id = events.deposit_id
       WHERE
         (blocks.hash IS NULL AND deposits.main) OR
-        blocks.main <> deposits.main OR
-        ((blocks.main OR deposits.main) AND events.deleted_at IS NOT NULL) AND
+        (
+          blocks.main <> deposits.main OR
+          ((blocks.main OR deposits.main) AND events.deleted_at IS NOT NULL)
+        ) AND
         (
           blocks.hash IS NULL OR
           blocks.sequence <= ${blocksHead.sequence - beforeSequence}
