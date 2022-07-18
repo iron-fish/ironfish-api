@@ -484,10 +484,11 @@ export class EventsService {
       const pointDifference = adjustedPoints - existingEvent.points;
 
       // Only update event points if necessary
-      if (pointDifference !== 0) {
+      if (pointDifference !== 0 || existingEvent.deleted_at) {
         existingEvent = await client.event.update({
           data: {
             points: adjustedPoints,
+            deleted_at: null,
           },
           where: {
             id: existingEvent.id,

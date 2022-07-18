@@ -183,7 +183,13 @@ export class DepositsUpsertService {
       LEFT JOIN
         blocks
       ON blocks.hash = deposits.block_hash
-      WHERE (blocks.hash IS NULL AND deposits.main) OR blocks.main <> deposits.main
+      JOIN
+        events
+      ON deposits.id = events.deposit_id
+      WHERE
+        (blocks.hash IS NULL AND deposits.main) OR
+        blocks.main <> deposits.main OR
+        ((blocks.main OR deposits.main) AND events.deleted_at IS NOT NULL)
       `,
     );
     if (!is.array(result) || result.length !== 1 || !is.object(result[0])) {
@@ -215,9 +221,13 @@ export class DepositsUpsertService {
       LEFT JOIN
         blocks
       ON blocks.hash = deposits.block_hash
+      JOIN
+        events
+      ON deposits.id = events.deposit_id
       WHERE
         (blocks.hash IS NULL AND deposits.main) OR
-        blocks.main <> deposits.main AND
+        blocks.main <> deposits.main OR
+        ((blocks.main OR deposits.main) AND events.deleted_at IS NOT NULL) AND
         (
           blocks.hash IS NULL OR
           blocks.sequence <= ${blocksHead.sequence - beforeSequence}
