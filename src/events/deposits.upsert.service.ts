@@ -234,6 +234,7 @@ export class DepositsUpsertService {
           blocks.hash IS NULL OR
           blocks.sequence <= ${blocksHead.sequence - beforeSequence}
         )
+      LIMIT 50000
       `,
     );
 
