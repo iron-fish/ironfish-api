@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable } from '@nestjs/common';
-import { Deposit, Event, EventType, Prisma, User } from '@prisma/client';
+import { Deposit, EventType, Prisma } from '@prisma/client';
 import is from '@sindresorhus/is';
 import assert from 'assert';
 import { ApiConfigService } from '../api-config/api-config.service';
@@ -10,7 +10,6 @@ import { BlocksService } from '../blocks/blocks.service';
 import { BlockOperation } from '../blocks/enums/block-operation';
 import { SEND_TRANSACTION_LIMIT_ORE } from '../common/constants';
 import { standardizeHash } from '../common/utils/hash';
-import { tracer } from '../dd-trace/tracer';
 import { DepositHeadsService } from '../deposit-heads/deposit-heads.service';
 import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
 import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
@@ -86,21 +85,16 @@ export class DepositsUpsertService {
             amount,
           };
 
-          const deposit: Deposit = await tracer.trace(
-            'DepositUpsertService.upsert.upsertDeposit',
-            async (): Promise<Deposit> => {
-              return prisma.deposit.upsert({
-                create: depositParams,
-                update: depositParams,
-                where: {
-                  uq_deposits_on_transaction_hash_and_graffiti: {
-                    transaction_hash: depositParams.transaction_hash,
-                    graffiti: depositParams.graffiti,
-                  },
-                },
-              });
+          const deposit = await prisma.deposit.upsert({
+            create: depositParams,
+            update: depositParams,
+            where: {
+              uq_deposits_on_transaction_hash_and_graffiti: {
+                transaction_hash: depositParams.transaction_hash,
+                graffiti: depositParams.graffiti,
+              },
             },
-          );
+          });
           deposits.push(deposit);
 
           await this.processDeposit(prisma, deposit, operation.block.timestamp);
@@ -123,51 +117,34 @@ export class DepositsUpsertService {
     blockTimestamp: Date | null,
   ): Promise<void> {
     if (!deposit.main) {
-      const event = await tracer.trace(
-        'DepositUpsertService.processDeposit.findEvent',
-        async (): Promise<Event | null> => {
-          return prisma.event.findUnique({
-            where: {
-              deposit_id: deposit.id,
-            },
-          });
+      const event = await prisma.event.findUnique({
+        where: {
+          deposit_id: deposit.id,
         },
-      );
+      });
 
       if (event) {
-        await tracer.trace(
-          'DepositUpsertService.processDeposit.deleteEvent',
-          async (): Promise<void> => {
-            await this.eventsService.deleteWithClient(event, prisma);
-          },
-        );
+        await this.eventsService.deleteWithClient(event, prisma);
       }
     }
 
     if (deposit.main && deposit.amount >= SEND_TRANSACTION_LIMIT_ORE) {
-      const user = await tracer.trace(
-        'DepositUpsertService.processDeposit.findUser',
-        async (): Promise<User | null> => {
-          return this.usersService.findByGraffiti(deposit.graffiti, prisma);
-        },
+      const user = await this.usersService.findByGraffiti(
+        deposit.graffiti,
+        prisma,
       );
 
       if (user) {
         assert.ok(blockTimestamp);
 
-        await tracer.trace(
-          'DepositsUpsertService.processDeposit.createEvent',
-          async (): Promise<void> => {
-            await this.eventsService.createWithClient(
-              {
-                occurredAt: blockTimestamp,
-                type: EventType.SEND_TRANSACTION,
-                userId: user.id,
-                deposit,
-              },
-              prisma,
-            );
+        await this.eventsService.createWithClient(
+          {
+            occurredAt: blockTimestamp,
+            type: EventType.SEND_TRANSACTION,
+            userId: user.id,
+            deposit,
           },
+          prisma,
         );
       }
     }
@@ -183,13 +160,9 @@ export class DepositsUpsertService {
       LEFT JOIN
         blocks
       ON blocks.hash = deposits.block_hash
-      JOIN
-        events
-      ON deposits.id = events.deposit_id
       WHERE
         (blocks.hash IS NULL AND deposits.main) OR
-        blocks.main <> deposits.main OR
-        ((blocks.main OR deposits.main) AND events.deleted_at IS NOT NULL)
+        blocks.main <> deposits.main
       `,
     );
     if (!is.array(result) || result.length !== 1 || !is.object(result[0])) {
@@ -221,15 +194,9 @@ export class DepositsUpsertService {
       LEFT JOIN
         blocks
       ON blocks.hash = deposits.block_hash
-      JOIN
-        events
-      ON deposits.id = events.deposit_id
       WHERE
         (blocks.hash IS NULL AND deposits.main) OR
-        (
-          blocks.main <> deposits.main OR
-          ((blocks.main OR deposits.main) AND events.deleted_at IS NOT NULL)
-        ) AND
+        blocks.main <> deposits.main AND
         (
           blocks.hash IS NULL OR
           blocks.sequence <= ${blocksHead.sequence - beforeSequence}
