@@ -136,7 +136,7 @@ export class EventsService {
     }
 
     const [nextRecords = [], previousRecords = []] = await Promise.all([
-      await this.prisma.event.findMany({
+      this.prisma.event.findMany({
         where: {
           ...where,
           id: {
@@ -146,7 +146,7 @@ export class EventsService {
         orderBy,
         take: 1,
       }),
-      await this.prisma.event.findMany({
+      this.prisma.event.findMany({
         where: {
           ...where,
           id: {
