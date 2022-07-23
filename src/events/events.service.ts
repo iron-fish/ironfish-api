@@ -57,20 +57,26 @@ export class EventsService {
     hasPrevious: boolean;
   }> {
     const cursorId = options.before ?? options.after;
-    const cursor = cursorId ? { id: cursorId } : undefined;
     const direction = options.before !== undefined ? -1 : 1;
     const limit =
       direction * Math.min(MAX_LIMIT, options.limit || DEFAULT_LIMIT);
     const orderBy = {
       occurred_at: Prisma.SortOrder.desc,
     };
-    const skip = cursor ? 1 : 0;
+    const skip = cursorId ? 1 : 0;
+    const fn = options.before ? 'gte' : 'lte';
     const where = {
       user_id: options.userId,
       deleted_at: null,
+      ...(cursorId
+        ? {
+            id: {
+              [fn]: cursorId,
+            },
+          }
+        : {}),
     };
     const records = await this.prisma.event.findMany({
-      cursor,
       orderBy,
       skip,
       take: limit,
@@ -128,20 +134,29 @@ export class EventsService {
         hasPrevious: false,
       };
     }
-    const nextRecords = await this.prisma.event.findMany({
-      where,
-      orderBy,
-      cursor: { id: data[length - 1].id },
-      skip: 1,
-      take: 1,
-    });
-    const previousRecords = await this.prisma.event.findMany({
-      where,
-      orderBy,
-      cursor: { id: data[0].id },
-      skip: 1,
-      take: -1,
-    });
+
+    const [nextRecords = [], previousRecords = []] = await Promise.all([
+      await this.prisma.event.findMany({
+        where: {
+          ...where,
+          id: {
+            lt: data[length - 1].id,
+          },
+        },
+        orderBy,
+        take: 1,
+      }),
+      await this.prisma.event.findMany({
+        where: {
+          ...where,
+          id: {
+            gt: data[0].id,
+          },
+        },
+        orderBy,
+        take: 1,
+      }),
+    ]);
     return {
       hasNext: nextRecords.length > 0,
       hasPrevious: previousRecords.length > 0,
