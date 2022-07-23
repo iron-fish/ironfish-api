@@ -50,6 +50,7 @@ export class TelemetryController {
       if (!version || !this.isValidTelemetryVersion(version.value)) {
         continue;
       }
+
       nodeVersion = version.value;
 
       options.push({
@@ -60,34 +61,32 @@ export class TelemetryController {
       });
     }
 
+    if (graffiti && nodeVersion) {
+      const nodeUptimeEnabled = this.config.get<boolean>('NODE_UPTIME_ENABLED');
+      if (!nodeUptimeEnabled) {
+        return;
+      }
+
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+      const minVersion = await this.versionsService.getLatestAtDate(oneWeekAgo);
+
+      // If the API fails to fetch a version, we don't want to punish the user
+      if (!minVersion || gte(nodeVersion, minVersion.version)) {
+        const user = await this.usersService.findByGraffiti(graffiti);
+
+        if (user) {
+          await this.nodeUptimes.addUptime(user);
+        }
+      }
+    }
+
     if (options.length) {
       this.influxDbService.writePoints(options);
     }
 
     this.submitIpWithoutNodeFieldsToTelemetry(request);
-
-    if (!graffiti || !nodeVersion) {
-      return;
-    }
-
-    const nodeUptimeEnabled = this.config.get<boolean>('NODE_UPTIME_ENABLED');
-    if (!nodeUptimeEnabled) {
-      return;
-    }
-
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-
-    const minVersion = await this.versionsService.getLatestAtDate(oneWeekAgo);
-
-    // If the API fails to fetch a version, we don't want to punish the user
-    if (!minVersion || gte(nodeVersion, minVersion.version)) {
-      const user = await this.usersService.findByGraffiti(graffiti);
-
-      if (user) {
-        await this.nodeUptimes.addUptime(user);
-      }
-    }
   }
 
   private isValidTelemetryVersion(version: string): boolean {
