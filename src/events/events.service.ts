@@ -71,9 +71,9 @@ export class EventsService {
 
     if (cursorId) {
       if (options.before) {
-        where.id = { gte: cursorId };
+        where.occurred_at = { gte: cursorId };
       } else {
-        where.id = { lte: cursorId };
+        where.occurred_at = { lte: cursorId };
       }
     }
 
@@ -136,22 +136,22 @@ export class EventsService {
       };
     }
 
-    const nextRecords = await this.prisma.event.findMany({
+    const nextRecords = await this.prisma.event.count({
       where: {
         ...where,
-        id: {
-          lt: data[length - 1].id,
+        occurred_at: {
+          lt: data[length - 1].occurred_at,
         },
       },
       orderBy,
       take: 1,
     });
 
-    const previousRecords = await this.prisma.event.findMany({
+    const previousRecords = await this.prisma.event.count({
       where: {
         ...where,
-        id: {
-          gt: data[0].id,
+        occurred_at: {
+          gt: data[0].occurred_at,
         },
       },
       orderBy,
@@ -159,8 +159,8 @@ export class EventsService {
     });
 
     return {
-      hasNext: nextRecords.length > 0,
-      hasPrevious: previousRecords.length > 0,
+      hasNext: nextRecords > 0,
+      hasPrevious: previousRecords > 0,
     };
   }
 
