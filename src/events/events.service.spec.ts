@@ -211,13 +211,15 @@ describe('EventsService', () => {
         it('returns records before the cursor', async () => {
           const { events, user } = await setup();
           events.reverse();
-          const lastEventId = events[0].id;
+          const lastEventOccurredAt = events[0].occurred_at;
           const { data: records } = await eventsService.list({
             userId: user.id,
-            before: lastEventId,
+            before: lastEventOccurredAt,
           });
           for (const record of records) {
-            expect(record.id).toBeLessThan(lastEventId);
+            expect(record.occurred_at.valueOf()).toBeLessThan(
+              lastEventOccurredAt.valueOf(),
+            );
             expect(record.user_id).toBe(user.id);
           }
         });
@@ -226,13 +228,15 @@ describe('EventsService', () => {
       describe('with the after cursor', () => {
         it('returns records after the cursor', async () => {
           const { events, user } = await setup();
-          const firstEventId = events[0].id;
+          const firstEventOccurredAt = events[0].occurred_at;
           const { data: records } = await eventsService.list({
             userId: user.id,
-            after: firstEventId,
+            after: firstEventOccurredAt,
           });
           for (const record of records) {
-            expect(record.id).toBeGreaterThan(firstEventId);
+            expect(record.occurred_at.valueOf()).toBeGreaterThan(
+              firstEventOccurredAt.valueOf(),
+            );
             expect(record.user_id).toBe(user.id);
           }
         });

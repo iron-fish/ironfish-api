@@ -3,8 +3,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 export interface ListEventsOptions {
-  after?: string;
-  before?: string;
+  after?: Date;
+  before?: Date;
   userId?: number;
   limit?: number;
 }

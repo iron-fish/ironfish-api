@@ -3,14 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import {
-  IsInt,
-  IsISO8601,
-  IsNumber,
-  IsOptional,
-  Max,
-  Min,
-} from 'class-validator';
+import { IsDate, IsInt, IsNumber, IsOptional, Max, Min } from 'class-validator';
 
 export class EventsQueryDto {
   @ApiPropertyOptional({ description: 'Unique User identifier' })
@@ -24,20 +17,20 @@ export class EventsQueryDto {
     description:
       'An object identifier to use as a cursor pagination to fetch records after',
   })
-  @IsISO8601()
+  @IsDate()
   @IsOptional()
-  @Type(() => String)
-  readonly after?: string;
+  @Type(() => Date)
+  readonly after?: Date;
 
   @ApiPropertyOptional({
     description:
       'An object identifier to use as a cursor pagination to fetch records before',
   })
   @ApiPropertyOptional()
-  @IsISO8601()
+  @IsDate()
   @IsOptional()
-  @Type(() => String)
-  readonly before?: string;
+  @Type(() => Date)
+  readonly before?: Date;
 
   @ApiPropertyOptional({
     description: 'A limit on the number of objects to return between 1 and 100',
