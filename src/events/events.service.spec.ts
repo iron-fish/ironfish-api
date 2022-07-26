@@ -179,10 +179,8 @@ describe('EventsService', () => {
           });
 
           for (let i = 1; i < records.length; i++) {
-            expect(
-              records[i - 1].occurred_at.getUTCMilliseconds(),
-            ).toBeGreaterThanOrEqual(
-              records[i].occurred_at.getUTCMilliseconds(),
+            expect(records[i - 1].occurred_at.valueOf()).toBeGreaterThanOrEqual(
+              records[i].occurred_at.valueOf(),
             );
           }
 
