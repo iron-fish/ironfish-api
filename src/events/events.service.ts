@@ -64,13 +64,7 @@ export class EventsService {
       occurred_at: Prisma.SortOrder.desc,
     };
     const skip = cursorId ? 1 : 0;
-    const where: {
-      user_id?: number;
-      deleted_at: null;
-      id?: {
-        [key: string]: number;
-      };
-    } = {
+    const where: Prisma.EventWhereInput = {
       user_id: options.userId,
       deleted_at: null,
     };
