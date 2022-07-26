@@ -410,6 +410,9 @@ export class EventsService {
       _sum: {
         points: true,
       },
+      _count: {
+        points: true,
+      },
       where: {
         type,
         user_id: id,
@@ -418,14 +421,7 @@ export class EventsService {
       },
     });
     return {
-      count: await this.prisma.event.count({
-        where: {
-          type,
-          user_id: id,
-          deleted_at: null,
-          ...dateFilter,
-        },
-      }),
+      count: aggregate._count.points || 0,
       points: aggregate._sum.points || 0,
     };
   }
