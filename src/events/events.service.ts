@@ -64,18 +64,25 @@ export class EventsService {
       occurred_at: Prisma.SortOrder.desc,
     };
     const skip = cursorId ? 1 : 0;
-    const fn = options.before ? 'gte' : 'lte';
-    const where = {
+    const where: {
+      user_id?: number;
+      deleted_at: null;
+      id?: {
+        [key: string]: number;
+      };
+    } = {
       user_id: options.userId,
       deleted_at: null,
-      ...(cursorId
-        ? {
-            id: {
-              [fn]: cursorId,
-            },
-          }
-        : {}),
     };
+
+    if (cursorId) {
+      if (options.before) {
+        where.id = { gte: cursorId };
+      } else {
+        where.id = { lte: cursorId };
+      }
+    }
+
     const records = await this.prisma.event.findMany({
       orderBy,
       skip,
@@ -135,28 +142,28 @@ export class EventsService {
       };
     }
 
-    const [nextRecords = [], previousRecords = []] = await Promise.all([
-      this.prisma.event.findMany({
-        where: {
-          ...where,
-          id: {
-            lt: data[length - 1].id,
-          },
+    const nextRecords = await this.prisma.event.findMany({
+      where: {
+        ...where,
+        id: {
+          lt: data[length - 1].id,
         },
-        orderBy,
-        take: 1,
-      }),
-      this.prisma.event.findMany({
-        where: {
-          ...where,
-          id: {
-            gt: data[0].id,
-          },
+      },
+      orderBy,
+      take: 1,
+    });
+
+    const previousRecords = await this.prisma.event.findMany({
+      where: {
+        ...where,
+        id: {
+          gt: data[0].id,
         },
-        orderBy,
-        take: 1,
-      }),
-    ]);
+      },
+      orderBy,
+      take: 1,
+    });
+
     return {
       hasNext: nextRecords.length > 0,
       hasPrevious: previousRecords.length > 0,
