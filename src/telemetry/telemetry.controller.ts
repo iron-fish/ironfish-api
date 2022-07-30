@@ -52,6 +52,10 @@ export class TelemetryController {
       }
       nodeVersion = version.value;
 
+      if (this.getSkippedMeasurements().includes(measurement)) {
+        continue;
+      }
+
       options.push({
         fields,
         measurement,
@@ -88,6 +92,11 @@ export class TelemetryController {
         await this.nodeUptimes.addUptime(user);
       }
     }
+  }
+
+  private getSkippedMeasurements(): string[] {
+    const measurements = this.config.get<string>('SKIP_MEASUREMENTS');
+    return measurements ? measurements.split(',') : [];
   }
 
   private isValidTelemetryVersion(version: string): boolean {
