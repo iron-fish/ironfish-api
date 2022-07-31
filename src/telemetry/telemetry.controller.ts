@@ -95,7 +95,10 @@ export class TelemetryController {
   }
 
   private getSkippedMeasurements(): string[] {
-    const measurements = this.config.get<string>('SKIP_MEASUREMENTS');
+    const measurements = this.config.getWithDefault<string>(
+      'SKIP_MEASUREMENTS',
+      '',
+    );
     return measurements ? measurements.split(',') : [];
   }
 
