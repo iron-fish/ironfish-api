@@ -64,7 +64,7 @@
     "webpack-node-externals": "3.0.0"
   },
   "dependencies": {
-    "@influxdata/influxdb-client": "1.27.0",
+    "@influxdata/influxdb-client": "1.28.0",
     "@magic-sdk/admin": "1.4.1",
     "@nestjs/common": "8.4.7",
     "@nestjs/config": "2.2.0",
