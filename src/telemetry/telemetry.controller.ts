@@ -53,6 +53,10 @@ export class TelemetryController {
 
       nodeVersion = version.value;
 
+      if (this.getSkippedMeasurements().includes(measurement)) {
+        continue;
+      }
+
       options.push({
         fields,
         measurement,
@@ -87,6 +91,14 @@ export class TelemetryController {
     }
 
     this.submitIpWithoutNodeFieldsToTelemetry(request);
+  }
+
+  private getSkippedMeasurements(): string[] {
+    const measurements = this.config.getWithDefault<string>(
+      'SKIP_MEASUREMENTS',
+      '',
+    );
+    return measurements ? measurements.split(',') : [];
   }
 
   private isValidTelemetryVersion(version: string): boolean {
