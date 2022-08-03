@@ -30,7 +30,7 @@ class TagDto {
   readonly value!: string;
 }
 
-class WriteTelemetryPointDto {
+export class WriteTelemetryPointDto {
   @IsArray()
   @ArrayMaxSize(3000)
   @ValidateNested({ each: true })

@@ -14,6 +14,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
 import { VersionsService } from '../versions/versions.service';
+import { BLOCK_PROPAGATION_INTERVAL } from './telemetry.controller';
 
 function mockTelemetryPoints() {
   const fields = [
@@ -38,7 +39,7 @@ function mockTelemetryPoints() {
       value: 'howdy',
     },
   ];
-  const measurement = 'node';
+  const measurement = 'node_started';
   const tags = [{ name: 'version', value: '0.1.24' }];
   const timestamp = new Date();
 
@@ -179,6 +180,71 @@ describe('TelemetryController', () => {
           .mockImplementationOnce(jest.fn());
 
         const points = mockTelemetryPoints();
+
+        await request(app.getHttpServer())
+          .post('/telemetry')
+          .send({ points })
+          .expect(HttpStatus.CREATED);
+
+        expect(writePoints).toHaveBeenCalledTimes(1);
+        expect(writePoints).toHaveBeenCalledWith(points);
+      });
+
+      it('filters points to InfluxDB', async () => {
+        const points = mockTelemetryPoints();
+        points[0].measurement = 'node_stats';
+        points[0].fields = [
+          {
+            name: 'heap_used',
+            type: 'integer',
+            value: 1,
+          },
+          {
+            name: 'foobarbaz',
+            type: 'integer',
+            value: 2,
+          },
+        ];
+
+        const writePoints = jest
+          .spyOn(influxDbService, 'writePoints')
+          .mockImplementationOnce(jest.fn());
+
+        await request(app.getHttpServer())
+          .post('/telemetry')
+          .send({ points })
+          .expect(HttpStatus.CREATED);
+
+        expect(writePoints).toHaveBeenCalledTimes(1);
+        expect(writePoints).not.toHaveBeenCalledWith(points);
+        points[0].fields.splice(1, 1);
+        expect(writePoints).toHaveBeenCalledWith(points);
+      });
+
+      it('filters some blocks', async () => {
+        const points = mockTelemetryPoints();
+        points[0].measurement = 'block_propagation';
+        points[0].fields = [
+          {
+            name: 'sequence',
+            type: 'integer',
+            value: BLOCK_PROPAGATION_INTERVAL + 1,
+          },
+        ];
+
+        const writePoints = jest
+          .spyOn(influxDbService, 'writePoints')
+          .mockImplementationOnce(jest.fn());
+
+        await request(app.getHttpServer())
+          .post('/telemetry')
+          .send({ points })
+          .expect(HttpStatus.CREATED);
+
+        expect(writePoints).toHaveBeenCalledTimes(0);
+        expect(writePoints).not.toHaveBeenCalledWith(points);
+
+        points[0].fields[0].value = BLOCK_PROPAGATION_INTERVAL;
 
         await request(app.getHttpServer())
           .post('/telemetry')
