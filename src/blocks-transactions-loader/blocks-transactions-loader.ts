@@ -7,6 +7,7 @@ import { BlocksService } from '../blocks/blocks.service';
 import { BlockDto, UpsertBlocksDto } from '../blocks/dto/upsert-blocks.dto';
 import { BlocksDailyService } from '../blocks-daily/blocks-daily.service';
 import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
+import { EventsService } from '../events/events.service';
 import { DeleteBlockMinedEventOptions } from '../events/interfaces/delete-block-mined-event-options';
 import { UpsertBlockMinedEventOptions } from '../events/interfaces/upsert-block-mined-event-options';
 import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
@@ -23,6 +24,7 @@ export class BlocksTransactionsLoader {
     private readonly graphileWorkerService: GraphileWorkerService,
     private readonly prisma: PrismaService,
     private readonly transactionsService: TransactionsService,
+    private readonly eventsService: EventsService,
   ) {}
 
   async bulkUpsert({
@@ -38,7 +40,15 @@ export class BlocksTransactionsLoader {
 
     const records: (Block & { transactions: Transaction[] })[] = [];
 
+    let updateMinedBlockEvents = false;
+
     for (const block of blocks) {
+      if (!updateMinedBlockEvents) {
+        updateMinedBlockEvents = this.eventsService.blockMinedEnabled(
+          block.sequence,
+        );
+      }
+
       let timeSinceLastBlockMs: number | undefined = undefined;
       if (block.previous_block_hash !== undefined) {
         const seenPreviousBlock = previousHashes.get(block.previous_block_hash);
@@ -108,24 +118,26 @@ export class BlocksTransactionsLoader {
       );
     }
 
-    for (const payload of deleteBlockMinedPayloads) {
-      await this.graphileWorkerService.addJob(
-        GraphileWorkerPattern.DELETE_BLOCK_MINED_EVENT,
-        payload,
-        {
-          queueName: 'delete_block_mined_event',
-        },
-      );
-    }
+    if (updateMinedBlockEvents) {
+      for (const payload of deleteBlockMinedPayloads) {
+        await this.graphileWorkerService.addJob(
+          GraphileWorkerPattern.DELETE_BLOCK_MINED_EVENT,
+          payload,
+          {
+            queueName: 'delete_block_mined_event',
+          },
+        );
+      }
 
-    for (const payload of upsertBlockMinedPayloads) {
-      await this.graphileWorkerService.addJob(
-        GraphileWorkerPattern.UPSERT_BLOCK_MINED_EVENT,
-        payload,
-        {
-          queueName: 'upsert_block_mined_event',
-        },
-      );
+      for (const payload of upsertBlockMinedPayloads) {
+        await this.graphileWorkerService.addJob(
+          GraphileWorkerPattern.UPSERT_BLOCK_MINED_EVENT,
+          payload,
+          {
+            queueName: 'upsert_block_mined_event',
+          },
+        );
+      }
     }
 
     await this.graphileWorkerService.addJob(

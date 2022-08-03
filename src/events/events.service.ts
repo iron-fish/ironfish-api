@@ -593,15 +593,10 @@ export class EventsService {
   }
 
   async upsertBlockMined(block: Block, user: User): Promise<Event | null> {
-    // https://ironfish.network/blog/2022/03/07/incentivized-testnet-roadmap
-    const endOfPhaseOneSequence = 150000;
-    const allowBlockMinedPoints = this.config.get<boolean>(
-      'ALLOW_BLOCK_MINED_POINTS',
-    );
-
-    if (!allowBlockMinedPoints || block.sequence > endOfPhaseOneSequence) {
+    if (!this.blockMinedEnabled(block.sequence)) {
       return null;
     }
+
     return this.create({
       blockId: block.id,
       occurredAt: block.timestamp,
@@ -744,5 +739,17 @@ export class EventsService {
       },
       client,
     );
+  }
+
+  /**
+   * https://ironfish.network/blog/2022/03/07/incentivized-testnet-roadmap
+   */
+  blockMinedEnabled(sequence: number): boolean {
+    const endOfPhaseOneSequence = 150000;
+    const allowBlockMinedPoints = this.config.get<boolean>(
+      'ALLOW_BLOCK_MINED_POINTS',
+    );
+
+    return allowBlockMinedPoints && sequence <= endOfPhaseOneSequence;
   }
 }
