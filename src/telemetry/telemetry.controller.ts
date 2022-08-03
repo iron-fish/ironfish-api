@@ -26,7 +26,7 @@ import {
 /** How many blocks per sequence for block_propagation measurement to allow through telemetry */
 export const BLOCK_PROPAGATION_INTERVAL = 5;
 
-const TELEMETRY_WHITELIST = new Map<string, true | RegExp | Array<string>>([
+const TELEMETRY_WHITELIST = new Map<string, true | Array<string>>([
   ['block_mined', true],
   ['block_propagation', true],
   ['node_started', true],
@@ -142,13 +142,7 @@ export class TelemetryController {
       }
 
       const fields = point.fields.filter((field) => {
-        if (filters === true) {
-          return true;
-        } else if (filters instanceof RegExp) {
-          return filters.test(field.name);
-        } else {
-          return filters.includes(field.name);
-        }
+        return filters === true || filters.includes(field.name);
       });
 
       options.push({
