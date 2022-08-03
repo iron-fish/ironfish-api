@@ -11,13 +11,41 @@ import {
 } from '@nestjs/common';
 import { ApiExcludeEndpoint } from '@nestjs/swagger';
 import { Request } from 'express';
-import { gte, valid } from 'semver';
+import semver from 'semver';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { InfluxDbService } from '../influxdb/influxdb.service';
+import { CreatePointOptions } from '../influxdb/interfaces/create-point-options';
 import { NodeUptimesService } from '../node-uptimes/node-uptimes.service';
 import { UsersService } from '../users/users.service';
 import { VersionsService } from '../versions/versions.service';
-import { WriteTelemetryPointsDto } from './dto/write-telemetry-points.dto';
+import {
+  WriteTelemetryPointDto,
+  WriteTelemetryPointsDto,
+} from './dto/write-telemetry-points.dto';
+
+/** How many blocks per sequence for block_propagation measurement to allow through telemetry */
+export const BLOCK_PROPAGATION_INTERVAL = 5;
+
+const TELEMETRY_WHITELIST = new Map<string, true | RegExp | Array<string>>([
+  ['block_mined', true],
+  ['block_propagation', true],
+  ['node_started', true],
+  [
+    'node_stats',
+    [
+      'heap_total',
+      'heap_used',
+      'peers_count',
+      'session_id',
+      'inbound_traffic',
+      'outbound_traffic',
+      'node_id',
+      'mempool_size',
+      'head_sequence',
+    ],
+  ],
+  ['transaction_propagation', true],
+]);
 
 @Controller('telemetry')
 export class TelemetryController {
@@ -43,47 +71,10 @@ export class TelemetryController {
     )
     { points, graffiti }: WriteTelemetryPointsDto,
   ): Promise<void> {
-    const options = [];
-    let nodeVersion;
-    for (const { fields, measurement, tags, timestamp } of points) {
-      const version = tags.find((tag) => tag.name === 'version');
-      if (!version || !this.isValidTelemetryVersion(version.value)) {
-        continue;
-      }
-
-      nodeVersion = version.value;
-
-      if (this.getSkippedMeasurements().includes(measurement)) {
-        continue;
-      }
-
-      options.push({
-        fields,
-        measurement,
-        tags,
-        timestamp,
-      });
-    }
+    const { options, nodeVersion } = this.processPoints(points);
 
     if (graffiti && nodeVersion) {
-      const nodeUptimeEnabled = this.config.get<boolean>('NODE_UPTIME_ENABLED');
-      if (!nodeUptimeEnabled) {
-        return;
-      }
-
-      const oneWeekAgo = new Date();
-      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-
-      const minVersion = await this.versionsService.getLatestAtDate(oneWeekAgo);
-
-      // If the API fails to fetch a version, we don't want to punish the user
-      if (!minVersion || gte(nodeVersion, minVersion.version)) {
-        const user = await this.usersService.findByGraffiti(graffiti);
-
-        if (user) {
-          await this.nodeUptimes.addUptime(user);
-        }
-      }
+      await this.addUptime(graffiti, nodeVersion);
     }
 
     if (options.length) {
@@ -93,20 +84,93 @@ export class TelemetryController {
     this.submitIpWithoutNodeFieldsToTelemetry(request);
   }
 
-  private getSkippedMeasurements(): string[] {
-    const measurements = this.config.getWithDefault<string>(
-      'SKIP_MEASUREMENTS',
-      '',
-    );
-    return measurements ? measurements.split(',') : [];
+  async addUptime(graffiti: string, nodeVersion: string): Promise<void> {
+    const nodeUptimeEnabled = this.config.get<boolean>('NODE_UPTIME_ENABLED');
+    if (!nodeUptimeEnabled) {
+      return;
+    }
+
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+    const minVersion = await this.versionsService.getLatestAtDate(oneWeekAgo);
+
+    // If the API fails to fetch a version, we don't want to punish the user
+    if (minVersion && semver.lt(nodeVersion, minVersion.version)) {
+      return;
+    }
+
+    const user = await this.usersService.findByGraffiti(graffiti);
+    if (!user) {
+      return;
+    }
+
+    await this.nodeUptimes.addUptime(user);
+  }
+
+  private processPoints(points: WriteTelemetryPointDto[]): {
+    nodeVersion: string | null;
+    options: CreatePointOptions[];
+  } {
+    const options = [];
+    let nodeVersion: string | null = null;
+
+    for (const point of points) {
+      const version = point.tags.find((tag) => tag.name === 'version');
+      if (!version || !this.isValidTelemetryVersion(version.value)) {
+        continue;
+      } else {
+        nodeVersion = version.value;
+      }
+
+      const filters = TELEMETRY_WHITELIST.get(point.measurement);
+      if (filters === undefined) {
+        continue;
+      }
+
+      if (point.measurement === 'block_propagation') {
+        const sequence = point.fields.find((f) => f.name === 'sequence');
+
+        if (!sequence || sequence.type !== 'integer') {
+          continue;
+        }
+
+        // We only process block_propagation every 5 blocks
+        if (sequence.value % BLOCK_PROPAGATION_INTERVAL !== 0) {
+          continue;
+        }
+      }
+
+      const fields = point.fields.filter((field) => {
+        if (filters === true) {
+          return true;
+        } else if (filters instanceof RegExp) {
+          return filters.test(field.name);
+        } else {
+          return filters.includes(field.name);
+        }
+      });
+
+      options.push({
+        fields,
+        measurement: point.measurement,
+        tags: point.tags,
+        timestamp: point.timestamp,
+      });
+    }
+
+    return {
+      nodeVersion,
+      options,
+    };
   }
 
   private isValidTelemetryVersion(version: string): boolean {
-    const parsed = valid(version);
+    const parsed = semver.valid(version);
     if (!parsed) {
       return false;
     }
-    return gte(parsed, this.MINIMUM_TELEMETRY_VERSION);
+    return semver.gte(parsed, this.MINIMUM_TELEMETRY_VERSION);
   }
 
   private submitIpWithoutNodeFieldsToTelemetry(request: Request): void {
