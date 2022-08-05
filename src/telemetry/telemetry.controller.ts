@@ -36,6 +36,7 @@ const TELEMETRY_WHITELIST = new Map<string, true | Array<string>>([
       'heap_total',
       'heap_used',
       'peers_count',
+      'rss',
       'session_id',
       'node_id',
       'mempool_size',
