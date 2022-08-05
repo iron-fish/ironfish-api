@@ -26,38 +26,6 @@ import {
 /** How many blocks per sequence for block_propagation measurement to allow through telemetry */
 export const BLOCK_PROPAGATION_INTERVAL = 5;
 
-const traffic_types = ['inbound_traffic', 'outbound_traffic'];
-
-const message_types = [
-  'disconnecting',
-  'cannotsatisfyrequest',
-  'getblockhashesrequest',
-  'getblockhashesresponse',
-  'getblocksrequest',
-  'getblocksresponse',
-  'identify',
-  'newblock',
-  'newtransaction',
-  'peerlist',
-  'peerlistrequest',
-  'signal',
-  'signalrequest',
-  'pooledtransactionsrequest',
-  'pooledtransactionsresponse',
-  'newpooledtransactionhashes',
-  'newtransactionv2',
-  'newblockhashes',
-  'newblockv2',
-  'getblocktransactionsrequest',
-  'getblocktransactionsresponse',
-  'getcompactblockrequest',
-  'getcompactblockresponse',
-];
-
-const traffic_message_types = traffic_types.flatMap((a) =>
-  message_types.map((b) => a.concat(...['_', b])),
-);
-
 const TELEMETRY_WHITELIST = new Map<string, true | Array<string>>([
   ['block_mined', true],
   ['block_propagation', true],
@@ -72,8 +40,20 @@ const TELEMETRY_WHITELIST = new Map<string, true | Array<string>>([
       'node_id',
       'mempool_size',
       'head_sequence',
-      ...traffic_types,
-      ...traffic_message_types,
+      'inbound_traffic',
+      'inbound_traffic_newblock',
+      'inbound_traffic_newtransaction',
+      'inbound_traffic_pooledtransactionsrequest',
+      'inbound_traffic_pooledtransactionsrequest',
+      'inbound_traffic_newpooledtransactionhashes',
+      'inbound_traffic_newtransactionv2',
+      'outbound_traffic',
+      'outbound_traffic_newblock',
+      'outbound_traffic_newtransaction',
+      'outbound_traffic_pooledtransactionsrequest',
+      'outbound_traffic_pooledtransactionsrequest',
+      'outbound_traffic_newpooledtransactionhashes',
+      'outbound_traffic_newtransactionv2',
     ],
   ],
   ['transaction_propagation', true],
