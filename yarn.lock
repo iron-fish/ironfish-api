@@ -501,18 +501,18 @@
     minimist "^1.2.6"
     tar "^6.1.11"
 
-"@datadog/native-metrics@^1.4.1":
-  version "1.4.1"
-  resolved "https://registry.yarnpkg.com/@datadog/native-metrics/-/native-metrics-1.4.1.tgz#fd7cda7de4384632c29eae1210a7cfb0a6a61410"
-  integrity sha512-YodThqbAHayz+8kuHrtqLF+Qa7BBfawNsW7jla4X6BvKHa310nYzhOfQNWmr7aTOajk7eeF1OqCcxT87E5rIzw==
+"@datadog/native-metrics@^1.4.2":
+  version "1.4.2"
+  resolved "https://registry.yarnpkg.com/@datadog/native-metrics/-/native-metrics-1.4.2.tgz#ca0c3cedcf56acc468a68c0e44e49d6c90430980"
+  integrity sha512-ExSIZCEo3pXTNQRuyQllIa+0pc2bVDOntlx0JMnu7+GjeEjJxGyVLw8tTx5EQUmHSLt0Jm7aeMW63C8DJnO27A==
   dependencies:
     nan "^2.15.0"
     node-gyp-build "^3.9.0"
 
-"@datadog/pprof@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@datadog/pprof/-/pprof-1.0.0.tgz#a91bf1c5b3e53e9d49e26bdb1eeacda0b10adb2a"
-  integrity sha512-m4i45xvMFxmubsGi7NNYZ4VdwZ4bd9S6JXc6GZYvUMmJWkg4YnFkd6kre/El1nHvI1jXozxNuBOPEJHqNxxWYA==
+"@datadog/pprof@^1.0.2":
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/@datadog/pprof/-/pprof-1.0.2.tgz#835b2e8596738348a5ba81e5e399cdf3bc85bd35"
+  integrity sha512-AMTK55W3Aa2QX2X8mN9SQfDGw3HvwIK9Or8pXQFss+kjtH5pCkO9oqE5838MeXgRh9BR8HWrjAQE3Ji7FRCK2g==
   dependencies:
     delay "^5.0.0"
     findit2 "^2.2.3"
@@ -2302,14 +2302,14 @@ data-urls@^2.0.0:
     whatwg-mimetype "^2.3.0"
     whatwg-url "^8.0.0"
 
-dd-trace@2.12.1:
-  version "2.12.1"
-  resolved "https://registry.yarnpkg.com/dd-trace/-/dd-trace-2.12.1.tgz#375f95ea3f6f66372a12feb59c518f1d4e5a7c26"
-  integrity sha512-cokux/Q6WYxyDJIuEeS7epkpWHVB/ay8vijH+xTz9MuRu7qyGJ71RyQGE1EPebgCbrhjekNTE0iEMnD+d/ddug==
+dd-trace@2.12.2:
+  version "2.12.2"
+  resolved "https://registry.yarnpkg.com/dd-trace/-/dd-trace-2.12.2.tgz#81a94a7289e79b1275b5898423b277d9e47cb6a6"
+  integrity sha512-ZRDDjuZl10CMDyJYair6dV87Zaz63NfOoon/r99fYdZi/ISAUtvun64OmOEdE3Kl8A3LOL4wY25nvB3YTDnwjA==
   dependencies:
     "@datadog/native-appsec" "^1.2.1"
-    "@datadog/native-metrics" "^1.4.1"
-    "@datadog/pprof" "^1.0.0"
+    "@datadog/native-metrics" "^1.4.2"
+    "@datadog/pprof" "^1.0.2"
     "@datadog/sketches-js" "^1.0.5"
     "@types/node" ">=12"
     crypto-randomuuid "^1.0.0"
@@ -2326,7 +2326,6 @@ dd-trace@2.12.1:
     module-details-from-path "^1.0.3"
     opentracing ">=0.12.1"
     path-to-regexp "^0.1.2"
-    performance-now "^2.1.0"
     retry "^0.10.1"
     semver "^5.5.0"
 
@@ -4711,11 +4710,6 @@ pause@0.0.1:
   version "0.0.1"
   resolved "https://registry.yarnpkg.com/pause/-/pause-0.0.1.tgz#1d408b3fdb76923b9543d96fb4c9dfd535d9cb5d"
   integrity sha1-HUCLP9t2kjuVQ9lvtMnf1TXZy10=
-
-performance-now@^2.1.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/performance-now/-/performance-now-2.1.0.tgz#6309f4e0e5fa913ec1c69307ae364b4b377c9e7b"
-  integrity sha1-Ywn04OX6kT7BxpMHrjZLSzd8nns=
 
 pg-connection-string@^2.5.0:
   version "2.5.0"
