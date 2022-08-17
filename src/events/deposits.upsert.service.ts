@@ -150,7 +150,9 @@ export class DepositsUpsertService {
     }
   }
 
-  async mismatchedDepositCount(): Promise<number> {
+  async mismatchedDepositCount(beforeSequence = 0): Promise<number> {
+    const blocksHead = await this.blocksService.head();
+
     const result = await this.prisma.$queryRawUnsafe<{ count: BigInt }[]>(
       `
       SELECT
@@ -162,7 +164,8 @@ export class DepositsUpsertService {
       ON blocks.hash = deposits.block_hash
       WHERE
         (blocks.hash IS NULL AND deposits.main) OR
-        blocks.main <> deposits.main
+        blocks.main <> deposits.main AND
+        deposits.block_sequence <= ${blocksHead.sequence - beforeSequence}
       `,
     );
     if (!is.array(result) || result.length !== 1 || !is.object(result[0])) {
@@ -197,10 +200,7 @@ export class DepositsUpsertService {
       WHERE
         (blocks.hash IS NULL AND deposits.main) OR
         blocks.main <> deposits.main AND
-        (
-          blocks.hash IS NULL OR
-          blocks.sequence <= ${blocksHead.sequence - beforeSequence}
-        )
+        deposits.block_sequence <= ${blocksHead.sequence - beforeSequence}
       LIMIT 50000
       `,
     );
