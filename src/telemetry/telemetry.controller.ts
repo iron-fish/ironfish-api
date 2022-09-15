@@ -75,6 +75,7 @@ const TELEMETRY_WHITELIST = new Map<string, true | Array<string>>([
   ],
   ['transaction_propagation', true],
   ['block_assembled', true],
+  ['forks_count', true],
 ]);
 
 @Controller('telemetry')
