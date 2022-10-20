@@ -90,7 +90,7 @@
     "pino": "8.6.1",
     "reflect-metadata": "0.1.13",
     "rxjs": "7.5.7",
-    "semver": "7.3.7",
+    "semver": "7.3.8",
     "swagger-ui-express": "4.5.0",
     "type-fest": "2.19.0",
     "ulid": "2.3.0"
