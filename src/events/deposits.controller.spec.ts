@@ -206,4 +206,21 @@ describe('DepositsController', () => {
       );
     });
   });
+
+  describe('POST /deposits/deposited_iron', () => {
+    it('enqueues a worker job to determine amount of deposited iron', async () => {
+      const addJob = jest
+        .spyOn(graphileWorkerService, 'addJob')
+        .mockImplementationOnce(jest.fn());
+
+      await request(app.getHttpServer())
+        .post('/deposits/deposited_iron')
+        .set('Authorization', `Bearer ${API_KEY}`)
+        .expect(HttpStatus.CREATED);
+
+      expect(addJob).toHaveBeenCalledWith(
+        GraphileWorkerPattern.SYNC_DEPOSITED_IRON,
+      );
+    });
+  });
 });

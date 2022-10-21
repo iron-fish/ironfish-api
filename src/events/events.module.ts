@@ -6,6 +6,7 @@ import { ApiConfigModule } from '../api-config/api-config.module';
 import { BlocksModule } from '../blocks/blocks.module';
 import { DepositHeadsModule } from '../deposit-heads/deposit-heads.module';
 import { GraphileWorkerModule } from '../graphile-worker/graphile-worker.module';
+import { InfluxDbModule } from '../influxdb/influxdb.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { UserPointsModule } from '../user-points/user-points.module';
 import { UsersModule } from '../users/users.module';
@@ -20,6 +21,7 @@ import { EventsService } from './events.service';
     BlocksModule,
     DepositHeadsModule,
     GraphileWorkerModule,
+    InfluxDbModule,
     PrismaModule,
     UserPointsModule,
     UsersModule,
