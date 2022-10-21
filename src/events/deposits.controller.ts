@@ -59,7 +59,7 @@ export class DepositsController {
     summary: 'The max increment of IRON allowed to be deposited to Iron Bank',
   })
   @Get('min_and_max_deposit')
-  maxDeposit(): { minDeposit: number, maxDeposit: number } {
+  maxDeposit(): { minDeposit: number; maxDeposit: number } {
     const maxDeposit = this.configService.get<number>('MAX_DEPOSIT');
     const minDeposit = this.configService.get<number>('MIN_DEPOSIT');
     return { minDeposit, maxDeposit };
