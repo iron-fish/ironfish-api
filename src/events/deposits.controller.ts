@@ -56,7 +56,8 @@ export class DepositsController {
   }
 
   @ApiOperation({
-    summary: 'The max increment of IRON allowed to be deposited to Iron Bank',
+    summary:
+      'The min and max increment of IRON allowed to be deposited to Iron Bank',
   })
   @Get('min_and_max_deposit')
   minAndMaxDeposit(): { minDeposit: number; maxDeposit: number } {
