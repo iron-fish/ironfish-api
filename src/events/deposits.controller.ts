@@ -91,4 +91,13 @@ export class DepositsController {
       GraphileWorkerPattern.REFRESH_DEPOSITS,
     );
   }
+
+  @ApiExcludeEndpoint()
+  @Post('deposited_iron')
+  @UseGuards(ApiKeyGuard)
+  async depositedIron(): Promise<void> {
+    await this.graphileWorkerService.addJob(
+      GraphileWorkerPattern.SYNC_DEPOSITED_IRON,
+    );
+  }
 }

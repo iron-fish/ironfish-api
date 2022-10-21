@@ -13,6 +13,7 @@ import { standardizeHash } from '../common/utils/hash';
 import { DepositHeadsService } from '../deposit-heads/deposit-heads.service';
 import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
 import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
+import { InfluxDbService } from '../influxdb/influxdb.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
 import { UpsertDepositsOperationDto } from './dto/upsert-deposit.dto';
@@ -25,6 +26,7 @@ export class DepositsUpsertService {
     private readonly depositHeadsService: DepositHeadsService,
     private readonly eventsService: EventsService,
     private readonly graphileWorkerService: GraphileWorkerService,
+    private readonly influxDbService: InfluxDbService,
     private readonly prisma: PrismaService,
     private readonly usersService: UsersService,
     private readonly blocksService: BlocksService,
@@ -254,5 +256,38 @@ export class DepositsUpsertService {
         mismatchedDeposit.block_timestamp,
       );
     });
+  }
+
+  async syncDepositedIron(): Promise<void> {
+    const aggregate = await this.prisma.deposit.aggregate({
+      _sum: {
+        amount: true,
+      },
+    });
+    this.influxDbService.writePoints([
+      {
+        measurement: 'deposited_iron',
+        fields: [
+          {
+            name: 'iron',
+            type: 'float',
+            value: aggregate._sum.amount || 0,
+          },
+        ],
+        tags: [],
+        timestamp: new Date(),
+      },
+    ]);
+    const runAt = new Date();
+    runAt.setMinutes(runAt.getMinutes() + 10);
+    await this.graphileWorkerService.addJob(
+      GraphileWorkerPattern.SYNC_DEPOSITED_IRON,
+      {},
+      {
+        jobKeyMode: `preserve_run_at`,
+        queueName: `deposited_iron`,
+        runAt,
+      },
+    );
   }
 }
