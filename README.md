@@ -28,6 +28,7 @@ You'll need a `.env` file with the following keys:
 * `IRONFISH_API_KEY`
 * `MAGIC_SECRET_KEY`
 * `MAX_DEPOSIT`
+* `MIN_DEPOSIT`
 * `NETWORK_VERSION`
 * `NODE_ENV`
 * `WORKER_COUNT`
