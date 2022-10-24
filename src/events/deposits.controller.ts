@@ -95,7 +95,7 @@ export class DepositsController {
   @ApiExcludeEndpoint()
   @Post('sync_to_telemetry')
   @UseGuards(ApiKeyGuard)
-  async depositedIron(): Promise<void> {
+  async syncToTelemetry(): Promise<void> {
     await this.graphileWorkerService.addJob(
       GraphileWorkerPattern.SUBMIT_DEPOSITED_IRON_TO_TELEMETRY,
     );
