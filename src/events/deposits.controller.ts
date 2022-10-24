@@ -59,11 +59,11 @@ export class DepositsController {
     summary:
       'The min and max increment of IRON allowed to be deposited to Iron Bank',
   })
-  @Get('min_and_max_deposit')
-  minAndMaxDeposit(): { minDeposit: number; maxDeposit: number } {
-    const maxDeposit = this.configService.get<number>('MAX_DEPOSIT');
-    const minDeposit = this.configService.get<number>('MIN_DEPOSIT');
-    return { minDeposit, maxDeposit };
+  @Get('min_and_max_deposit_size')
+  minAndMaxDeposit(): { min_deposit_size: number; max_deposit_size: number } {
+    const min_deposit_size = this.configService.get<number>('MIN_DEPOSIT_SIZE');
+    const max_deposit_size = this.configService.get<number>('MAX_DEPOSIT_SIZE');
+    return { min_deposit_size, max_deposit_size };
   }
 
   @ApiExcludeEndpoint()
@@ -93,11 +93,11 @@ export class DepositsController {
   }
 
   @ApiExcludeEndpoint()
-  @Post('deposited_iron')
+  @Post('sync_to_telemetry')
   @UseGuards(ApiKeyGuard)
   async depositedIron(): Promise<void> {
     await this.graphileWorkerService.addJob(
-      GraphileWorkerPattern.SYNC_DEPOSITED_IRON,
+      GraphileWorkerPattern.SUBMIT_DEPOSITED_IRON_TO_TELEMETRY,
     );
   }
 }
