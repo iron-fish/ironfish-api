@@ -206,4 +206,33 @@ describe('DepositsController', () => {
       );
     });
   });
+
+  describe('POST /deposits/sync_to_telemetry', () => {
+    it('enqueues a worker to sync total iron to telemetry', async () => {
+      const addJob = jest
+        .spyOn(graphileWorkerService, 'addJob')
+        .mockImplementationOnce(jest.fn());
+
+      await request(app.getHttpServer())
+        .post('/deposits/sync_to_telemetry')
+        .set('Authorization', `Bearer ${API_KEY}`)
+        .expect(HttpStatus.CREATED);
+
+      expect(addJob).toHaveBeenCalledWith(
+        GraphileWorkerPattern.SUBMIT_DEPOSITED_IRON_TO_TELEMETRY,
+      );
+    });
+  });
+
+  describe('GET /deposits/min_and_max_deposit_size', () => {
+    it('retrieves min and max deposit size', async () => {
+      const { body } = await request(app.getHttpServer())
+        .get('/deposits/min_and_max_deposit_size')
+        .expect(HttpStatus.OK);
+
+      const { min_deposit_size, max_deposit_size } = body;
+      expect(min_deposit_size as string).toBe(config.get('MIN_DEPOSIT_SIZE'));
+      expect(max_deposit_size as string).toBe(config.get('MAX_DEPOSIT_SIZE'));
+    });
+  });
 });

@@ -30,6 +30,13 @@ export class DepositsJobsController {
     return { requeue: false };
   }
 
+  @MessagePattern(GraphileWorkerPattern.SUBMIT_DEPOSITED_IRON_TO_TELEMETRY)
+  @UseFilters(new GraphileWorkerException())
+  async submitDepositedIronToTelemetry(): Promise<GraphileWorkerHandlerResponse> {
+    await this.depositsUpsertService.syncDepositedIron();
+    return { requeue: false };
+  }
+
   @MessagePattern(GraphileWorkerPattern.REFRESH_DEPOSIT)
   @UseFilters(new GraphileWorkerException())
   async refreshDeposit(

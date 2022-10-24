@@ -55,6 +55,17 @@ export class DepositsController {
     return { address };
   }
 
+  @ApiOperation({
+    summary:
+      'The min and max increment of IRON allowed to be deposited to Iron Bank',
+  })
+  @Get('min_and_max_deposit_size')
+  minAndMaxDeposit(): { min_deposit_size: number; max_deposit_size: number } {
+    const min_deposit_size = this.configService.get<number>('MIN_DEPOSIT_SIZE');
+    const max_deposit_size = this.configService.get<number>('MAX_DEPOSIT_SIZE');
+    return { min_deposit_size, max_deposit_size };
+  }
+
   @ApiExcludeEndpoint()
   @Post()
   @UseGuards(ApiKeyGuard)
@@ -78,6 +89,15 @@ export class DepositsController {
   async refresh(): Promise<void> {
     await this.graphileWorkerService.addJob(
       GraphileWorkerPattern.REFRESH_DEPOSITS,
+    );
+  }
+
+  @ApiExcludeEndpoint()
+  @Post('sync_to_telemetry')
+  @UseGuards(ApiKeyGuard)
+  async syncToTelemetry(): Promise<void> {
+    await this.graphileWorkerService.addJob(
+      GraphileWorkerPattern.SUBMIT_DEPOSITED_IRON_TO_TELEMETRY,
     );
   }
 }
