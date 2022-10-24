@@ -283,7 +283,7 @@ export class DepositsUpsertService {
     await this.graphileWorkerService.addJob(
       GraphileWorkerPattern.SUBMIT_DEPOSITED_IRON_TO_TELEMETRY,
       {},
-      { jobKey: 'deposit_sync_to_telemetry', runAt: runAt },
+      { jobKey: 'sync_deposited_iron_to_telemetry', runAt },
     );
   }
 }
