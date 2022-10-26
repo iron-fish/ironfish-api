@@ -458,15 +458,19 @@ export class EventsService {
       return null;
     }
 
-    let adjustedPoints = points ?? POINTS_PER_CATEGORY[type];
+    let adjustedPoints = points;
 
-    if (deposit) {
+    if (points) {
+      adjustedPoints = points;
+    } else if (deposit) {
       adjustedPoints =
         Math.floor(
           deposit.amount /
             ORE_TO_IRON /
             this.config.get<number>('MIN_DEPOSIT_SIZE'),
         ) * POINTS_PER_CATEGORY[type];
+    } else {
+      adjustedPoints = POINTS_PER_CATEGORY[type];
     }
 
     let metadata = {};
