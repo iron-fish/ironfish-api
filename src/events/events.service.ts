@@ -457,7 +457,14 @@ export class EventsService {
       return null;
     }
 
-    const adjustedPoints = points ?? POINTS_PER_CATEGORY[type];
+    let adjustedPoints = points ?? POINTS_PER_CATEGORY[type];
+
+    if (deposit) {
+      adjustedPoints =
+        Math.floor(
+          deposit.amount / this.config.get<number>('MIN_DEPOSIT_SIZE'),
+        ) * POINTS_PER_CATEGORY[type];
+    }
 
     let metadata = {};
     let existingEvent;

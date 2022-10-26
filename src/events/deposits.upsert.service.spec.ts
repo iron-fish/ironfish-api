@@ -377,6 +377,28 @@ describe('DepositsUpsertService', () => {
     });
   };
 
+  describe('upsert deposit with greater than min increment', () => {
+    it('updates deposit.main to match block.main', async () => {
+      const tx = transaction(
+        [...notes([1, 1.0], user1.graffiti)],
+        'transaction1Hash',
+      );
+      const operation = depositOperation(
+        [tx],
+        BlockOperation.DISCONNECTED,
+        'block1Hash',
+      );
+
+      const deposits = await depositsUpsertService.upsert(operation);
+
+      const depositEvent = await prisma.event.findUnique({
+        where: { deposit_id: deposits[0].id },
+      });
+
+      expect(depositEvent?.points).toBe(10);
+    });
+  });
+
   const transaction = (notes: UpsertDepositsNoteDto[], hash?: string) => {
     return {
       hash: hash || uuid(),
