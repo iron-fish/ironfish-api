@@ -8,7 +8,7 @@ import assert from 'assert';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { BlocksService } from '../blocks/blocks.service';
 import { BlockOperation } from '../blocks/enums/block-operation';
-import { SEND_TRANSACTION_LIMIT_ORE } from '../common/constants';
+import { ORE_TO_IRON, SEND_TRANSACTION_LIMIT_ORE } from '../common/constants';
 import { standardizeHash } from '../common/utils/hash';
 import { DepositHeadsService } from '../deposit-heads/deposit-heads.service';
 import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
@@ -271,7 +271,9 @@ export class DepositsUpsertService {
           {
             name: 'iron',
             type: 'float',
-            value: aggregate._sum.amount || 0,
+            value: aggregate._sum.amount
+              ? aggregate._sum.amount / ORE_TO_IRON
+              : 0,
           },
         ],
         tags: [],
