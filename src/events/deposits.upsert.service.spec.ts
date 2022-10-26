@@ -195,7 +195,8 @@ describe('DepositsUpsertService', () => {
           },
         });
 
-        expect(user2Events[0].points).toBe(1);
+        //notes([0.1, 3], user2.graffiti)
+        expect(user2Events[0].points).toBe(31);
         expect(user2Events[1].points).toBe(0);
         expect(user2Events[1].deposit_id).toEqual(user2Deposits[1].id);
         expect(user2Deposits[1].amount).toEqual(1 * ORE_TO_IRON);
@@ -376,6 +377,28 @@ describe('DepositsUpsertService', () => {
       return { memo: graffiti, amount: amount * ORE_TO_IRON };
     });
   };
+
+  describe('upsert deposit with greater than min increment', () => {
+    it('updates deposit.main to match block.main', async () => {
+      const tx = transaction(
+        [...notes([1.1, 1.0], user1.graffiti)],
+        'deposithash',
+      );
+      const operation = depositOperation(
+        [tx],
+        BlockOperation.CONNECTED,
+        'blockdeposithash',
+      );
+
+      const deposits = await depositsUpsertService.upsert(operation);
+
+      const depositEvent = await prisma.event.findUnique({
+        where: { deposit_id: deposits[0].id },
+      });
+
+      expect(depositEvent?.points).toBe(21);
+    });
+  });
 
   const transaction = (notes: UpsertDepositsNoteDto[], hash?: string) => {
     return {

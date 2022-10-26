@@ -9,6 +9,7 @@ import { serializedBlockFromRecord } from '../blocks/utils/block-translator';
 import {
   DEFAULT_LIMIT,
   MAX_LIMIT,
+  ORE_TO_IRON,
   POINTS_PER_CATEGORY,
 } from '../common/constants';
 import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
@@ -457,7 +458,20 @@ export class EventsService {
       return null;
     }
 
-    const adjustedPoints = points ?? POINTS_PER_CATEGORY[type];
+    let adjustedPoints = points;
+
+    if (points) {
+      adjustedPoints = points;
+    } else if (deposit) {
+      adjustedPoints =
+        Math.floor(
+          deposit.amount /
+            ORE_TO_IRON /
+            this.config.get<number>('MIN_DEPOSIT_SIZE'),
+        ) * POINTS_PER_CATEGORY[type];
+    } else {
+      adjustedPoints = POINTS_PER_CATEGORY[type];
+    }
 
     let metadata = {};
     let existingEvent;
