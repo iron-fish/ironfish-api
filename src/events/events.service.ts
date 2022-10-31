@@ -564,7 +564,7 @@ export class EventsService {
   }
 
   async updateLatestPoints(userId: number, type: EventType): Promise<void> {
-    const occurredAtAggregate = await this.prisma.event.aggregate({
+    const occurredAtAggregate = await this.prisma.readClient.event.aggregate({
       _max: {
         occurred_at: true,
       },
@@ -576,7 +576,7 @@ export class EventsService {
     });
     const latestOccurredAt = occurredAtAggregate._max.occurred_at;
 
-    const pointsAggregate = await this.prisma.event.aggregate({
+    const pointsAggregate = await this.prisma.readClient.event.aggregate({
       _sum: {
         points: true,
       },
@@ -588,7 +588,7 @@ export class EventsService {
     });
     const points = pointsAggregate._sum.points ?? 0;
 
-    const totalPointsAggregate = await this.prisma.event.aggregate({
+    const totalPointsAggregate = await this.prisma.readClient.event.aggregate({
       _sum: {
         points: true,
       },
