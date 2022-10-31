@@ -71,7 +71,7 @@ export class NodeUptimesService {
   }
 
   async get(user: User): Promise<NodeUptime | null> {
-    return this.getWithClient(user, this.prisma);
+    return this.getWithClient(user, this.prisma.readClient);
   }
 
   async getWithClient(

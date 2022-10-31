@@ -297,7 +297,7 @@ export class EventsService {
     { id }: User,
     type: EventType,
   ): Promise<SerializedEventMetrics> {
-    const aggregate = await this.prisma.event.aggregate({
+    const aggregate = await this.prisma.readClient.event.aggregate({
       _sum: {
         points: true,
       },
@@ -333,7 +333,7 @@ export class EventsService {
     eventMetrics: Record<EventType, SerializedEventMetrics>;
     points: number;
   }> {
-    const pointsAggregate = await this.prisma.event.aggregate({
+    const pointsAggregate = await this.prisma.readClient.event.aggregate({
       _sum: {
         points: true,
       },
@@ -407,7 +407,7 @@ export class EventsService {
         lt: end,
       },
     };
-    const aggregate = await this.prisma.event.aggregate({
+    const aggregate = await this.prisma.readClient.event.aggregate({
       _sum: {
         points: true,
       },
@@ -663,7 +663,7 @@ export class EventsService {
   ): Promise<SerializedEventMetrics> {
     const rank = await this.getLifetimeEventsRankForUser(user, events);
 
-    const count = await this.prisma.event.count({
+    const count = await this.prisma.readClient.event.count({
       where: {
         type: {
           in: events,

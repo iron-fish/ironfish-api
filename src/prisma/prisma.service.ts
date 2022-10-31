@@ -10,7 +10,7 @@ export class PrismaService
   extends PrismaClient
   implements OnModuleInit, OnModuleDestroy
 {
-  private readonly readClient: PrismaClient;
+  readonly readClient: PrismaClient;
 
   constructor(readonly config: ApiConfigService) {
     super({
