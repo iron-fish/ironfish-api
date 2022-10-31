@@ -9,20 +9,22 @@ datasource db {
 }
 
 model Event {
-  id          Int       @id @default(autoincrement())
-  created_at  DateTime  @default(now()) @db.Timestamp(6)
-  updated_at  DateTime  @default(now()) @updatedAt @db.Timestamp(6)
-  type        EventType
-  occurred_at DateTime  @db.Timestamp(6)
-  points      Int
-  user_id     Int
-  deleted_at  DateTime? @db.Timestamp(6)
-  deposit_id  Int?      @unique(map: "uq_events_on_deposit_id")
-  block_id    Int?      @unique(map: "uq_events_on_block_id")
-  deposit     Deposit?  @relation(fields: [deposit_id], references: [id])
-  block       Block?    @relation(fields: [block_id], references: [id])
-  user        User      @relation(fields: [user_id], references: [id])
-  url         String?   @db.VarChar
+  id                  Int              @id @default(autoincrement())
+  created_at          DateTime         @default(now()) @db.Timestamp(6)
+  updated_at          DateTime         @default(now()) @updatedAt @db.Timestamp(6)
+  type                EventType
+  occurred_at         DateTime         @db.Timestamp(6)
+  points              Int
+  user_id             Int
+  deleted_at          DateTime?        @db.Timestamp(6)
+  deposit_id          Int?             @unique(map: "uq_events_on_deposit_id")
+  block_id            Int?             @unique(map: "uq_events_on_block_id")
+  deposit             Deposit?         @relation(fields: [deposit_id], references: [id])
+  block               Block?           @relation(fields: [block_id], references: [id])
+  user                User             @relation(fields: [user_id], references: [id])
+  url                 String?          @db.VarChar
+  masp_transaction_id Int?             @unique(map: "uq_events_on_masp_transaction_id")
+  MaspTransaction     MaspTransaction? @relation(fields: [masp_transaction_id], references: [id])
 
   @@index([deposit_id], name: "index_events_on_deposit_id")
   @@index([block_id], name: "index_events_on_block_id")
@@ -139,7 +141,7 @@ model BlockDaily {
   id                         Int      @id @default(autoincrement())
   created_at                 DateTime @default(now()) @db.Timestamp(6)
   updated_at                 DateTime @default(now()) @updatedAt @db.Timestamp(6)
-  date                       DateTime @db.Timestamp(6) @unique(map: "uq_blocks_daily_on_date")
+  date                       DateTime @unique(map: "uq_blocks_daily_on_date") @db.Timestamp(6)
   unique_graffiti_count      Int
   average_block_time_ms      Int
   blocks_count               Int
@@ -174,26 +176,26 @@ enum EventType {
 }
 
 model UserPoints {
-  id                                             Int       @id @default(autoincrement())
-  created_at                                     DateTime  @default(now()) @db.Timestamp(6)
-  updated_at                                     DateTime  @default(now()) @updatedAt @db.Timestamp(6)
-  user_id                                        Int       @unique
-  total_points                                   Int       @default(0)
-  block_mined_points                             Int       @default(0)
-  block_mined_last_occurred_at                   DateTime? @db.Timestamp(6)
-  bug_caught_points                              Int       @default(0)
-  bug_caught_last_occurred_at                    DateTime? @db.Timestamp(6)
-  community_contribution_points                  Int       @default(0)
-  community_contribution_last_occurred_at        DateTime? @db.Timestamp(6)
-  pull_request_merged_points                     Int       @default(0)
-  pull_request_merged_last_occurred_at           DateTime? @db.Timestamp(6)
-  social_media_promotion_points                  Int       @default(0)
-  social_media_promotion_last_occurred_at        DateTime? @db.Timestamp(6)
-  node_uptime_points                             Int       @default(0)
-  node_uptime_last_occurred_at                   DateTime? @db.Timestamp(6)
-  send_transaction_points                        Int       @default(0)
-  send_transaction_last_occurred_at              DateTime? @db.Timestamp(6)
-  user                                           User      @relation(fields: [user_id], references: [id])
+  id                                      Int       @id @default(autoincrement())
+  created_at                              DateTime  @default(now()) @db.Timestamp(6)
+  updated_at                              DateTime  @default(now()) @updatedAt @db.Timestamp(6)
+  user_id                                 Int       @unique
+  total_points                            Int       @default(0)
+  block_mined_points                      Int       @default(0)
+  block_mined_last_occurred_at            DateTime? @db.Timestamp(6)
+  bug_caught_points                       Int       @default(0)
+  bug_caught_last_occurred_at             DateTime? @db.Timestamp(6)
+  community_contribution_points           Int       @default(0)
+  community_contribution_last_occurred_at DateTime? @db.Timestamp(6)
+  pull_request_merged_points              Int       @default(0)
+  pull_request_merged_last_occurred_at    DateTime? @db.Timestamp(6)
+  social_media_promotion_points           Int       @default(0)
+  social_media_promotion_last_occurred_at DateTime? @db.Timestamp(6)
+  node_uptime_points                      Int       @default(0)
+  node_uptime_last_occurred_at            DateTime? @db.Timestamp(6)
+  send_transaction_points                 Int       @default(0)
+  send_transaction_last_occurred_at       DateTime? @db.Timestamp(6)
+  user                                    User      @relation(fields: [user_id], references: [id])
 
   @@index([user_id], map: "index_user_points_on_user_id")
   @@index([block_mined_points], map: "index_user_points_on_block_mined")
@@ -207,25 +209,50 @@ model UserPoints {
 }
 
 model Deposit {
-  id                  Int                @id @default(autoincrement())
-  created_at          DateTime           @default(now()) @db.Timestamp(6)
-  updated_at          DateTime           @default(now()) @updatedAt @db.Timestamp(6)
-  transaction_hash    String             @db.VarChar
-  block_hash          String             @db.VarChar
-  graffiti            String             @db.VarChar
-  block_sequence      Int
-  network_version     Int
-  main                Boolean
-  amount              Int
-  event               Event?
+  id               Int      @id @default(autoincrement())
+  created_at       DateTime @default(now()) @db.Timestamp(6)
+  updated_at       DateTime @default(now()) @updatedAt @db.Timestamp(6)
+  transaction_hash String   @db.VarChar
+  block_hash       String   @db.VarChar
+  graffiti         String   @db.VarChar
+  block_sequence   Int
+  network_version  Int
+  main             Boolean
+  amount           Int
+  event            Event?
 
-  @@map("deposits")
   @@unique([transaction_hash, graffiti], name: "uq_deposits_on_transaction_hash_and_graffiti", map: "uq_deposits_on_transaction_hash_and_graffiti")
+  @@map("deposits")
 }
 
 model DepositHead {
-    id                Int                @id
-    block_hash        String             @db.VarChar
+  id         Int    @id
+  block_hash String @db.VarChar
 
-    @@map("deposit_head")
+  @@map("deposit_head")
+}
+
+model MaspTransaction {
+  id               Int                 @id @default(autoincrement())
+  created_at       DateTime            @default(now()) @db.Timestamp(6)
+  updated_at       DateTime            @default(now()) @updatedAt @db.Timestamp(6)
+  transaction_hash String              @db.VarChar
+  block_hash       String              @db.VarChar
+  asset            String              @db.VarChar
+  type             MaspTransactionType
+  block_sequence   Int
+  network_version  Int
+  main             Boolean
+  amount           Int
+  event            Event?
+
+  eventId Int?
+
+  @@map("masp_transactions")
+}
+
+enum MaspTransactionType {
+  SEND
+  BURN
+  MINT
 }

@@ -27,6 +27,7 @@
     "test:keepdb": "dotenv -e .env.test -- jest --runInBand",
     "test": "dotenv -e .env.test -- prisma migrate reset --force --skip-generate > /dev/null && yarn test:keepdb",
     "db:client:generate": "prisma generate",
+    "db:client:format": "prisma format",
     "db:migrate": "prisma migrate dev"
   },
   "devDependencies": {
