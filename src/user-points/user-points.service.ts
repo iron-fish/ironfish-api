@@ -12,7 +12,7 @@ export class UserPointsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findOrThrow(userId: number): Promise<UserPoints> {
-    const record = await this.prisma.userPoints.findUnique({
+    const record = await this.prisma.readClient.userPoints.findUnique({
       where: {
         user_id: userId,
       },
