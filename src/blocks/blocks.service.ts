@@ -444,7 +444,7 @@ export class BlocksService {
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
 
     if (typeof options === 'number') {
-      return this.prisma.block.findUnique({
+      return this.prisma.readClient.block.findUnique({
         where: {
           id: options,
         },
@@ -453,7 +453,7 @@ export class BlocksService {
 
     const { withTransactions } = options;
     if (options.hash !== undefined) {
-      const block = await this.prisma.block.findFirst({
+      const block = await this.prisma.readClient.block.findFirst({
         where: {
           hash: standardizeHash(options.hash),
           network_version: networkVersion,
@@ -468,7 +468,7 @@ export class BlocksService {
 
       return block;
     } else if (options.sequence !== undefined) {
-      const block = await this.prisma.block.findFirst({
+      const block = await this.prisma.readClient.block.findFirst({
         where: {
           sequence: options.sequence,
           main: true,

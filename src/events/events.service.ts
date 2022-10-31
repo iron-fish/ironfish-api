@@ -78,7 +78,7 @@ export class EventsService {
       }
     }
 
-    const records = await this.prisma.event.findMany({
+    const records = await this.prisma.readClient.event.findMany({
       orderBy,
       skip,
       take: limit,
@@ -137,7 +137,7 @@ export class EventsService {
       };
     }
 
-    const nextRecords = await this.prisma.event.findMany({
+    const nextRecords = await this.prisma.readClient.event.findMany({
       where: {
         ...where,
         id: {
@@ -148,7 +148,7 @@ export class EventsService {
       take: 1,
     });
 
-    const previousRecords = await this.prisma.event.findMany({
+    const previousRecords = await this.prisma.readClient.event.findMany({
       where: {
         ...where,
         id: {

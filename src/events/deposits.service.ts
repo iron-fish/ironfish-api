@@ -10,7 +10,7 @@ export class DepositsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async find(id: number): Promise<Deposit | null> {
-    return this.prisma.deposit.findUnique({
+    return this.prisma.readClient.deposit.findUnique({
       where: {
         id,
       },
