@@ -238,7 +238,7 @@ model MaspTransaction {
   updated_at       DateTime            @default(now()) @updatedAt @db.Timestamp(6)
   transaction_hash String              @db.VarChar
   block_hash       String              @db.VarChar
-  asset            String              @db.VarChar
+  asset_identifier String              @db.VarChar
   type             MaspTransactionType
   block_sequence   Int
   network_version  Int
@@ -246,13 +246,13 @@ model MaspTransaction {
   amount           Int
   event            Event?
 
-  eventId Int?
+  event_id Int?
 
   @@map("masp_transactions")
 }
 
 enum MaspTransactionType {
-  SEND
+  TRANSFER
   BURN
   MINT
 }
