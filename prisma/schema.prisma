@@ -246,8 +246,6 @@ model MaspTransaction {
   amount           Int
   event            Event?
 
-  event_id Int?
-
   @@map("masp_transactions")
 }
 
