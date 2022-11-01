@@ -16,7 +16,6 @@ model Event {
   occurred_at DateTime  @db.Timestamp(6)
   points      Int
   user_id     Int
-  deleted_at  DateTime? @db.Timestamp(6)
   deposit_id  Int?      @unique(map: "uq_events_on_deposit_id")
   block_id    Int?      @unique(map: "uq_events_on_block_id")
   deposit     Deposit?  @relation(fields: [deposit_id], references: [id])

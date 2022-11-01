@@ -676,8 +676,7 @@ describe('EventsService', () => {
         });
         assert(event);
         const eventToDelete = await eventsService.findOrThrow(event.id);
-        const deletedEvent = await eventsService.delete(eventToDelete);
-        expect(deletedEvent.deleted_at).toBeTruthy();
+        await eventsService.delete(eventToDelete);
 
         const newPoints = 500;
         const event2 = await eventsService.create({
@@ -688,7 +687,6 @@ describe('EventsService', () => {
         });
 
         expect(event2?.points).toStrictEqual(newPoints);
-        expect(event2?.deleted_at).toBeFalsy();
       });
     });
 
@@ -809,13 +807,10 @@ describe('EventsService', () => {
     describe('when the event exists', () => {
       it('deletes the record', async () => {
         const { block, event } = await setupBlockMinedWithEvent();
-        const record = await eventsService.deleteBlockMined(block);
-        expect(record).toMatchObject({
-          ...event,
-          deleted_at: expect.any(Date),
-          updated_at: expect.any(Date),
-          points: 0,
-        });
+        await eventsService.deleteBlockMined(block);
+        await expect(eventsService.findOrThrow(event.id)).rejects.toThrow(
+          NotFoundException,
+        );
       });
 
       it('subtracts points from the user total points', async () => {
@@ -850,16 +845,12 @@ describe('EventsService', () => {
   });
 
   describe('delete', () => {
-    it('sets `deleted_at` for the record', async () => {
-      const { event } = await setupBlockMinedWithEvent();
-      const record = await eventsService.delete(event);
-
-      expect(record).toMatchObject({
-        ...event,
-        deleted_at: expect.any(Date),
-        updated_at: expect.any(Date),
-        points: 0,
-      });
+    it('deletes the record', async () => {
+      const { block, event } = await setupBlockMinedWithEvent();
+      await eventsService.deleteBlockMined(block);
+      await expect(eventsService.findOrThrow(event.id)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('subtracts points from the user total points', async () => {
@@ -933,7 +924,6 @@ describe('EventsService', () => {
         type: EventType.NODE_UPTIME,
         points: POINTS_PER_CATEGORY[EventType.NODE_UPTIME],
         user_id: user.id,
-        deleted_at: null,
       });
     });
   });

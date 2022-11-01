@@ -67,7 +67,6 @@ export class EventsService {
     const skip = cursorId ? 1 : 0;
     const where: Prisma.EventWhereInput = {
       user_id: options.userId,
-      deleted_at: null,
     };
 
     if (cursorId) {
@@ -249,7 +248,6 @@ export class EventsService {
       where: {
         type,
         user_id: id,
-        deleted_at: null,
       },
     });
     return {
@@ -307,7 +305,6 @@ export class EventsService {
       where: {
         type,
         user_id: id,
-        deleted_at: null,
       },
     });
     return {
@@ -320,7 +317,6 @@ export class EventsService {
     return this.prisma.event.findFirst({
       where: {
         url,
-        deleted_at: null,
       },
     });
   }
@@ -343,7 +339,6 @@ export class EventsService {
           lt: end,
         },
         user_id: user.id,
-        deleted_at: null,
       },
     });
     return {
@@ -417,7 +412,6 @@ export class EventsService {
       where: {
         type,
         user_id: id,
-        deleted_at: null,
         ...dateFilter,
       },
     });
@@ -507,11 +501,10 @@ export class EventsService {
       const pointDifference = adjustedPoints - existingEvent.points;
 
       // Only update event points if necessary
-      if (pointDifference !== 0 || existingEvent.deleted_at) {
+      if (pointDifference !== 0) {
         existingEvent = await client.event.update({
           data: {
             points: adjustedPoints,
-            deleted_at: null,
           },
           where: {
             id: existingEvent.id,
@@ -571,7 +564,6 @@ export class EventsService {
       where: {
         type,
         user_id: userId,
-        deleted_at: null,
       },
     });
     const latestOccurredAt = occurredAtAggregate._max.occurred_at;
@@ -583,7 +575,6 @@ export class EventsService {
       where: {
         type,
         user_id: userId,
-        deleted_at: null,
       },
     });
     const points = pointsAggregate._sum.points ?? 0;
@@ -594,7 +585,6 @@ export class EventsService {
       },
       where: {
         user_id: userId,
-        deleted_at: null,
       },
     });
     const totalPoints = totalPointsAggregate._sum.points ?? 0;
@@ -642,11 +632,7 @@ export class EventsService {
     event: Event,
     prisma: BasePrismaClient,
   ): Promise<Event> {
-    const updated = await prisma.event.update({
-      data: {
-        deleted_at: new Date().toISOString(),
-        points: 0,
-      },
+    const record = await prisma.event.delete({
       where: {
         id: event.id,
       },
@@ -654,7 +640,7 @@ export class EventsService {
 
     await this.addUpdateLatestPointsJob(event.user_id, event.type);
 
-    return updated;
+    return record;
   }
 
   async getLifetimeEventsMetricsForUser(
@@ -669,7 +655,6 @@ export class EventsService {
           in: events,
         },
         user_id: user.id,
-        deleted_at: null,
       },
     });
 
