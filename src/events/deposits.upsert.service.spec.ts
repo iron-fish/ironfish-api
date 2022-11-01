@@ -195,10 +195,8 @@ describe('DepositsUpsertService', () => {
           },
         });
 
-        //notes([0.1, 3], user2.graffiti)
         expect(user2Events[0].points).toBe(31);
-        expect(user2Events[1].points).toBe(0);
-        expect(user2Events[1].deposit_id).toEqual(user2Deposits[1].id);
+        expect(user2Events[0].deposit_id).toEqual(user2Deposits[0].id);
         expect(user2Deposits[1].amount).toEqual(1 * ORE_TO_IRON);
 
         expect(user1Deposits).toHaveLength(2);
