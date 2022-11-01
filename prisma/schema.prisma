@@ -27,6 +27,7 @@ model Event {
   MaspTransaction     MaspTransaction? @relation(fields: [masp_transaction_id], references: [id])
 
   @@index([deposit_id], name: "index_events_on_deposit_id")
+  @@index([masp_transaction_id], name: "index_events_on_masp_transaction_id")
   @@index([block_id], name: "index_events_on_block_id")
   @@index([user_id], name: "index_events_on_user_id")
   @@map("events")

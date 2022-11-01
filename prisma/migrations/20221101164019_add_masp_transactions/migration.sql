@@ -7,9 +7,6 @@
 -- CreateEnum
 CREATE TYPE "MaspTransactionType" AS ENUM ('TRANSFER', 'BURN', 'MINT');
 
--- DropIndex
-DROP INDEX "index_users_on_graffiti";
-
 -- AlterTable
 ALTER TABLE "events" ADD COLUMN     "masp_transaction_id" INTEGER;
 
@@ -34,7 +31,7 @@ CREATE TABLE "masp_transactions" (
 CREATE UNIQUE INDEX "uq_events_on_masp_transaction_id" ON "events"("masp_transaction_id");
 
 -- CreateIndex
-CREATE INDEX "index_users_on_graffiti" ON "users"("graffiti");
+CREATE INDEX "index_events_on_masp_transaction_id" ON "events"("masp_transaction_id");
 
 -- AddForeignKey
 ALTER TABLE "events" ADD CONSTRAINT "events_masp_transaction_id_fkey" FOREIGN KEY ("masp_transaction_id") REFERENCES "masp_transactions"("id") ON DELETE SET NULL ON UPDATE CASCADE;
