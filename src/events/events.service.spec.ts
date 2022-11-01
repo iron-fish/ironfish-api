@@ -341,55 +341,6 @@ describe('EventsService', () => {
     });
   });
 
-  describe('getLifetimeEventMetricsForUser', () => {
-    it('sums up all the events for the users', async () => {
-      const eventCounts: Record<EventType, number> = {
-        BLOCK_MINED: 4,
-        BUG_CAUGHT: 1,
-        COMMUNITY_CONTRIBUTION: 0,
-        PULL_REQUEST_MERGED: 2,
-        SOCIAL_MEDIA_PROMOTION: 0,
-        NODE_UPTIME: 1,
-        SEND_TRANSACTION: 1,
-      };
-      const user = await usersService.create({
-        email: faker.internet.email(),
-        graffiti: uuid(),
-        country_code: faker.address.countryCode('alpha-3'),
-      });
-
-      for (const [eventType, count] of Object.entries(eventCounts)) {
-        for (let i = 0; i < count; i++) {
-          await prisma.event.create({
-            data: {
-              user_id: user.id,
-              type: EventType[eventType as keyof typeof EventType],
-              occurred_at: new Date(),
-              points: 0,
-            },
-          });
-        }
-      }
-
-      const lifetimeMetrics =
-        await eventsService.getLifetimeEventMetricsForUser(user);
-      const lifetimeCounts = {
-        [EventType.BLOCK_MINED]: lifetimeMetrics[EventType.BLOCK_MINED].count,
-        [EventType.BUG_CAUGHT]: lifetimeMetrics[EventType.BUG_CAUGHT].count,
-        [EventType.COMMUNITY_CONTRIBUTION]:
-          lifetimeMetrics[EventType.COMMUNITY_CONTRIBUTION].count,
-        [EventType.PULL_REQUEST_MERGED]:
-          lifetimeMetrics[EventType.PULL_REQUEST_MERGED].count,
-        [EventType.SOCIAL_MEDIA_PROMOTION]:
-          lifetimeMetrics[EventType.SOCIAL_MEDIA_PROMOTION].count,
-        [EventType.NODE_UPTIME]: lifetimeMetrics[EventType.NODE_UPTIME].count,
-        [EventType.SEND_TRANSACTION]:
-          lifetimeMetrics[EventType.SEND_TRANSACTION].count,
-      };
-      expect(lifetimeCounts).toEqual(eventCounts);
-    });
-  });
-
   describe('getTotalEventMetricsForUser', () => {
     it('returns sums of event counts within the provided time range', async () => {
       const now = new Date();

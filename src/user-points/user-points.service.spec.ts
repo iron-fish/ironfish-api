@@ -54,18 +54,22 @@ describe('UserPointsService', () => {
       const points = {
         [EventType.BLOCK_MINED]: {
           points: 100,
+          count: 5,
           latestOccurredAt: new Date(),
         },
         [EventType.PULL_REQUEST_MERGED]: {
           points: 110,
+          count: 5,
           latestOccurredAt: new Date(),
         },
         [EventType.NODE_UPTIME]: {
           points: 150,
+          count: 5,
           latestOccurredAt: new Date(),
         },
         [EventType.SEND_TRANSACTION]: {
           points: 120,
+          count: 5,
           latestOccurredAt: new Date(),
         },
       };
