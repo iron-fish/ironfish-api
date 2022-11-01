@@ -689,6 +689,7 @@ describe('EventsService', () => {
       expect(upsertPoints.mock.calls[0][0].points).toEqual({
         [type]: {
           points,
+          count: 1,
           latestOccurredAt: event.occurred_at,
         },
       });

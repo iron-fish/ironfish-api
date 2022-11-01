@@ -520,12 +520,16 @@ export class EventsService {
       _sum: {
         points: true,
       },
+      _count: {
+        points: true,
+      },
       where: {
         type,
         user_id: userId,
       },
     });
     const points = pointsAggregate._sum.points ?? 0;
+    const count = pointsAggregate._count.points ?? 0;
 
     const totalPointsAggregate = await this.prisma.readClient.event.aggregate({
       _sum: {
@@ -539,7 +543,7 @@ export class EventsService {
 
     await this.userPointsService.upsert({
       userId,
-      points: { [type]: { points, latestOccurredAt } },
+      points: { [type]: { points, count, latestOccurredAt } },
       totalPoints,
     });
   }
