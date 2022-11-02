@@ -26,14 +26,24 @@ export class HealthController {
   @Get('admin')
   async admin(): Promise<{
     queued_jobs: number;
-    mismatched_deposits: number;
   }> {
-    const [queuedJobs, mismatchedDeposits] = await Promise.all([
-      this.graphileWorkerService.queuedJobCount(),
-      this.depositsUpsertService.mismatchedDepositCount(),
-    ]);
+    const queuedJobs = await this.graphileWorkerService.queuedJobCount();
+
     return {
       queued_jobs: queuedJobs,
+    };
+  }
+
+  @ApiExcludeEndpoint()
+  @UseGuards(ApiKeyGuard)
+  @Get('deposit')
+  async deposit(): Promise<{
+    mismatched_deposits: number;
+  }> {
+    const mismatchedDeposits =
+      await this.depositsUpsertService.mismatchedDepositCount();
+
+    return {
       mismatched_deposits: mismatchedDeposits,
     };
   }
