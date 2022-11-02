@@ -82,7 +82,7 @@ describe('TransactionsService', () => {
     });
 
     describe('when a hash does exist for the the network version', () => {
-      it('updates the transaction record', async () => {
+      it('does not update the transaction record', async () => {
         const notes = [{ commitment: uuid() }];
         const spends = [{ nullifier: uuid() }];
         const transactions = await transactionsService.createManyWithClient(
@@ -117,10 +117,10 @@ describe('TransactionsService', () => {
         expect(newTransactions[0]).toMatchObject({
           id: transaction.id,
           hash: transaction.hash,
-          fee: newFee,
-          size: newSize,
-          notes: newNotes,
-          spends: newSpends,
+          fee: transaction.fee,
+          size: transaction.size,
+          notes: transaction.notes,
+          spends: transaction.spends,
         });
       });
     });
