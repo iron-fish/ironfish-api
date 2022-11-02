@@ -113,7 +113,7 @@ export class BlocksTransactionsLoader {
         {
           // We increased this from the default of 5000 because the transactions were
           // timing out and failing to upsert blocks
-          timeout: 20000,
+          timeout: 30000,
         },
       );
     }
