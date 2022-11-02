@@ -168,7 +168,7 @@ export class EventsService {
     userId: number;
     points: Record<
       EventType,
-      { points: number; latestOccurredAt: Date | null }
+      { points: number; count: number; latestOccurredAt: Date | null }
     >;
     totalPoints: number;
   }> {
@@ -236,10 +236,14 @@ export class EventsService {
     type: EventType,
   ): Promise<{
     points: number;
+    count: number;
     latestOccurredAt: Date | null;
   }> {
     const aggregate = await this.prisma.event.aggregate({
       _sum: {
+        points: true,
+      },
+      _count: {
         points: true,
       },
       _max: {
@@ -252,6 +256,7 @@ export class EventsService {
     });
     return {
       points: aggregate._sum.points ?? 0,
+      count: aggregate._count.points ?? 0,
       latestOccurredAt: aggregate._max.occurred_at,
     };
   }
@@ -571,12 +576,16 @@ export class EventsService {
       _sum: {
         points: true,
       },
+      _count: {
+        points: true,
+      },
       where: {
         type,
         user_id: userId,
       },
     });
     const points = pointsAggregate._sum.points ?? 0;
+    const count = pointsAggregate._count.points ?? 0;
 
     const totalPointsAggregate = await this.prisma.readClient.event.aggregate({
       _sum: {
@@ -590,7 +599,7 @@ export class EventsService {
 
     await this.userPointsService.upsert({
       userId,
-      points: { [type]: { points, latestOccurredAt } },
+      points: { [type]: { points, count, latestOccurredAt } },
       totalPoints,
     });
   }
@@ -648,30 +657,23 @@ export class EventsService {
   ): Promise<SerializedEventMetrics> {
     const rank = await this.getLifetimeEventsRankForUser(user, events);
 
-    const count = await this.prisma.readClient.event.count({
-      where: {
-        type: {
-          in: events,
-        },
-        user_id: user.id,
-      },
-    });
-
     return {
       rank: rank.rank,
       points: rank.points,
-      count: count,
+      count: rank.count,
     };
   }
 
   async getLifetimeEventsRankForUser(
     user: User,
     events: EventType[],
-  ): Promise<{ points: number; rank: number }> {
+  ): Promise<{ points: number; count: number; rank: number }> {
     const queryPoints = events
       .map((e) => e.toLowerCase() + '_points')
       .join(' + ');
-
+    const queryCounts = events
+      .map((e) => e.toLowerCase() + '_count')
+      .join(' + ');
     const queryLastOccurredAt = events
       .map((e) => e.toLowerCase() + '_last_occurred_at')
       .join(', ');
@@ -681,6 +683,7 @@ export class EventsService {
         SELECT
           users.id as user_id,
           ${queryPoints} as points,
+          ${queryCounts} as count,
           RANK() OVER (
             ORDER BY
               COALESCE(${queryPoints}, 0) DESC,
@@ -698,6 +701,7 @@ export class EventsService {
       SELECT
         user_id,
         points,
+        count,
         rank::INTEGER
       FROM
         user_ranks
@@ -709,6 +713,7 @@ export class EventsService {
     const rank = await this.prisma.$queryRawUnsafe<
       {
         points: number;
+        count: number;
         rank: number;
       }[]
     >(query, user.id);
@@ -720,6 +725,7 @@ export class EventsService {
     return {
       rank: rank[0].rank,
       points: rank[0].points,
+      count: rank[0].count,
     };
   }
 
