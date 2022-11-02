@@ -158,6 +158,38 @@ describe('DepositsUpsertService', () => {
       expect(user2Events[1].deposit_id).toEqual(user2Deposits[1].id);
     });
 
+    it('correctly counts points in multiple increments', async () => {
+      const user = await usersService.create({
+        email: faker.internet.email(),
+        graffiti: uuid(),
+        country_code: faker.address.countryCode(),
+      });
+
+      const testDeposit = async (
+        amounts: number[],
+        points: number | undefined,
+      ): Promise<void> => {
+        const operation = depositOperation(
+          [transaction(notes(amounts, user.graffiti), uuid())],
+          BlockOperation.CONNECTED,
+          'blockdeposithash',
+        );
+
+        const [deposit] = await depositsUpsertService.upsert(operation);
+        const event = await prisma.event.findUnique({
+          where: { deposit_id: deposit.id },
+        });
+
+        expect(event?.points).toBe(points);
+      };
+
+      await testDeposit([0.1], 1);
+      await testDeposit([0.32], 3);
+      await testDeposit([0.6], 6);
+      await testDeposit([0.59], 5);
+      await testDeposit([0.05], undefined);
+    });
+
     describe('on DISCONNECTED operations', () => {
       it('removes events', async () => {
         const payload1 = depositOperation(
@@ -375,28 +407,6 @@ describe('DepositsUpsertService', () => {
       return { memo: graffiti, amount: amount * ORE_TO_IRON };
     });
   };
-
-  describe('upsert deposit with greater than min increment', () => {
-    it('updates deposit.main to match block.main', async () => {
-      const tx = transaction(
-        [...notes([1.1, 1.0], user1.graffiti)],
-        'deposithash',
-      );
-      const operation = depositOperation(
-        [tx],
-        BlockOperation.CONNECTED,
-        'blockdeposithash',
-      );
-
-      const deposits = await depositsUpsertService.upsert(operation);
-
-      const depositEvent = await prisma.event.findUnique({
-        where: { deposit_id: deposits[0].id },
-      });
-
-      expect(depositEvent?.points).toBe(21);
-    });
-  });
 
   const transaction = (notes: UpsertDepositsNoteDto[], hash?: string) => {
     return {
