@@ -130,82 +130,29 @@ export class UsersController {
     let nodeUptime: SerializedUserMetrics['node_uptime'];
 
     if (query.granularity === MetricsGranularity.LIFETIME) {
-      const bugCaughtRankPromise =
-        this.eventsService.getLifetimeEventsRankForUser(user, [
-          EventType.BUG_CAUGHT,
-        ]);
-
-      const pullRequestRankPromise =
-        this.eventsService.getLifetimeEventsRankForUser(user, [
-          EventType.PULL_REQUEST_MERGED,
-        ]);
-
-      const nodeUptimeRankPromise =
-        this.eventsService.getLifetimeEventsRankForUser(user, [
-          EventType.NODE_UPTIME,
-        ]);
-
-      const sendTransactionRankPromise =
-        this.eventsService.getLifetimeEventsRankForUser(user, [
-          EventType.SEND_TRANSACTION,
-        ]);
-
-      const mainRankPromise =
-        await this.eventsService.getLifetimeEventsRankForUser(user, [
-          EventType.BUG_CAUGHT,
-          EventType.NODE_UPTIME,
-          EventType.SEND_TRANSACTION,
-        ]);
-
-      const codeRanksPromise =
-        await this.eventsService.getLifetimeEventsRankForUser(user, [
-          EventType.PULL_REQUEST_MERGED,
-        ]);
-
-      const [
-        bugCaughtRank,
-        pullRequestRank,
-        nodeUptimeRank,
-        sendTransactionRank,
-        codeRank,
-        mainRank,
-      ] = await Promise.all([
-        bugCaughtRankPromise,
-        pullRequestRankPromise,
-        nodeUptimeRankPromise,
-        sendTransactionRankPromise,
-        codeRanksPromise,
-        mainRankPromise,
-      ]);
-
-      const empty = { count: 0, points: 0, rank: 0 };
-
-      eventMetrics = {
-        BUG_CAUGHT: bugCaughtRank,
-        PULL_REQUEST_MERGED: pullRequestRank,
-        NODE_UPTIME: nodeUptimeRank,
-        SEND_TRANSACTION: sendTransactionRank,
-        BLOCK_MINED: empty,
-        COMMUNITY_CONTRIBUTION: empty,
-        SOCIAL_MEDIA_PROMOTION: empty,
-      };
+      eventMetrics = await this.eventsService.getLifetimeEventMetricsForUser(
+        user,
+      );
 
       pools = {
-        main: mainRank,
-        code: codeRank,
+        main: await this.eventsService.getLifetimeEventsMetricsForUser(user, [
+          EventType.BUG_CAUGHT,
+          EventType.NODE_UPTIME,
+          EventType.SEND_TRANSACTION,
+        ]),
+        code: await this.eventsService.getLifetimeEventsMetricsForUser(user, [
+          EventType.PULL_REQUEST_MERGED,
+        ]),
       };
-
-      points =
-        bugCaughtRank.points +
-        pullRequestRank.points +
-        nodeUptimeRank.points +
-        sendTransactionRank.points;
 
       const uptime = await this.nodeUptimeService.get(user);
       nodeUptime = {
         total_hours: uptime?.total_hours ?? 0,
         last_checked_in: uptime?.last_checked_in?.toISOString() ?? null,
       };
+
+      const userPoints = await this.userPointsService.findOrThrow(user.id);
+      points = userPoints.total_points;
     } else {
       if (query.start === undefined || query.end === undefined) {
         throw new UnprocessableEntityException(

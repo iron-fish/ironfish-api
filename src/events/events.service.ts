@@ -261,6 +261,63 @@ export class EventsService {
     };
   }
 
+  async getLifetimeEventMetricsForUser(
+    user: User,
+  ): Promise<Record<EventType, SerializedEventMetrics>> {
+    return {
+      BLOCK_MINED: await this.getLifetimeEventTypeMetricsForUser(
+        user,
+        EventType.BLOCK_MINED,
+      ),
+      BUG_CAUGHT: await this.getLifetimeEventTypeMetricsForUser(
+        user,
+        EventType.BUG_CAUGHT,
+      ),
+      COMMUNITY_CONTRIBUTION: await this.getLifetimeEventTypeMetricsForUser(
+        user,
+        EventType.COMMUNITY_CONTRIBUTION,
+      ),
+      PULL_REQUEST_MERGED: await this.getLifetimeEventTypeMetricsForUser(
+        user,
+        EventType.PULL_REQUEST_MERGED,
+      ),
+      SOCIAL_MEDIA_PROMOTION: await this.getLifetimeEventTypeMetricsForUser(
+        user,
+        EventType.SOCIAL_MEDIA_PROMOTION,
+      ),
+      NODE_UPTIME: await this.getLifetimeEventTypeMetricsForUser(
+        user,
+        EventType.NODE_UPTIME,
+      ),
+      SEND_TRANSACTION: await this.getLifetimeEventTypeMetricsForUser(
+        user,
+        EventType.SEND_TRANSACTION,
+      ),
+    };
+  }
+
+  private async getLifetimeEventTypeMetricsForUser(
+    { id }: User,
+    type: EventType,
+  ): Promise<SerializedEventMetrics> {
+    const aggregate = await this.prisma.readClient.event.aggregate({
+      _sum: {
+        points: true,
+      },
+      _count: {
+        points: true,
+      },
+      where: {
+        type,
+        user_id: id,
+      },
+    });
+    return {
+      count: aggregate._count.points || 0,
+      points: aggregate._sum.points || 0,
+    };
+  }
+
   private async getEventByUrl(url: string): Promise<Event | null> {
     return this.prisma.event.findFirst({
       where: {
