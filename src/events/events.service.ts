@@ -460,8 +460,7 @@ export class EventsService {
       adjustedPoints =
         Math.floor(
           deposit.amount /
-            ORE_TO_IRON /
-            this.config.get<number>('MIN_DEPOSIT_SIZE'),
+            (this.config.get<number>('MIN_DEPOSIT_SIZE') * ORE_TO_IRON),
         ) * POINTS_PER_CATEGORY[type];
     } else {
       adjustedPoints = POINTS_PER_CATEGORY[type];
