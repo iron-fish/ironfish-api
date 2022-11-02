@@ -352,6 +352,7 @@ describe('EventsService', () => {
         NODE_UPTIME: 1,
         SEND_TRANSACTION: 1,
       };
+
       const user = await usersService.create({
         email: faker.internet.email(),
         graffiti: uuid(),
@@ -360,19 +361,25 @@ describe('EventsService', () => {
 
       for (const [eventType, count] of Object.entries(eventCounts)) {
         for (let i = 0; i < count; i++) {
-          await prisma.event.create({
-            data: {
-              user_id: user.id,
-              type: EventType[eventType as keyof typeof EventType],
-              occurred_at: new Date(),
-              points: 0,
-            },
+          await eventsService.create({
+            userId: user.id,
+            type: EventType[eventType as keyof typeof EventType],
+            occurredAt: new Date(),
+            points: 0,
           });
         }
+
+        await eventsService.updateLatestPoints(
+          user.id,
+          EventType[eventType as keyof typeof EventType],
+        );
       }
 
+      const userPoints = await userPointsService.findOrThrow(user.id);
+
       const lifetimeMetrics =
-        await eventsService.getLifetimeEventMetricsForUser(user);
+        eventsService.getLifetimeEventMetricsForUser(userPoints);
+
       const lifetimeCounts = {
         [EventType.BLOCK_MINED]: lifetimeMetrics[EventType.BLOCK_MINED].count,
         [EventType.BUG_CAUGHT]: lifetimeMetrics[EventType.BUG_CAUGHT].count,

@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { UserPoints } from '@prisma/client';
 import { Job } from 'graphile-worker';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { BlocksService } from '../blocks/blocks.service';
@@ -261,60 +262,38 @@ export class EventsService {
     };
   }
 
-  async getLifetimeEventMetricsForUser(
-    user: User,
-  ): Promise<Record<EventType, SerializedEventMetrics>> {
+  getLifetimeEventMetricsForUser(
+    points: UserPoints,
+  ): Record<EventType, SerializedEventMetrics> {
     return {
-      BLOCK_MINED: await this.getLifetimeEventTypeMetricsForUser(
-        user,
-        EventType.BLOCK_MINED,
-      ),
-      BUG_CAUGHT: await this.getLifetimeEventTypeMetricsForUser(
-        user,
-        EventType.BUG_CAUGHT,
-      ),
-      COMMUNITY_CONTRIBUTION: await this.getLifetimeEventTypeMetricsForUser(
-        user,
-        EventType.COMMUNITY_CONTRIBUTION,
-      ),
-      PULL_REQUEST_MERGED: await this.getLifetimeEventTypeMetricsForUser(
-        user,
-        EventType.PULL_REQUEST_MERGED,
-      ),
-      SOCIAL_MEDIA_PROMOTION: await this.getLifetimeEventTypeMetricsForUser(
-        user,
-        EventType.SOCIAL_MEDIA_PROMOTION,
-      ),
-      NODE_UPTIME: await this.getLifetimeEventTypeMetricsForUser(
-        user,
-        EventType.NODE_UPTIME,
-      ),
-      SEND_TRANSACTION: await this.getLifetimeEventTypeMetricsForUser(
-        user,
-        EventType.SEND_TRANSACTION,
-      ),
-    };
-  }
-
-  private async getLifetimeEventTypeMetricsForUser(
-    { id }: User,
-    type: EventType,
-  ): Promise<SerializedEventMetrics> {
-    const aggregate = await this.prisma.readClient.event.aggregate({
-      _sum: {
-        points: true,
+      BLOCK_MINED: {
+        count: points.block_mined_count,
+        points: points.block_mined_points,
       },
-      _count: {
-        points: true,
+      BUG_CAUGHT: {
+        count: points.bug_caught_count,
+        points: points.bug_caught_points,
       },
-      where: {
-        type,
-        user_id: id,
+      COMMUNITY_CONTRIBUTION: {
+        count: points.community_contribution_count,
+        points: points.community_contribution_points,
       },
-    });
-    return {
-      count: aggregate._count.points || 0,
-      points: aggregate._sum.points || 0,
+      NODE_UPTIME: {
+        count: points.node_uptime_count,
+        points: points.node_uptime_points,
+      },
+      PULL_REQUEST_MERGED: {
+        count: points.pull_request_merged_count,
+        points: points.pull_request_merged_points,
+      },
+      SEND_TRANSACTION: {
+        count: points.send_transaction_count,
+        points: points.send_transaction_points,
+      },
+      SOCIAL_MEDIA_PROMOTION: {
+        count: points.social_media_promotion_count,
+        points: points.social_media_promotion_points,
+      },
     };
   }
 
@@ -710,7 +689,7 @@ export class EventsService {
       LIMIT
         1;`;
 
-    const rank = await this.prisma.$queryRawUnsafe<
+    const rank = await this.prisma.readClient.$queryRawUnsafe<
       {
         points: number;
         count: number;
