@@ -352,6 +352,7 @@ describe('EventsService', () => {
         NODE_UPTIME: 1,
         SEND_TRANSACTION: 1,
       };
+
       const user = await usersService.create({
         email: faker.internet.email(),
         graffiti: uuid(),
@@ -360,19 +361,25 @@ describe('EventsService', () => {
 
       for (const [eventType, count] of Object.entries(eventCounts)) {
         for (let i = 0; i < count; i++) {
-          await prisma.event.create({
-            data: {
-              user_id: user.id,
-              type: EventType[eventType as keyof typeof EventType],
-              occurred_at: new Date(),
-              points: 0,
-            },
+          await eventsService.create({
+            userId: user.id,
+            type: EventType[eventType as keyof typeof EventType],
+            occurredAt: new Date(),
+            points: 0,
           });
         }
+
+        await eventsService.updateLatestPoints(
+          user.id,
+          EventType[eventType as keyof typeof EventType],
+        );
       }
 
+      const userPoints = await userPointsService.findOrThrow(user.id);
+
       const lifetimeMetrics =
-        await eventsService.getLifetimeEventMetricsForUser(user);
+        eventsService.getLifetimeEventMetricsForUser(userPoints);
+
       const lifetimeCounts = {
         [EventType.BLOCK_MINED]: lifetimeMetrics[EventType.BLOCK_MINED].count,
         [EventType.BUG_CAUGHT]: lifetimeMetrics[EventType.BUG_CAUGHT].count,
@@ -676,8 +683,7 @@ describe('EventsService', () => {
         });
         assert(event);
         const eventToDelete = await eventsService.findOrThrow(event.id);
-        const deletedEvent = await eventsService.delete(eventToDelete);
-        expect(deletedEvent.deleted_at).toBeTruthy();
+        await eventsService.delete(eventToDelete);
 
         const newPoints = 500;
         const event2 = await eventsService.create({
@@ -688,7 +694,6 @@ describe('EventsService', () => {
         });
 
         expect(event2?.points).toStrictEqual(newPoints);
-        expect(event2?.deleted_at).toBeFalsy();
       });
     });
 
@@ -740,6 +745,7 @@ describe('EventsService', () => {
       expect(upsertPoints.mock.calls[0][0].points).toEqual({
         [type]: {
           points,
+          count: 1,
           latestOccurredAt: event.occurred_at,
         },
       });
@@ -809,13 +815,10 @@ describe('EventsService', () => {
     describe('when the event exists', () => {
       it('deletes the record', async () => {
         const { block, event } = await setupBlockMinedWithEvent();
-        const record = await eventsService.deleteBlockMined(block);
-        expect(record).toMatchObject({
-          ...event,
-          deleted_at: expect.any(Date),
-          updated_at: expect.any(Date),
-          points: 0,
-        });
+        await eventsService.deleteBlockMined(block);
+        await expect(eventsService.findOrThrow(event.id)).rejects.toThrow(
+          NotFoundException,
+        );
       });
 
       it('subtracts points from the user total points', async () => {
@@ -850,16 +853,12 @@ describe('EventsService', () => {
   });
 
   describe('delete', () => {
-    it('sets `deleted_at` for the record', async () => {
-      const { event } = await setupBlockMinedWithEvent();
-      const record = await eventsService.delete(event);
-
-      expect(record).toMatchObject({
-        ...event,
-        deleted_at: expect.any(Date),
-        updated_at: expect.any(Date),
-        points: 0,
-      });
+    it('deletes the record', async () => {
+      const { block, event } = await setupBlockMinedWithEvent();
+      await eventsService.deleteBlockMined(block);
+      await expect(eventsService.findOrThrow(event.id)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('subtracts points from the user total points', async () => {
@@ -933,7 +932,6 @@ describe('EventsService', () => {
         type: EventType.NODE_UPTIME,
         points: POINTS_PER_CATEGORY[EventType.NODE_UPTIME],
         user_id: user.id,
-        deleted_at: null,
       });
     });
   });

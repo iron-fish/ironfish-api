@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { UserPoints } from '@prisma/client';
 import { Job } from 'graphile-worker';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { BlocksService } from '../blocks/blocks.service';
@@ -67,7 +68,6 @@ export class EventsService {
     const skip = cursorId ? 1 : 0;
     const where: Prisma.EventWhereInput = {
       user_id: options.userId,
-      deleted_at: null,
     };
 
     if (cursorId) {
@@ -169,7 +169,7 @@ export class EventsService {
     userId: number;
     points: Record<
       EventType,
-      { points: number; latestOccurredAt: Date | null }
+      { points: number; count: number; latestOccurredAt: Date | null }
     >;
     totalPoints: number;
   }> {
@@ -237,10 +237,14 @@ export class EventsService {
     type: EventType,
   ): Promise<{
     points: number;
+    count: number;
     latestOccurredAt: Date | null;
   }> {
     const aggregate = await this.prisma.event.aggregate({
       _sum: {
+        points: true,
+      },
+      _count: {
         points: true,
       },
       _max: {
@@ -249,70 +253,47 @@ export class EventsService {
       where: {
         type,
         user_id: id,
-        deleted_at: null,
       },
     });
     return {
       points: aggregate._sum.points ?? 0,
+      count: aggregate._count.points ?? 0,
       latestOccurredAt: aggregate._max.occurred_at,
     };
   }
 
-  async getLifetimeEventMetricsForUser(
-    user: User,
-  ): Promise<Record<EventType, SerializedEventMetrics>> {
+  getLifetimeEventMetricsForUser(
+    points: UserPoints,
+  ): Record<EventType, SerializedEventMetrics> {
     return {
-      BLOCK_MINED: await this.getLifetimeEventTypeMetricsForUser(
-        user,
-        EventType.BLOCK_MINED,
-      ),
-      BUG_CAUGHT: await this.getLifetimeEventTypeMetricsForUser(
-        user,
-        EventType.BUG_CAUGHT,
-      ),
-      COMMUNITY_CONTRIBUTION: await this.getLifetimeEventTypeMetricsForUser(
-        user,
-        EventType.COMMUNITY_CONTRIBUTION,
-      ),
-      PULL_REQUEST_MERGED: await this.getLifetimeEventTypeMetricsForUser(
-        user,
-        EventType.PULL_REQUEST_MERGED,
-      ),
-      SOCIAL_MEDIA_PROMOTION: await this.getLifetimeEventTypeMetricsForUser(
-        user,
-        EventType.SOCIAL_MEDIA_PROMOTION,
-      ),
-      NODE_UPTIME: await this.getLifetimeEventTypeMetricsForUser(
-        user,
-        EventType.NODE_UPTIME,
-      ),
-      SEND_TRANSACTION: await this.getLifetimeEventTypeMetricsForUser(
-        user,
-        EventType.SEND_TRANSACTION,
-      ),
-    };
-  }
-
-  private async getLifetimeEventTypeMetricsForUser(
-    { id }: User,
-    type: EventType,
-  ): Promise<SerializedEventMetrics> {
-    const aggregate = await this.prisma.readClient.event.aggregate({
-      _sum: {
-        points: true,
+      BLOCK_MINED: {
+        count: points.block_mined_count,
+        points: points.block_mined_points,
       },
-      _count: {
-        points: true,
+      BUG_CAUGHT: {
+        count: points.bug_caught_count,
+        points: points.bug_caught_points,
       },
-      where: {
-        type,
-        user_id: id,
-        deleted_at: null,
+      COMMUNITY_CONTRIBUTION: {
+        count: points.community_contribution_count,
+        points: points.community_contribution_points,
       },
-    });
-    return {
-      count: aggregate._count.points || 0,
-      points: aggregate._sum.points || 0,
+      NODE_UPTIME: {
+        count: points.node_uptime_count,
+        points: points.node_uptime_points,
+      },
+      PULL_REQUEST_MERGED: {
+        count: points.pull_request_merged_count,
+        points: points.pull_request_merged_points,
+      },
+      SEND_TRANSACTION: {
+        count: points.send_transaction_count,
+        points: points.send_transaction_points,
+      },
+      SOCIAL_MEDIA_PROMOTION: {
+        count: points.social_media_promotion_count,
+        points: points.social_media_promotion_points,
+      },
     };
   }
 
@@ -320,7 +301,6 @@ export class EventsService {
     return this.prisma.event.findFirst({
       where: {
         url,
-        deleted_at: null,
       },
     });
   }
@@ -343,7 +323,6 @@ export class EventsService {
           lt: end,
         },
         user_id: user.id,
-        deleted_at: null,
       },
     });
     return {
@@ -417,7 +396,6 @@ export class EventsService {
       where: {
         type,
         user_id: id,
-        deleted_at: null,
         ...dateFilter,
       },
     });
@@ -466,8 +444,7 @@ export class EventsService {
       adjustedPoints =
         Math.floor(
           deposit.amount /
-            ORE_TO_IRON /
-            this.config.get<number>('MIN_DEPOSIT_SIZE'),
+            (this.config.get<number>('MIN_DEPOSIT_SIZE') * ORE_TO_IRON),
         ) * POINTS_PER_CATEGORY[type];
     } else {
       adjustedPoints = POINTS_PER_CATEGORY[type];
@@ -507,11 +484,10 @@ export class EventsService {
       const pointDifference = adjustedPoints - existingEvent.points;
 
       // Only update event points if necessary
-      if (pointDifference !== 0 || existingEvent.deleted_at) {
+      if (pointDifference !== 0) {
         existingEvent = await client.event.update({
           data: {
             points: adjustedPoints,
-            deleted_at: null,
           },
           where: {
             id: existingEvent.id,
@@ -564,44 +540,45 @@ export class EventsService {
   }
 
   async updateLatestPoints(userId: number, type: EventType): Promise<void> {
-    const occurredAtAggregate = await this.prisma.event.aggregate({
+    const occurredAtAggregate = await this.prisma.readClient.event.aggregate({
       _max: {
         occurred_at: true,
       },
       where: {
         type,
         user_id: userId,
-        deleted_at: null,
       },
     });
     const latestOccurredAt = occurredAtAggregate._max.occurred_at;
 
-    const pointsAggregate = await this.prisma.event.aggregate({
+    const pointsAggregate = await this.prisma.readClient.event.aggregate({
       _sum: {
+        points: true,
+      },
+      _count: {
         points: true,
       },
       where: {
         type,
         user_id: userId,
-        deleted_at: null,
       },
     });
     const points = pointsAggregate._sum.points ?? 0;
+    const count = pointsAggregate._count.points ?? 0;
 
-    const totalPointsAggregate = await this.prisma.event.aggregate({
+    const totalPointsAggregate = await this.prisma.readClient.event.aggregate({
       _sum: {
         points: true,
       },
       where: {
         user_id: userId,
-        deleted_at: null,
       },
     });
     const totalPoints = totalPointsAggregate._sum.points ?? 0;
 
     await this.userPointsService.upsert({
       userId,
-      points: { [type]: { points, latestOccurredAt } },
+      points: { [type]: { points, count, latestOccurredAt } },
       totalPoints,
     });
   }
@@ -642,11 +619,7 @@ export class EventsService {
     event: Event,
     prisma: BasePrismaClient,
   ): Promise<Event> {
-    const updated = await prisma.event.update({
-      data: {
-        deleted_at: new Date().toISOString(),
-        points: 0,
-      },
+    const record = await prisma.event.delete({
       where: {
         id: event.id,
       },
@@ -654,7 +627,7 @@ export class EventsService {
 
     await this.addUpdateLatestPointsJob(event.user_id, event.type);
 
-    return updated;
+    return record;
   }
 
   async getLifetimeEventsMetricsForUser(
@@ -663,31 +636,23 @@ export class EventsService {
   ): Promise<SerializedEventMetrics> {
     const rank = await this.getLifetimeEventsRankForUser(user, events);
 
-    const count = await this.prisma.readClient.event.count({
-      where: {
-        type: {
-          in: events,
-        },
-        user_id: user.id,
-        deleted_at: null,
-      },
-    });
-
     return {
       rank: rank.rank,
       points: rank.points,
-      count: count,
+      count: rank.count,
     };
   }
 
   async getLifetimeEventsRankForUser(
     user: User,
     events: EventType[],
-  ): Promise<{ points: number; rank: number }> {
+  ): Promise<{ points: number; count: number; rank: number }> {
     const queryPoints = events
       .map((e) => e.toLowerCase() + '_points')
       .join(' + ');
-
+    const queryCounts = events
+      .map((e) => e.toLowerCase() + '_count')
+      .join(' + ');
     const queryLastOccurredAt = events
       .map((e) => e.toLowerCase() + '_last_occurred_at')
       .join(', ');
@@ -697,6 +662,7 @@ export class EventsService {
         SELECT
           users.id as user_id,
           ${queryPoints} as points,
+          ${queryCounts} as count,
           RANK() OVER (
             ORDER BY
               COALESCE(${queryPoints}, 0) DESC,
@@ -714,6 +680,7 @@ export class EventsService {
       SELECT
         user_id,
         points,
+        count,
         rank::INTEGER
       FROM
         user_ranks
@@ -722,9 +689,10 @@ export class EventsService {
       LIMIT
         1;`;
 
-    const rank = await this.prisma.$queryRawUnsafe<
+    const rank = await this.prisma.readClient.$queryRawUnsafe<
       {
         points: number;
+        count: number;
         rank: number;
       }[]
     >(query, user.id);
@@ -736,6 +704,7 @@ export class EventsService {
     return {
       rank: rank[0].rank,
       points: rank[0].points,
+      count: rank[0].count,
     };
   }
 

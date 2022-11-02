@@ -16,7 +16,6 @@ model Event {
   occurred_at         DateTime         @db.Timestamp(6)
   points              Int
   user_id             Int
-  deleted_at          DateTime?        @db.Timestamp(6)
   deposit_id          Int?             @unique(map: "uq_events_on_deposit_id")
   block_id            Int?             @unique(map: "uq_events_on_block_id")
   deposit             Deposit?         @relation(fields: [deposit_id], references: [id])
@@ -25,7 +24,6 @@ model Event {
   url                 String?          @db.VarChar
   masp_transaction_id Int?             @unique(map: "uq_events_on_masp_transaction_id")
   MaspTransaction     MaspTransaction? @relation(fields: [masp_transaction_id], references: [id])
-
   @@index([deposit_id], name: "index_events_on_deposit_id")
   @@index([masp_transaction_id], name: "index_events_on_masp_transaction_id")
   @@index([block_id], name: "index_events_on_block_id")
@@ -183,18 +181,25 @@ model UserPoints {
   user_id                                 Int       @unique
   total_points                            Int       @default(0)
   block_mined_points                      Int       @default(0)
+  block_mined_count                       Int       @default(0)
   block_mined_last_occurred_at            DateTime? @db.Timestamp(6)
   bug_caught_points                       Int       @default(0)
+  bug_caught_count                        Int       @default(0)
   bug_caught_last_occurred_at             DateTime? @db.Timestamp(6)
   community_contribution_points           Int       @default(0)
+  community_contribution_count            Int       @default(0)
   community_contribution_last_occurred_at DateTime? @db.Timestamp(6)
   pull_request_merged_points              Int       @default(0)
+  pull_request_merged_count               Int       @default(0)
   pull_request_merged_last_occurred_at    DateTime? @db.Timestamp(6)
   social_media_promotion_points           Int       @default(0)
+  social_media_promotion_count          Int       @default(0)
   social_media_promotion_last_occurred_at DateTime? @db.Timestamp(6)
   node_uptime_points                      Int       @default(0)
+  node_uptime_count                       Int       @default(0)
   node_uptime_last_occurred_at            DateTime? @db.Timestamp(6)
   send_transaction_points                 Int       @default(0)
+  send_transaction_count                 Int       @default(0)
   send_transaction_last_occurred_at       DateTime? @db.Timestamp(6)
   user                                    User      @relation(fields: [user_id], references: [id])
 

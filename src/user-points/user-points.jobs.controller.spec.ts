@@ -121,30 +121,37 @@ describe('UserPointsJobsController', () => {
         points: {
           BLOCK_MINED: {
             points: 50,
+            count: 1,
             latestOccurredAt: new Date(),
           },
           BUG_CAUGHT: {
             points: 50,
+            count: 1,
             latestOccurredAt: new Date(),
           },
           COMMUNITY_CONTRIBUTION: {
             points: 0,
+            count: 0,
             latestOccurredAt: new Date(),
           },
           PULL_REQUEST_MERGED: {
             points: 0,
+            count: 0,
             latestOccurredAt: new Date(),
           },
           SOCIAL_MEDIA_PROMOTION: {
             points: 0,
+            count: 0,
             latestOccurredAt: new Date(),
           },
           NODE_UPTIME: {
             points: 0,
+            count: 0,
             latestOccurredAt: new Date(),
           },
           SEND_TRANSACTION: {
             points: 0,
+            count: 0,
             latestOccurredAt: new Date(),
           },
         },
@@ -172,30 +179,37 @@ describe('UserPointsJobsController', () => {
         points: {
           BLOCK_MINED: {
             points: 50,
+            count: 1,
             latestOccurredAt: new Date(),
           },
           BUG_CAUGHT: {
             points: 50,
+            count: 1,
             latestOccurredAt: new Date(),
           },
           COMMUNITY_CONTRIBUTION: {
             points: 0,
+            count: 0,
             latestOccurredAt: new Date(),
           },
           PULL_REQUEST_MERGED: {
             points: 0,
+            count: 0,
             latestOccurredAt: new Date(),
           },
           SOCIAL_MEDIA_PROMOTION: {
             points: 0,
+            count: 0,
             latestOccurredAt: new Date(),
           },
           NODE_UPTIME: {
             points: 0,
+            count: 0,
             latestOccurredAt: new Date(),
           },
           SEND_TRANSACTION: {
             points: 0,
+            count: 0,
             latestOccurredAt: new Date(),
           },
         },
