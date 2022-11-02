@@ -6,6 +6,7 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
+import { Decimal } from '@prisma/client/runtime';
 import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { ApiConfigService } from '../api-config/api-config.service';
@@ -433,7 +434,7 @@ describe('BlocksService', () => {
 
       const metrics = await blocksService.getDateMetrics(date);
       expect(metrics).toMatchObject({
-        averageBlockTimeMs: expect.any(Number),
+        averageBlockTimeMs: expect.any(Decimal),
         averageDifficultyMillis: expect.any(Number),
         blocksCount: expect.any(Number),
         blocksWithGraffitiCount: expect.any(Number),
