@@ -24,53 +24,48 @@ export class TransactionsService {
     private readonly prisma: PrismaService,
   ) {}
 
-  async bulkUpsertWithClient(
+  async createManyWithClient(
     prisma: BasePrismaClient,
     transactions: UpsertTransactionOptions[],
   ): Promise<Transaction[]> {
-    const records = [];
-    for (const transaction of transactions) {
-      records.push(await this.upsert(prisma, transaction));
-    }
-    return records;
+    const networkVersion = this.config.get<number>('NETWORK_VERSION');
+
+    await prisma.transaction.createMany({
+      data: transactions.map((tx) => ({
+        hash: standardizeHash(tx.hash),
+        network_version: networkVersion,
+        fee: tx.fee,
+        size: tx.size,
+        notes: classToPlain(tx.notes),
+        spends: classToPlain(tx.spends),
+      })),
+      skipDuplicates: true,
+    });
+
+    return await this.findMany(prisma, transactions);
   }
 
-  async bulkUpsert(
+  async findMany(
+    prisma: BasePrismaClient,
     transactions: UpsertTransactionOptions[],
   ): Promise<Transaction[]> {
-    return this.prisma.$transaction(async (prisma) => {
-      return this.bulkUpsertWithClient(prisma, transactions);
+    const networkVersion = this.config.get<number>('NETWORK_VERSION');
+
+    return await prisma.transaction.findMany({
+      where: {
+        hash: {
+          in: transactions.map((tx) => standardizeHash(tx.hash)),
+        },
+        network_version: networkVersion,
+      },
     });
   }
 
-  private async upsert(
-    prisma: BasePrismaClient,
-    { hash, fee, size, notes, spends }: UpsertTransactionOptions,
-  ): Promise<Transaction> {
-    const networkVersion = this.config.get<number>('NETWORK_VERSION');
-    hash = standardizeHash(hash);
-
-    return prisma.transaction.upsert({
-      create: {
-        hash,
-        network_version: networkVersion,
-        fee,
-        size,
-        notes: classToPlain(notes),
-        spends: classToPlain(spends),
-      },
-      update: {
-        fee,
-        size,
-        notes: classToPlain(notes),
-        spends: classToPlain(spends),
-      },
-      where: {
-        uq_transactions_on_hash_and_network_version: {
-          hash,
-          network_version: networkVersion,
-        },
-      },
+  async createMany(
+    transactions: UpsertTransactionOptions[],
+  ): Promise<Transaction[]> {
+    return this.prisma.$transaction(async (prisma) => {
+      return this.createManyWithClient(prisma, transactions);
     });
   }
 

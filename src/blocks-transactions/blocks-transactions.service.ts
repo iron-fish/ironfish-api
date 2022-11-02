@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable, UnprocessableEntityException } from '@nestjs/common';
-import { Block, BlockTransaction, Transaction } from '@prisma/client';
+import { Block, BlockTransaction, Prisma, Transaction } from '@prisma/client';
 import { SortOrder } from '../common/enums/sort-order';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
@@ -23,6 +23,36 @@ export class BlocksTransactionsService {
           transaction_id: transactionId,
         },
       },
+    });
+  }
+
+  async deleteMany(
+    prisma: BasePrismaClient,
+    block: Block,
+    transactions: Transaction[],
+  ): Promise<Prisma.BatchPayload> {
+    return prisma.blockTransaction.deleteMany({
+      where: {
+        block_id: block.id,
+        transaction_id: {
+          in: transactions.map((tx) => tx.id),
+        },
+      },
+    });
+  }
+
+  async createMany(
+    prisma: BasePrismaClient,
+    block: Block,
+    transactions: { transaction: Transaction; index: number }[],
+  ): Promise<Prisma.BatchPayload> {
+    return prisma.blockTransaction.createMany({
+      data: transactions.map((tx) => ({
+        block_id: block.id,
+        transaction_id: tx.transaction.id,
+        index: tx.index,
+      })),
+      skipDuplicates: true,
     });
   }
 

@@ -58,7 +58,7 @@ export class TransactionsController {
   @ApiExcludeEndpoint()
   @Post()
   @UseGuards(ApiKeyGuard)
-  async bulkUpsert(
+  async bulkCreate(
     @Body(
       new ValidationPipe({
         errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
@@ -67,7 +67,7 @@ export class TransactionsController {
     )
     upsertTransactionsDto: UpsertTransactionsDto,
   ): Promise<List<SerializedTransaction>> {
-    const transactions = await this.transactionsService.bulkUpsert(
+    const transactions = await this.transactionsService.createMany(
       upsertTransactionsDto.transactions,
     );
     return {
