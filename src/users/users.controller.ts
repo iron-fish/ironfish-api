@@ -130,9 +130,11 @@ export class UsersController {
     let nodeUptime: SerializedUserMetrics['node_uptime'];
 
     if (query.granularity === MetricsGranularity.LIFETIME) {
-      eventMetrics = await this.eventsService.getLifetimeEventMetricsForUser(
-        user,
-      );
+      const userPoints = await this.userPointsService.findOrThrow(user.id);
+      points = userPoints.total_points;
+
+      eventMetrics =
+        this.eventsService.getLifetimeEventMetricsForUser(userPoints);
 
       pools = {
         main: await this.eventsService.getLifetimeEventsMetricsForUser(user, [
@@ -150,9 +152,6 @@ export class UsersController {
         total_hours: uptime?.total_hours ?? 0,
         last_checked_in: uptime?.last_checked_in?.toISOString() ?? null,
       };
-
-      const userPoints = await this.userPointsService.findOrThrow(user.id);
-      points = userPoints.total_points;
     } else {
       if (query.start === undefined || query.end === undefined) {
         throw new UnprocessableEntityException(
