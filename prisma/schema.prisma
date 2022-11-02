@@ -9,21 +9,23 @@ datasource db {
 }
 
 model Event {
-  id          Int       @id @default(autoincrement())
-  created_at  DateTime  @default(now()) @db.Timestamp(6)
-  updated_at  DateTime  @default(now()) @updatedAt @db.Timestamp(6)
-  type        EventType
-  occurred_at DateTime  @db.Timestamp(6)
-  points      Int
-  user_id     Int
-  deposit_id  Int?      @unique(map: "uq_events_on_deposit_id")
-  block_id    Int?      @unique(map: "uq_events_on_block_id")
-  deposit     Deposit?  @relation(fields: [deposit_id], references: [id])
-  block       Block?    @relation(fields: [block_id], references: [id])
-  user        User      @relation(fields: [user_id], references: [id])
-  url         String?   @db.VarChar
-
+  id                  Int              @id @default(autoincrement())
+  created_at          DateTime         @default(now()) @db.Timestamp(6)
+  updated_at          DateTime         @default(now()) @updatedAt @db.Timestamp(6)
+  type                EventType
+  occurred_at         DateTime         @db.Timestamp(6)
+  points              Int
+  user_id             Int
+  deposit_id          Int?             @unique(map: "uq_events_on_deposit_id")
+  block_id            Int?             @unique(map: "uq_events_on_block_id")
+  deposit             Deposit?         @relation(fields: [deposit_id], references: [id])
+  block               Block?           @relation(fields: [block_id], references: [id])
+  user                User             @relation(fields: [user_id], references: [id])
+  url                 String?          @db.VarChar
+  masp_transaction_id Int?             @unique(map: "uq_events_on_masp_transaction_id")
+  MaspTransaction     MaspTransaction? @relation(fields: [masp_transaction_id], references: [id])
   @@index([deposit_id], name: "index_events_on_deposit_id")
+  @@index([masp_transaction_id], name: "index_events_on_masp_transaction_id")
   @@index([block_id], name: "index_events_on_block_id")
   @@index([user_id], name: "index_events_on_user_id")
   @@map("events")
@@ -234,4 +236,27 @@ model DepositHead {
   block_hash String @db.VarChar
 
   @@map("deposit_head")
+}
+
+model MaspTransaction {
+  id               Int                 @id @default(autoincrement())
+  created_at       DateTime            @default(now()) @db.Timestamp(6)
+  updated_at       DateTime            @default(now()) @updatedAt @db.Timestamp(6)
+  transaction_hash String              @db.VarChar
+  block_hash       String              @db.VarChar
+  asset_identifier String              @db.VarChar
+  type             MaspTransactionType
+  block_sequence   Int
+  network_version  Int
+  main             Boolean
+  amount           Int
+  event            Event?
+
+  @@map("masp_transactions")
+}
+
+enum MaspTransactionType {
+  TRANSFER
+  BURN
+  MINT
 }
