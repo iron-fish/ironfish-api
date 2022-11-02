@@ -6,6 +6,8 @@ import faker from 'faker';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
 import { ApiConfigService } from '../api-config/api-config.service';
+import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
+import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
@@ -16,12 +18,14 @@ const API_KEY = 'test';
 describe('EventsController', () => {
   let app: INestApplication;
   let config: ApiConfigService;
+  let graphileWorkerService: GraphileWorkerService;
   let prisma: PrismaService;
   let usersService: UsersService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
     config = app.get(ApiConfigService);
+    graphileWorkerService = app.get(GraphileWorkerService);
     prisma = app.get(PrismaService);
     usersService = app.get(UsersService);
     await app.init();
@@ -32,23 +36,6 @@ describe('EventsController', () => {
   });
 
   describe('GET /events/', () => {
-    describe('with no filters', () => {
-      it('returns a list of events', async () => {
-        const { body } = await request(app.getHttpServer())
-          .get(`/events`)
-          .expect(HttpStatus.OK);
-
-        const { data } = body;
-        expect((data as unknown[]).length).toBeGreaterThan(0);
-        expect((data as unknown[])[0]).toMatchObject({
-          id: expect.any(Number),
-          user_id: expect.any(Number),
-          type: expect.any(String),
-          metadata: expect.any(Object),
-        });
-      });
-    });
-
     describe('with a user filter', () => {
       it('returns events only for that user', async () => {
         const user = await usersService.create({
@@ -99,6 +86,23 @@ describe('EventsController', () => {
         }
       });
     });
+
+    describe('with no filters', () => {
+      it('returns a list of events', async () => {
+        const { body } = await request(app.getHttpServer())
+          .get(`/events`)
+          .expect(HttpStatus.OK);
+
+        const { data } = body;
+        expect((data as unknown[]).length).toBeGreaterThan(0);
+        expect((data as unknown[])[0]).toMatchObject({
+          id: expect.any(Number),
+          user_id: expect.any(Number),
+          type: expect.any(String),
+          metadata: expect.any(Object),
+        });
+      });
+    });
   });
 
   describe('POST /events', () => {
@@ -142,67 +146,40 @@ describe('EventsController', () => {
     });
 
     describe('with a valid payload', () => {
-      it('creates an event record', async () => {
+      it('enqueues a worker job to create the event', async () => {
+        const addJob = jest
+          .spyOn(graphileWorkerService, 'addJob')
+          .mockImplementationOnce(jest.fn());
+
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: uuid(),
           country_code: faker.address.countryCode('alpha-3'),
         });
-        const occurredAt = new Date().toISOString();
+        const occurredAt = new Date();
         const type = EventType.BUG_CAUGHT;
         const points = 10;
-        const { body } = await request(app.getHttpServer())
-          .post(`/events`)
+        await request(app.getHttpServer())
+          .post('/events')
           .set('Authorization', `Bearer ${API_KEY}`)
           .send({
             graffiti: user.graffiti,
             type,
             points,
-            occurred_at: occurredAt,
+            occurred_at: occurredAt.toISOString(),
           })
-          .expect(HttpStatus.CREATED);
+          .expect(HttpStatus.ACCEPTED);
 
-        expect(body).toMatchObject({
-          id: expect.any(Number),
-          user_id: user.id,
-          type,
-          points,
-          occurred_at: occurredAt,
-        });
-      });
-
-      it('creates an event with url parameter', async () => {
-        const user = await usersService.create({
-          email: faker.internet.email(),
-          graffiti: uuid(),
-          country_code: faker.address.countryCode('alpha-3'),
-        });
-        const occurredAt = new Date().toISOString();
-        const type = EventType.PULL_REQUEST_MERGED;
-        const url = `https://github.com/iron-fish/ironfish/pull/${uuid().toString()}`;
-        const points = 10;
-        const { body } = await request(app.getHttpServer())
-          .post(`/events`)
-          .set('Authorization', `Bearer ${API_KEY}`)
-          .send({
-            graffiti: user.graffiti,
+        expect(addJob).toHaveBeenCalledWith(
+          GraphileWorkerPattern.CREATE_EVENT,
+          {
             type,
             points,
-            occurred_at: occurredAt,
-            url,
-          })
-          .expect(HttpStatus.CREATED);
-
-        expect(body).toMatchObject({
-          id: expect.any(Number),
-          user_id: user.id,
-          type,
-          points,
-          occurred_at: occurredAt,
-          metadata: {
-            url: url,
+            occurredAt,
+            userId: user.id,
+            url: undefined,
           },
-        });
+        );
       });
     });
   });

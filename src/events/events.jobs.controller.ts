@@ -10,6 +10,7 @@ import { GraphileWorkerHandlerResponse } from '../graphile-worker/interfaces/gra
 import { LoggerService } from '../logger/logger.service';
 import { UsersService } from '../users/users.service';
 import { EventsService } from './events.service';
+import { CreateEventOptions } from './interfaces/create-event-options';
 import { DeleteBlockMinedEventOptions } from './interfaces/delete-block-mined-event-options';
 import { UpsertBlockMinedEventOptions } from './interfaces/upsert-block-mined-event-options';
 import { EventType } from '.prisma/client';
@@ -22,6 +23,15 @@ export class EventsJobsController {
     private readonly loggerService: LoggerService,
     private readonly usersService: UsersService,
   ) {}
+
+  @MessagePattern(GraphileWorkerPattern.CREATE_EVENT)
+  @UseFilters(new GraphileWorkerException())
+  async createEvent(
+    options: CreateEventOptions,
+  ): Promise<GraphileWorkerHandlerResponse> {
+    await this.eventsService.create(options);
+    return { requeue: false };
+  }
 
   @MessagePattern(GraphileWorkerPattern.UPSERT_BLOCK_MINED_EVENT)
   @UseFilters(new GraphileWorkerException())
