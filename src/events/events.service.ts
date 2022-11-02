@@ -658,19 +658,10 @@ export class EventsService {
   ): Promise<SerializedEventMetrics> {
     const rank = await this.getLifetimeEventsRankForUser(user, events);
 
-    const count = await this.prisma.readClient.event.count({
-      where: {
-        type: {
-          in: events,
-        },
-        user_id: user.id,
-      },
-    });
-
     return {
       rank: rank.rank,
       points: rank.points,
-      count: count,
+      count: rank.count,
     };
   }
 
@@ -684,7 +675,6 @@ export class EventsService {
     const queryCounts = events
       .map((e) => e.toLowerCase() + '_count')
       .join(' + ');
-
     const queryLastOccurredAt = events
       .map((e) => e.toLowerCase() + '_last_occurred_at')
       .join(', ');
