@@ -24,6 +24,7 @@ model Event {
   url                 String?          @db.VarChar
   masp_transaction_id Int?             @unique(map: "uq_events_on_masp_transaction_id")
   MaspTransaction     MaspTransaction? @relation(fields: [masp_transaction_id], references: [id])
+
   @@index([deposit_id], name: "index_events_on_deposit_id")
   @@index([masp_transaction_id], name: "index_events_on_masp_transaction_id")
   @@index([block_id], name: "index_events_on_block_id")
@@ -170,6 +171,9 @@ enum EventType {
   SOCIAL_MEDIA_PROMOTION
   NODE_UPTIME
   SEND_TRANSACTION
+  MASP_TRANSFER
+  MASP_BURN
+  MASP_MINT
 
   @@map("event_type")
 }
@@ -193,14 +197,23 @@ model UserPoints {
   pull_request_merged_count               Int       @default(0)
   pull_request_merged_last_occurred_at    DateTime? @db.Timestamp(6)
   social_media_promotion_points           Int       @default(0)
-  social_media_promotion_count          Int       @default(0)
+  social_media_promotion_count            Int       @default(0)
   social_media_promotion_last_occurred_at DateTime? @db.Timestamp(6)
   node_uptime_points                      Int       @default(0)
   node_uptime_count                       Int       @default(0)
   node_uptime_last_occurred_at            DateTime? @db.Timestamp(6)
   send_transaction_points                 Int       @default(0)
-  send_transaction_count                 Int       @default(0)
+  send_transaction_count                  Int       @default(0)
   send_transaction_last_occurred_at       DateTime? @db.Timestamp(6)
+  masp_mint_points                        Int       @default(0)
+  masp_mint_count                         Int       @default(0)
+  masp_mint_last_occurred_at              DateTime? @db.Timestamp(6)
+  masp_burn_points                        Int       @default(0)
+  masp_burn_count                         Int       @default(0)
+  masp_burn_last_occurred_at              DateTime? @db.Timestamp(6)
+  masp_transfer_points                    Int       @default(0)
+  masp_transfer_count                     Int       @default(0)
+  masp_transfer_last_occurred_at          DateTime? @db.Timestamp(6)
   user                                    User      @relation(fields: [user_id], references: [id])
 
   @@index([user_id], map: "index_user_points_on_user_id")
@@ -245,6 +258,7 @@ model MaspTransaction {
   transaction_hash String              @db.VarChar
   block_hash       String              @db.VarChar
   asset_identifier String              @db.VarChar
+  graffiti         String              @db.VarChar
   type             MaspTransactionType
   block_sequence   Int
   network_version  Int
@@ -252,6 +266,7 @@ model MaspTransaction {
   amount           Int
   event            Event?
 
+  @@unique([transaction_hash, graffiti, type], name: "uq_masp_on_transaction_hash_graffiti_type", map: "uq_masp_on_transaction_hash_graffiti_type")
   @@map("masp_transactions")
 }
 
