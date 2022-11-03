@@ -259,19 +259,12 @@ model MaspTransaction {
   block_hash       String              @db.VarChar
   asset_identifier String              @db.VarChar
   graffiti         String              @db.VarChar
-  type             MaspTransactionType
   block_sequence   Int
   network_version  Int
   main             Boolean
   amount           Int
   event            Event?
 
-  @@unique([transaction_hash, graffiti, type], name: "uq_masp_on_transaction_hash_graffiti_type", map: "uq_masp_on_transaction_hash_graffiti_type")
+  @@unique([transaction_hash, graffiti], name: "uq_masp_on_transaction_hash_graffiti", map: "uq_masp_on_transaction_hash_graffiti")
   @@map("masp_transactions")
-}
-
-enum MaspTransactionType {
-  TRANSFER
-  BURN
-  MINT
 }
