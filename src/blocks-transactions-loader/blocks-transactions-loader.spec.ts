@@ -44,7 +44,7 @@ describe('BlocksTransactionsLoader', () => {
     jest.clearAllMocks();
   });
 
-  describe('bulkUpsert', () => {
+  describe('createMany', () => {
     it('stores a Block, Transaction, and BlockTransaction record', async () => {
       const blockHash1 = uuid();
       const blockHash2 = uuid();
@@ -58,7 +58,7 @@ describe('BlocksTransactionsLoader', () => {
         notes: [{ commitment: uuid() }],
         spends: [{ nullifier: uuid() }],
       };
-      const blocks = await blocksTransactionsLoader.bulkUpsert({
+      const blocks = await blocksTransactionsLoader.createMany({
         blocks: [
           {
             hash: blockHash1,
@@ -139,7 +139,7 @@ describe('BlocksTransactionsLoader', () => {
           graffiti,
           country_code: faker.address.countryCode('alpha-3'),
         });
-        const blocks = await blocksTransactionsLoader.bulkUpsert({
+        const blocks = await blocksTransactionsLoader.createMany({
           blocks: [
             {
               hash: uuid(),
@@ -172,7 +172,7 @@ describe('BlocksTransactionsLoader', () => {
           graffiti,
           country_code: faker.address.countryCode('alpha-3'),
         });
-        const blocks = await blocksTransactionsLoader.bulkUpsert({
+        const blocks = await blocksTransactionsLoader.createMany({
           blocks: [
             {
               hash: uuid(),
@@ -200,7 +200,7 @@ describe('BlocksTransactionsLoader', () => {
       });
 
       it('queues a job to sync a daily snapshot', async () => {
-        await blocksTransactionsLoader.bulkUpsert({
+        await blocksTransactionsLoader.createMany({
           blocks: [
             {
               hash: uuid(),

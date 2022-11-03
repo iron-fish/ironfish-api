@@ -54,7 +54,7 @@ export class BlocksController {
   @ApiExcludeEndpoint()
   @Post()
   @UseGuards(ApiKeyGuard)
-  async bulkUpsert(
+  async createMany(
     @Body(
       new ValidationPipe({
         errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
@@ -63,7 +63,7 @@ export class BlocksController {
     )
     upsertBlocksDto: UpsertBlocksDto,
   ): Promise<List<SerializedBlock>> {
-    const blocks = await this.blocksTransactionsLoader.bulkUpsert(
+    const blocks = await this.blocksTransactionsLoader.createMany(
       upsertBlocksDto,
     );
     return {

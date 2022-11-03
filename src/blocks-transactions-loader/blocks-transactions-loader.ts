@@ -7,6 +7,7 @@ import { BlocksService } from '../blocks/blocks.service';
 import { BlockDto, UpsertBlocksDto } from '../blocks/dto/upsert-blocks.dto';
 import { BlocksDailyService } from '../blocks-daily/blocks-daily.service';
 import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
+import { standardizeHash } from '../common/utils/hash';
 import { EventsService } from '../events/events.service';
 import { DeleteBlockMinedEventOptions } from '../events/interfaces/delete-block-mined-event-options';
 import { UpsertBlockMinedEventOptions } from '../events/interfaces/upsert-block-mined-event-options';
@@ -27,7 +28,7 @@ export class BlocksTransactionsLoader {
     private readonly eventsService: EventsService,
   ) {}
 
-  async bulkUpsert({
+  async createMany({
     blocks,
   }: UpsertBlocksDto): Promise<(Block & { transactions: Transaction[] })[]> {
     const deleteBlockMinedPayloads: DeleteBlockMinedEventOptions[] = [];
@@ -91,22 +92,31 @@ export class BlocksTransactionsLoader {
             upsertBlockMinedPayloads.push(upsertBlockMinedOptions);
           }
 
+          // Create new Transaction records
           const transactions =
-            await this.transactionsService.bulkUpsertWithClient(
+            await this.transactionsService.createManyWithClient(
               prisma,
               block.transactions,
             );
 
-          for (let i = 0; i < transactions.length; ++i) {
-            const transaction = transactions[i];
-
-            await this.blocksTransactionsService.upsert(
-              prisma,
-              createdBlock,
-              transaction,
-              i,
+          // Get the index of the each transaction in the block
+          const indexedTransactions = block.transactions.map((dto, index) => {
+            const transaction = transactions.find(
+              (t) => t.hash === standardizeHash(dto.hash),
             );
-          }
+
+            if (transaction === undefined) {
+              throw new Error('Transaction must have been created');
+            }
+
+            return { transaction, index };
+          });
+
+          await this.blocksTransactionsService.createMany(
+            prisma,
+            createdBlock,
+            indexedTransactions,
+          );
 
           records.push({ ...createdBlock, transactions });
         },
