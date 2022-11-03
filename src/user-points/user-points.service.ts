@@ -44,6 +44,9 @@ export class UserPointsService {
       const socialMediaPromotion = points[EventType.SOCIAL_MEDIA_PROMOTION];
       const nodeUptime = points[EventType.NODE_UPTIME];
       const transactionSent = points[EventType.SEND_TRANSACTION];
+      const maspMint = points[EventType.MASP_MINT];
+      const maspBurn = points[EventType.MASP_BURN];
+      const maspTransfer = points[EventType.MASP_TRANSFER];
 
       if (blockMined) {
         options.block_mined_last_occurred_at = blockMined.latestOccurredAt;
@@ -83,6 +86,21 @@ export class UserPointsService {
           transactionSent.latestOccurredAt;
         options.send_transaction_points = transactionSent.points;
         options.send_transaction_count = transactionSent.count;
+      }
+      if (maspMint) {
+        options.masp_mint_last_occurred_at = maspMint.latestOccurredAt;
+        options.masp_mint_points = maspMint.points;
+        options.masp_mint_count = maspMint.count;
+      }
+      if (maspBurn) {
+        options.masp_burn_last_occurred_at = maspBurn.latestOccurredAt;
+        options.masp_burn_points = maspBurn.points;
+        options.masp_burn_count = maspBurn.count;
+      }
+      if (maspTransfer) {
+        options.masp_transfer_last_occurred_at = maspTransfer.latestOccurredAt;
+        options.masp_transfer_points = maspTransfer.points;
+        options.masp_transfer_count = maspTransfer.count;
       }
     }
 
