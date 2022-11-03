@@ -208,6 +208,21 @@ export class EventsService {
         user,
         EventType.SEND_TRANSACTION,
       );
+    const maspMintAggregate =
+      await this.getLifetimePointsAndOccurredAtForUserAndType(
+        user,
+        EventType.MASP_MINT,
+      );
+    const maspBurnAggregate =
+      await this.getLifetimePointsAndOccurredAtForUserAndType(
+        user,
+        EventType.MASP_BURN,
+      );
+    const maspTransferAggregate =
+      await this.getLifetimePointsAndOccurredAtForUserAndType(
+        user,
+        EventType.MASP_TRANSFER,
+      );
     const totalPoints =
       blockMinedAggregate.points +
       bugCaughtAggregate.points +
@@ -215,7 +230,10 @@ export class EventsService {
       pullRequestAggregate.points +
       socialMediaAggregate.points +
       nodeUptimeAggregate.points +
-      sendTransactionAggregate.points;
+      sendTransactionAggregate.points +
+      maspMintAggregate.points +
+      maspBurnAggregate.points +
+      maspTransferAggregate.points;
 
     return {
       userId: user.id,
@@ -228,6 +246,9 @@ export class EventsService {
         SOCIAL_MEDIA_PROMOTION: socialMediaAggregate,
         NODE_UPTIME: nodeUptimeAggregate,
         SEND_TRANSACTION: sendTransactionAggregate,
+        MASP_BURN: maspBurnAggregate,
+        MASP_MINT: maspMintAggregate,
+        MASP_TRANSFER: maspTransferAggregate,
       },
     };
   }
@@ -293,6 +314,18 @@ export class EventsService {
       SOCIAL_MEDIA_PROMOTION: {
         count: points.social_media_promotion_count,
         points: points.social_media_promotion_points,
+      },
+      MASP_BURN: {
+        count: points.masp_burn_count,
+        points: points.masp_burn_points,
+      },
+      MASP_MINT: {
+        count: points.masp_mint_count,
+        points: points.masp_mint_points,
+      },
+      MASP_TRANSFER: {
+        count: points.masp_transfer_count,
+        points: points.masp_transfer_points,
       },
     };
   }
@@ -366,6 +399,24 @@ export class EventsService {
         SEND_TRANSACTION: await this.getTotalEventTypeMetricsForUser(
           user,
           EventType.SEND_TRANSACTION,
+          start,
+          end,
+        ),
+        MASP_BURN: await this.getTotalEventTypeMetricsForUser(
+          user,
+          EventType.MASP_BURN,
+          start,
+          end,
+        ),
+        MASP_MINT: await this.getTotalEventTypeMetricsForUser(
+          user,
+          EventType.MASP_MINT,
+          start,
+          end,
+        ),
+        MASP_TRANSFER: await this.getTotalEventTypeMetricsForUser(
+          user,
+          EventType.MASP_TRANSFER,
           start,
           end,
         ),

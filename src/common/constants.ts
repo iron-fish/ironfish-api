@@ -18,6 +18,13 @@ export const NODE_UPTIME_CREDIT_HOURS = 12; // Credit in 12 hour chunks
 export const ORE_TO_IRON = 100000000;
 export const SEND_TRANSACTION_LIMIT_ORE = ORE_TO_IRON * 0.1; // Only transactions >= to this amount will get points
 
+// MASP Transaction types, if changed, also needs to be changed in schema.prisma for DB level
+export enum MaspTransactionTypes {
+  TRANSFER,
+  BURN,
+  MINT,
+}
+
 // Event categories
 export const WEEKLY_POINT_LIMITS_BY_EVENT_TYPE: Record<EventType, number> = {
   [EventType.BLOCK_MINED]: 1000,
@@ -27,6 +34,9 @@ export const WEEKLY_POINT_LIMITS_BY_EVENT_TYPE: Record<EventType, number> = {
   [EventType.SOCIAL_MEDIA_PROMOTION]: 1000,
   [EventType.NODE_UPTIME]: 140,
   [EventType.SEND_TRANSACTION]: Number.MAX_VALUE,
+  [EventType.MASP_TRANSFER]: 1,
+  [EventType.MASP_MINT]: 1,
+  [EventType.MASP_BURN]: 1,
 };
 
 export const POINTS_PER_CATEGORY: Record<EventType, number> = {
@@ -37,4 +47,7 @@ export const POINTS_PER_CATEGORY: Record<EventType, number> = {
   [EventType.SOCIAL_MEDIA_PROMOTION]: 100,
   [EventType.NODE_UPTIME]: 10,
   [EventType.SEND_TRANSACTION]: 1,
+  [EventType.MASP_TRANSFER]: 1,
+  [EventType.MASP_MINT]: 1,
+  [EventType.MASP_BURN]: 1,
 };
