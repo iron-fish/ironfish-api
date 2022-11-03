@@ -42,7 +42,7 @@ export class TransactionsService {
       skipDuplicates: true,
     });
 
-    return await this.findMany(prisma, transactions);
+    return this.findMany(prisma, transactions);
   }
 
   async findMany(
@@ -51,7 +51,7 @@ export class TransactionsService {
   ): Promise<Transaction[]> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
 
-    return await prisma.transaction.findMany({
+    return prisma.transaction.findMany({
       where: {
         hash: {
           in: transactions.map((tx) => standardizeHash(tx.hash)),
