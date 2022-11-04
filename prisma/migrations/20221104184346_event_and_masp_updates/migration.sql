@@ -20,9 +20,6 @@ ALTER TYPE "event_type" ADD VALUE 'MASP_TRANSFER';
 ALTER TYPE "event_type" ADD VALUE 'MASP_BURN';
 ALTER TYPE "event_type" ADD VALUE 'MASP_MINT';
 
--- DropIndex
-DROP INDEX "index_users_on_graffiti";
-
 -- AlterTable
 ALTER TABLE "masp_transactions" DROP COLUMN "amount",
 DROP COLUMN "asset_identifier",
@@ -54,6 +51,3 @@ CREATE TABLE "masp_transaction_head" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "uq_masp_on_transaction_hash" ON "masp_transactions"("transaction_hash");
-
--- CreateIndex
-CREATE INDEX "index_users_on_graffiti" ON "users"("graffiti");
