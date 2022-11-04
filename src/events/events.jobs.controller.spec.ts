@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { INestApplication } from '@nestjs/common';
+import { EventType } from '@prisma/client';
 import assert from 'assert';
 import faker from 'faker';
 import { ulid } from 'ulid';
@@ -48,6 +49,35 @@ describe('EventsJobsController', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+  describe('createEvent', () => {
+    it('creates an event record', async () => {
+      const user = await usersService.create({
+        email: faker.internet.email(),
+        graffiti: ulid(),
+        country_code: faker.address.countryCode('alpha-3'),
+      });
+      const occurredAt = new Date();
+      const type = EventType.BUG_CAUGHT;
+      const points = 10;
+
+      await eventsJobsController.createEvent({
+        userId: user.id,
+        type,
+        points,
+        occurredAt,
+      });
+
+      const { data } = await eventsService.list({ userId: user.id });
+      expect(data).toHaveLength(1);
+      assert.ok(data[0]);
+      expect(data[0]).toMatchObject({
+        id: expect.any(Number),
+        user_id: user.id,
+        type,
+      });
+    });
   });
 
   describe('upsertBlockMinedEvent', () => {
