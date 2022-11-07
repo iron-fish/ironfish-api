@@ -351,6 +351,9 @@ describe('EventsService', () => {
         SOCIAL_MEDIA_PROMOTION: 0,
         NODE_UPTIME: 1,
         SEND_TRANSACTION: 1,
+        MASP_BURN: 1,
+        MASP_MINT: 1,
+        MASP_TRANSFER: 1,
       };
 
       const user = await usersService.create({
@@ -392,6 +395,10 @@ describe('EventsService', () => {
         [EventType.NODE_UPTIME]: lifetimeMetrics[EventType.NODE_UPTIME].count,
         [EventType.SEND_TRANSACTION]:
           lifetimeMetrics[EventType.SEND_TRANSACTION].count,
+        [EventType.MASP_BURN]: lifetimeMetrics[EventType.MASP_BURN].count,
+        [EventType.MASP_MINT]: lifetimeMetrics[EventType.MASP_MINT].count,
+        [EventType.MASP_TRANSFER]:
+          lifetimeMetrics[EventType.MASP_TRANSFER].count,
       };
       expect(lifetimeCounts).toEqual(eventCounts);
     });
@@ -413,6 +420,9 @@ describe('EventsService', () => {
         SOCIAL_MEDIA_PROMOTION: 0,
         NODE_UPTIME: 0,
         SEND_TRANSACTION: 0,
+        MASP_BURN: 0,
+        MASP_MINT: 0,
+        MASP_TRANSFER: 0,
       };
       const eventCountsToIgnore: Record<EventType, number> = {
         BLOCK_MINED: 1,
@@ -422,6 +432,9 @@ describe('EventsService', () => {
         SOCIAL_MEDIA_PROMOTION: 2,
         NODE_UPTIME: 0,
         SEND_TRANSACTION: 0,
+        MASP_BURN: 0,
+        MASP_MINT: 0,
+        MASP_TRANSFER: 0,
       };
       let totalPoints = 0;
 
@@ -471,6 +484,9 @@ describe('EventsService', () => {
         [EventType.NODE_UPTIME]: eventMetrics[EventType.NODE_UPTIME].count,
         [EventType.SEND_TRANSACTION]:
           eventMetrics[EventType.SEND_TRANSACTION].count,
+        [EventType.MASP_BURN]: eventMetrics[EventType.MASP_BURN].count,
+        [EventType.MASP_MINT]: eventMetrics[EventType.MASP_MINT].count,
+        [EventType.MASP_TRANSFER]: eventMetrics[EventType.MASP_TRANSFER].count,
       };
       expect(eventCounts).toEqual(eventCountsToReturn);
       expect(points).toBe(totalPoints);

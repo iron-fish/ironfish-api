@@ -27,6 +27,9 @@ export const WEEKLY_POINT_LIMITS_BY_EVENT_TYPE: Record<EventType, number> = {
   [EventType.SOCIAL_MEDIA_PROMOTION]: 1000,
   [EventType.NODE_UPTIME]: 140,
   [EventType.SEND_TRANSACTION]: Number.MAX_VALUE,
+  [EventType.MASP_TRANSFER]: 1,
+  [EventType.MASP_MINT]: 1,
+  [EventType.MASP_BURN]: 1,
 };
 
 export const POINTS_PER_CATEGORY: Record<EventType, number> = {
@@ -37,4 +40,7 @@ export const POINTS_PER_CATEGORY: Record<EventType, number> = {
   [EventType.SOCIAL_MEDIA_PROMOTION]: 100,
   [EventType.NODE_UPTIME]: 10,
   [EventType.SEND_TRANSACTION]: 1,
+  [EventType.MASP_TRANSFER]: 1,
+  [EventType.MASP_MINT]: 1,
+  [EventType.MASP_BURN]: 1,
 };
