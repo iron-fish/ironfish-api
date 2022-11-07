@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { UserPoints } from '@prisma/client';
+import { Deposit, UserPoints } from '@prisma/client';
 import { Job } from 'graphile-worker';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { BlocksService } from '../blocks/blocks.service';
@@ -492,12 +492,7 @@ export class EventsService {
     if (points != null) {
       adjustedPoints = points;
     } else if (deposit) {
-      const minDepositSizeOre =
-        this.config.get<number>('MIN_DEPOSIT_SIZE') * ORE_TO_IRON;
-
-      adjustedPoints =
-        Math.floor(deposit.amount / minDepositSizeOre) *
-        POINTS_PER_CATEGORY[type];
+      adjustedPoints = this.calculateDepositPoints(deposit);
     } else {
       adjustedPoints = POINTS_PER_CATEGORY[type];
     }
@@ -568,10 +563,17 @@ export class EventsService {
     };
   }
 
-  private addUpdateLatestPointsJob(
-    userId: number,
-    type: EventType,
-  ): Promise<Job> {
+  calculateDepositPoints(deposit: Deposit): number {
+    const minDepositSizeOre =
+      this.config.get<number>('MIN_DEPOSIT_SIZE') * ORE_TO_IRON;
+
+    return (
+      Math.floor(deposit.amount / minDepositSizeOre) *
+      POINTS_PER_CATEGORY[EventType.SEND_TRANSACTION]
+    );
+  }
+
+  addUpdateLatestPointsJob(userId: number, type: EventType): Promise<Job> {
     const updateLatestPointsQueues = 4;
     const maxJobFrequencyMinutes = 10;
 

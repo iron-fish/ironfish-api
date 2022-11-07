@@ -53,6 +53,27 @@ export class UsersService {
     });
   }
 
+  async findManyAndMapByGraffiti(
+    graffiti: string[],
+  ): Promise<Map<string, User>> {
+    const unique = Array.from(new Set(graffiti));
+
+    const users = await this.prisma.user.findMany({
+      where: {
+        graffiti: {
+          in: unique,
+        },
+      },
+    });
+
+    const results = new Map<string, User>();
+    for (const user of users) {
+      results.set(user.graffiti, user);
+    }
+
+    return results;
+  }
+
   async findByGraffitiOrThrow(graffiti: string): Promise<User> {
     const record = await this.findByGraffiti(graffiti);
     if (!record) {

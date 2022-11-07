@@ -112,44 +112,50 @@ describe('DepositsUpsertService', () => {
   });
 
   describe('upsert', () => {
-    it('upserts new deposits and events', async () => {
+    it('upserts deposits and events', async () => {
+      const user1 = await usersService.create({
+        email: faker.internet.email(),
+        country_code: faker.address.countryCode(),
+        graffiti: uuid(),
+      });
+
+      const user2 = await usersService.create({
+        email: faker.internet.email(),
+        country_code: faker.address.countryCode(),
+        graffiti: uuid(),
+      });
+
       const payload = depositOperation(
-        [transaction1, transaction2],
+        [
+          transaction([
+            ...notes([1, 2], user1.graffiti),
+            ...notes([0.1, 3], user2.graffiti),
+          ]),
+          transaction([
+            ...notes([0.05], user1.graffiti),
+            ...notes([1.0], user2.graffiti),
+          ]),
+        ],
         BlockOperation.CONNECTED,
-        'block1Hash',
       );
 
       await depositsUpsertService.upsert(payload);
 
       const user1Events = await prisma.event.findMany({
-        where: {
-          user_id: user1.id,
-          type: EventType.SEND_TRANSACTION,
-        },
+        where: { user_id: user1.id },
       });
-
       const user2Events = await prisma.event.findMany({
-        where: {
-          user_id: user2.id,
-          type: EventType.SEND_TRANSACTION,
-        },
+        where: { user_id: user2.id },
+      });
+      const user1Deposits = await prisma.deposit.findMany({
+        where: { graffiti: user1.graffiti },
+      });
+      const user2Deposits = await prisma.deposit.findMany({
+        where: { graffiti: user2.graffiti },
       });
 
       expect(user1Events).toHaveLength(1);
       expect(user2Events).toHaveLength(2);
-
-      const user1Deposits = await prisma.deposit.findMany({
-        where: {
-          graffiti: user1.graffiti,
-        },
-      });
-
-      const user2Deposits = await prisma.deposit.findMany({
-        where: {
-          graffiti: user2.graffiti,
-        },
-      });
-
       expect(user1Deposits).toHaveLength(2);
       expect(user2Deposits).toHaveLength(2);
 
@@ -158,85 +164,140 @@ describe('DepositsUpsertService', () => {
       expect(user2Events[1].deposit_id).toEqual(user2Deposits[1].id);
     });
 
-    it('correctly counts points in multiple increments', async () => {
-      const user = await usersService.create({
-        email: faker.internet.email(),
-        graffiti: uuid(),
-        country_code: faker.address.countryCode(),
-      });
-
-      const testDeposit = async (
-        amounts: number[],
-        points: number | undefined,
-      ): Promise<void> => {
-        const operation = depositOperation(
-          [transaction(notes(amounts, user.graffiti), uuid())],
-          BlockOperation.CONNECTED,
-          'blockdeposithash',
+    it('correctly counts points', async () => {
+      async function getPoints(
+        user: User,
+        amount: number,
+      ): Promise<number | undefined> {
+        const [deposit] = await depositsUpsertService.upsert(
+          depositOperation(
+            [transaction(notes([amount], user.graffiti), uuid())],
+            BlockOperation.CONNECTED,
+          ),
         );
 
-        const [deposit] = await depositsUpsertService.upsert(operation);
         const event = await prisma.event.findUnique({
           where: { deposit_id: deposit.id },
         });
 
-        expect(event?.points).toBe(points);
-      };
+        return event?.points;
+      }
 
-      await testDeposit([0.1], 1);
-      await testDeposit([0.32], 3);
-      await testDeposit([0.6], 6);
-      await testDeposit([0.59], 5);
-      await testDeposit([0.05], undefined);
+      const user = await usersService.create({
+        email: faker.internet.email(),
+        country_code: faker.address.countryCode(),
+        graffiti: uuid(),
+      });
+
+      expect(await getPoints(user, 0.1)).toBe(1);
+      expect(await getPoints(user, 0.32)).toBe(3);
+      expect(await getPoints(user, 0.6)).toBe(6);
+      expect(await getPoints(user, 0.59)).toBe(5);
+      expect(await getPoints(user, 0.05)).toBeUndefined();
     });
 
-    describe('on DISCONNECTED operations', () => {
-      it('removes events', async () => {
-        const payload1 = depositOperation(
+    it('on disconnect removes events', async () => {
+      const user1 = await usersService.create({
+        email: faker.internet.email(),
+        country_code: faker.address.countryCode(),
+        graffiti: uuid(),
+      });
+
+      const user2 = await usersService.create({
+        email: faker.internet.email(),
+        country_code: faker.address.countryCode(),
+        graffiti: uuid(),
+      });
+
+      const transaction1 = transaction([
+        ...notes([1, 2], user1.graffiti),
+        ...notes([0.1, 3], user2.graffiti),
+      ]);
+
+      const transaction2 = transaction([
+        ...notes([0.05], user1.graffiti),
+        ...notes([1.0], user2.graffiti),
+      ]);
+
+      await depositsUpsertService.upsert(
+        depositOperation(
           [transaction1, transaction2],
           BlockOperation.CONNECTED,
           'block1Hash',
-        );
+        ),
+      );
 
-        await depositsUpsertService.upsert(payload1);
+      let user1Events = await prisma.event.findMany({
+        where: {
+          user_id: user1.id,
+        },
+      });
 
-        const payload2 = depositOperation(
-          [transaction2],
+      let user2Events = await prisma.event.findMany({
+        where: {
+          user_id: user2.id,
+        },
+      });
+
+      let user1Deposits = await prisma.deposit.findMany({
+        where: {
+          graffiti: user1.graffiti,
+        },
+      });
+
+      let user2Deposits = await prisma.deposit.findMany({
+        where: {
+          graffiti: user2.graffiti,
+        },
+      });
+
+      expect(user1Events).toHaveLength(1);
+      expect(user2Events).toHaveLength(2);
+      expect(user1Deposits).toHaveLength(2);
+      expect(user2Deposits).toHaveLength(2);
+      expect(user1Deposits[0].main).toBe(true);
+      expect(user2Deposits[0].main).toBe(true);
+      expect(user2Deposits[1].main).toBe(true);
+
+      await depositsUpsertService.upsert(
+        depositOperation(
+          [transaction1, transaction2],
           BlockOperation.DISCONNECTED,
           'block1Hash',
-        );
+        ),
+      );
 
-        await depositsUpsertService.upsert(payload2);
-
-        const user2Events = await prisma.event.findMany({
-          where: {
-            user_id: user2.id,
-            type: EventType.SEND_TRANSACTION,
-          },
-        });
-
-        const user1Deposits = await prisma.deposit.findMany({
-          where: {
-            graffiti: user1.graffiti,
-          },
-        });
-
-        const user2Deposits = await prisma.deposit.findMany({
-          where: {
-            graffiti: user2.graffiti,
-          },
-        });
-
-        expect(user2Events[0].points).toBe(31);
-        expect(user2Events[0].deposit_id).toEqual(user2Deposits[0].id);
-        expect(user2Deposits[1].amount).toEqual(1 * ORE_TO_IRON);
-
-        expect(user1Deposits).toHaveLength(2);
-        expect(user2Deposits).toHaveLength(2);
-
-        expect(user1Deposits[1].main).toBe(false);
-        expect(user2Deposits[1].main).toBe(false);
+      user1Events = await prisma.event.findMany({
+        where: {
+          user_id: user1.id,
+        },
       });
+
+      user2Events = await prisma.event.findMany({
+        where: {
+          user_id: user2.id,
+        },
+      });
+
+      user1Deposits = await prisma.deposit.findMany({
+        where: {
+          graffiti: user1.graffiti,
+        },
+      });
+
+      user2Deposits = await prisma.deposit.findMany({
+        where: {
+          graffiti: user2.graffiti,
+        },
+      });
+
+      expect(user1Events).toHaveLength(0);
+      expect(user2Events).toHaveLength(0);
+      expect(user1Deposits).toHaveLength(2);
+      expect(user2Deposits).toHaveLength(2);
+      expect(user1Deposits[0].main).toBe(false);
+      expect(user2Deposits[0].main).toBe(false);
+      expect(user2Deposits[1].main).toBe(false);
     });
 
     it('updates the deposit head', async () => {
@@ -244,15 +305,14 @@ describe('DepositsUpsertService', () => {
         .spyOn(depositHeadsService, 'upsert')
         .mockImplementation(jest.fn());
 
-      const operation = depositOperation(
-        [transaction1],
-        BlockOperation.CONNECTED,
-        'block1Hash',
+      const blockHash = uuid();
+
+      await depositsUpsertService.upsert(
+        depositOperation([transaction1], BlockOperation.CONNECTED, blockHash),
       );
-      await depositsUpsertService.upsert(operation);
 
       assert.ok(updateHead.mock.calls);
-      expect(updateHead.mock.calls[0][0]).toBe(operation.block.hash);
+      expect(updateHead.mock.calls[0][0]).toBe(blockHash);
     });
 
     describe('on FORK operations', () => {
