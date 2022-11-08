@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable } from '@nestjs/common';
-import { Deposit, EventType, Prisma } from '@prisma/client';
+import { Deposit, EventType, Prisma, User } from '@prisma/client';
 import is from '@sindresorhus/is';
 import assert from 'assert';
 import { ApiConfigService } from '../api-config/api-config.service';
@@ -51,66 +51,6 @@ export class DepositsUpsertService {
         );
       }
     }
-  }
-
-  async upsert(operation: UpsertDepositsOperationDto): Promise<Deposit[]> {
-    const networkVersion = this.config.get<number>('NETWORK_VERSION');
-    const deposits = new Array<Deposit>();
-    const blockHash = standardizeHash(operation.block.hash);
-
-    for (const transaction of operation.transactions) {
-      const transactionHash = standardizeHash(transaction.hash);
-
-      const shouldUpsertDeposit =
-        operation.type === BlockOperation.CONNECTED ||
-        operation.type === BlockOperation.DISCONNECTED;
-      if (!shouldUpsertDeposit) {
-        continue;
-      }
-
-      const amounts = new Map<string, number>();
-
-      for (const deposit of transaction.notes) {
-        const amount = amounts.get(deposit.memo) ?? 0;
-        amounts.set(deposit.memo, amount + deposit.amount);
-      }
-
-      for (const [graffiti, amount] of amounts) {
-        await this.prisma.$transaction(async (prisma) => {
-          const depositParams = {
-            transaction_hash: transactionHash,
-            block_hash: blockHash,
-            block_sequence: operation.block.sequence,
-            network_version: networkVersion,
-            graffiti,
-            main: operation.type === BlockOperation.CONNECTED,
-            amount,
-          };
-
-          const deposit = await prisma.deposit.upsert({
-            create: depositParams,
-            update: depositParams,
-            where: {
-              uq_deposits_on_transaction_hash_and_graffiti: {
-                transaction_hash: depositParams.transaction_hash,
-                graffiti: depositParams.graffiti,
-              },
-            },
-          });
-          deposits.push(deposit);
-
-          await this.processDeposit(prisma, deposit, operation.block.timestamp);
-        });
-      }
-
-      const headHash =
-        operation.type === BlockOperation.CONNECTED
-          ? operation.block.hash
-          : operation.block.previousBlockHash;
-      await this.depositHeadsService.upsert(headHash);
-    }
-
-    return deposits;
   }
 
   async processDeposit(
@@ -287,5 +227,195 @@ export class DepositsUpsertService {
       {},
       { jobKey: 'sync_deposited_iron_to_telemetry', runAt },
     );
+  }
+
+  async upsert(operation: UpsertDepositsOperationDto): Promise<Deposit[]> {
+    const [deposits, users] = await this.prisma.$transaction(
+      async (prisma) => {
+        const networkVersion = this.config.get<number>('NETWORK_VERSION');
+        const blockHash = standardizeHash(operation.block.hash);
+
+        // The type is wrong in the DTO this is a strong
+        const blockTimestamp = new Date(operation.block.timestamp);
+
+        const shouldUpsertDeposit =
+          operation.type === BlockOperation.CONNECTED ||
+          operation.type === BlockOperation.DISCONNECTED;
+
+        let deposits = new Array<Deposit>();
+        let users = new Map<string, User>();
+
+        if (shouldUpsertDeposit) {
+          if (operation.type === BlockOperation.CONNECTED) {
+            let depositParams = new Array<{
+              transaction_hash: string;
+              block_hash: string;
+              block_sequence: number;
+              network_version: number;
+              graffiti: string;
+              main: boolean;
+              amount: number;
+            }>();
+
+            const graffitis = new Array<string>();
+
+            for (const transaction of operation.transactions) {
+              const amounts = new Map<string, number>();
+
+              for (const note of transaction.notes) {
+                if (note.memo) {
+                  const amount = amounts.get(note.memo) ?? 0;
+                  amounts.set(note.memo, amount + note.amount);
+                }
+              }
+
+              // Create deposit params for each deposit with a matching user
+              for (const [graffiti, amount] of amounts) {
+                depositParams.push({
+                  graffiti,
+                  amount,
+                  transaction_hash: standardizeHash(transaction.hash),
+                  block_hash: blockHash,
+                  block_sequence: operation.block.sequence,
+                  main: true,
+                  network_version: networkVersion,
+                });
+
+                graffitis.push(graffiti);
+              }
+            }
+
+            // Bulk load unique users and map by graffiti
+            users = await this.usersService.findManyAndMapByGraffiti(graffitis);
+
+            // Filter deposits made by unknown users
+            depositParams = depositParams.filter((d) => users.has(d.graffiti));
+
+            // Deposits are shared between blocks, so we need to reassign all the ones on other blocks
+            await prisma.deposit.updateMany({
+              data: {
+                block_hash: blockHash,
+                main: true,
+              },
+              where: {
+                AND: depositParams.map((deposit) => ({
+                  transaction_hash: deposit.transaction_hash,
+                  graffiti: deposit.graffiti,
+                })),
+                network_version: networkVersion,
+              },
+            });
+
+            // Now create new not existing deposits
+            await prisma.deposit.createMany({
+              data: depositParams,
+              skipDuplicates: true,
+            });
+
+            deposits = await prisma.deposit.findMany({
+              where: {
+                block_hash: blockHash,
+                network_version: networkVersion,
+              },
+            });
+
+            const eventPayloads = [];
+            const usersFiltered = new Map<string, User>();
+            const eventDepositIds = new Array<number>();
+
+            // Create the event payloads filtering events and users on points < 0
+            for (const deposit of deposits) {
+              const points = this.eventsService.calculateDepositPoints(deposit);
+
+              if (points <= 0) {
+                continue;
+              }
+
+              const user = users.get(deposit.graffiti);
+
+              // This should NEVER happen but can happen if a user is deleted after they made a deposit
+              if (!user) {
+                continue;
+              }
+
+              usersFiltered.set(deposit.graffiti, user);
+              eventDepositIds.push(deposit.id);
+
+              eventPayloads.push({
+                occurred_at: blockTimestamp.toISOString(),
+                type: EventType.SEND_TRANSACTION,
+                user_id: user.id,
+                points: points,
+                deposit_id: deposit.id,
+              });
+            }
+
+            users = usersFiltered;
+
+            // This SHOULD NOT be needed but this cleans up bad data in the server and crashes without this
+            await prisma.event.deleteMany({
+              where: {
+                deposit_id: {
+                  in: eventDepositIds,
+                },
+              },
+            });
+
+            await prisma.event.createMany({
+              data: eventPayloads,
+            });
+          } else if (operation.type === BlockOperation.DISCONNECTED) {
+            await prisma.deposit.updateMany({
+              data: {
+                main: false,
+              },
+              where: {
+                block_hash: blockHash,
+                network_version: networkVersion,
+              },
+            });
+
+            deposits = await prisma.deposit.findMany({
+              where: {
+                block_hash: blockHash,
+                network_version: networkVersion,
+              },
+            });
+
+            await prisma.event.deleteMany({
+              where: {
+                deposit_id: {
+                  in: deposits.map((deposit) => deposit.id),
+                },
+              },
+            });
+
+            users = await this.usersService.findManyAndMapByGraffiti(
+              deposits.map((d) => d.graffiti),
+            );
+          }
+        }
+
+        const headHash =
+          operation.type === BlockOperation.CONNECTED
+            ? standardizeHash(operation.block.hash)
+            : standardizeHash(operation.block.previousBlockHash);
+
+        await this.depositHeadsService.upsert(headHash);
+
+        return [deposits, users];
+      },
+      { timeout: 120000 },
+    );
+
+    // Recalculate points, this really should be after the transaction commits
+    for (const user of users.values()) {
+      await this.eventsService.addUpdateLatestPointsJob(
+        user.id,
+        EventType.SEND_TRANSACTION,
+      );
+    }
+
+    return deposits;
   }
 }
