@@ -257,6 +257,8 @@ export class DepositsUpsertService {
               amount: number;
             }>();
 
+            const graffitis = new Array<string>();
+
             for (const transaction of operation.transactions) {
               const amounts = new Map<string, number>();
 
@@ -278,13 +280,13 @@ export class DepositsUpsertService {
                   main: true,
                   network_version: networkVersion,
                 });
+
+                graffitis.push(graffiti);
               }
             }
 
             // Bulk load unique users and map by graffiti
-            users = await this.usersService.findManyAndMapByGraffiti(
-              depositParams.map((d) => d.graffiti),
-            );
+            users = await this.usersService.findManyAndMapByGraffiti(graffitis);
 
             // Filter deposits made by unknown users
             depositParams = depositParams.filter((d) => users.has(d.graffiti));
@@ -319,6 +321,7 @@ export class DepositsUpsertService {
 
             const eventPayloads = [];
             const usersFiltered = new Map<string, User>();
+            const eventDepositIds = new Array<number>();
 
             // Create the event payloads filtering events and users on points < 0
             for (const deposit of deposits) {
@@ -336,6 +339,7 @@ export class DepositsUpsertService {
               }
 
               usersFiltered.set(deposit.graffiti, user);
+              eventDepositIds.push(deposit.id);
 
               eventPayloads.push({
                 occurred_at: blockTimestamp.toISOString(),
@@ -352,7 +356,7 @@ export class DepositsUpsertService {
             await prisma.event.deleteMany({
               where: {
                 deposit_id: {
-                  in: deposits.map((deposit) => deposit.id),
+                  in: eventDepositIds,
                 },
               },
             });
