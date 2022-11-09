@@ -44,6 +44,17 @@ export class GraphileWorkerService {
     });
   }
 
+  async getJobs(queueName = ''): Promise<Array<Job>> {
+    await this.initWorkerUtils();
+    return this.workerUtils.withPgClient(async (pgClient) => {
+      const conditional = queueName ? `WHERE queue_name = '${queueName}'` : '';
+      const result = await pgClient.query<Job>(
+        `SELECT * FROM graphile_worker.jobs ${conditional};`,
+      );
+      return result.rows;
+    });
+  }
+
   private async initWorkerUtils(): Promise<void> {
     if (this.workerUtils) {
       return;

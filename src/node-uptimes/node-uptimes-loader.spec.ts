@@ -127,28 +127,28 @@ describe('NodeUptimesLoader', () => {
     });
     describe('when multiple jobs are added', () => {
       it('updates job rather than creating new job', async () => {
+        const queueName = 'update_node_uptime';
         const addJob = async (userId: number) => {
           const now = new Date();
+          const payload = [{ userId: userId, occurredAt: now }];
           await graphileWorkerService.addJob(
             GraphileWorkerPattern.CREATE_NODE_UPTIME_EVENT,
-            [{ userId: userId, occurredAt: now }],
+            payload,
             {
-              queueName: 'update_node_uptime',
+              queueName: queueName,
               jobKey: 'update_node_uptime',
               jobKeyMode: 'preserve_run_at',
             },
           );
         };
         await addJob(1);
-        let jobCount = await graphileWorkerService.queuedJobCount(
-          'update_node_uptime',
-        );
-        expect(jobCount).toBe(1);
+        let jobs = await graphileWorkerService.getJobs(queueName);
+        expect(jobs).toHaveLength(1);
+        expect(jobs[0].payload).toHaveLength(1);
         await addJob(2);
-        jobCount = await graphileWorkerService.queuedJobCount(
-          'update_node_uptime',
-        );
-        expect(jobCount).toBe(1);
+        jobs = await graphileWorkerService.getJobs(queueName);
+        expect(jobs).toHaveLength(1);
+        expect(jobs[0].payload).toHaveLength(2);
       });
     });
   });
