@@ -22,14 +22,20 @@ export class NodeUptimesJobsController {
   ) {}
 
   @MessagePattern(GraphileWorkerPattern.CREATE_NODE_UPTIME_EVENT)
-  async createNodeUptimeEvent(
+  async createNodeUptimeEvents(
     uptimeEvents: CreateNodeUptimeEventOptionsList,
   ): Promise<GraphileWorkerHandlerResponse> {
     const users = await this.usersService.findMany(
       uptimeEvents.map((uptimeEvent) => uptimeEvent.userId),
     );
+    // gather just the most recent uptime event for each user
+    const reducedUptimeEvents = [
+      ...new Map(
+        uptimeEvents.map((uptimeEvent) => [uptimeEvent['userId'], uptimeEvent]),
+      ).values(),
+    ];
     const uptimeEventsWithUser = new Array<CreateEvent>();
-    for (const uptimeEvent of uptimeEvents) {
+    for (const uptimeEvent of reducedUptimeEvents) {
       const user = users.get(uptimeEvent.userId);
       if (!user) {
         this.loggerService.error(
