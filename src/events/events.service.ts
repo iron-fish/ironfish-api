@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Deposit, UserPoints } from '@prisma/client';
+import { Deposit, NodeUptime, UserPoints } from '@prisma/client';
 import { Job } from 'graphile-worker';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { BlocksService } from '../blocks/blocks.service';
@@ -10,6 +10,7 @@ import { serializedBlockFromRecord } from '../blocks/utils/block-translator';
 import {
   DEFAULT_LIMIT,
   MAX_LIMIT,
+  NODE_UPTIME_CREDIT_HOURS,
   ORE_TO_IRON,
   POINTS_PER_CATEGORY,
 } from '../common/constants';
@@ -499,6 +500,7 @@ export class EventsService {
 
     let metadata = {};
     let existingEvent;
+
     if (url) {
       metadata = { ...metadata, url };
       existingEvent = await this.getEventByUrl(url);
@@ -765,17 +767,31 @@ export class EventsService {
   async createNodeUptimeEventWithClient(
     user: User,
     occurredAt: Date,
+    uptime: NodeUptime,
     client: BasePrismaClient,
-  ): Promise<Event | null> {
-    return this.createWithClient(
-      {
-        occurredAt,
-        type: EventType.NODE_UPTIME,
-        userId: user.id,
+  ): Promise<number> {
+    // calculate how many events to create
+    // create event payloads
+    // call create many on events
+
+    const count = Math.floor(uptime.total_hours / NODE_UPTIME_CREDIT_HOURS);
+
+    const payloads = [];
+
+    for (let i = 0; i < count; ++i) {
+      payloads.push({
+        occurred_at: occurredAt.toISOString(),
         points: POINTS_PER_CATEGORY[EventType.NODE_UPTIME],
-      },
-      client,
-    );
+        type: EventType.NODE_UPTIME,
+        user_id: user.id,
+      });
+    }
+
+    const created = await client.event.createMany({
+      data: payloads,
+    });
+
+    return created.count;
   }
 
   /**

@@ -87,32 +87,38 @@ describe('NodeUptimesLoader', () => {
 
     describe('when the uptime has enough hours', () => {
       it('creates event and decrements hours', async () => {
-        const createNodeUptimeEventWithClient = jest.spyOn(
-          eventsService,
-          'createNodeUptimeEventWithClient',
-        );
+        const createNodeUptimeEventWithClient = jest
+          .spyOn(eventsService, 'createNodeUptimeEventWithClient')
+          .mockResolvedValue(435);
+
         const decrementCountedHoursWithClient = jest
           .spyOn(nodeUptimesService, 'decrementCountedHoursWithClient')
           .mockImplementationOnce(jest.fn());
+
         const user = await setupUser();
+
         const uptime = await prisma.nodeUptime.create({
           data: {
             user_id: user.id,
-            total_hours: NODE_UPTIME_CREDIT_HOURS,
+            total_hours: NODE_UPTIME_CREDIT_HOURS * 2 + 1,
           },
         });
         const occurredAt = new Date();
 
         await nodeUptimesLoader.createEvent(user, occurredAt);
+
         expect(createNodeUptimeEventWithClient).toHaveBeenCalledTimes(1);
         expect(createNodeUptimeEventWithClient).toHaveBeenCalledWith(
           user,
           occurredAt,
+          uptime,
           expect.anything(),
         );
+
         expect(decrementCountedHoursWithClient).toHaveBeenCalledTimes(1);
-        expect(decrementCountedHoursWithClient).toHaveBeenLastCalledWith(
+        expect(decrementCountedHoursWithClient).toHaveBeenCalledWith(
           uptime,
+          12 * 435,
           expect.anything(),
         );
       });

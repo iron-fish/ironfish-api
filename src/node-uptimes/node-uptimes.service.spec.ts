@@ -127,17 +127,18 @@ describe('NodeUptimesService', () => {
       const uptime = await prisma.nodeUptime.create({
         data: {
           user_id: user.id,
-          total_hours: 12,
+          total_hours: 24,
         },
       });
 
       const result = await nodeUptimesService.decrementCountedHoursWithClient(
         uptime,
+        12,
         prisma,
       );
 
       assert(result);
-      expect(result.total_hours).toBe(0);
+      expect(result.total_hours).toBe(12);
     });
   });
 });

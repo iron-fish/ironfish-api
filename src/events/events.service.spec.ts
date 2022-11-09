@@ -7,7 +7,10 @@ import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { serializedBlockFromRecord } from '../blocks/utils/block-translator';
-import { POINTS_PER_CATEGORY } from '../common/constants';
+import {
+  NODE_UPTIME_CREDIT_HOURS,
+  POINTS_PER_CATEGORY,
+} from '../common/constants';
 import { EventsJobsController } from '../events/events.jobs.controller';
 import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
 import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
@@ -939,11 +942,27 @@ describe('EventsService', () => {
   describe('createNodeUptimeEventWithClient', () => {
     it('creates a node uptime event', async () => {
       const user = await setupUser();
-      const record = await eventsService.createNodeUptimeEventWithClient(
+
+      const uptime = await prisma.nodeUptime.create({
+        data: {
+          user_id: user.id,
+          total_hours: NODE_UPTIME_CREDIT_HOURS,
+        },
+      });
+
+      await eventsService.createNodeUptimeEventWithClient(
         user,
         new Date(),
+        uptime,
         prisma,
       );
+
+      const record = await prisma.event.findFirstOrThrow({
+        where: {
+          user_id: user.id,
+        },
+      });
+
       expect(record).toMatchObject({
         type: EventType.NODE_UPTIME,
         points: POINTS_PER_CATEGORY[EventType.NODE_UPTIME],
