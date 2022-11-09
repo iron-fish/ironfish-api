@@ -37,29 +37,33 @@ describe('NodeUptimesJobsController', () => {
 
   describe('createNodeUptimeEvent', () => {
     describe('with a missing user', () => {
-      it('does not update', async () => {
-        const createEvent = jest.spyOn(nodeUptimesLoader, 'createEvent');
+      it('calls with empty list', async () => {
+        const createEvents = jest.spyOn(nodeUptimesLoader, 'createEvents');
 
-        await nodeUptimesJobsController.createNodeUptimeEvent({
-          userId: 99999,
-          occurredAt: new Date(),
-        });
-        expect(createEvent).not.toHaveBeenCalled();
+        await nodeUptimesJobsController.createNodeUptimeEvents([
+          {
+            userId: 99999,
+            occurredAt: new Date(),
+          },
+        ]);
+        expect(createEvents).toHaveBeenCalledWith([]);
       });
     });
 
     describe('with a valid user', () => {
       it('creates an event with the loader', async () => {
-        const createEvent = jest.spyOn(nodeUptimesLoader, 'createEvent');
+        const createEvent = jest.spyOn(nodeUptimesLoader, 'createEvents');
         const user = await setupUser();
         const occurredAt = new Date();
 
-        await nodeUptimesJobsController.createNodeUptimeEvent({
-          userId: user.id,
-          occurredAt,
-        });
-        expect(createEvent).toHaveBeenCalledTimes(1);
-        expect(createEvent).toHaveBeenCalledWith(user, occurredAt);
+        await nodeUptimesJobsController.createNodeUptimeEvents([
+          {
+            userId: user.id,
+            occurredAt,
+          },
+        ]);
+        expect(createEvent).toHaveBeenCalledTimes(2);
+        expect(createEvent).toHaveBeenCalledWith([{ user, occurredAt }]);
       });
     });
   });

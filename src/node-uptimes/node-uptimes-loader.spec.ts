@@ -55,7 +55,9 @@ describe('NodeUptimesLoader', () => {
         );
         const user = await setupUser();
 
-        await nodeUptimesLoader.createEvent(user, new Date());
+        await nodeUptimesLoader.createEvents([
+          { user, occurredAt: new Date() },
+        ]);
         expect(createNodeUptimeEventWithClient).not.toHaveBeenCalled();
         expect(decrementCountedHoursWithClient).not.toHaveBeenCalled();
       });
@@ -79,7 +81,9 @@ describe('NodeUptimesLoader', () => {
           },
         });
 
-        await nodeUptimesLoader.createEvent(user, new Date());
+        await nodeUptimesLoader.createEvents([
+          { user, occurredAt: new Date() },
+        ]);
         expect(createNodeUptimeEventWithClient).not.toHaveBeenCalled();
         expect(decrementCountedHoursWithClient).not.toHaveBeenCalled();
       });
@@ -103,7 +107,7 @@ describe('NodeUptimesLoader', () => {
         });
         const occurredAt = new Date();
 
-        await nodeUptimesLoader.createEvent(user, occurredAt);
+        await nodeUptimesLoader.createEvents([{ user, occurredAt }]);
         expect(createNodeUptimeEventWithClient).toHaveBeenCalledTimes(1);
         expect(createNodeUptimeEventWithClient).toHaveBeenCalledWith(
           user,
