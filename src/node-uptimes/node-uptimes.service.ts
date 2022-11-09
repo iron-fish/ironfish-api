@@ -63,7 +63,10 @@ export class NodeUptimesService {
       await this.graphileWorkerService.addJob(
         GraphileWorkerPattern.CREATE_NODE_UPTIME_EVENT,
         { userId, occurredAt: now },
-        { queueName: `update_node_uptime_for_${userId}` },
+        {
+          queueName: `update_node_uptime`,
+          jobKey: `update_node_uptime_for_${userId}`,
+        },
       );
     }
 
