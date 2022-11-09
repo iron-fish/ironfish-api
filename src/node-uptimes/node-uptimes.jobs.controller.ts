@@ -47,7 +47,7 @@ export class NodeUptimesJobsController {
       uptimeEventsWithUser.push({ user, occurredAt: uptimeEvent.occurredAt });
     }
 
-    await this.nodeUptimesLoader.createEvent(uptimeEventsWithUser);
+    await this.nodeUptimesLoader.createEvents(uptimeEventsWithUser);
     return { requeue: false };
   }
 }

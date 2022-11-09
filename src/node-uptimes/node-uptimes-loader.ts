@@ -22,7 +22,7 @@ export class NodeUptimesLoader {
     private readonly prisma: PrismaService,
   ) {}
 
-  async createEvent(props: CreateEventsProps): Promise<void> {
+  async createEvents(props: CreateEventsProps): Promise<void> {
     for (const { user, occurredAt } of props) {
       const uptime = await this.nodeUptimesService.get(user);
       if (!uptime || uptime.total_hours < NODE_UPTIME_CREDIT_HOURS) {
