@@ -770,10 +770,6 @@ export class EventsService {
     uptime: NodeUptime,
     client: BasePrismaClient,
   ): Promise<number> {
-    // calculate how many events to create
-    // create event payloads
-    // call create many on events
-
     const count = Math.floor(uptime.total_hours / NODE_UPTIME_CREDIT_HOURS);
 
     const payloads = [];
