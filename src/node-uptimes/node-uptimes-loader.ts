@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable } from '@nestjs/common';
+import { EventType } from '@prisma/client';
 import { NODE_UPTIME_CREDIT_HOURS } from '../common/constants';
 import { EventsService } from '../events/events.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -18,24 +19,33 @@ export class NodeUptimesLoader {
 
   async createEvent(user: User, occurredAt: Date): Promise<void> {
     const uptime = await this.nodeUptimesService.get(user);
+
     if (!uptime || uptime.total_hours < NODE_UPTIME_CREDIT_HOURS) {
       return;
     }
 
     await this.prisma.$transaction(async (prisma) => {
-      const event = await this.eventsService.createNodeUptimeEventWithClient(
+      const created = await this.eventsService.createNodeUptimeEventWithClient(
         user,
         occurredAt,
+        uptime,
         prisma,
       );
-      if (!event) {
+
+      if (!created) {
         throw new Error(`Error creating node uptime event`);
       }
 
       await this.nodeUptimesService.decrementCountedHoursWithClient(
         uptime,
+        created * NODE_UPTIME_CREDIT_HOURS,
         prisma,
       );
     });
+
+    await this.eventsService.addUpdateLatestPointsJob(
+      uptime.user_id,
+      EventType.NODE_UPTIME,
+    );
   }
 }
