@@ -6,6 +6,8 @@ import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { NODE_UPTIME_CREDIT_HOURS } from '../common/constants';
 import { EventsService } from '../events/events.service';
+import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
+import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
@@ -17,6 +19,7 @@ describe('NodeUptimesLoader', () => {
   let eventsService: EventsService;
   let nodeUptimesLoader: NodeUptimesLoader;
   let nodeUptimesService: NodeUptimesService;
+  let graphileWorkerService: GraphileWorkerService;
   let prisma: PrismaService;
   let usersService: UsersService;
 
@@ -25,6 +28,7 @@ describe('NodeUptimesLoader', () => {
     eventsService = app.get(EventsService);
     nodeUptimesLoader = app.get(NodeUptimesLoader);
     nodeUptimesService = app.get(NodeUptimesService);
+    graphileWorkerService = app.get(GraphileWorkerService);
     prisma = app.get(PrismaService);
     usersService = app.get(UsersService);
     await app.init();
@@ -119,6 +123,32 @@ describe('NodeUptimesLoader', () => {
           uptime,
           expect.anything(),
         );
+      });
+    });
+    describe('when multiple jobs are added', () => {
+      it('updates job rather than creating new job', async () => {
+        const addJob = async (userId: number) => {
+          const now = new Date();
+          await graphileWorkerService.addJob(
+            GraphileWorkerPattern.CREATE_NODE_UPTIME_EVENT,
+            [{ userId: userId, occurredAt: now }],
+            {
+              queueName: 'update_node_uptime',
+              jobKey: 'update_node_uptime',
+              jobKeyMode: 'preserve_run_at',
+            },
+          );
+        };
+        await addJob(1);
+        let jobCount = await graphileWorkerService.queuedJobCount(
+          'update_node_uptime',
+        );
+        expect(jobCount).toBe(1);
+        await addJob(2);
+        jobCount = await graphileWorkerService.queuedJobCount(
+          'update_node_uptime',
+        );
+        expect(jobCount).toBe(1);
       });
     });
   });

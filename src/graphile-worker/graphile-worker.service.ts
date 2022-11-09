@@ -31,12 +31,13 @@ export class GraphileWorkerService {
     });
   }
 
-  async queuedJobCount(): Promise<number> {
+  async queuedJobCount(queueName = ''): Promise<number> {
     await this.initWorkerUtils();
 
     return this.workerUtils.withPgClient(async (pgClient) => {
+      const conditional = queueName ? `AND queue_name = '${queueName}'` : '';
       const result = await pgClient.query<{ count: BigInt }>(
-        'SELECT COUNT(*) FROM graphile_worker.jobs WHERE locked_at IS NULL;',
+        `SELECT COUNT(*) FROM graphile_worker.jobs WHERE locked_at IS NULL ${conditional};`,
       );
 
       return Number(result.rows[0].count);
