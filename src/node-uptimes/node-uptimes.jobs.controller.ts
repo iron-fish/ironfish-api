@@ -4,13 +4,11 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
+import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { GraphileWorkerHandlerResponse } from '../graphile-worker/interfaces/graphile-worker-handler-response';
 import { LoggerService } from '../logger/logger.service';
 import { UsersService } from '../users/users.service';
-import {
-  CreateNodeUptimeEventOptions,
-  CreateNodeUptimeEventOptionsList,
-} from './interfaces/create-node-uptime-event-options';
+import { CreateNodeUptimeEventOptionsList } from './interfaces/create-node-uptime-event-options';
 import { CreateEvent, NodeUptimesLoader } from './node-uptimes-loader';
 
 @Controller()
@@ -18,6 +16,7 @@ export class NodeUptimesJobsController {
   constructor(
     private readonly loggerService: LoggerService,
     private readonly nodeUptimesLoader: NodeUptimesLoader,
+    private readonly graphileWorkerService: GraphileWorkerService,
     private readonly usersService: UsersService,
   ) {}
 
@@ -48,6 +47,17 @@ export class NodeUptimesJobsController {
     }
 
     await this.nodeUptimesLoader.createEvents(uptimeEventsWithUser);
+    const runAt = new Date();
+    runAt.setMinutes(runAt.getMinutes() + 60);
+    await this.graphileWorkerService.addJob(
+      GraphileWorkerPattern.CREATE_NODE_UPTIME_EVENT,
+      [],
+      {
+        queueName: 'update_node_uptime',
+        jobKey: 'update_node_uptime',
+        runAt,
+      },
+    );
     return { requeue: false };
   }
 }

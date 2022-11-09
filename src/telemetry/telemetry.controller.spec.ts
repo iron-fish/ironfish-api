@@ -352,7 +352,7 @@ describe('TelemetryController', () => {
           expect(workerAddJob).toHaveBeenCalledTimes(1);
           expect(workerAddJob).toHaveBeenCalledWith(
             GraphileWorkerPattern.CREATE_NODE_UPTIME_EVENT,
-            { userId: user.id, occurredAt: expect.any(Date) },
+            [{ userId: user.id, occurredAt: expect.any(Date) }],
             expect.anything(),
           );
         });
