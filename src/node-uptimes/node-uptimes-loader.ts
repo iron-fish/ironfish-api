@@ -8,6 +8,12 @@ import { PrismaService } from '../prisma/prisma.service';
 import { NodeUptimesService } from './node-uptimes.service';
 import { User } from '.prisma/client';
 
+export type CreateEvent = {
+  user: User;
+  occurredAt: Date;
+};
+export type CreateEventsProps = Array<CreateEvent>;
+
 @Injectable()
 export class NodeUptimesLoader {
   constructor(
@@ -16,26 +22,28 @@ export class NodeUptimesLoader {
     private readonly prisma: PrismaService,
   ) {}
 
-  async createEvent(user: User, occurredAt: Date): Promise<void> {
-    const uptime = await this.nodeUptimesService.get(user);
-    if (!uptime || uptime.total_hours < NODE_UPTIME_CREDIT_HOURS) {
-      return;
-    }
-
-    await this.prisma.$transaction(async (prisma) => {
-      const event = await this.eventsService.createNodeUptimeEventWithClient(
-        user,
-        occurredAt,
-        prisma,
-      );
-      if (!event) {
-        throw new Error(`Error creating node uptime event`);
+  async createEvent(props: CreateEventsProps): Promise<void> {
+    for (const { user, occurredAt } of props) {
+      const uptime = await this.nodeUptimesService.get(user);
+      if (!uptime || uptime.total_hours < NODE_UPTIME_CREDIT_HOURS) {
+        return;
       }
 
-      await this.nodeUptimesService.decrementCountedHoursWithClient(
-        uptime,
-        prisma,
-      );
-    });
+      await this.prisma.$transaction(async (prisma) => {
+        const event = await this.eventsService.createNodeUptimeEventWithClient(
+          user,
+          occurredAt,
+          prisma,
+        );
+        if (!event) {
+          throw new Error(`Error creating node uptime event`);
+        }
+
+        await this.nodeUptimesService.decrementCountedHoursWithClient(
+          uptime,
+          prisma,
+        );
+      });
+    }
   }
 }

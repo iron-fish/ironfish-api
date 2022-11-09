@@ -5,3 +5,5 @@ export interface CreateNodeUptimeEventOptions {
   occurredAt: Date;
   userId: number;
 }
+export type CreateNodeUptimeEventOptionsList =
+  Array<CreateNodeUptimeEventOptions>;

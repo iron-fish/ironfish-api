@@ -7,8 +7,11 @@ import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-
 import { GraphileWorkerHandlerResponse } from '../graphile-worker/interfaces/graphile-worker-handler-response';
 import { LoggerService } from '../logger/logger.service';
 import { UsersService } from '../users/users.service';
-import { CreateNodeUptimeEventOptions } from './interfaces/create-node-uptime-event-options';
-import { NodeUptimesLoader } from './node-uptimes-loader';
+import {
+  CreateNodeUptimeEventOptions,
+  CreateNodeUptimeEventOptionsList,
+} from './interfaces/create-node-uptime-event-options';
+import { CreateEvent, NodeUptimesLoader } from './node-uptimes-loader';
 
 @Controller()
 export class NodeUptimesJobsController {
@@ -19,17 +22,26 @@ export class NodeUptimesJobsController {
   ) {}
 
   @MessagePattern(GraphileWorkerPattern.CREATE_NODE_UPTIME_EVENT)
-  async createNodeUptimeEvent({
-    userId,
-    occurredAt,
-  }: CreateNodeUptimeEventOptions): Promise<GraphileWorkerHandlerResponse> {
-    const user = await this.usersService.find(userId);
-    if (!user) {
-      this.loggerService.error(`No user found for '${userId}'`, '');
-      return { requeue: false };
+  async createNodeUptimeEvent(
+    uptimeEvents: CreateNodeUptimeEventOptionsList,
+  ): Promise<GraphileWorkerHandlerResponse> {
+    const users = await this.usersService.findMany(
+      uptimeEvents.map((uptimeEvent) => uptimeEvent.userId),
+    );
+    const uptimeEventsWithUser = new Array<CreateEvent>();
+    for (const uptimeEvent of uptimeEvents) {
+      const user = users.get(uptimeEvent.userId);
+      if (!user) {
+        this.loggerService.error(
+          `No user found for '${uptimeEvent.userId}'`,
+          '',
+        );
+        continue;
+      }
+      uptimeEventsWithUser.push({ user, occurredAt: uptimeEvent.occurredAt });
     }
 
-    await this.nodeUptimesLoader.createEvent(user, occurredAt);
+    await this.nodeUptimesLoader.createEvent(uptimeEventsWithUser);
     return { requeue: false };
   }
 }

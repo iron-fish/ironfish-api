@@ -33,6 +33,17 @@ export class UsersService {
     });
   }
 
+  async findMany(ids: Array<number>): Promise<Map<number, User>> {
+    const users = await this.prisma.user.findMany({
+      where: { id: { in: ids } },
+    });
+    const results = new Map<number, User>();
+    for (const user of users) {
+      results.set(user.id, user);
+    }
+    return results;
+  }
+
   async findOrThrow(id: number): Promise<User> {
     const record = await this.find(id);
     if (record === null) {
