@@ -292,21 +292,23 @@ export class DepositsUpsertService {
             depositParams = depositParams.filter((d) => users.has(d.graffiti));
 
             // Deposits are shared between blocks, so we need to reassign all the ones on other blocks
-            await prisma.deposit.updateMany({
-              data: {
-                block_hash: blockHash,
-                main: true,
-              },
-              where: {
-                AND: depositParams.map((deposit) => ({
-                  transaction_hash: deposit.transaction_hash,
-                  graffiti: deposit.graffiti,
-                })),
-                network_version: networkVersion,
-              },
-            });
+            if (depositParams.length) {
+              await prisma.deposit.updateMany({
+                data: {
+                  block_hash: blockHash,
+                  main: true,
+                },
+                where: {
+                  AND: depositParams.map((deposit) => ({
+                    transaction_hash: deposit.transaction_hash,
+                    graffiti: deposit.graffiti,
+                  })),
+                  network_version: networkVersion,
+                },
+              });
+            }
 
-            // Now create new not existing deposits
+            // Create new deposits
             await prisma.deposit.createMany({
               data: depositParams,
               skipDuplicates: true,
