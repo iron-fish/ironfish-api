@@ -164,6 +164,47 @@ describe('DepositsUpsertService', () => {
       expect(user2Events[1].deposit_id).toEqual(user2Deposits[1].id);
     });
 
+    it('should not reassign any deposits', async () => {
+      const user = await usersService.create({
+        email: faker.internet.email(),
+        country_code: faker.address.countryCode(),
+        graffiti: uuid(),
+      });
+
+      await depositsUpsertService.upsert(
+        depositOperation(
+          [transaction(notes([0.1], user.graffiti))],
+          BlockOperation.CONNECTED,
+        ),
+      );
+
+      let deposits = await prisma.deposit.findMany({
+        where: { graffiti: user.graffiti },
+      });
+
+      expect(deposits).toHaveLength(1);
+      expect(deposits[0]).toMatchObject({ main: true });
+
+      await depositsUpsertService.upsert(
+        depositOperation([], BlockOperation.CONNECTED, 'test-empty-operation'),
+      );
+
+      await depositsUpsertService.upsert(
+        depositOperation(
+          [],
+          BlockOperation.DISCONNECTED,
+          'test-empty-operation',
+        ),
+      );
+
+      deposits = await prisma.deposit.findMany({
+        where: { graffiti: user.graffiti },
+      });
+
+      expect(deposits).toHaveLength(1);
+      expect(deposits[0]).toMatchObject({ main: true });
+    });
+
     it('correctly counts points', async () => {
       async function getPoints(
         user: User,
