@@ -49,13 +49,35 @@ export class GraphileWorkerMicroservice
 
   private getTaskHandlers(): TaskList {
     const patterns = Array.from(this.messageHandlers.keys());
-    const taskList: Record<string, Task> = {};
-    for (const pattern of patterns) {
-      taskList[pattern] = this.createMessageHandler(
-        pattern as unknown as GraphileWorkerPattern,
+    const handlers: Record<string, Task> = {};
+    let whitelist = new Set(patterns);
+
+    const configDyno = this.config.get<string>('DYNO');
+
+    if (configDyno) {
+      // DYNO should be something like worker.1 and converted to WORKER_1_GRAPHILE_PATTERNS
+      const configWorker =
+        configDyno.replace('.', '_').toUpperCase() + '_GRAPHILE_PATTERNS';
+
+      const configPatterns = this.config.getWithDefault<string | null>(
+        configWorker,
+        null,
       );
+
+      if (configPatterns) {
+        whitelist = new Set(configPatterns.split(',').map((s) => s.trim()));
+      }
     }
-    return taskList;
+
+    for (const pattern of patterns) {
+      if (whitelist.has(pattern)) {
+        handlers[pattern] = this.createMessageHandler(
+          pattern as unknown as GraphileWorkerPattern,
+        );
+      }
+    }
+
+    return handlers;
   }
 
   private createMessageHandler(pattern: GraphileWorkerPattern): Task {
