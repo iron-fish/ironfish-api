@@ -59,9 +59,13 @@ export class GraphileWorkerMicroservice
       const configWorker =
         configDyno.replace('.', '_').toUpperCase() + '_GRAPHILE_PATTERNS';
 
-      const configPatterns = this.config.getWithDefault<string | null>(
+      const configPatterns = this.config.getWithDefault<string>(
         configWorker,
-        null,
+        '',
+      );
+
+      this.loggerService.info(
+        `Configuring worker whitelist as ${configWorker}: ${configPatterns}`,
       );
 
       if (configPatterns) {
