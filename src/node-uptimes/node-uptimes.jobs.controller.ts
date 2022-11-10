@@ -23,6 +23,7 @@ export class NodeUptimesJobsController {
     userId,
     occurredAt,
   }: CreateNodeUptimeEventOptions): Promise<GraphileWorkerHandlerResponse> {
+    occurredAt = new Date(occurredAt);
     const user = await this.usersService.find(userId);
 
     if (!user) {
