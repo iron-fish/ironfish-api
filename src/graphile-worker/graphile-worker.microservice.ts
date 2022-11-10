@@ -16,7 +16,7 @@ export class GraphileWorkerMicroservice
 {
   private runner!: Runner;
   private concurrently = 0;
-  private lastJobEndedAt: number | null = null;
+  private lastJobEndedAt = new Date().getTime();
 
   constructor(
     private readonly config: ApiConfigService,
@@ -91,7 +91,7 @@ export class GraphileWorkerMicroservice
       const start = new Date().getTime();
 
       this.concurrently += 1;
-      const idle = start - (this.lastJobEndedAt ?? start);
+      const idle = start - this.lastJobEndedAt;
 
       try {
         await this.handle(pattern, payload);
