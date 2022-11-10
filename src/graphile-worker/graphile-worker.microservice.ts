@@ -15,6 +15,8 @@ export class GraphileWorkerMicroservice
   implements CustomTransportStrategy
 {
   private runner!: Runner;
+  private concurrently = 0;
+  private lastJobEndedAt: number | null = null;
 
   constructor(
     private readonly config: ApiConfigService,
@@ -83,6 +85,10 @@ export class GraphileWorkerMicroservice
   private createMessageHandler(pattern: GraphileWorkerPattern): Task {
     return async (payload: unknown) => {
       const start = new Date().getTime();
+
+      this.concurrently += 1;
+      const idle = start - (this.lastJobEndedAt ?? start);
+
       try {
         await this.handle(pattern, payload);
 
@@ -99,7 +105,11 @@ export class GraphileWorkerMicroservice
 
         throw error;
       } finally {
-        const duration = new Date().getTime() - start;
+        const end = new Date().getTime();
+        const duration = end - start;
+
+        this.concurrently -= 1;
+        this.lastJobEndedAt = end;
 
         this.datadogService.timing('worker', duration, {
           pattern,
@@ -109,6 +119,8 @@ export class GraphileWorkerMicroservice
           JSON.stringify({
             duration,
             pattern,
+            running: this.concurrently,
+            idle: (idle / 1000).toFixed(2) + ' seconds',
           }),
         );
       }
