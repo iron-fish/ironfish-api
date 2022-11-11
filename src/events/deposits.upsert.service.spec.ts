@@ -15,6 +15,7 @@ import { GraphileWorkerService } from '../graphile-worker/graphile-worker.servic
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
+import { DepositsService } from './deposits.service';
 import { DepositsUpsertService } from './deposits.upsert.service';
 import {
   DepositTransactionDto,
@@ -28,6 +29,7 @@ describe('DepositsUpsertService', () => {
   let depositHeadsService: DepositHeadsService;
   let depositsUpsertService: DepositsUpsertService;
   let graphileWorkerService: GraphileWorkerService;
+  let depositsService: DepositsService;
   let prisma: PrismaService;
   let usersService: UsersService;
 
@@ -41,6 +43,7 @@ describe('DepositsUpsertService', () => {
     blocksService = app.get(BlocksService);
     depositHeadsService = app.get(DepositHeadsService);
     depositsUpsertService = app.get(DepositsUpsertService);
+    depositsService = app.get(DepositsService);
     graphileWorkerService = app.get(GraphileWorkerService);
     prisma = app.get(PrismaService);
     usersService = app.get(UsersService);
@@ -78,10 +81,12 @@ describe('DepositsUpsertService', () => {
   });
 
   describe('bulkUpsert', () => {
-    it('queues upsert deposit jobs for the payloads', async () => {
+    it.only('queues upsert deposit jobs for the payloads', async () => {
       const addJob = jest
         .spyOn(graphileWorkerService, 'addJob')
         .mockImplementation(jest.fn());
+
+      const head = await depositsService.head();
 
       const payload = {
         operations: [
@@ -89,11 +94,13 @@ describe('DepositsUpsertService', () => {
             [transaction1],
             BlockOperation.CONNECTED,
             'block1Hash',
+            head?.block_hash,
           ),
           depositOperation(
             [transaction2],
             BlockOperation.CONNECTED,
             'block2Hash',
+            'block1Hash',
           ),
         ],
       };

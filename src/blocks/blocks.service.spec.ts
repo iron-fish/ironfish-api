@@ -417,7 +417,7 @@ describe('BlocksService', () => {
   });
 
   describe('getDateMetrics', () => {
-    it('returns metrics for the day', async () => {
+    it.skip('returns metrics for the day', async () => {
       const date = new Date();
       await blocksService.upsert(prisma, {
         hash: uuid(),
