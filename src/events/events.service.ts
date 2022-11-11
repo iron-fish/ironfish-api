@@ -604,14 +604,14 @@ export class EventsService {
         last_occurred_at: Date;
       }[]
     >(
-      `select
-        max(occurred_at) as last_occurred_at,
-        sum(points) as total_points,
-        count(*) as total_count,
-        sum(case when type = $1::event_type then points end) points,
-        count(case when type = $1::event_type then 0 end) as count
-      from events
-      where user_id=$2;`,
+      `SELECT
+        SUM(points) AS total_points,
+        COUNT(*) AS total_count,
+        SUM(CASE WHEN type = $1::event_type THEN points END) points,
+        COUNT(CASE WHEN type = $1::event_type THEN 1 END) AS count,
+        MAX(CASE WHEN type = $1::event_type THEN occurred_at END) AS last_occurred_at
+      FROM events
+      WHERE user_id=$2;`,
       EventType[type as keyof typeof EventType],
       userId,
     );
