@@ -16,6 +16,7 @@ import { GraphileWorkerService } from '../graphile-worker/graphile-worker.servic
 import { InfluxDbService } from '../influxdb/influxdb.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
+import { DepositsService } from './deposits.service';
 import { UpsertDepositsOperationDto } from './dto/upsert-deposit.dto';
 import { EventsService } from './events.service';
 
@@ -24,6 +25,7 @@ export class DepositsUpsertService {
   constructor(
     private readonly config: ApiConfigService,
     private readonly depositHeadsService: DepositHeadsService,
+    private readonly depositsService: DepositsService,
     private readonly eventsService: EventsService,
     private readonly graphileWorkerService: GraphileWorkerService,
     private readonly influxDbService: InfluxDbService,
@@ -41,14 +43,7 @@ export class DepositsUpsertService {
         operation.type === BlockOperation.DISCONNECTED;
 
       if (shouldUpsertDeposits) {
-        await this.graphileWorkerService.addJob<UpsertDepositsOperationDto>(
-          GraphileWorkerPattern.UPSERT_DEPOSIT,
-          operation,
-          {
-            jobKey: `upsert_deposit:${operation.block.hash}:${operation.type}`,
-            queueName: 'upsert_deposit',
-          },
-        );
+        await this.upsert(operation);
       }
     }
   }

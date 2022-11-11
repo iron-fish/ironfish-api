@@ -27,7 +27,7 @@ export class DepositsController {
   constructor(
     private readonly configService: ApiConfigService,
     private readonly depositsUpsert: DepositsUpsertService,
-    private readonly deposits: DepositsService,
+    private readonly depositsService: DepositsService,
     private readonly graphileWorkerService: GraphileWorkerService,
   ) {}
 
@@ -35,7 +35,7 @@ export class DepositsController {
   @ApiExcludeEndpoint()
   @Get('head')
   async head(): Promise<{ block_hash: string }> {
-    const depositHead = await this.deposits.head();
+    const depositHead = await this.depositsService.head();
 
     if (!depositHead) {
       throw new NotFoundException();
