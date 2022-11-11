@@ -606,7 +606,6 @@ export class EventsService {
     >(
       `SELECT
         SUM(points) AS total_points,
-        COUNT(*) AS total_count,
         SUM(CASE WHEN type = $1::event_type THEN points END) points,
         COUNT(CASE WHEN type = $1::event_type THEN 1 END) AS count,
         MAX(CASE WHEN type = $1::event_type THEN occurred_at END) AS last_occurred_at
