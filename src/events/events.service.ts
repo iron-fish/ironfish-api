@@ -596,46 +596,36 @@ export class EventsService {
   }
 
   async updateLatestPoints(userId: number, type: EventType): Promise<void> {
-    const occurredAtAggregate = await this.prisma.readClient.event.aggregate({
-      _max: {
-        occurred_at: true,
-      },
-      where: {
-        type,
-        user_id: userId,
-      },
-    });
-    const latestOccurredAt = occurredAtAggregate._max.occurred_at;
-
-    const pointsAggregate = await this.prisma.readClient.event.aggregate({
-      _sum: {
-        points: true,
-      },
-      _count: {
-        points: true,
-      },
-      where: {
-        type,
-        user_id: userId,
-      },
-    });
-    const points = pointsAggregate._sum.points ?? 0;
-    const count = pointsAggregate._count.points ?? 0;
-
-    const totalPointsAggregate = await this.prisma.readClient.event.aggregate({
-      _sum: {
-        points: true,
-      },
-      where: {
-        user_id: userId,
-      },
-    });
-    const totalPoints = totalPointsAggregate._sum.points ?? 0;
+    const [counts] = await this.prisma.readClient.$queryRawUnsafe<
+      {
+        count: BigInt;
+        points: BigInt;
+        total_points: BigInt;
+        last_occurred_at: Date;
+      }[]
+    >(
+      `select
+        max(occurred_at) as last_occurred_at,
+        sum(points) as total_points,
+        count(*) as total_count,
+        sum(case when type = $1::event_type then points end) points,
+        count(case when type = $1::event_type then 0 end) as count
+      from events
+      where user_id=$2;`,
+      EventType[type as keyof typeof EventType],
+      userId,
+    );
 
     await this.userPointsService.upsert({
       userId,
-      points: { [type]: { points, count, latestOccurredAt } },
-      totalPoints,
+      totalPoints: Number(counts.total_points),
+      points: {
+        [type]: {
+          points: Number(counts.points),
+          count: Number(counts.count),
+          latestOccurredAt: counts.last_occurred_at,
+        },
+      },
     });
   }
 
