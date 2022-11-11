@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import faker from 'faker';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
 import { ApiConfigService } from '../api-config/api-config.service';
@@ -11,7 +10,7 @@ import { ORE_TO_IRON } from '../common/constants';
 import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
 import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { bootstrapTestApp } from '../test/test-app';
-import { UsersService } from '../users/users.service';
+import { DepositsService } from './deposits.service';
 import { DepositsUpsertService } from './deposits.upsert.service';
 import {
   DepositTransactionDto,
@@ -24,16 +23,16 @@ describe('DepositsController', () => {
   let app: INestApplication;
   let config: ApiConfigService;
   let depositsUpsertsService: DepositsUpsertService;
+  let depositsService: DepositsService;
   let graphileWorkerService: GraphileWorkerService;
-  let usersService: UsersService;
   let API_KEY: string;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
     config = app.get(ApiConfigService);
     depositsUpsertsService = app.get(DepositsUpsertService);
+    depositsService = app.get(DepositsService);
     graphileWorkerService = app.get(GraphileWorkerService);
-    usersService = app.get(UsersService);
     API_KEY = config.get<string>('IRONFISH_API_KEY');
     await app.init();
   });
@@ -51,27 +50,12 @@ describe('DepositsController', () => {
   });
 
   describe('GET /deposits/head', () => {
-    const block1Hash = uuid();
-    const block2Hash = uuid();
-
     it('returns the latest deposit submitted', async () => {
+      const head = await depositsService.head();
+      const hash = uuid();
+
       await depositsUpsertsService.upsert(
-        depositOperation(
-          [transaction([...notes([1, 2], uuid())])],
-          BlockOperation.CONNECTED,
-          block1Hash,
-          uuid(),
-          1,
-        ),
-      );
-      await depositsUpsertsService.upsert(
-        depositOperation(
-          [transaction([...notes([1, 2], uuid())])],
-          BlockOperation.CONNECTED,
-          block2Hash,
-          block1Hash,
-          2,
-        ),
+        depositOperation([], BlockOperation.CONNECTED, hash, head?.block_hash),
       );
 
       const response = await request(app.getHttpServer())
@@ -79,26 +63,7 @@ describe('DepositsController', () => {
         .set('Authorization', `Bearer ${API_KEY}`)
         .expect(HttpStatus.OK);
 
-      expect(response.body.block_hash).toEqual(block2Hash);
-    });
-
-    it('returns the latest deposit if a block is disconnected', async () => {
-      await depositsUpsertsService.upsert(
-        depositOperation(
-          [transaction([...notes([1, 2], uuid())])],
-          BlockOperation.DISCONNECTED,
-          block2Hash,
-          block1Hash,
-          2,
-        ),
-      );
-
-      const response = await request(app.getHttpServer())
-        .get(`/deposits/head`)
-        .set('Authorization', `Bearer ${API_KEY}`)
-        .expect(HttpStatus.OK);
-
-      expect(response.body.block_hash).toEqual(block1Hash);
+      expect(response.body.block_hash).toEqual(hash);
     });
   });
 
@@ -119,32 +84,9 @@ describe('DepositsController', () => {
         .spyOn(depositsUpsertsService, 'bulkUpsert')
         .mockImplementationOnce(jest.fn());
 
-      const user1 = await usersService.create({
-        email: faker.internet.email(),
-        graffiti: uuid(),
-        country_code: faker.address.countryCode(),
-      });
-      const user2 = await usersService.create({
-        email: faker.internet.email(),
-        graffiti: uuid(),
-        country_code: faker.address.countryCode(),
-      });
-      const transaction1 = transaction(
-        [...notes([1, 2], user1.graffiti), ...notes([0.1, 3], user2.graffiti)],
-        'transaction1Hash',
-      );
-      const transaction2 = transaction(
-        [...notes([0.05], user1.graffiti), ...notes([1], user2.graffiti)],
-        'transaction2Hash',
-      );
-
       const payload: UpsertDepositsDto = {
         operations: [
-          depositOperation(
-            [transaction1, transaction2],
-            BlockOperation.CONNECTED,
-            'block1Hash',
-          ),
+          depositOperation([transaction(notes([1]))], BlockOperation.CONNECTED),
         ],
       };
 
@@ -158,9 +100,11 @@ describe('DepositsController', () => {
     });
   });
 
-  const notes = (amounts: number[], graffiti: string) => {
+  const notes = (amounts: number[], graffiti?: string) => {
+    const memo = graffiti ?? uuid();
+
     return amounts.map((amount) => {
-      return { memo: graffiti, amount: amount * ORE_TO_IRON };
+      return { memo, amount: amount * ORE_TO_IRON };
     });
   };
 
