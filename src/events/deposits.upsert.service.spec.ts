@@ -3,13 +3,11 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { INestApplication } from '@nestjs/common';
 import { User } from '@prisma/client';
-import assert from 'assert';
 import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { BlocksService } from '../blocks/blocks.service';
 import { BlockOperation } from '../blocks/enums/block-operation';
 import { ORE_TO_IRON } from '../common/constants';
-import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
 import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
@@ -79,39 +77,40 @@ describe('DepositsUpsertService', () => {
 
   describe('bulkUpsert', () => {
     it('queues upsert deposit jobs for the payloads', async () => {
-      const addJob = jest
-        .spyOn(graphileWorkerService, 'addJob')
+      const upsert = jest
+        .spyOn(depositsUpsertService, 'upsert')
         .mockImplementation(jest.fn());
 
       const head = await depositsService.head();
 
-      const payload = {
-        operations: [
-          depositOperation(
-            [transaction1],
-            BlockOperation.CONNECTED,
-            'block1Hash',
-            head?.block_hash,
-          ),
-          depositOperation(
-            [transaction2],
-            BlockOperation.CONNECTED,
-            'block2Hash',
-            'block1Hash',
-          ),
-        ],
-      };
+      const operations = [
+        depositOperation(
+          [transaction1],
+          BlockOperation.CONNECTED,
+          'block1Hash',
+          head?.block_hash,
+        ),
+        depositOperation(
+          [transaction2],
+          BlockOperation.CONNECTED,
+          'block2Hash',
+          'block1Hash',
+        ),
+        depositOperation(
+          [transaction1],
+          BlockOperation.FORK,
+          'block11Hash',
+          head?.block_hash,
+        ),
+      ];
 
-      await depositsUpsertService.bulkUpsert(payload.operations);
+      await depositsUpsertService.bulkUpsert(operations);
 
-      expect(addJob).toHaveBeenCalledTimes(payload.operations.length);
-      assert.ok(addJob.mock.calls);
-      for (let i = 0; i < payload.operations.length; i++) {
-        expect(addJob.mock.calls[i][0]).toBe(
-          GraphileWorkerPattern.UPSERT_DEPOSIT,
-        );
-        expect(addJob.mock.calls[i][1]).toEqual(payload.operations[i]);
-      }
+      expect(upsert).toHaveBeenCalledTimes(2);
+      expect(upsert.mock.calls[0]).toEqual([operations[0]]);
+      expect(upsert.mock.calls[1]).toEqual([operations[1]]);
+
+      upsert.mockRestore();
     });
   });
 

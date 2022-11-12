@@ -43,14 +43,7 @@ export class DepositsUpsertService {
         operation.type === BlockOperation.DISCONNECTED;
 
       if (shouldUpsertDeposits) {
-        await this.graphileWorkerService.addJob<UpsertDepositsOperationDto>(
-          GraphileWorkerPattern.UPSERT_DEPOSIT,
-          operation,
-          {
-            jobKey: `upsert_deposit:${operation.block.hash}:${operation.type}`,
-            queueName: 'upsert_deposit',
-          },
-        );
+        await this.upsert(operation);
       }
     }
   }
