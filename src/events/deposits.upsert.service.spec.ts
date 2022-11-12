@@ -2,19 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { INestApplication } from '@nestjs/common';
-import { EventType, User } from '@prisma/client';
+import { User } from '@prisma/client';
 import assert from 'assert';
 import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { BlocksService } from '../blocks/blocks.service';
 import { BlockOperation } from '../blocks/enums/block-operation';
 import { ORE_TO_IRON } from '../common/constants';
-import { DepositHeadsService } from '../deposit-heads/deposit-heads.service';
 import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
 import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
+import { DepositsService } from './deposits.service';
 import { DepositsUpsertService } from './deposits.upsert.service';
 import {
   DepositTransactionDto,
@@ -25,9 +25,9 @@ import {
 describe('DepositsUpsertService', () => {
   let app: INestApplication;
   let blocksService: BlocksService;
-  let depositHeadsService: DepositHeadsService;
   let depositsUpsertService: DepositsUpsertService;
   let graphileWorkerService: GraphileWorkerService;
+  let depositsService: DepositsService;
   let prisma: PrismaService;
   let usersService: UsersService;
 
@@ -39,8 +39,8 @@ describe('DepositsUpsertService', () => {
   beforeAll(async () => {
     app = await bootstrapTestApp();
     blocksService = app.get(BlocksService);
-    depositHeadsService = app.get(DepositHeadsService);
     depositsUpsertService = app.get(DepositsUpsertService);
+    depositsService = app.get(DepositsService);
     graphileWorkerService = app.get(GraphileWorkerService);
     prisma = app.get(PrismaService);
     usersService = app.get(UsersService);
@@ -83,17 +83,21 @@ describe('DepositsUpsertService', () => {
         .spyOn(graphileWorkerService, 'addJob')
         .mockImplementation(jest.fn());
 
+      const head = await depositsService.head();
+
       const payload = {
         operations: [
           depositOperation(
             [transaction1],
             BlockOperation.CONNECTED,
             'block1Hash',
+            head?.block_hash,
           ),
           depositOperation(
             [transaction2],
             BlockOperation.CONNECTED,
             'block2Hash',
+            'block1Hash',
           ),
         ],
       };
@@ -171,12 +175,30 @@ describe('DepositsUpsertService', () => {
         graffiti: uuid(),
       });
 
-      await depositsUpsertService.upsert(
-        depositOperation(
-          [transaction(notes([0.1], user.graffiti))],
-          BlockOperation.CONNECTED,
-        ),
+      const head = await depositsService.head();
+
+      const operation1 = depositOperation(
+        [transaction(notes([0.1], user.graffiti))],
+        BlockOperation.CONNECTED,
+        undefined,
+        head?.block_hash,
       );
+
+      const operation2 = depositOperation(
+        [],
+        BlockOperation.CONNECTED,
+        undefined,
+        operation1.block.hash,
+      );
+
+      const operation3 = depositOperation(
+        [],
+        BlockOperation.DISCONNECTED,
+        operation2.block.hash,
+        operation1.block.hash,
+      );
+
+      await depositsUpsertService.upsert(operation1);
 
       let deposits = await prisma.deposit.findMany({
         where: { graffiti: user.graffiti },
@@ -185,17 +207,8 @@ describe('DepositsUpsertService', () => {
       expect(deposits).toHaveLength(1);
       expect(deposits[0]).toMatchObject({ main: true });
 
-      await depositsUpsertService.upsert(
-        depositOperation([], BlockOperation.CONNECTED, 'test-empty-operation'),
-      );
-
-      await depositsUpsertService.upsert(
-        depositOperation(
-          [],
-          BlockOperation.DISCONNECTED,
-          'test-empty-operation',
-        ),
-      );
+      await depositsUpsertService.upsert(operation2);
+      await depositsUpsertService.upsert(operation3);
 
       deposits = await prisma.deposit.findMany({
         where: { graffiti: user.graffiti },
@@ -210,10 +223,14 @@ describe('DepositsUpsertService', () => {
         user: User,
         amount: number,
       ): Promise<number | undefined> {
+        const head = await depositsService.head();
+
         const [deposit] = await depositsUpsertService.upsert(
           depositOperation(
             [transaction(notes([amount], user.graffiti), uuid())],
             BlockOperation.CONNECTED,
+            undefined,
+            head?.block_hash,
           ),
         );
 
@@ -260,13 +277,23 @@ describe('DepositsUpsertService', () => {
         ...notes([1.0], user2.graffiti),
       ]);
 
-      await depositsUpsertService.upsert(
-        depositOperation(
-          [transaction1, transaction2],
-          BlockOperation.CONNECTED,
-          'block1Hash',
-        ),
+      const head = await depositsService.head();
+
+      const operation1 = depositOperation(
+        [transaction1, transaction2],
+        BlockOperation.CONNECTED,
+        undefined,
+        head?.block_hash,
       );
+
+      const operation2 = depositOperation(
+        [transaction1, transaction2],
+        BlockOperation.DISCONNECTED,
+        operation1.block.hash,
+        head?.block_hash,
+      );
+
+      await depositsUpsertService.upsert(operation1);
 
       let user1Events = await prisma.event.findMany({
         where: {
@@ -300,13 +327,7 @@ describe('DepositsUpsertService', () => {
       expect(user2Deposits[0].main).toBe(true);
       expect(user2Deposits[1].main).toBe(true);
 
-      await depositsUpsertService.upsert(
-        depositOperation(
-          [transaction1, transaction2],
-          BlockOperation.DISCONNECTED,
-          'block1Hash',
-        ),
-      );
+      await depositsUpsertService.upsert(operation2);
 
       user1Events = await prisma.event.findMany({
         where: {
@@ -342,73 +363,52 @@ describe('DepositsUpsertService', () => {
     });
 
     it('updates the deposit head', async () => {
-      const updateHead = jest
-        .spyOn(depositHeadsService, 'upsert')
-        .mockImplementation(jest.fn());
+      const head = await depositsService.head();
 
-      const blockHash = uuid();
-
-      await depositsUpsertService.upsert(
-        depositOperation([transaction1], BlockOperation.CONNECTED, blockHash),
+      const operation = depositOperation(
+        [transaction1],
+        BlockOperation.CONNECTED,
+        uuid(),
+        head?.block_hash,
       );
 
-      assert.ok(updateHead.mock.calls);
-      expect(updateHead.mock.calls[0][0]).toBe(blockHash);
+      await depositsUpsertService.upsert(operation);
+
+      await expect(depositsService.head()).resolves.toMatchObject({
+        block_hash: operation.block.hash,
+      });
     });
 
-    describe('on FORK operations', () => {
-      it('does not delete events on FORK operations', async () => {
-        const transaction3 = transaction(
-          [...notes([0.1], user2.graffiti)],
-          'transaction3Hash',
-        );
+    it('does does not process fork events', async () => {
+      const payload = depositOperation([], BlockOperation.FORK);
 
-        const payload = depositOperation(
-          [transaction3],
-          BlockOperation.CONNECTED,
-          'block3Hash',
-        );
-
-        await depositsUpsertService.upsert(payload);
-
-        const user2EventsBefore = await prisma.event.findMany({
-          where: {
-            user_id: user2.id,
-            type: EventType.SEND_TRANSACTION,
-          },
-        });
-
-        const forkPayload = depositOperation(
-          [transaction3],
-          BlockOperation.FORK,
-          'block3Hash',
-        );
-
-        await depositsUpsertService.upsert(forkPayload);
-
-        const user2EventsAfter = await prisma.event.findMany({
-          where: {
-            user_id: user2.id,
-            type: EventType.SEND_TRANSACTION,
-          },
-        });
-
-        expect(user2EventsBefore).toEqual(user2EventsAfter);
-      });
+      await expect(depositsUpsertService.upsert(payload)).rejects.toThrow(
+        'FORK not supported',
+      );
     });
   });
 
   describe('mismatchedDeposits', () => {
     it('finds deposits where deposits.main does not match block.main', async () => {
-      const operation = depositOperation(
+      const head = await depositsService.head();
+
+      const operation1 = depositOperation(
         [transaction1],
-        BlockOperation.DISCONNECTED,
-        'block1Hash',
+        BlockOperation.CONNECTED,
+        undefined,
+        head?.block_hash,
       );
 
-      const deposits = await depositsUpsertService.upsert(operation);
+      const operation2 = depositOperation(
+        [transaction1],
+        BlockOperation.DISCONNECTED,
+        operation1.block.hash,
+        operation1.block.previousBlockHash,
+      );
 
-      const { block } = await blockWithMismatch(operation);
+      await depositsUpsertService.upsert(operation1);
+      const deposits = await depositsUpsertService.upsert(operation2);
+      const { block } = await blockWithMismatch(operation2);
 
       const mismatched = await depositsUpsertService.mismatchedDeposits(0);
 
@@ -438,10 +438,13 @@ describe('DepositsUpsertService', () => {
 
   describe('refreshDeposits', () => {
     it('enqueues refreshDeposit jobs', async () => {
+      const head = await depositsService.head();
+
       const operation = depositOperation(
         [transaction1],
         BlockOperation.CONNECTED,
-        uuid(),
+        undefined,
+        head?.block_hash,
       );
 
       await depositsUpsertService.upsert(operation);
@@ -477,15 +480,28 @@ describe('DepositsUpsertService', () => {
 
   describe('refreshDeposit', () => {
     it('updates deposit.main to match block.main', async () => {
-      const operation = depositOperation(
+      const head = await depositsService.head();
+
+      const transaction1 = transaction(notes([1], user1.graffiti));
+
+      const operation1 = depositOperation(
         [transaction1],
-        BlockOperation.DISCONNECTED,
-        'block1Hash',
+        BlockOperation.CONNECTED,
+        undefined,
+        head?.block_hash,
       );
 
-      const deposits = await depositsUpsertService.upsert(operation);
+      const operation2 = depositOperation(
+        [transaction1],
+        BlockOperation.DISCONNECTED,
+        operation1.block.hash,
+        operation1.block.previousBlockHash,
+      );
 
-      const { block } = await blockWithMismatch(operation);
+      await depositsUpsertService.upsert(operation1);
+      const deposits = await depositsUpsertService.upsert(operation2);
+
+      const { block } = await blockWithMismatch(operation2);
 
       expect(deposits[0].main).not.toBe(block.main);
 
