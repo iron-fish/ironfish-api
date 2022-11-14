@@ -253,6 +253,8 @@ export class UsersService {
             )} AS latest_event_occurred_at
           FROM
             user_points
+          WHERE
+            total_points != 0
         ),
         user_ranks as (
           SELECT
@@ -269,7 +271,7 @@ export class UsersService {
             ) AS rank
           FROM
             users
-          JOIN
+          INNER JOIN
             user_latest_events
           ON
             user_latest_events.user_id = users.id
