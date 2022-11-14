@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable } from '@nestjs/common';
-import { EventType, MaspTransaction, User } from '@prisma/client';
+import { EventType, MaspTransaction } from '@prisma/client';
 import assert from 'assert';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { BlockOperation } from '../blocks/enums/block-operation';
@@ -12,7 +12,6 @@ import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-
 import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { MaspTransactionHeadService } from '../masp-transaction-head/masp-transaction-head.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { UsersService } from '../users/users.service';
 import { UpsertMaspTransactionsOperationDto } from './dto/upsert-masp.dto';
 import { EventsService } from './events.service';
@@ -54,32 +53,14 @@ export class MaspTransactionsUpsertService {
   async upsert(
     operation: UpsertMaspTransactionsOperationDto,
   ): Promise<MaspTransaction[]> {
-    const [maspTransactions, users] = await this.prisma.$transaction((client) =>
-      this.upsertWithClient(client, operation),
-    );
-    for (const maspTransaction of maspTransactions) {
-      const user = users.get(maspTransaction.asset_name);
-      assert(user);
-      await this.eventsService.addUpdateLatestPointsJob(
-        user.id,
-        maspTransaction.type,
-      );
-    }
-    return maspTransactions;
-  }
-
-  async upsertWithClient(
-    prisma: BasePrismaClient,
-    operation: UpsertMaspTransactionsOperationDto,
-  ): Promise<[MaspTransaction[], Map<string, User>]> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
     const blockHash = standardizeHash(operation.block.hash);
 
-    const shouldUpsertMaspTransactions =
+    assert(
       operation.type === BlockOperation.CONNECTED ||
-      operation.type === BlockOperation.DISCONNECTED;
-
-    let maspTransactions = new Array<MaspTransaction>();
+        operation.type === BlockOperation.DISCONNECTED,
+      'FORK operations not supported',
+    );
 
     const userGraffitis = operation.transactions.flatMap((transaction) =>
       transaction.notes.map((note) => note.assetName),
@@ -87,7 +68,8 @@ export class MaspTransactionsUpsertService {
     const users = await this.usersService.findManyAndMapByGraffiti(
       userGraffitis,
     );
-    if (shouldUpsertMaspTransactions) {
+    const maspTransactions = await this.prisma.$transaction(async (prisma) => {
+      let maspTransactions = new Array<MaspTransaction>();
       if (operation.type === BlockOperation.CONNECTED) {
         // Create masp transaction params
         const maspTransactionParams = new Array<{
@@ -149,7 +131,6 @@ export class MaspTransactionsUpsertService {
           skipDuplicates: true,
         });
       }
-
       if (operation.type === BlockOperation.DISCONNECTED) {
         await prisma.maspTransaction.updateMany({
           data: {
@@ -176,7 +157,8 @@ export class MaspTransactionsUpsertService {
           },
         });
       }
-    }
+      return maspTransactions;
+    });
 
     const headHash =
       operation.type === BlockOperation.CONNECTED
@@ -184,7 +166,14 @@ export class MaspTransactionsUpsertService {
         : standardizeHash(operation.block.previousBlockHash);
 
     await this.maspTransactionHeadService.upsert(headHash);
-
-    return [maspTransactions, users];
+    for (const maspTransaction of maspTransactions) {
+      const user = users.get(maspTransaction.asset_name);
+      assert(user);
+      await this.eventsService.addUpdateLatestPointsJob(
+        user.id,
+        maspTransaction.type,
+      );
+    }
+    return maspTransactions;
   }
 }

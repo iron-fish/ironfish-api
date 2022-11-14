@@ -237,35 +237,5 @@ describe('MaspTransactionUpsertService', () => {
       assert.ok(updateHead.mock.calls);
       expect(updateHead.mock.calls[0][0]).toBe(operation.block.hash);
     });
-
-    describe('on FORK operations', () => {
-      it('does not delete events on FORK operations', async () => {
-        const operation = payload.operations[0];
-        const blockOperationType = operation.transactions[0].notes[0].type;
-        const forkOperation = {
-          ...operation,
-          type: BlockOperation.FORK,
-        };
-        await maspTransactionsUpsertService.upsert(operation);
-
-        const user1EventsBefore = await prismaService.event.findMany({
-          where: {
-            user_id: user2.id,
-            type: blockOperationType,
-          },
-        });
-
-        await maspTransactionsUpsertService.upsert(forkOperation);
-
-        const user1EventsAfter = await prismaService.event.findMany({
-          where: {
-            user_id: user2.id,
-            type: blockOperationType,
-          },
-        });
-
-        expect(user1EventsBefore).toEqual(user1EventsAfter);
-      });
-    });
   });
 });
