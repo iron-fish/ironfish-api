@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Deposit, UserPoints } from '@prisma/client';
+import { Deposit, NodeUptime, UserPoints } from '@prisma/client';
 import { Job } from 'graphile-worker';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { BlocksService } from '../blocks/blocks.service';
@@ -10,6 +10,7 @@ import { serializedBlockFromRecord } from '../blocks/utils/block-translator';
 import {
   DEFAULT_LIMIT,
   MAX_LIMIT,
+  NODE_UPTIME_CREDIT_HOURS,
   ORE_TO_IRON,
   POINTS_PER_CATEGORY,
 } from '../common/constants';
@@ -499,6 +500,7 @@ export class EventsService {
 
     let metadata = {};
     let existingEvent;
+
     if (url) {
       metadata = { ...metadata, url };
       existingEvent = await this.getEventByUrl(url);
@@ -594,46 +596,35 @@ export class EventsService {
   }
 
   async updateLatestPoints(userId: number, type: EventType): Promise<void> {
-    const occurredAtAggregate = await this.prisma.readClient.event.aggregate({
-      _max: {
-        occurred_at: true,
-      },
-      where: {
-        type,
-        user_id: userId,
-      },
-    });
-    const latestOccurredAt = occurredAtAggregate._max.occurred_at;
-
-    const pointsAggregate = await this.prisma.readClient.event.aggregate({
-      _sum: {
-        points: true,
-      },
-      _count: {
-        points: true,
-      },
-      where: {
-        type,
-        user_id: userId,
-      },
-    });
-    const points = pointsAggregate._sum.points ?? 0;
-    const count = pointsAggregate._count.points ?? 0;
-
-    const totalPointsAggregate = await this.prisma.readClient.event.aggregate({
-      _sum: {
-        points: true,
-      },
-      where: {
-        user_id: userId,
-      },
-    });
-    const totalPoints = totalPointsAggregate._sum.points ?? 0;
+    const [counts] = await this.prisma.readClient.$queryRawUnsafe<
+      {
+        count: BigInt;
+        points: BigInt;
+        total_points: BigInt;
+        last_occurred_at: Date;
+      }[]
+    >(
+      `SELECT
+        SUM(points) AS total_points,
+        SUM(CASE WHEN type = $1::event_type THEN points END) points,
+        COUNT(CASE WHEN type = $1::event_type THEN 1 END) AS count,
+        MAX(CASE WHEN type = $1::event_type THEN occurred_at END) AS last_occurred_at
+      FROM events
+      WHERE user_id=$2;`,
+      EventType[type as keyof typeof EventType],
+      userId,
+    );
 
     await this.userPointsService.upsert({
       userId,
-      points: { [type]: { points, count, latestOccurredAt } },
-      totalPoints,
+      totalPoints: Number(counts.total_points),
+      points: {
+        [type]: {
+          points: Number(counts.points),
+          count: Number(counts.count),
+          latestOccurredAt: counts.last_occurred_at,
+        },
+      },
     });
   }
 
@@ -765,17 +756,27 @@ export class EventsService {
   async createNodeUptimeEventWithClient(
     user: User,
     occurredAt: Date,
+    uptime: NodeUptime,
     client: BasePrismaClient,
-  ): Promise<Event | null> {
-    return this.createWithClient(
-      {
-        occurredAt,
-        type: EventType.NODE_UPTIME,
-        userId: user.id,
+  ): Promise<number> {
+    const count = Math.floor(uptime.total_hours / NODE_UPTIME_CREDIT_HOURS);
+
+    const payloads = [];
+
+    for (let i = 0; i < count; ++i) {
+      payloads.push({
+        occurred_at: occurredAt.toISOString(),
         points: POINTS_PER_CATEGORY[EventType.NODE_UPTIME],
-      },
-      client,
-    );
+        type: EventType.NODE_UPTIME,
+        user_id: user.id,
+      });
+    }
+
+    const created = await client.event.createMany({
+      data: payloads,
+    });
+
+    return created.count;
   }
 
   /**

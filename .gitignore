@@ -1,5 +1,7 @@
 *.log
-.env
+.env*
+!.env.template
+!.env.test
 build
 node_modules
 coverage

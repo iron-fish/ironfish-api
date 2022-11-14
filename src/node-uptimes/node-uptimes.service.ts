@@ -34,6 +34,7 @@ export class NodeUptimesService {
       );
 
       let uptime = await this.getWithClient(user, prisma);
+
       if (uptime && uptime.last_checked_in >= lastCheckinCutoff) {
         return uptime;
       }
@@ -59,11 +60,13 @@ export class NodeUptimesService {
     });
 
     if (uptime.total_hours >= NODE_UPTIME_CREDIT_HOURS) {
-      const userId = user.id;
       await this.graphileWorkerService.addJob(
         GraphileWorkerPattern.CREATE_NODE_UPTIME_EVENT,
-        { userId, occurredAt: now },
-        { queueName: `update_node_uptime_for_${userId}` },
+        { userId: user.id, occurredAt: now },
+        {
+          queueName: `update_node_uptime`,
+          jobKey: `update_node_uptime_for_${user.id}`,
+        },
       );
     }
 
@@ -87,6 +90,7 @@ export class NodeUptimesService {
 
   async decrementCountedHoursWithClient(
     uptime: NodeUptime,
+    hours: number = NODE_UPTIME_CHECKIN_HOURS,
     client: BasePrismaClient,
   ): Promise<NodeUptime> {
     return client.nodeUptime.update({
@@ -95,7 +99,7 @@ export class NodeUptimesService {
       },
       data: {
         total_hours: {
-          decrement: NODE_UPTIME_CREDIT_HOURS,
+          decrement: hours,
         },
       },
     });

@@ -12,5 +12,4 @@ export interface UpsertUserPointsOptions {
     >
   >;
   totalPoints?: number;
-  totalCount?: number;
 }
