@@ -8,6 +8,7 @@ import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-
 import { GraphileWorkerException } from '../graphile-worker/graphile-worker-exception';
 import { GraphileWorkerHandlerResponse } from '../graphile-worker/interfaces/graphile-worker-handler-response';
 import { LoggerService } from '../logger/logger.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
 import { EventsService } from './events.service';
 import { CreateEventOptions } from './interfaces/create-event-options';
@@ -22,6 +23,7 @@ export class EventsJobsController {
     private readonly eventsService: EventsService,
     private readonly loggerService: LoggerService,
     private readonly usersService: UsersService,
+    private readonly prismaService: PrismaService,
   ) {}
 
   @MessagePattern(GraphileWorkerPattern.CREATE_EVENT)
@@ -29,7 +31,7 @@ export class EventsJobsController {
   async createEvent(
     options: CreateEventOptions,
   ): Promise<GraphileWorkerHandlerResponse> {
-    await this.eventsService.create(options);
+    await this.eventsService.createWithClient(options, this.prismaService);
     return { requeue: false };
   }
 
