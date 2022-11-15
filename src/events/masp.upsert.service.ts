@@ -166,6 +166,7 @@ export class MaspTransactionsUpsertService {
         : standardizeHash(operation.block.previousBlockHash);
 
     await this.maspTransactionHeadService.upsert(headHash);
+
     for (const maspTransaction of maspTransactions) {
       const user = users.get(maspTransaction.asset_name);
       assert(user);
