@@ -253,8 +253,7 @@ export class UsersService {
             )} AS latest_event_occurred_at
           FROM
             user_points
-          WHERE
-            total_points != 0
+          ${searchFilter ? '' : 'WHERE total_points != 0'}
         ),
         user_ranks as (
           SELECT
