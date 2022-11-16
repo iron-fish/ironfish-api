@@ -102,28 +102,24 @@ export function IsAxiosError(e: unknown): e is AxiosError {
 }
 
 const api = new WebApi({
-  host: 'localhost:8003',
+  host: 'http://localhost:8003',
   token: process.env.IRONFISH_API_KEY,
 });
-
-setTimeout(
-  () => async () =>
-    await api.uploadMaspTransactions([
-      {
-        type: 'connected',
-        block: {
-          hash: uuid(),
-          timestamp: new Date().getTime(),
-          sequence: 1,
-        },
-        transactions: [
-          {
-            hash: uuid(),
-            type: 'MASP_MINT',
-            assetName: 'jowparks',
-          },
-        ],
+void (async () =>
+  await api.uploadMaspTransactions([
+    {
+      type: 'connected',
+      block: {
+        hash: uuid(),
+        timestamp: new Date().getTime(),
+        sequence: 1,
       },
-    ]),
-  3000,
-);
+      transactions: [
+        {
+          hash: uuid(),
+          type: 'MASP_MINT',
+          assetName: 'jowparks',
+        },
+      ],
+    },
+  ]))();
