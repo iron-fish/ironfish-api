@@ -6,6 +6,7 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
+import { User } from '@prisma/client';
 import assert from 'assert';
 import faker from 'faker';
 import { ulid } from 'ulid';
@@ -281,40 +282,54 @@ describe('UsersService', () => {
       expect(records[1].rank).toBe(2);
       expect(records[2].rank).toBe(3);
     });
-    it('excludes users with 0 points', async () => {
+    describe('user filtering', () => {
+      let userA: User;
+      let userB: User;
       const graffiti = uuid();
-      const now = new Date();
+      const noPointsUser = graffiti + '-b';
+      beforeAll(async () => {
+        const now = new Date();
 
-      const userA = await usersService.create({
-        email: faker.internet.email(),
-        graffiti: graffiti + '-a',
-        country_code: faker.address.countryCode('alpha-3'),
+        userA = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: graffiti + '-a',
+          country_code: faker.address.countryCode('alpha-3'),
+        });
+
+        userB = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: noPointsUser,
+          country_code: faker.address.countryCode('alpha-3'),
+        });
+
+        await eventsService.create({
+          type: EventType.SOCIAL_MEDIA_PROMOTION,
+          userId: userA.id,
+          occurredAt: now,
+          points: 5,
+        });
+        await userPointsService.upsert(
+          await eventsService.getUpsertPointsOptions(userA),
+        );
       });
 
-      await usersService.create({
-        email: faker.internet.email(),
-        graffiti: graffiti + '-b',
-        country_code: faker.address.countryCode('alpha-3'),
+      it('excludes 0 point users with no search terms', async () => {
+        const { data: records } = await usersService.listWithRank({
+          eventType: EventType.SOCIAL_MEDIA_PROMOTION,
+        });
+        const ids = records.map((user) => user.id);
+        expect(ids).toContain(userA.id);
+        expect(ids).not.toContain(userB.id);
       });
-
-      await eventsService.create({
-        type: EventType.SOCIAL_MEDIA_PROMOTION,
-        userId: userA.id,
-        occurredAt: now,
-        points: 5,
+      it('includes 0 point user when username is search param', async () => {
+        const { data: records } = await usersService.listWithRank({
+          eventType: EventType.SOCIAL_MEDIA_PROMOTION,
+          search: noPointsUser,
+          limit: 3,
+        });
+        expect(records).toHaveLength(1);
+        expect(records[0].id).toEqual(userB.id);
       });
-      await userPointsService.upsert(
-        await eventsService.getUpsertPointsOptions(userA),
-      );
-
-      const { data: records } = await usersService.listWithRank({
-        eventType: EventType.SOCIAL_MEDIA_PROMOTION,
-        search: graffiti,
-        limit: 3,
-      });
-      expect(records).toHaveLength(1);
-      expect(records[0].id).toEqual(userA.id);
-      expect(records[0].total_points).toBe(5);
     });
 
     describe(`when 'event_type' is provided`, () => {
