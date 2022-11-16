@@ -21,4 +21,10 @@ export class MaspTransactionHeadService {
       where: { id: 1 },
     });
   }
+
+  async head(): Promise<MaspTransactionHead | null> {
+    return this.prisma.maspTransactionHead.findFirst({
+      where: { id: 1 },
+    });
+  }
 }

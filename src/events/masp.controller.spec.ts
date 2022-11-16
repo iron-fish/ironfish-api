@@ -5,9 +5,11 @@ import { HttpStatus, INestApplication } from '@nestjs/common';
 import { EventType } from '@prisma/client';
 import faker from 'faker';
 import request from 'supertest';
+import { v4 as uuid } from 'uuid';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { BlockOperation } from '../blocks/enums/block-operation';
 import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
+import { MaspTransactionHeadService } from '../masp-transaction-head/masp-transaction-head.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
 import {
@@ -21,6 +23,7 @@ describe('MaspController', () => {
   let config: ApiConfigService;
   let maspTransactionsUpsertService: MaspTransactionsUpsertService;
   let graphileWorkerService: GraphileWorkerService;
+  let maspTransactionHeadService: MaspTransactionHeadService;
   let usersService: UsersService;
   let API_KEY: string;
   let user1Graffiti: string;
@@ -33,6 +36,7 @@ describe('MaspController', () => {
     app = await bootstrapTestApp();
     config = app.get(ApiConfigService);
     maspTransactionsUpsertService = app.get(MaspTransactionsUpsertService);
+    maspTransactionHeadService = app.get(MaspTransactionHeadService);
     graphileWorkerService = app.get(GraphileWorkerService);
     usersService = app.get(UsersService);
     API_KEY = config.get<string>('IRONFISH_API_KEY');
@@ -42,23 +46,13 @@ describe('MaspController', () => {
     user2Graffiti = 'user2maspcontroller';
     transaction1 = {
       hash: 'transactionHash1',
-      notes: [
-        {
-          memo: 'foo',
-          type: EventType.MASP_MINT,
-          assetName: user1Graffiti,
-        },
-      ],
+      type: EventType.MASP_MINT,
+      assetName: user1Graffiti,
     };
     transaction2 = {
       hash: 'transactionHash2',
-      notes: [
-        {
-          memo: 'foo',
-          type: EventType.MASP_BURN,
-          assetName: user2Graffiti,
-        },
-      ],
+      type: EventType.MASP_BURN,
+      assetName: user2Graffiti,
     };
     payload = {
       operations: [
@@ -77,7 +71,7 @@ describe('MaspController', () => {
           type: BlockOperation.CONNECTED,
           block: {
             hash: 'controllerblockhash2',
-            previousBlockHash: 'previousblockhash2',
+            previousBlockHash: 'controllerblockhash1',
             timestamp: new Date(),
             sequence: 4,
           },
@@ -111,7 +105,16 @@ describe('MaspController', () => {
 
   describe('GET /masp/head', () => {
     it('returns the latest deposit submitted', async () => {
-      await maspTransactionsUpsertService.upsert(payload.operations[0]);
+      const head = await maspTransactionHeadService.head();
+
+      const operation = {
+        ...payload.operations[0],
+        block: {
+          ...payload.operations[0].block,
+          previousBlockHash: head?.block_hash || uuid(),
+        },
+      };
+      await maspTransactionsUpsertService.upsert(operation);
       await maspTransactionsUpsertService.upsert(payload.operations[1]);
 
       const response = await request(app.getHttpServer())
@@ -125,7 +128,16 @@ describe('MaspController', () => {
     });
 
     it('returns the latest deposit if a block is disconnected', async () => {
-      await maspTransactionsUpsertService.upsert(payload.operations[0]);
+      const head = await maspTransactionHeadService.head();
+
+      const operation = {
+        ...payload.operations[0],
+        block: {
+          ...payload.operations[0].block,
+          previousBlockHash: head?.block_hash || uuid(),
+        },
+      };
+      await maspTransactionsUpsertService.upsert(operation);
       await maspTransactionsUpsertService.upsert({
         ...payload.operations[0],
         type: BlockOperation.DISCONNECTED,

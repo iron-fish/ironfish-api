@@ -15,27 +15,15 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { BlockOperation } from '../../blocks/enums/block-operation';
-
-export class UpsertMaspTransactionNoteDto {
+export class MaspTransactionDto {
   @IsString()
-  readonly memo!: string;
+  readonly hash!: string;
 
   @IsString()
   readonly type!: EventType;
 
   @IsString()
   readonly assetName!: string;
-}
-
-export class MaspTransactionDto {
-  @IsString()
-  readonly hash!: string;
-
-  @IsArray()
-  @ArrayMinSize(1)
-  @ValidateNested({ each: true })
-  @Type(() => UpsertMaspTransactionNoteDto)
-  readonly notes!: UpsertMaspTransactionNoteDto[];
 }
 
 export class UpsertMaspTransactionBlockDto {

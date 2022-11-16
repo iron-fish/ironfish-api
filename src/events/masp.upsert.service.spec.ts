@@ -6,8 +6,6 @@ import { EventType, User } from '@prisma/client';
 import assert from 'assert';
 import faker from 'faker';
 import { BlockOperation } from '../blocks/enums/block-operation';
-import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
-import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { MaspTransactionHeadService } from '../masp-transaction-head/masp-transaction-head.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
@@ -21,7 +19,6 @@ describe('MaspTransactionUpsertService', () => {
   let app: INestApplication;
   let maspTransactionHeadService: MaspTransactionHeadService;
   let maspTransactionsUpsertService: MaspTransactionsUpsertService;
-  let graphileWorkerService: GraphileWorkerService;
   let prismaService: PrismaService;
   let usersService: UsersService;
 
@@ -37,33 +34,18 @@ describe('MaspTransactionUpsertService', () => {
     const user2Graffiti = 'user2masp';
     transaction1 = {
       hash: 'transactionHash1',
-      notes: [
-        {
-          memo: 'foo',
-          type: EventType.MASP_MINT,
-          assetName: user1Graffiti,
-        },
-      ],
+      type: EventType.MASP_MINT,
+      assetName: user1Graffiti,
     };
     transaction2 = {
       hash: 'transactionHash2',
-      notes: [
-        {
-          memo: 'foo',
-          type: EventType.MASP_BURN,
-          assetName: user2Graffiti,
-        },
-      ],
+      type: EventType.MASP_BURN,
+      assetName: user2Graffiti,
     };
     transaction3 = {
       hash: 'transactionHash3',
-      notes: [
-        {
-          memo: 'foo',
-          type: EventType.MASP_MINT,
-          assetName: user2Graffiti,
-        },
-      ],
+      type: EventType.MASP_MINT,
+      assetName: user2Graffiti,
     };
     payload = {
       operations: [
@@ -93,7 +75,6 @@ describe('MaspTransactionUpsertService', () => {
     maspTransactionsUpsertService = app.get(MaspTransactionsUpsertService);
     maspTransactionHeadService = app.get(MaspTransactionHeadService);
     prismaService = app.get(PrismaService);
-    graphileWorkerService = app.get(GraphileWorkerService);
     usersService = app.get(UsersService);
     await app.init();
 
@@ -118,25 +99,6 @@ describe('MaspTransactionUpsertService', () => {
     jest.clearAllMocks();
   });
 
-  describe('bulkUpsert', () => {
-    it('queues upsert masp transaction jobs for the payloads', async () => {
-      const addJob = jest
-        .spyOn(graphileWorkerService, 'addJob')
-        .mockImplementation(jest.fn());
-
-      await maspTransactionsUpsertService.bulkUpsert(payload.operations);
-
-      expect(addJob).toHaveBeenCalledTimes(payload.operations.length);
-      assert.ok(addJob.mock.calls);
-      for (let i = 0; i < payload.operations.length; i++) {
-        expect(addJob.mock.calls[i][0]).toBe(
-          GraphileWorkerPattern.UPSERT_MASP_TRANSACTION,
-        );
-        expect(addJob.mock.calls[i][1]).toEqual(payload.operations[i]);
-      }
-    });
-  });
-
   describe('upsert', () => {
     it('upserts new masp transactions and events', async () => {
       // setup
@@ -149,14 +111,14 @@ describe('MaspTransactionUpsertService', () => {
       const user1Events = await prismaService.event.findMany({
         where: {
           user_id: user1.id,
-          type: transaction1.notes[0].type,
+          type: transaction1.type,
         },
       });
 
       const user2Events = await prismaService.event.findMany({
         where: {
           user_id: user2.id,
-          type: transaction2.notes[0].type,
+          type: transaction2.type,
         },
       });
 
@@ -197,20 +159,21 @@ describe('MaspTransactionUpsertService', () => {
     describe('on DISCONNECTED operations', () => {
       it('removes events', async () => {
         // connected operation
+        await prismaService.maspTransactionHead.delete({ where: { id: 1 } });
         await maspTransactionsUpsertService.upsert(payload.operations[0]);
 
         //disconnected operation
-        const diconnectingOperation = {
+        const disconnectingOperation = {
           ...payload.operations[0],
           type: BlockOperation.DISCONNECTED,
         };
 
-        await maspTransactionsUpsertService.upsert(diconnectingOperation);
+        await maspTransactionsUpsertService.upsert(disconnectingOperation);
 
         const user1Events = await prismaService.event.findMany({
           where: {
             user_id: user1.id,
-            type: diconnectingOperation.transactions[0].notes[0].type,
+            type: disconnectingOperation.transactions[0].type,
           },
         });
 
@@ -221,21 +184,30 @@ describe('MaspTransactionUpsertService', () => {
             },
           });
 
-        expect(user1Events[0]).toBeFalsy();
-
+        expect(user1Events).toHaveLength(0);
         expect(user1MaspTransactions[0].main).toBe(false);
       });
     });
 
-    it('updates the deposit head', async () => {
-      const operation = payload.operations[0];
-      const updateHead = jest
-        .spyOn(maspTransactionHeadService, 'upsert')
-        .mockImplementation(jest.fn());
+    it('updates the masp transactions head', async () => {
+      const head = await maspTransactionHeadService.head();
+      assert(head);
+      const operation = {
+        transactions: [transaction1, transaction2],
+        type: BlockOperation.CONNECTED,
+        block: {
+          hash: 'maspupsertblockhash1',
+          previousBlockHash: head.block_hash,
+          timestamp: new Date(),
+          sequence: 3,
+        },
+      };
+
       await maspTransactionsUpsertService.upsert(operation);
 
-      assert.ok(updateHead.mock.calls);
-      expect(updateHead.mock.calls[0][0]).toBe(operation.block.hash);
+      await expect(maspTransactionHeadService.head()).resolves.toMatchObject({
+        block_hash: payload.operations[0].block.hash,
+      });
     });
   });
 });

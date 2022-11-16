@@ -22,7 +22,7 @@ import { MaspTransactionsUpsertService } from './masp.upsert.service';
 @Controller('masp')
 export class MaspController {
   constructor(
-    private readonly maspTransactionUpsert: MaspTransactionsUpsertService,
+    private readonly maspTransactionUpsertService: MaspTransactionsUpsertService,
     private readonly prisma: PrismaService,
   ) {}
 
@@ -56,7 +56,7 @@ export class MaspController {
     data: UpsertMaspTransactionsDto,
     @Res() res: Response,
   ): Promise<void> {
-    await this.maspTransactionUpsert.bulkUpsert(data.operations);
+    await this.maspTransactionUpsertService.bulkUpsert(data.operations);
     res.sendStatus(HttpStatus.ACCEPTED);
   }
 }
