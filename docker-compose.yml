@@ -11,6 +11,8 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker-compose.sql:/docker-entrypoint-initdb.d/init.sql
+    # uncomment below if you want to log queries
+    # command: ["postgres", "-c", "log_statement=all", "-c", "log_destination=stderr"]
 
 volumes:
   postgres_data:
