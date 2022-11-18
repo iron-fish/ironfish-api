@@ -8,7 +8,6 @@ import { ApiConfigService } from '../api-config/api-config.service';
 import { BlockOperation } from '../blocks/enums/block-operation';
 import { POINTS_PER_CATEGORY } from '../common/constants';
 import { standardizeHash } from '../common/utils/hash';
-import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { MaspTransactionHeadService } from '../masp-transaction-head/masp-transaction-head.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
@@ -21,7 +20,6 @@ export class MaspTransactionsUpsertService {
     private readonly config: ApiConfigService,
     private readonly maspTransactionHeadService: MaspTransactionHeadService,
     private readonly eventsService: EventsService,
-    private readonly graphileWorkerService: GraphileWorkerService,
     private readonly prisma: PrismaService,
     private readonly usersService: UsersService,
   ) {}
@@ -102,7 +100,24 @@ export class MaspTransactionsUpsertService {
             network_version: networkVersion,
           });
         }
-
+        // MASP transactions are shared between blocks, so we need to reassign all the ones on other blocks
+        if (maspTransactionParams.length) {
+          await prisma.maspTransaction.updateMany({
+            data: {
+              block_hash: blockHash,
+              main: true,
+            },
+            where: {
+              OR: maspTransactionParams.map((masp) => ({
+                AND: {
+                  transaction_hash: masp.transaction_hash,
+                  asset_name: masp.asset_name,
+                },
+              })),
+              network_version: networkVersion,
+            },
+          });
+        }
         // Now create new not existing masp transactions
         await prisma.maspTransaction.createMany({
           data: maspTransactionParams,
@@ -115,7 +130,6 @@ export class MaspTransactionsUpsertService {
             network_version: networkVersion,
           },
         });
-
         const eventPayloads = maspTransactions.map((maspTransaction) => {
           const user = users.get(maspTransaction.asset_name);
           assert(user);

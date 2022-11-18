@@ -156,10 +156,43 @@ describe('MaspTransactionUpsertService', () => {
       expect(user2Events[0].type).toEqual(EventType.MASP_BURN);
     });
 
+    it('updates MASP block hash on reorg', async () => {
+      // setup
+      await prismaService.maspTransactionHead.delete({ where: { id: 1 } });
+      const individualPayload = payload.operations[0];
+
+      // test
+      await maspTransactionsUpsertService.upsert(individualPayload);
+      await maspTransactionsUpsertService.upsert({
+        ...individualPayload,
+        type: BlockOperation.DISCONNECTED,
+      });
+      const updatedHash = 'newhash';
+      await maspTransactionsUpsertService.upsert({
+        ...individualPayload,
+        block: {
+          ...individualPayload.block,
+          hash: updatedHash,
+        },
+      });
+      const user1MaspTransactions =
+        await prismaService.maspTransaction.findMany({
+          where: {
+            asset_name: user1.graffiti,
+          },
+        });
+
+      expect(user1MaspTransactions).toHaveLength(1);
+      expect(user1MaspTransactions[0].asset_name).toEqual(user1.graffiti);
+      expect(user1MaspTransactions[0].type).toEqual(EventType.MASP_MINT);
+      expect(user1MaspTransactions[0].block_hash).toBe(updatedHash);
+    });
+
     describe('on DISCONNECTED operations', () => {
       it('removes events', async () => {
         // connected operation
         await prismaService.maspTransactionHead.delete({ where: { id: 1 } });
+        // await prismaService.event.deleteMany();
         await maspTransactionsUpsertService.upsert(payload.operations[0]);
 
         //disconnected operation
