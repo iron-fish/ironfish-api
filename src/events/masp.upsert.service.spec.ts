@@ -192,7 +192,6 @@ describe('MaspTransactionUpsertService', () => {
       it('removes events', async () => {
         // connected operation
         await prismaService.maspTransactionHead.delete({ where: { id: 1 } });
-        // await prismaService.event.deleteMany();
         await maspTransactionsUpsertService.upsert(payload.operations[0]);
 
         //disconnected operation

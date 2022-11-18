@@ -182,6 +182,9 @@ export class UsersController {
           eventMetrics[EventType.SOCIAL_MEDIA_PROMOTION],
         node_uptime: eventMetrics[EventType.NODE_UPTIME],
         send_transaction: eventMetrics[EventType.SEND_TRANSACTION],
+        masp_burn: eventMetrics[EventType.MASP_BURN],
+        masp_mint: eventMetrics[EventType.MASP_MINT],
+        masp_transfer: eventMetrics[EventType.MASP_TRANSFER],
       },
     };
   }
