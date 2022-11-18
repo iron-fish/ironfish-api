@@ -140,7 +140,9 @@ export class UsersController {
         main: await this.eventsService.getLifetimeEventsMetricsForUser(user, [
           EventType.BUG_CAUGHT,
           EventType.NODE_UPTIME,
-          EventType.SEND_TRANSACTION,
+          EventType.MASP_BURN,
+          EventType.MASP_MINT,
+          EventType.MASP_TRANSFER,
         ]),
         code: await this.eventsService.getLifetimeEventsMetricsForUser(user, [
           EventType.PULL_REQUEST_MERGED,
