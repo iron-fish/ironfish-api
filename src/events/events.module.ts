@@ -7,25 +7,38 @@ import { BlocksModule } from '../blocks/blocks.module';
 import { DepositHeadsModule } from '../deposit-heads/deposit-heads.module';
 import { GraphileWorkerModule } from '../graphile-worker/graphile-worker.module';
 import { InfluxDbModule } from '../influxdb/influxdb.module';
+import { MaspTransactionHeadModule } from '../masp-transaction-head/masp-transaction-head.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { UserPointsModule } from '../user-points/user-points.module';
 import { UsersModule } from '../users/users.module';
 import { DepositsService } from './deposits.service';
 import { DepositsUpsertService } from './deposits.upsert.service';
 import { EventsService } from './events.service';
+import { MaspTransactionsUpsertService } from './masp.upsert.service';
 
 @Module({
-  exports: [EventsService, DepositsService, DepositsUpsertService],
+  exports: [
+    EventsService,
+    DepositsService,
+    DepositsUpsertService,
+    MaspTransactionsUpsertService,
+  ],
   imports: [
     ApiConfigModule,
     BlocksModule,
     DepositHeadsModule,
+    MaspTransactionHeadModule,
     GraphileWorkerModule,
     InfluxDbModule,
     PrismaModule,
     UserPointsModule,
     UsersModule,
   ],
-  providers: [EventsService, DepositsService, DepositsUpsertService],
+  providers: [
+    EventsService,
+    DepositsService,
+    DepositsUpsertService,
+    MaspTransactionsUpsertService,
+  ],
 })
 export class EventsModule {}

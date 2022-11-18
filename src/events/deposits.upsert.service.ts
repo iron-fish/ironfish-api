@@ -309,9 +309,11 @@ export class DepositsUpsertService {
                 main: true,
               },
               where: {
-                AND: depositParams.map((deposit) => ({
-                  transaction_hash: deposit.transaction_hash,
-                  graffiti: deposit.graffiti,
+                OR: depositParams.map((deposit) => ({
+                  AND: {
+                    transaction_hash: deposit.transaction_hash,
+                    graffiti: deposit.graffiti,
+                  },
                 })),
                 network_version: networkVersion,
               },
