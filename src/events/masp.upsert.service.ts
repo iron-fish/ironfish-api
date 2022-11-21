@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable } from '@nestjs/common';
-import { EventType, MaspTransaction } from '@prisma/client';
+import { EventType, MaspTransaction, User } from '@prisma/client';
 import assert from 'assert';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { BlockOperation } from '../blocks/enums/block-operation';
@@ -62,7 +62,7 @@ export class MaspTransactionsUpsertService {
     const previousBlockHash = standardizeHash(
       operation.block.previousBlockHash,
     );
-
+    let users = new Map<string, User>();
     const maspTransactions = await this.prisma.$transaction(async (prisma) => {
       const head = await this.maspTransactionHeadService.head();
       let maspTransactions = new Array<MaspTransaction>();
@@ -70,9 +70,7 @@ export class MaspTransactionsUpsertService {
         const userGraffitis = operation.transactions.map(
           (transaction) => transaction.assetName,
         );
-        const users = await this.usersService.findManyAndMapByGraffiti(
-          userGraffitis,
-        );
+        users = await this.usersService.findManyAndMapByGraffiti(userGraffitis);
         if (head && head.block_hash !== previousBlockHash) {
           throw new Error(
             `Cannot connect block ${blockHash} to ${String(
@@ -178,7 +176,9 @@ export class MaspTransactionsUpsertService {
             network_version: networkVersion,
           },
         });
-
+        users = await this.usersService.findManyAndMapByGraffiti(
+          maspTransactions.map((transaction) => transaction.asset_name),
+        );
         await prisma.event.deleteMany({
           where: {
             masp_transaction_id: {
@@ -197,11 +197,8 @@ export class MaspTransactionsUpsertService {
       return maspTransactions;
     });
 
-    const pointUsers = await this.usersService.findManyAndMapByGraffiti(
-      maspTransactions.map((transaction) => transaction.asset_name),
-    );
     for (const maspTransaction of maspTransactions) {
-      const user = pointUsers.get(maspTransaction.asset_name);
+      const user = users.get(maspTransaction.asset_name);
       assert(user);
       await this.eventsService.addUpdateLatestPointsJob(
         user.id,
