@@ -52,12 +52,12 @@ export class MaspTransactionsUpsertService {
       'FORK operations not supported',
     );
 
-    const userGraffitis = operation.transactions.map(
-      (transaction) => transaction.assetName,
-    );
-    const users = await this.usersService.findManyAndMapByGraffiti(
-      userGraffitis,
-    );
+    if (operation.type === BlockOperation.DISCONNECTED) {
+      assert(
+        operation.transactions.length === 0,
+        'Transactions should not be sent with disconnected blocks',
+      );
+    }
 
     const previousBlockHash = standardizeHash(
       operation.block.previousBlockHash,
@@ -67,6 +67,12 @@ export class MaspTransactionsUpsertService {
       const head = await this.maspTransactionHeadService.head();
       let maspTransactions = new Array<MaspTransaction>();
       if (operation.type === BlockOperation.CONNECTED) {
+        const userGraffitis = operation.transactions.map(
+          (transaction) => transaction.assetName,
+        );
+        const users = await this.usersService.findManyAndMapByGraffiti(
+          userGraffitis,
+        );
         if (head && head.block_hash !== previousBlockHash) {
           throw new Error(
             `Cannot connect block ${blockHash} to ${String(
@@ -191,8 +197,11 @@ export class MaspTransactionsUpsertService {
       return maspTransactions;
     });
 
+    const pointUsers = await this.usersService.findManyAndMapByGraffiti(
+      maspTransactions.map((transaction) => transaction.asset_name),
+    );
     for (const maspTransaction of maspTransactions) {
-      const user = users.get(maspTransaction.asset_name);
+      const user = pointUsers.get(maspTransaction.asset_name);
       assert(user);
       await this.eventsService.addUpdateLatestPointsJob(
         user.id,
