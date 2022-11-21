@@ -267,7 +267,7 @@ model MaspTransaction {
   event            Event?
 
   @@unique([transaction_hash], name: "uq_masp_on_transaction_hash", map: "uq_masp_on_transaction_hash")
-  @@unique([asset_name, type, week], name: "uq_masp_on_asset_type_week", map: "uq_masp_on_asset_type_week")
+  @@unique([asset_name, type, week, main], name: "uq_masp_on_asset_type_week_main", map: "uq_masp_on_asset_type_week_main")
 
   @@map("masp_transactions")
 }

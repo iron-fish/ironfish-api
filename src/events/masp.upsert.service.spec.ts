@@ -254,6 +254,70 @@ describe('MaspTransactionUpsertService', () => {
       },
     );
 
+    it('Allows resubmission of assets if block was disconnected', async () => {
+      // setup
+      const head = await maspTransactionHeadService.head();
+      const initialOperation = {
+        transactions: [
+          {
+            hash: 'originaldisconnectedhash',
+            type: EventType.MASP_MINT,
+            assetName: greedyUser.graffiti,
+          },
+        ],
+        type: BlockOperation.CONNECTED,
+        block: {
+          hash: 'pointtest1',
+          previousBlockHash: head?.block_hash || 'foo',
+          timestamp: new Date('2023/03/01'),
+          sequence: 1,
+        },
+      };
+      const disconnectOperation = {
+        ...initialOperation,
+        transactions: [],
+        type: BlockOperation.DISCONNECTED,
+      };
+      const secondOperation = {
+        transactions: [
+          {
+            hash: 'validnewtransaction',
+            type: EventType.MASP_MINT,
+            assetName: greedyUser.graffiti,
+          },
+        ],
+        type: BlockOperation.CONNECTED,
+        block: {
+          hash: 'pointtest2',
+          previousBlockHash: head?.block_hash || 'foo',
+          timestamp: new Date('2023/03/01'),
+          sequence: 2,
+        },
+      };
+      // test
+      await maspTransactionsUpsertService.upsert(initialOperation);
+      await maspTransactionsUpsertService.upsert(disconnectOperation);
+      await maspTransactionsUpsertService.upsert(secondOperation);
+      const greedyUserTransactions =
+        await prismaService.maspTransaction.findMany({
+          where: {
+            asset_name: greedyUser.graffiti,
+          },
+        });
+      expect(greedyUserTransactions).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            transaction_hash: 'originaldisconnectedhash',
+            main: false,
+          }),
+          expect.objectContaining({
+            transaction_hash: 'validnewtransaction',
+            main: true,
+          }),
+        ]),
+      );
+    });
+
     describe('on DISCONNECTED operations', () => {
       it('removes events', async () => {
         // connected operation
