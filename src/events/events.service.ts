@@ -10,6 +10,7 @@ import { serializedBlockFromRecord } from '../blocks/utils/block-translator';
 import {
   DEFAULT_LIMIT,
   MAX_LIMIT,
+  MAX_POINT_BLOCK_SEQUENCE,
   NODE_UPTIME_CREDIT_HOURS,
   ORE_TO_IRON,
   POINTS_PER_CATEGORY,
@@ -566,13 +567,24 @@ export class EventsService {
   }
 
   calculateDepositPoints(deposit: Deposit): number {
-    const minDepositSizeOre =
-      this.config.get<number>('MIN_DEPOSIT_SIZE') * ORE_TO_IRON;
+    let minDepositSize;
+    let maxDepositSize;
 
-    return (
-      Math.floor(deposit.amount / minDepositSizeOre) *
-      POINTS_PER_CATEGORY[EventType.SEND_TRANSACTION]
-    );
+    if (deposit.block_sequence < MAX_POINT_BLOCK_SEQUENCE) {
+      minDepositSize = 0.1;
+      maxDepositSize = 0.1;
+    } else {
+      minDepositSize = this.config.get<number>('MIN_DEPOSIT_SIZE');
+      maxDepositSize = this.config.get<number>('MAX_DEPOSIT_SIZE');
+    }
+
+    const minDepositSizeOre = minDepositSize * ORE_TO_IRON;
+    const maxDepositSizeOre = maxDepositSize * ORE_TO_IRON;
+
+    const amountCapped = Math.min(deposit.amount, maxDepositSizeOre);
+    const numIncrements = Math.floor(amountCapped / minDepositSizeOre);
+
+    return numIncrements * POINTS_PER_CATEGORY[EventType.SEND_TRANSACTION];
   }
 
   addUpdateLatestPointsJob(userId: number, type: EventType): Promise<Job> {
