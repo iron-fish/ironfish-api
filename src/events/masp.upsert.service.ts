@@ -52,6 +52,13 @@ export class MaspTransactionsUpsertService {
       'FORK operations not supported',
     );
 
+    if (operation.type === BlockOperation.DISCONNECTED) {
+      assert(
+        operation.transactions.length === 0,
+        'Transactions should not be sent with disconnected blocks',
+      );
+    }
+
     const userGraffitis = operation.transactions.map(
       (transaction) => transaction.assetName,
     );
