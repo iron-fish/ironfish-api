@@ -11,6 +11,7 @@ import { standardizeHash } from '../common/utils/hash';
 import { MaspTransactionHeadService } from '../masp-transaction-head/masp-transaction-head.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
+import { phase3Week } from '../users/utils/week';
 import { UpsertMaspTransactionsOperationDto } from './dto/upsert-masp.dto';
 import { EventsService } from './events.service';
 
@@ -86,10 +87,14 @@ export class MaspTransactionsUpsertService {
           block_hash: string;
           block_sequence: number;
           network_version: number;
+          week: number;
           type: EventType;
           asset_name: string;
           main: boolean;
         }>();
+        const currentPhase3Week = phase3Week(
+          new Date(operation.block.timestamp),
+        );
         for (const transaction of operation.transactions) {
           // Masp assetName should match user grafitti
           if (!users.has(transaction.assetName)) {
@@ -104,6 +109,7 @@ export class MaspTransactionsUpsertService {
             block_sequence: operation.block.sequence,
             main: true,
             network_version: networkVersion,
+            week: currentPhase3Week,
           });
         }
         // MASP transactions are shared between blocks, so we need to reassign all the ones on other blocks

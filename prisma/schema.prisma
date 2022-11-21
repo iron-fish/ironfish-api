@@ -262,10 +262,13 @@ model MaspTransaction {
   type             EventType
   block_sequence   Int
   network_version  Int
+  week             Int
   main             Boolean
   event            Event?
 
   @@unique([transaction_hash], name: "uq_masp_on_transaction_hash", map: "uq_masp_on_transaction_hash")
+  @@unique([asset_name, type, week], name: "uq_masp_on_asset_type_week", map: "uq_masp_on_asset_type_week")
+
   @@map("masp_transactions")
 }
 
