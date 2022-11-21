@@ -7,7 +7,7 @@ import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { BlocksService } from '../blocks/blocks.service';
 import { BlockOperation } from '../blocks/enums/block-operation';
-import { ORE_TO_IRON } from '../common/constants';
+import { MAX_POINT_BLOCK_SEQUENCE, ORE_TO_IRON } from '../common/constants';
 import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
@@ -230,6 +230,7 @@ describe('DepositsUpsertService', () => {
             BlockOperation.CONNECTED,
             undefined,
             head?.block_hash,
+            MAX_POINT_BLOCK_SEQUENCE,
           ),
         );
 

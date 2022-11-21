@@ -8,7 +8,9 @@ import { v4 as uuid } from 'uuid';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { serializedBlockFromRecord } from '../blocks/utils/block-translator';
 import {
+  MAX_POINT_BLOCK_SEQUENCE,
   NODE_UPTIME_CREDIT_HOURS,
+  ORE_TO_IRON,
   POINTS_PER_CATEGORY,
 } from '../common/constants';
 import { EventsJobsController } from '../events/events.jobs.controller';
@@ -969,5 +971,43 @@ describe('EventsService', () => {
         user_id: user.id,
       });
     });
+  });
+
+  it('calculateDepositPoints', async () => {
+    const user = await setupUser();
+
+    const deposit = {
+      id: 1,
+      created_at: new Date(),
+      updated_at: new Date(),
+      amount: 0 * ORE_TO_IRON,
+      transaction_hash: uuid(),
+      user_id: user,
+      block_hash: uuid(),
+      block_sequence: 0,
+      graffiti: '',
+      network_version: 0,
+      main: true,
+    };
+
+    deposit.amount = 0 * ORE_TO_IRON;
+    expect(eventsService.calculateDepositPoints(deposit)).toBe(0);
+
+    deposit.amount = 0.1 * ORE_TO_IRON;
+    expect(eventsService.calculateDepositPoints(deposit)).toBe(1);
+
+    deposit.amount = 0.2 * ORE_TO_IRON;
+    expect(eventsService.calculateDepositPoints(deposit)).toBe(1);
+
+    deposit.amount = 10 * ORE_TO_IRON;
+    expect(eventsService.calculateDepositPoints(deposit)).toBe(1);
+
+    deposit.amount = 1 * ORE_TO_IRON;
+    deposit.block_sequence = MAX_POINT_BLOCK_SEQUENCE;
+    expect(eventsService.calculateDepositPoints(deposit)).toBe(6);
+
+    deposit.amount = 0.6 * ORE_TO_IRON;
+    deposit.block_sequence = MAX_POINT_BLOCK_SEQUENCE;
+    expect(eventsService.calculateDepositPoints(deposit)).toBe(6);
   });
 });
