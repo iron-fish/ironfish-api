@@ -139,7 +139,8 @@ describe('MaspController', () => {
       };
       await maspTransactionsUpsertService.upsert(operation);
       await maspTransactionsUpsertService.upsert({
-        ...payload.operations[0],
+        ...operation,
+        transactions: [],
         type: BlockOperation.DISCONNECTED,
       });
 
@@ -149,7 +150,7 @@ describe('MaspController', () => {
         .expect(HttpStatus.OK);
 
       expect(response.body.block_hash).toEqual(
-        payload.operations[0].block.previousBlockHash,
+        operation.block.previousBlockHash,
       );
     });
   });

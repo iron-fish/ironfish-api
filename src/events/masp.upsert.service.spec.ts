@@ -165,6 +165,7 @@ describe('MaspTransactionUpsertService', () => {
       await maspTransactionsUpsertService.upsert(individualPayload);
       await maspTransactionsUpsertService.upsert({
         ...individualPayload,
+        transactions: [],
         type: BlockOperation.DISCONNECTED,
       });
       const updatedHash = 'newhash';
@@ -197,6 +198,7 @@ describe('MaspTransactionUpsertService', () => {
         //disconnected operation
         const disconnectingOperation = {
           ...payload.operations[0],
+          transactions: [],
           type: BlockOperation.DISCONNECTED,
         };
 
@@ -205,7 +207,7 @@ describe('MaspTransactionUpsertService', () => {
         const user1Events = await prismaService.event.findMany({
           where: {
             user_id: user1.id,
-            type: disconnectingOperation.transactions[0].type,
+            type: payload.operations[0].transactions[0].type,
           },
         });
 
