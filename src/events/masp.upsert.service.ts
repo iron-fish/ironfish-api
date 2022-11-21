@@ -135,7 +135,6 @@ export class MaspTransactionsUpsertService {
           data: maspTransactionParams,
           skipDuplicates: true,
         });
-
         maspTransactions = await prisma.maspTransaction.findMany({
           where: {
             block_hash: blockHash,

@@ -24,6 +24,7 @@ describe('MaspTransactionUpsertService', () => {
 
   let user1: User;
   let user2: User;
+  let greedyUser: User;
   let transaction1: MaspTransactionDto;
   let transaction2: MaspTransactionDto;
   let transaction3: MaspTransactionDto;
@@ -32,6 +33,7 @@ describe('MaspTransactionUpsertService', () => {
   beforeAll(async () => {
     const user1Graffiti = 'user1masp';
     const user2Graffiti = 'user2masp';
+    const greedyUserGraffiti = 'greedyUser';
     transaction1 = {
       hash: 'transactionHash1',
       type: EventType.MASP_MINT,
@@ -87,6 +89,12 @@ describe('MaspTransactionUpsertService', () => {
     user2 = await usersService.create({
       email: faker.internet.email(),
       graffiti: user2Graffiti,
+      country_code: faker.address.countryCode(),
+    });
+
+    greedyUser = await usersService.create({
+      email: faker.internet.email(),
+      graffiti: greedyUserGraffiti,
       country_code: faker.address.countryCode(),
     });
   });
@@ -188,6 +196,63 @@ describe('MaspTransactionUpsertService', () => {
       expect(user1MaspTransactions[0].type).toEqual(EventType.MASP_MINT);
       expect(user1MaspTransactions[0].block_hash).toBe(updatedHash);
     });
+
+    it.each([
+      [new Date('2023/02/01'), new Date('2023/02/01'), 1],
+      [new Date('2023/02/01'), new Date('2023/02/14'), 2],
+    ])(
+      'Transactions on dates %p %p produce %p masp transactions (dates relative to launch, see phase3Week() )',
+      async (
+        initialDate: Date,
+        secondDate: Date,
+        expectedNumberMasp: number,
+      ) => {
+        // setup
+        const head = await maspTransactionHeadService.head();
+        const initialOperation = {
+          transactions: [
+            {
+              hash: 'limitUserHash',
+              type: EventType.MASP_MINT,
+              assetName: greedyUser.graffiti,
+            },
+          ],
+          type: BlockOperation.CONNECTED,
+          block: {
+            hash: 'pointtest1',
+            previousBlockHash: head?.block_hash || 'foo',
+            timestamp: initialDate,
+            sequence: 1,
+          },
+        };
+        const secondOperation = {
+          transactions: [
+            {
+              hash: 'limitUserHash2',
+              type: EventType.MASP_MINT,
+              assetName: greedyUser.graffiti,
+            },
+          ],
+          type: BlockOperation.CONNECTED,
+          block: {
+            hash: 'pointtest2',
+            previousBlockHash: 'pointtest1',
+            timestamp: secondDate,
+            sequence: 2,
+          },
+        };
+        // test
+        await maspTransactionsUpsertService.upsert(initialOperation);
+        await maspTransactionsUpsertService.upsert(secondOperation);
+        const greedyUserTransactions =
+          await prismaService.maspTransaction.findMany({
+            where: {
+              asset_name: greedyUser.graffiti,
+            },
+          });
+        expect(greedyUserTransactions).toHaveLength(expectedNumberMasp);
+      },
+    );
 
     describe('on DISCONNECTED operations', () => {
       it('removes events', async () => {
