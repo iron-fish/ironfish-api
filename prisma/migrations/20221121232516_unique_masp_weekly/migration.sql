@@ -5,14 +5,8 @@
   - Added the required column `week` to the `masp_transactions` table without a default value. This is not possible if the table is not empty.
 
 */
--- DropIndex
-DROP INDEX "index_users_on_graffiti";
-
 -- AlterTable
 ALTER TABLE "masp_transactions" ADD COLUMN     "week" INTEGER NOT NULL;
 
 -- CreateIndex
 CREATE UNIQUE INDEX "uq_masp_on_asset_type_week_main" ON "masp_transactions"("asset_name", "type", "week", "main");
-
--- CreateIndex
-CREATE INDEX "index_users_on_graffiti" ON "users"("graffiti");
