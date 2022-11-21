@@ -254,7 +254,7 @@ describe('MaspTransactionUpsertService', () => {
       },
     );
 
-    it('Allows resubmission of assets if block was disconnected', async () => {
+    it('Allows resubmission of MASP transaction if block was disconnected', async () => {
       // setup
       const head = await maspTransactionHeadService.head();
       const initialOperation = {
