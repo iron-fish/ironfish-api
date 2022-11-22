@@ -581,7 +581,7 @@ export class EventsService {
     const minDepositSizeOre = minDepositSize * ORE_TO_IRON;
     const maxDepositSizeOre = maxDepositSize * ORE_TO_IRON;
 
-    const amountCapped = BigInt(Math.min(deposit.amount, maxDepositSizeOre));
+    const amountCapped = Math.min(deposit.amount, maxDepositSizeOre);
     const numIncrements = Math.floor(amountCapped / minDepositSizeOre);
 
     return numIncrements * POINTS_PER_CATEGORY[EventType.SEND_TRANSACTION];
