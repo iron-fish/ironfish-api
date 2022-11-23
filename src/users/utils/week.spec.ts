@@ -21,12 +21,12 @@ describe('Week Utils', () => {
     };
 
     // (2022, 0, 1) is Sat, 01 Jan 2022 05:00:00 GMT
-    expect(getWeek(2022, 0, 1)).toEqual({ day: 6, week: 162769 });
-    expect(getWeek(2022, 0, 2)).toEqual({ day: 0, week: 162770 });
-    expect(getWeek(2022, 0, 3)).toEqual({ day: 1, week: 162770 });
-    expect(getWeek(2022, 0, 4)).toEqual({ day: 2, week: 162770 });
-    expect(getWeek(2022, 0, 5)).toEqual({ day: 3, week: 162770 });
-    expect(getWeek(2022, 0, 6)).toEqual({ day: 4, week: 162770 });
-    expect(getWeek(2022, 0, 7)).toEqual({ day: 5, week: 162770 });
+    expect(getWeek(2022, 0, 1)).toEqual({ day: 6, week: 2712 });
+    expect(getWeek(2022, 0, 2)).toEqual({ day: 0, week: 2712 });
+    expect(getWeek(2022, 0, 3)).toEqual({ day: 1, week: 2713 });
+    expect(getWeek(2022, 0, 4)).toEqual({ day: 2, week: 2713 });
+    expect(getWeek(2022, 0, 5)).toEqual({ day: 3, week: 2713 });
+    expect(getWeek(2022, 0, 6)).toEqual({ day: 4, week: 2713 });
+    expect(getWeek(2022, 0, 7)).toEqual({ day: 5, week: 2713 });
   });
 });

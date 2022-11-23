@@ -140,7 +140,7 @@ export class MaspTransactionsUpsertService {
               network_version: networkVersion,
             },
           });
-          const currentPhase3Week = phase3Week();
+          const currentPhase3Week = phase3Week(operation.block.timestamp);
           const eventPayloads = maspTransactions.map((maspTransaction) => {
             const user = users.get(maspTransaction.asset_name);
             assert(user);
