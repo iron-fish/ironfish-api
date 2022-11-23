@@ -394,7 +394,7 @@ describe('Weekly transaction limit', () => {
     expect(legitUserEvents).toHaveLength(1);
     expect(legitUserEvents).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ type: EventType.MASP_MINT, week: 165557 }),
+        expect.objectContaining({ type: EventType.MASP_MINT, week: 2773 }),
       ]),
     );
   });
