@@ -105,7 +105,11 @@ export class TelemetryController {
   ): Promise<void> {
     const { options, nodeVersion } = this.processPoints(points);
 
-    if (graffiti && nodeVersion) {
+    if (
+      graffiti &&
+      nodeVersion &&
+      this.config.get<boolean>('ALLOW_NODE_UPTIME_POINTS')
+    ) {
       await this.addUptime(graffiti, nodeVersion);
     }
 
