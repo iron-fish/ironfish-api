@@ -237,7 +237,7 @@ model Deposit {
   block_sequence   Int
   network_version  Int
   main             Boolean
-  amount           Int
+  amount           Float
   event            Event?
 
   @@unique([transaction_hash, graffiti], name: "uq_deposits_on_transaction_hash_and_graffiti", map: "uq_deposits_on_transaction_hash_and_graffiti")
