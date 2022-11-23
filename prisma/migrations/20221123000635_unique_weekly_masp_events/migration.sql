@@ -8,4 +8,4 @@
 ALTER TABLE "events" ADD COLUMN     "week" INTEGER;
 
 -- CreateIndex
-CREATE UNIQUE INDEX "uq_masp_on_user_id_type_week" ON "events"("user_id", "type", "week");
+CREATE UNIQUE INDEX "uq_masp_on_user_id_type_week" ON "events"("user_id", "type", "week") WHERE masp_transaction_id IS NOT NULL;
