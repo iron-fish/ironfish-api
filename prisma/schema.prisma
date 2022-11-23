@@ -30,6 +30,7 @@ model Event {
   // currently unique not null isn't supported in prisma: https://github.com/prisma/prisma/issues/3387
   // leaving the line below will cause yarn db:migrate to try adding new migration everytime
   // @@unique([user_id, type, week], name: "uq_masp_on_user_id_type_week", map: "uq_masp_on_user_id_type_week")
+  
   @@index([deposit_id], name: "index_events_on_deposit_id")
   @@index([masp_transaction_id], name: "index_events_on_masp_transaction_id")
   @@index([block_id], name: "index_events_on_block_id")
