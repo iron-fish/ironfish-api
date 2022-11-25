@@ -255,7 +255,7 @@ describe('TelemetryController', () => {
         expect(writePoints).toHaveBeenCalledWith(points);
       });
 
-      describe('when `NODE_UPTIME_ENABLED` is true', () => {
+      describe('when `ALLOW_NODE_UPTIME_POINTS` is true', () => {
         it('updates the node uptime', async () => {
           jest
             .spyOn(influxDbService, 'writePoints')
@@ -393,7 +393,7 @@ describe('TelemetryController', () => {
         });
       });
 
-      describe('when `NODE_UPTIME_ENABLED` is false', () => {
+      describe('when `ALLOW_NODE_UPTIME_POINTS` is false', () => {
         it('does not add any uptime', async () => {
           jest.spyOn(config, 'get').mockImplementationOnce(() => false);
 

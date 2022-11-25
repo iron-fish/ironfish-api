@@ -83,7 +83,6 @@ export const REST_MODULES = [
         IRONFISH_API_KEY: joi.string().required(),
         MAGIC_SECRET_KEY: joi.string().required(),
         NETWORK_VERSION: joi.number().required(),
-        NODE_UPTIME_ENABLED: joi.boolean().default(true),
         NODE_ENV: joi.string().required(),
         DYNO: joi.string().allow('').default(''),
         PORT: joi.number().default(8003),
