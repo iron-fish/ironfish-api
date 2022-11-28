@@ -18,6 +18,7 @@ export const NODE_UPTIME_CREDIT_HOURS = 12; // Credit in 12 hour chunks
 export const ORE_TO_IRON = 100000000;
 export const SEND_TRANSACTION_LIMIT_ORE = ORE_TO_IRON * 0.1; // Only transactions >= to this amount will get points
 export const MAX_POINT_BLOCK_SEQUENCE = 252200; // When we increased the max points from 0.1 to a configuration
+export const ENABLE_DEPOSIT_BLOCK_SEQUENCE = 288_888; // When deposits should be turned off
 
 // Event categories
 export const WEEKLY_POINT_LIMITS_BY_EVENT_TYPE: Record<EventType, number> = {

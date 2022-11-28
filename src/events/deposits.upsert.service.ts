@@ -8,7 +8,11 @@ import assert from 'assert';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { BlocksService } from '../blocks/blocks.service';
 import { BlockOperation } from '../blocks/enums/block-operation';
-import { ORE_TO_IRON, SEND_TRANSACTION_LIMIT_ORE } from '../common/constants';
+import {
+  ENABLE_DEPOSIT_BLOCK_SEQUENCE,
+  ORE_TO_IRON,
+  SEND_TRANSACTION_LIMIT_ORE,
+} from '../common/constants';
 import { standardizeHash } from '../common/utils/hash';
 import { DepositHeadsService } from '../deposit-heads/deposit-heads.service';
 import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
@@ -225,6 +229,11 @@ export class DepositsUpsertService {
   }
 
   async upsert(operation: UpsertDepositsOperationDto): Promise<Deposit[]> {
+    assert(
+      operation.block.sequence <= ENABLE_DEPOSIT_BLOCK_SEQUENCE,
+      `Deposits not accepted after block ${ENABLE_DEPOSIT_BLOCK_SEQUENCE}`,
+    );
+
     const shouldUpsertDeposit =
       operation.type === BlockOperation.CONNECTED ||
       operation.type === BlockOperation.DISCONNECTED;
