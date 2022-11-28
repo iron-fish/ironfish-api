@@ -806,10 +806,10 @@
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
-"@magic-sdk/admin@1.4.1":
-  version "1.4.1"
-  resolved "https://registry.yarnpkg.com/@magic-sdk/admin/-/admin-1.4.1.tgz#751eb7eea8978b99b3c6ec1016bbb960c3e8cc05"
-  integrity sha512-5l/bkYnjphxwQBYUF6e5H7jcjBMVgx8omZK85ma7UxEXY+4UH6Kin/V8TyZOLMFcqrC8xSJwJQBPAQlOuLToIg==
+"@magic-sdk/admin@1.8.0":
+  version "1.8.0"
+  resolved "https://registry.yarnpkg.com/@magic-sdk/admin/-/admin-1.8.0.tgz#2a89e80a2c509bf91fbb925177abe2bd95694c18"
+  integrity sha512-9QXSyLM72kKeCwCYYfTBzMQ1ww+bPGFTKoO22bNBhalDC/Z068THc1B6DtzE9kROHLwyBmdBd5o8wDDkvwEwrg==
   dependencies:
     "@types/atob" "^2.1.2"
     atob "^2.1.2"
