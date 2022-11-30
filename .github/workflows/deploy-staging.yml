@@ -1,4 +1,4 @@
-name: Deploy Staging API
+name: STAGING - Deploy API
 on:
   push:
     branches:

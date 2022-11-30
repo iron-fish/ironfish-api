@@ -1,4 +1,4 @@
-name: Deploy Phase1 Production API
+name: PROD - Deploy Phase1 API
 on: workflow_dispatch
 
 jobs:
