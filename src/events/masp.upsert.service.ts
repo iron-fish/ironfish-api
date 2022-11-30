@@ -11,6 +11,7 @@ import { standardizeHash } from '../common/utils/hash';
 import { MaspTransactionHeadService } from '../masp-transaction-head/masp-transaction-head.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
+import { phase3Week } from '../users/utils/week';
 import { UpsertMaspTransactionsOperationDto } from './dto/upsert-masp.dto';
 import { EventsService } from './events.service';
 
@@ -139,6 +140,7 @@ export class MaspTransactionsUpsertService {
               network_version: networkVersion,
             },
           });
+          const currentPhase3Week = phase3Week(operation.block.timestamp);
           const eventPayloads = maspTransactions.map((maspTransaction) => {
             const user = users.get(maspTransaction.asset_name);
             assert(user);
@@ -147,6 +149,7 @@ export class MaspTransactionsUpsertService {
               occurred_at: operation.block.timestamp.toISOString(),
               type: maspTransaction.type,
               user_id: user.id,
+              week: currentPhase3Week,
               points: POINTS_PER_CATEGORY[maspTransaction.type],
               masp_transaction_id: maspTransaction.id,
             };
