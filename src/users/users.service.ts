@@ -366,11 +366,11 @@ export class UsersService {
       case EventType.SOCIAL_MEDIA_PROMOTION:
         return 'social_media_promotion_points';
       case EventType.MASP_BURN:
-        return 'masp_burn';
+        return 'masp_burn_points';
       case EventType.MASP_MINT:
-        return 'masp_mint';
+        return 'masp_mint_points';
       case EventType.MASP_TRANSFER:
-        return 'masp_transfer';
+        return 'masp_transfer_points';
     }
   }
 

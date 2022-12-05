@@ -282,6 +282,99 @@ describe('UsersService', () => {
       expect(records[2].rank).toBe(3);
     });
 
+    it('MASP queries work as expected', async () => {
+      const graffiti = uuid();
+      const now = new Date();
+
+      const userA = await usersService.create({
+        email: faker.internet.email(),
+        graffiti: graffiti + '-a',
+        country_code: faker.address.countryCode('alpha-3'),
+      });
+
+      await eventsService.create({
+        type: EventType.MASP_BURN,
+        userId: userA.id,
+        occurredAt: now,
+        points: 5,
+      });
+      await userPointsService.upsert(
+        await eventsService.getUpsertPointsOptions(userA),
+      );
+
+      await eventsService.create({
+        type: EventType.MASP_MINT,
+        userId: userA.id,
+        occurredAt: new Date(now.valueOf() - 1000),
+        points: 5,
+      });
+      await userPointsService.upsert(
+        await eventsService.getUpsertPointsOptions(userA),
+      );
+
+      await eventsService.create({
+        type: EventType.MASP_BURN,
+        userId: userA.id,
+        occurredAt: new Date(now.valueOf() + 1000),
+        points: 5,
+      });
+      await userPointsService.upsert(
+        await eventsService.getUpsertPointsOptions(userA),
+      );
+
+      const { data: records } = await usersService.listWithRank({
+        eventType: 'MASP_MINT',
+        search: graffiti,
+        limit: 1,
+      });
+      expect(records).toHaveLength(1);
+      const { data: records2 } = await usersService.listWithRank({
+        eventType: 'MASP_BURN',
+        search: graffiti,
+        limit: 1,
+      });
+      expect(records2).toHaveLength(1);
+      const { data: records3 } = await usersService.listWithRank({
+        eventType: 'MASP_BURN',
+        search: graffiti,
+        limit: 1,
+      });
+      expect(records3).toHaveLength(1);
+    });
+
+    describe('listByEmail', () => {
+      it('returns a list of matching users by email', async () => {
+        const email = faker.internet.email();
+        await usersService.create({
+          email,
+          graffiti: uuid(),
+          country_code: faker.address.countryCode('alpha-3'),
+        });
+
+        const records = await usersService.listByEmail(email);
+        for (const record of records) {
+          expect(record.email).toBe(standardizeEmail(email));
+        }
+      });
+    });
+
+    describe('list', () => {
+      it('returns a chunk of users', async () => {
+        const limit = 2;
+        const { data: records } = await usersService.list({
+          limit,
+        });
+        expect(records).toHaveLength(limit);
+        for (const record of records) {
+          expect(record).toMatchObject({
+            id: expect.any(Number),
+            email: expect.any(String),
+            graffiti: expect.any(String),
+          });
+        }
+      });
+    });
+
     describe(`when 'event_type' is provided`, () => {
       it('returns a chunk of users by event when specified', async () => {
         const { data: records } = await usersService.listWithRank({
