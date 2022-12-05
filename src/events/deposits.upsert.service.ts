@@ -198,11 +198,12 @@ export class DepositsUpsertService {
   }
 
   async syncDepositedIron(): Promise<void> {
-    const aggregate = await this.prisma.deposit.aggregate({
+    const aggregate = await this.prisma.readClient.deposit.aggregate({
       _sum: {
         amount: true,
       },
     });
+
     this.influxDbService.writePoints([
       {
         measurement: 'deposited_iron',
@@ -219,8 +220,9 @@ export class DepositsUpsertService {
         timestamp: new Date(),
       },
     ]);
+
     const runAt = new Date();
-    runAt.setMinutes(runAt.getMinutes() + 10);
+    runAt.setHours(runAt.getHours() + 6);
     await this.graphileWorkerService.addJob(
       GraphileWorkerPattern.SUBMIT_DEPOSITED_IRON_TO_TELEMETRY,
       {},
