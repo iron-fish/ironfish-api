@@ -576,10 +576,10 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-1.2.0.tgz#87de7af9c231826fdd68ac7258f77c429e0e5fcf"
   integrity sha512-wdppn25U8z/2yiaT6YGquE6X8sSv7hNMWSXYSSU1jGv/yd6XqjXgTDJ8KP4NgjTXfJ3GbRjeeb8RTV7a/VpM+w==
 
-"@influxdata/influxdb-client@1.32.0":
-  version "1.32.0"
-  resolved "https://registry.yarnpkg.com/@influxdata/influxdb-client/-/influxdb-client-1.32.0.tgz#98d311329241a10d6aef538f0d1d5901246055b6"
-  integrity sha512-TNKpDGYoBD3bZKn9xySeMiu6NcRKsJ8hPkmiCzYl/C6ur8DWlWfiZkviEdzabyhKC83EjarQSzhlJ2wvnIK9yg==
+"@influxdata/influxdb-client@1.33.0":
+  version "1.33.0"
+  resolved "https://registry.yarnpkg.com/@influxdata/influxdb-client/-/influxdb-client-1.33.0.tgz#ddae87b09070648feadca05dc8fd14bfe6f44166"
+  integrity sha512-ctICXZqq4Nff44Q5Pk3I63/jpZGTZ9VPr8dPJ78eujEHrTjz1M6mlNnXuF+TdqFfzlpmjxo4TcYEyDOPK+SQbQ==
 
 "@istanbuljs/load-nyc-config@^1.0.0":
   version "1.1.0"
