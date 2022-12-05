@@ -322,57 +322,24 @@ describe('UsersService', () => {
         await eventsService.getUpsertPointsOptions(userA),
       );
 
-      const { data: records } = await usersService.listWithRank({
+      const { data: mintRecords } = await usersService.listWithRank({
         eventType: 'MASP_MINT',
         search: graffiti,
         limit: 1,
       });
-      expect(records).toHaveLength(1);
-      const { data: records2 } = await usersService.listWithRank({
+      expect(mintRecords).toHaveLength(1);
+      const { data: burnRecords } = await usersService.listWithRank({
         eventType: 'MASP_BURN',
         search: graffiti,
         limit: 1,
       });
-      expect(records2).toHaveLength(1);
-      const { data: records3 } = await usersService.listWithRank({
-        eventType: 'MASP_BURN',
+      expect(burnRecords).toHaveLength(1);
+      const { data: transferRecords } = await usersService.listWithRank({
+        eventType: 'MASP_TRANSFER',
         search: graffiti,
         limit: 1,
       });
-      expect(records3).toHaveLength(1);
-    });
-
-    describe('listByEmail', () => {
-      it('returns a list of matching users by email', async () => {
-        const email = faker.internet.email();
-        await usersService.create({
-          email,
-          graffiti: uuid(),
-          country_code: faker.address.countryCode('alpha-3'),
-        });
-
-        const records = await usersService.listByEmail(email);
-        for (const record of records) {
-          expect(record.email).toBe(standardizeEmail(email));
-        }
-      });
-    });
-
-    describe('list', () => {
-      it('returns a chunk of users', async () => {
-        const limit = 2;
-        const { data: records } = await usersService.list({
-          limit,
-        });
-        expect(records).toHaveLength(limit);
-        for (const record of records) {
-          expect(record).toMatchObject({
-            id: expect.any(Number),
-            email: expect.any(String),
-            graffiti: expect.any(String),
-          });
-        }
-      });
+      expect(transferRecords).toHaveLength(1);
     });
 
     describe(`when 'event_type' is provided`, () => {
