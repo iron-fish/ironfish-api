@@ -702,6 +702,15 @@ export class EventsService {
       .map((e) => e.toLowerCase() + '_last_occurred_at')
       .join(', ');
 
+    // return early if user doesn't have any points
+    const userPoints = await this.userPointsService.findOrThrow(user.id);
+    if (userPoints.total_points === 0) {
+      return {
+        rank: 0,
+        points: 0,
+        count: 0,
+      };
+    }
     const query = `
       WITH user_ranks AS (
         SELECT
@@ -716,10 +725,14 @@ export class EventsService {
           ) as rank
         FROM
           users
-        LEFT JOIN
-          user_points
+        INNER JOIN
+          (
+            SELECT *
+            FROM user_points
+            WHERE total_points != 0
+          ) up
         ON
-          user_points.user_id = users.id
+          up.user_id = users.id
       )
 
       SELECT
