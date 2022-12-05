@@ -371,14 +371,14 @@ describe('UsersController', () => {
           },
           pools: {
             main: {
-              rank: 0,
-              count: 0,
-              points: 0,
+              rank: null,
+              count: null,
+              points: null,
             },
             code: {
-              rank: 0,
-              count: 0,
-              points: 0,
+              rank: null,
+              count: null,
+              points: null,
             },
           },
         });

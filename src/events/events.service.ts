@@ -691,7 +691,27 @@ export class EventsService {
   async getLifetimeEventsRankForUser(
     user: User,
     events: EventType[],
-  ): Promise<{ points: number; count: number; rank: number }> {
+  ): Promise<{
+    points: number | null;
+    count: number | null;
+    rank: number | null;
+  }> {
+    // return early if user doesn't have any points
+    const userPoints = await this.userPointsService.findOrThrow(user.id);
+    const filteredPoints = events
+      .map(
+        (e) =>
+          userPoints[(e.toLowerCase() + '_points') as keyof typeof userPoints],
+      )
+      .reduce((sum, current) => Number(sum) + Number(current), 0);
+    if (filteredPoints === 0) {
+      return {
+        rank: null,
+        points: null,
+        count: null,
+      };
+    }
+
     const queryPoints = events
       .map((e) => e.toLowerCase() + '_points')
       .join(' + ');
@@ -702,15 +722,6 @@ export class EventsService {
       .map((e) => e.toLowerCase() + '_last_occurred_at')
       .join(', ');
 
-    // return early if user doesn't have any points
-    const userPoints = await this.userPointsService.findOrThrow(user.id);
-    if (userPoints.total_points === 0) {
-      return {
-        rank: 0,
-        points: 0,
-        count: 0,
-      };
-    }
     const query = `
       WITH user_ranks AS (
         SELECT
@@ -729,7 +740,7 @@ export class EventsService {
           (
             SELECT *
             FROM user_points
-            WHERE total_points != 0
+            WHERE ${queryPoints} != 0
           ) up
         ON
           up.user_id = users.id
@@ -760,9 +771,9 @@ export class EventsService {
     }
 
     return {
-      rank: rank[0].rank,
-      points: rank[0].points,
-      count: rank[0].count,
+      rank: rank[0].rank || null,
+      points: rank[0].points || null,
+      count: rank[0].count || null,
     };
   }
 
