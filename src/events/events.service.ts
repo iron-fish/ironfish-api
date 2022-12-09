@@ -703,7 +703,11 @@ export class EventsService {
   async getLifetimeEventsRankForUser(
     user: User,
     events: EventType[],
-  ): Promise<{ points: number; count: number; rank: number }> {
+  ): Promise<{
+    points: number | null;
+    count: number | null;
+    rank: number | null;
+  }> {
     const queryPoints = events
       .map((e) => e.toLowerCase() + '_points')
       .join(' + ');
@@ -728,10 +732,14 @@ export class EventsService {
           ) as rank
         FROM
           users
-        LEFT JOIN
-          user_points
+        INNER JOIN
+          (
+            SELECT *
+            FROM user_points
+            WHERE ${queryPoints} != 0
+          ) up
         ON
-          user_points.user_id = users.id
+          up.user_id = users.id
       )
 
       SELECT
@@ -755,7 +763,11 @@ export class EventsService {
     >(query, user.id);
 
     if (rank.length === 0) {
-      throw new Error(`User ${user.id} has no user_points entry`);
+      return {
+        rank: null,
+        points: null,
+        count: null,
+      };
     }
 
     return {

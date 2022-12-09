@@ -349,6 +349,36 @@ describe('UsersController', () => {
           },
         });
       });
+      it('returns null for user without any points', async () => {
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          country_code: faker.address.countryCode('alpha-3'),
+        });
+        const { body } = await request(app.getHttpServer())
+          .get(`/users/${user.id}/metrics`)
+          .query({
+            granularity: MetricsGranularity.LIFETIME,
+          });
+
+        expect(body).toMatchObject({
+          user_id: user.id,
+          granularity: MetricsGranularity.LIFETIME,
+          points: 0,
+          pools: {
+            main: {
+              rank: null,
+              count: null,
+              points: null,
+            },
+            code: {
+              rank: null,
+              count: null,
+              points: null,
+            },
+          },
+        });
+      });
     });
 
     describe('with a valid total request', () => {
