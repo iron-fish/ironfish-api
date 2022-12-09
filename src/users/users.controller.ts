@@ -43,10 +43,7 @@ import { SerializedUserMetrics } from './interfaces/serialized-user-metrics';
 import { SerializedUserWithRank } from './interfaces/serialized-user-with-rank';
 import { UsersService } from './users.service';
 import { UsersUpdater } from './users-updater';
-import {
-  serializedUserFromRecord,
-  serializedUserFromRecordWithRank,
-} from './utils/user-translator';
+import { serializedUserFromRecord } from './utils/user-translator';
 import { EventType, User } from '.prisma/client';
 
 const MAX_SUPPORTED_TIME_RANGE_IN_DAYS = 30;
@@ -71,20 +68,11 @@ export class UsersController {
         transform: true,
       }),
     )
-    { graffiti, with_rank }: UserQueryDto,
-  ): Promise<SerializedUser | SerializedUserWithRank> {
+    { graffiti }: UserQueryDto,
+  ): Promise<SerializedUser> {
     const user = await this.usersService.findByGraffitiOrThrow(graffiti);
     const userPoints = await this.userPointsService.findOrThrow(user.id);
-
-    if (with_rank) {
-      return serializedUserFromRecordWithRank(
-        user,
-        userPoints,
-        await this.usersService.getRank(user),
-      );
-    } else {
-      return serializedUserFromRecord(user, userPoints);
-    }
+    return serializedUserFromRecord(user, userPoints);
   }
 
   @ApiOperation({ summary: 'Gets a specific User' })
@@ -93,14 +81,10 @@ export class UsersController {
   async get(
     @Param('id', new IntIsSafeForPrismaPipe())
     id: number,
-  ): Promise<SerializedUserWithRank> {
+  ): Promise<SerializedUser> {
     const user = await this.usersService.findOrThrow(id);
     const userPoints = await this.userPointsService.findOrThrow(user.id);
-    return serializedUserFromRecordWithRank(
-      user,
-      userPoints,
-      await this.usersService.getRank(user),
-    );
+    return serializedUserFromRecord(user, userPoints);
   }
 
   @ApiOperation({ summary: 'Gets metrics for a specific User' })
@@ -286,6 +270,7 @@ export class UsersController {
       search,
       countryCode,
     });
+
     const data = [];
     for (const record of records) {
       const userPoints = await this.userPointsService.findOrThrow(record.id);

@@ -15,7 +15,4 @@ export class UserQueryDto {
   @ApiPropertyOptional({
     description: 'Whether or not to include user rank in the response',
   })
-  @IsOptional()
-  @Transform(({ value }: TransformFnParams) => stringToBoolean(value))
-  readonly with_rank?: boolean;
 }
