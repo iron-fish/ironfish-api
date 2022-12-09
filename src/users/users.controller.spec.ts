@@ -349,7 +349,7 @@ describe('UsersController', () => {
           },
         });
       });
-      it('returns 0 for user without any points', async () => {
+      it('returns null for user without any points', async () => {
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: uuid(),
@@ -365,10 +365,6 @@ describe('UsersController', () => {
           user_id: user.id,
           granularity: MetricsGranularity.LIFETIME,
           points: 0,
-          node_uptime: {
-            total_hours: 0,
-            last_checked_in: null,
-          },
           pools: {
             main: {
               rank: null,

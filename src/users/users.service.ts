@@ -241,19 +241,20 @@ export class UsersService {
     }
 
     const searchFilter = `%${search ?? ''}%`;
+    const totalPointsAt = this.totalPointsAtForUserPoints(eventType);
 
     const query = `
       WITH 
         user_latest_events AS (
           SELECT
             user_id,
-            ${this.totalPointsAtForUserPoints(eventType)} AS total_points,
+            ${totalPointsAt} AS total_points,
             ${this.latestEventOccurredAtForUserPoints(
               eventType,
             )} AS latest_event_occurred_at
           FROM
             user_points
-          ${search ? '' : 'WHERE total_points != 0'}
+          ${search ? '' : 'WHERE ' + totalPointsAt + ' != 0'}
         ),
         user_ranks as (
           SELECT

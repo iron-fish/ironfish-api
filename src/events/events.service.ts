@@ -696,22 +696,6 @@ export class EventsService {
     count: number | null;
     rank: number | null;
   }> {
-    // return early if user doesn't have any points
-    const userPoints = await this.userPointsService.findOrThrow(user.id);
-    const filteredPoints = events
-      .map(
-        (e) =>
-          userPoints[(e.toLowerCase() + '_points') as keyof typeof userPoints],
-      )
-      .reduce((sum, current) => Number(sum) + Number(current), 0);
-    if (filteredPoints === 0) {
-      return {
-        rank: null,
-        points: null,
-        count: null,
-      };
-    }
-
     const queryPoints = events
       .map((e) => e.toLowerCase() + '_points')
       .join(' + ');
@@ -767,13 +751,17 @@ export class EventsService {
     >(query, user.id);
 
     if (rank.length === 0) {
-      throw new Error(`User ${user.id} has no user_points entry`);
+      return {
+        rank: null,
+        points: null,
+        count: null,
+      };
     }
 
     return {
-      rank: rank[0].rank || null,
-      points: rank[0].points || null,
-      count: rank[0].count || null,
+      rank: rank[0].rank,
+      points: rank[0].points,
+      count: rank[0].count,
     };
   }
 
