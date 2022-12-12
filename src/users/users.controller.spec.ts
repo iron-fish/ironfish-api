@@ -38,93 +38,58 @@ describe('UsersController', () => {
   });
 
   describe('GET /users/:id', () => {
-    describe('with a valid id', () => {
-      it('returns the user', async () => {
-        const user = await usersService.create({
-          email: faker.internet.email(),
-          graffiti: uuid(),
-          country_code: faker.address.countryCode(),
-        });
-        const { body } = await request(app.getHttpServer())
-          .get(`/users/${user.id}`)
-          .expect(HttpStatus.OK);
+    it('returns the user by id', async () => {
+      const user = await usersService.create({
+        email: faker.internet.email(),
+        graffiti: uuid(),
+        country_code: faker.address.countryCode(),
+      });
 
-        expect(body).toMatchObject({
-          id: user.id,
-          graffiti: user.graffiti,
-          total_points: expect.any(Number),
-          created_at: user.created_at.toISOString(),
-          rank: await usersService.getRank(user),
-        });
+      const { body } = await request(app.getHttpServer())
+        .get(`/users/${user.id}`)
+        .expect(HttpStatus.OK);
+
+      expect(body).toMatchObject({
+        id: user.id,
+        graffiti: user.graffiti,
+        total_points: expect.any(Number),
+        created_at: user.created_at.toISOString(),
       });
     });
 
-    describe('with a missing id', () => {
-      it('returns a 404', async () => {
-        await request(app.getHttpServer())
-          .get('/users/12345')
-          .expect(HttpStatus.NOT_FOUND);
-      });
+    it('returns a 404 if no id found', async () => {
+      await request(app.getHttpServer())
+        .get('/users/0')
+        .expect(HttpStatus.NOT_FOUND);
     });
   });
 
   describe('GET /users/find', () => {
-    describe('with rank requested', () => {
-      describe('with a valid graffiti', () => {
-        it('returns the user', async () => {
-          const graffiti = uuid();
-          const user = await usersService.create({
-            email: faker.internet.email(),
-            graffiti,
-            country_code: faker.address.countryCode(),
-          });
-          const { body } = await request(app.getHttpServer())
-            .get(`/users/find`)
-            .query({ graffiti, with_rank: true })
-            .expect(HttpStatus.OK);
+    it('returns the user by graffiti', async () => {
+      const user = await usersService.create({
+        email: faker.internet.email(),
+        graffiti: uuid(),
+        country_code: faker.address.countryCode(),
+      });
 
-          expect(body).toMatchObject({
-            id: user.id,
-            graffiti: user.graffiti,
-            total_points: expect.any(Number),
-            created_at: user.created_at.toISOString(),
-            rank: await usersService.getRank(user),
-          });
-        });
+      const { body } = await request(app.getHttpServer())
+        .get(`/users/find`)
+        .query({ graffiti: user.graffiti })
+        .expect(HttpStatus.OK);
+
+      expect(body).not.toHaveProperty('rank');
+      expect(body).toMatchObject({
+        id: user.id,
+        graffiti: user.graffiti,
+        total_points: expect.any(Number),
+        created_at: user.created_at.toISOString(),
       });
     });
 
-    describe('with rank not requested', () => {
-      describe('with a valid graffiti', () => {
-        it('returns the user', async () => {
-          const graffiti = uuid();
-          const user = await usersService.create({
-            email: faker.internet.email(),
-            graffiti,
-            country_code: faker.address.countryCode(),
-          });
-          const { body } = await request(app.getHttpServer())
-            .get(`/users/find`)
-            .query({ graffiti })
-            .expect(HttpStatus.OK);
-
-          expect(body).not.toHaveProperty('rank');
-          expect(body).toMatchObject({
-            id: user.id,
-            graffiti: user.graffiti,
-            total_points: expect.any(Number),
-            created_at: user.created_at.toISOString(),
-          });
-        });
-      });
-    });
-
-    describe('with a missing graffiti', () => {
-      it('returns a 404', async () => {
-        await request(app.getHttpServer())
-          .get('/users/find?graffiti=12345')
-          .expect(HttpStatus.NOT_FOUND);
-      });
+    it('returns a 404 for nonexistent user', async () => {
+      await request(app.getHttpServer())
+        .get(`/users/find?graffiti=${uuid()}`)
+        .expect(HttpStatus.NOT_FOUND);
     });
   });
 
