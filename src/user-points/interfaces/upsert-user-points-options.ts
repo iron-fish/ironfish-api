@@ -3,13 +3,14 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { EventType } from '.prisma/client';
 
+export interface UserPointsOptions {
+  points: number;
+  count: number;
+  latestOccurredAt: Date | null;
+}
+
 export interface UpsertUserPointsOptions {
   userId: number;
-  points?: Partial<
-    Record<
-      EventType,
-      { points: number; count: number; latestOccurredAt: Date | null }
-    >
-  >;
+  points?: Partial<Record<EventType, UserPointsOptions>>;
   totalPoints?: number;
 }

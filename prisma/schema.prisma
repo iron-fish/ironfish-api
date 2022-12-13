@@ -180,6 +180,7 @@ enum EventType {
   MULTI_ASSET_TRANSFER
   MULTI_ASSET_BURN
   MULTI_ASSET_MINT
+  POOL4
 
   @@map("event_type")
 }
@@ -220,6 +221,9 @@ model UserPoints {
   multi_asset_transfer_points             Int       @default(0)
   multi_asset_transfer_count              Int       @default(0)
   multi_asset_transfer_last_occurred_at   DateTime? @db.Timestamp(6)
+  pool4_points                            Int       @default(0)
+  pool4_count                             Int       @default(0)
+  pool4_last_occurred_at                  DateTime? @db.Timestamp(6)
   user                                    User      @relation(fields: [user_id], references: [id])
 
   @@index([user_id], map: "index_user_points_on_user_id")

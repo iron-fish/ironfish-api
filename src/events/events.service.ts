@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Deposit, NodeUptime, UserPoints } from '@prisma/client';
+import assert from 'assert';
 import { Job } from 'graphile-worker';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { BlocksService } from '../blocks/blocks.service';
@@ -225,6 +226,7 @@ export class EventsService {
         user,
         EventType.MULTI_ASSET_TRANSFER,
       );
+
     const totalPoints =
       blockMinedAggregate.points +
       bugCaughtAggregate.points +
@@ -236,6 +238,40 @@ export class EventsService {
       multiAssetMintAggregate.points +
       multiAssetBurnAggregate.points +
       multiAssetTransferAggregate.points;
+
+    const pool4Aggregates = [
+      bugCaughtAggregate,
+      nodeUptimeAggregate,
+      maspMintAggregate,
+      maspBurnAggregate,
+      maspTransferAggregate,
+    ];
+
+    const pool4Aggregate = pool4Aggregates.reduce(
+      (memo, curr) => {
+        if (!curr.latestOccurredAt) {
+          return memo;
+        }
+
+        if (
+          !memo.latestOccurredAt ||
+          curr.latestOccurredAt > memo.latestOccurredAt
+        ) {
+          memo.latestOccurredAt = curr.latestOccurredAt;
+        }
+
+        return {
+          points: memo.points + curr.points,
+          count: memo.count + curr.count,
+          latestOccurredAt: memo.latestOccurredAt,
+        };
+      },
+      {
+        points: 0,
+        count: 0,
+        latestOccurredAt: null,
+      },
+    );
 
     return {
       userId: user.id,
@@ -251,6 +287,7 @@ export class EventsService {
         MULTI_ASSET_BURN: multiAssetBurnAggregate,
         MULTI_ASSET_MINT: multiAssetMintAggregate,
         MULTI_ASSET_TRANSFER: multiAssetTransferAggregate,
+        POOL4: pool4Aggregate,
       },
     };
   }
@@ -328,6 +365,10 @@ export class EventsService {
       MULTI_ASSET_TRANSFER: {
         count: points.multi_asset_transfer_count,
         points: points.multi_asset_transfer_points,
+      },
+      POOL4: {
+        count: points.pool4_count,
+        points: points.pool4_points,
       },
     };
   }
@@ -422,6 +463,11 @@ export class EventsService {
           start,
           end,
         ),
+        POOL4: {
+          count: null,
+          points: null,
+          rank: null,
+        },
       },
       points: pointsAggregate._sum.points || 0,
     };
