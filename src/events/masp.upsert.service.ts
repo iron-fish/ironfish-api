@@ -19,7 +19,7 @@ import { EventsService } from './events.service';
 export class MaspUpsertService {
   constructor(
     private readonly config: ApiConfigService,
-    private readonly maspHeadService: MaspHeadService,
+    private readonly maspTransactionHeadService: MaspHeadService,
     private readonly eventsService: EventsService,
     private readonly prisma: PrismaService,
     private readonly usersService: UsersService,
@@ -62,50 +62,45 @@ export class MaspUpsertService {
       operation.block.previousBlockHash,
     );
 
-    const [masps, users] = await this.prisma.$transaction(async (prisma) => {
-      let users: Map<string, User>;
-      let masps = new Array<Masp>();
-      const head = await this.maspHeadService.head();
+    const [maspTransactions, users] = await this.prisma.$transaction(
+      async (prisma) => {
+        let users: Map<string, User>;
+        let masps = new Array<Masp>();
+        const head = await this.maspTransactionHeadService.head();
 
-      if (operation.type === BlockOperation.CONNECTED) {
-        const userGraffitis = operation.transactions.reduce<string[]>(
-          (acc, transaction) =>
-            acc.concat(
-              transaction.masps.reduce<string[]>(
-                (acc2, masp) => acc2.concat(masp.assetName),
-                [],
-              ),
-            ),
-          [],
-        );
-        users = await this.usersService.findManyAndMapByGraffiti(userGraffitis);
-        if (head && head.block_hash !== previousBlockHash) {
-          throw new Error(
-            `Cannot connect block ${blockHash} to ${String(
-              head.block_hash,
-            )}, expecting ${previousBlockHash}`,
+        if (operation.type === BlockOperation.CONNECTED) {
+          const userGraffitis = operation.transactions.map(
+            (transaction) => transaction.assetName,
           );
-        }
-        // Create masp transaction params
-        const maspParams = new Array<{
-          transaction_hash: string;
-          block_hash: string;
-          block_sequence: number;
-          network_version: number;
-          type: EventType;
-          asset_name: string;
-          main: boolean;
-        }>();
-        for (const transaction of operation.transactions) {
-          for (const masp of transaction.masps) {
+          users = await this.usersService.findManyAndMapByGraffiti(
+            userGraffitis,
+          );
+          if (head && head.block_hash !== previousBlockHash) {
+            throw new Error(
+              `Cannot connect block ${blockHash} to ${String(
+                head.block_hash,
+              )}, expecting ${previousBlockHash}`,
+            );
+          }
+          // Create masp transaction params
+          const maspTransactionParams = new Array<{
+            transaction_hash: string;
+            block_hash: string;
+            block_sequence: number;
+            network_version: number;
+            type: EventType;
+            asset_name: string;
+            main: boolean;
+          }>();
+          for (const transaction of operation.transactions) {
             // Masp assetName should match user grafitti
-            if (!users.has(masp.assetName)) {
+            if (!users.has(transaction.assetName)) {
               continue;
             }
 
-            maspParams.push({
-              asset_name: masp.assetName,
-              type: masp.type,
+            maspTransactionParams.push({
+              asset_name: transaction.assetName,
+              type: transaction.type,
               transaction_hash: standardizeHash(transaction.hash),
               block_hash: blockHash,
               block_sequence: operation.block.sequence,
@@ -113,106 +108,105 @@ export class MaspUpsertService {
               network_version: networkVersion,
             });
           }
-        }
-        // MASP transactions are shared between blocks, so we need to reassign all the ones on other blocks
-        if (maspParams.length) {
-          await prisma.masp.updateMany({
-            data: {
-              block_hash: blockHash,
-              main: true,
-            },
+          // MASP transactions are shared between blocks, so we need to reassign all the ones on other blocks
+          if (maspTransactionParams.length) {
+            await prisma.masp.updateMany({
+              data: {
+                block_hash: blockHash,
+                main: true,
+              },
+              where: {
+                OR: maspTransactionParams.map((masp) => ({
+                  AND: {
+                    transaction_hash: masp.transaction_hash,
+                    asset_name: masp.asset_name,
+                  },
+                })),
+                network_version: networkVersion,
+              },
+            });
+          }
+          // Now create new not existing masp transactions
+          await prisma.masp.createMany({
+            data: maspTransactionParams,
+            skipDuplicates: true,
+          });
+
+          masps = await prisma.masp.findMany({
             where: {
-              OR: maspParams.map((masp) => ({
-                AND: {
-                  transaction_hash: masp.transaction_hash,
-                  asset_name: masp.asset_name,
-                  type: masp.type,
-                },
-              })),
+              block_hash: blockHash,
               network_version: networkVersion,
             },
           });
-        }
-        // Now create new not existing masp transactions
-        await prisma.masp.createMany({
-          data: maspParams,
-          skipDuplicates: true,
-        });
+          const currentPhase3Week = phase3Week(operation.block.timestamp);
+          const eventPayloads = masps.map((maspTransaction) => {
+            const user = users.get(maspTransaction.asset_name);
+            assert(user);
 
-        masps = await prisma.masp.findMany({
-          where: {
-            block_hash: blockHash,
-            network_version: networkVersion,
-          },
-        });
-        const currentPhase3Week = phase3Week(operation.block.timestamp);
-        const eventPayloads = masps.map((masp) => {
-          const user = users.get(masp.asset_name);
-          assert(user);
+            return {
+              occurred_at: operation.block.timestamp.toISOString(),
+              type: maspTransaction.type,
+              user_id: user.id,
+              week: currentPhase3Week,
+              points: POINTS_PER_CATEGORY[maspTransaction.type],
+              masp_id: maspTransaction.id,
+            };
+          });
 
-          return {
-            occurred_at: operation.block.timestamp.toISOString(),
-            type: masp.type,
-            user_id: user.id,
-            week: currentPhase3Week,
-            points: POINTS_PER_CATEGORY[masp.type],
-            masp_id: masp.id,
-          };
-        });
-
-        await prisma.event.createMany({
-          data: eventPayloads,
-          skipDuplicates: true,
-        });
-      } else if (operation.type === BlockOperation.DISCONNECTED) {
-        if (!head || head.block_hash !== operation.block.hash) {
-          throw new Error(
-            `Cannot disconnect ${blockHash}, expecting ${String(
-              head?.block_hash,
-            )}`,
-          );
-        }
-        await prisma.masp.updateMany({
-          data: {
-            main: false,
-          },
-          where: {
-            block_hash: blockHash,
-            network_version: networkVersion,
-          },
-        });
-
-        masps = await prisma.masp.findMany({
-          where: {
-            block_hash: blockHash,
-            network_version: networkVersion,
-          },
-        });
-        users = await this.usersService.findManyAndMapByGraffiti(
-          masps.map((transaction) => transaction.asset_name),
-        );
-        await prisma.event.deleteMany({
-          where: {
-            masp_id: {
-              in: masps.map((masp) => masp.id),
+          await prisma.event.createMany({
+            data: eventPayloads,
+            skipDuplicates: true,
+          });
+        } else if (operation.type === BlockOperation.DISCONNECTED) {
+          if (!head || head.block_hash !== operation.block.hash) {
+            throw new Error(
+              `Cannot disconnect ${blockHash}, expecting ${String(
+                head?.block_hash,
+              )}`,
+            );
+          }
+          await prisma.masp.updateMany({
+            data: {
+              main: false,
             },
-          },
-        });
-      } else {
-        assert(false);
-      }
+            where: {
+              block_hash: blockHash,
+              network_version: networkVersion,
+            },
+          });
 
-      const headHash =
-        operation.type === BlockOperation.CONNECTED
-          ? standardizeHash(operation.block.hash)
-          : standardizeHash(operation.block.previousBlockHash);
+          masps = await prisma.masp.findMany({
+            where: {
+              block_hash: blockHash,
+              network_version: networkVersion,
+            },
+          });
+          users = await this.usersService.findManyAndMapByGraffiti(
+            masps.map((transaction) => transaction.asset_name),
+          );
+          await prisma.event.deleteMany({
+            where: {
+              masp_id: {
+                in: masps.map((maspTransaction) => maspTransaction.id),
+              },
+            },
+          });
+        } else {
+          assert(false);
+        }
 
-      await this.maspHeadService.upsert(headHash);
+        const headHash =
+          operation.type === BlockOperation.CONNECTED
+            ? standardizeHash(operation.block.hash)
+            : standardizeHash(operation.block.previousBlockHash);
 
-      return [masps, users];
-    });
+        await this.maspTransactionHeadService.upsert(headHash);
 
-    for (const maspTransaction of masps) {
+        return [masps, users];
+      },
+    );
+
+    for (const maspTransaction of maspTransactions) {
       const user = users.get(maspTransaction.asset_name);
       assert(user);
       await this.eventsService.addUpdateLatestPointsJob(
@@ -220,6 +214,6 @@ export class MaspUpsertService {
         maspTransaction.type,
       );
     }
-    return masps;
+    return maspTransactions;
   }
 }

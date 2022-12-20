@@ -46,21 +46,13 @@ describe('MaspController', () => {
     user2Graffiti = 'user2maspcontroller';
     transaction1 = {
       hash: 'transactionHash1',
-      masps: [
-        {
-          type: EventType.MASP_MINT,
-          assetName: user1Graffiti,
-        },
-      ],
+      type: EventType.MASP_MINT,
+      assetName: user1Graffiti,
     };
     transaction2 = {
       hash: 'transactionHash2',
-      masps: [
-        {
-          type: EventType.MASP_BURN,
-          assetName: user2Graffiti,
-        },
-      ],
+      type: EventType.MASP_BURN,
+      assetName: user2Graffiti,
     };
     payload = {
       operations: [
