@@ -14,14 +14,14 @@ import { UsersModule } from '../users/users.module';
 import { DepositsService } from './deposits.service';
 import { DepositsUpsertService } from './deposits.upsert.service';
 import { EventsService } from './events.service';
-import { MaspTransactionsUpsertService } from './masp.upsert.service';
+import { MaspUpsertService } from './masp.upsert.service';
 
 @Module({
   exports: [
     EventsService,
     DepositsService,
     DepositsUpsertService,
-    MaspTransactionsUpsertService,
+    MaspUpsertService,
   ],
   imports: [
     ApiConfigModule,
@@ -38,7 +38,7 @@ import { MaspTransactionsUpsertService } from './masp.upsert.service';
     EventsService,
     DepositsService,
     DepositsUpsertService,
-    MaspTransactionsUpsertService,
+    MaspUpsertService,
   ],
 })
 export class EventsModule {}

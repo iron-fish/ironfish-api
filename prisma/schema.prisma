@@ -9,30 +9,30 @@ datasource db {
 }
 
 model Event {
-  id                  Int              @id @default(autoincrement())
-  created_at          DateTime         @default(now()) @db.Timestamp(6)
-  updated_at          DateTime         @default(now()) @updatedAt @db.Timestamp(6)
-  type                EventType
-  occurred_at         DateTime         @db.Timestamp(6)
-  points              Int
-  user_id             Int
-  week                Int?
-  deposit_id          Int?             @unique(map: "uq_events_on_deposit_id")
-  block_id            Int?             @unique(map: "uq_events_on_block_id")
-  deposit             Deposit?         @relation(fields: [deposit_id], references: [id])
-  block               Block?           @relation(fields: [block_id], references: [id])
-  user                User             @relation(fields: [user_id], references: [id])
-  url                 String?          @db.VarChar
-  masp_transaction_id Int?             @unique(map: "uq_events_on_masp_transaction_id")
-  MaspTransaction     MaspTransaction? @relation(fields: [masp_transaction_id], references: [id])
+  id          Int       @id @default(autoincrement())
+  created_at  DateTime  @default(now()) @db.Timestamp(6)
+  updated_at  DateTime  @default(now()) @updatedAt @db.Timestamp(6)
+  type        EventType
+  occurred_at DateTime  @db.Timestamp(6)
+  points      Int
+  user_id     Int
+  week        Int?
+  deposit_id  Int?      @unique(map: "uq_events_on_deposit_id")
+  block_id    Int?      @unique(map: "uq_events_on_block_id")
+  deposit     Deposit?  @relation(fields: [deposit_id], references: [id])
+  block       Block?    @relation(fields: [block_id], references: [id])
+  user        User      @relation(fields: [user_id], references: [id])
+  url         String?   @db.VarChar
+  masp_id     Int?      @unique(map: "uq_events_on_masp_id")
+  Masp        Masp?     @relation(fields: [masp_id], references: [id])
 
   // below unique was created manually in the 20221123000635_unique_weekly_masp_events
   // currently unique not null isn't supported in prisma: https://github.com/prisma/prisma/issues/3387
   // leaving the line below will cause yarn db:migrate to try adding new migration everytime
   // @@unique([user_id, type, week], name: "uq_masp_on_user_id_type_week", map: "uq_masp_on_user_id_type_week")
-  
+
   @@index([deposit_id], name: "index_events_on_deposit_id")
-  @@index([masp_transaction_id], name: "index_events_on_masp_transaction_id")
+  @@index([masp_id], name: "index_events_on_masp_id")
   @@index([block_id], name: "index_events_on_block_id")
   @@index([user_id], name: "index_events_on_user_id")
   @@map("events")
@@ -258,7 +258,7 @@ model DepositHead {
   @@map("deposit_head")
 }
 
-model MaspTransaction {
+model Masp {
   id               Int       @id @default(autoincrement())
   created_at       DateTime  @default(now()) @db.Timestamp(6)
   updated_at       DateTime  @default(now()) @updatedAt @db.Timestamp(6)
@@ -271,13 +271,13 @@ model MaspTransaction {
   main             Boolean
   event            Event?
 
-  @@unique([transaction_hash], name: "uq_masp_on_transaction_hash", map: "uq_masp_on_transaction_hash")
-  @@map("masp_transactions")
+  @@unique([transaction_hash, asset_name, type], name: "uq_masp_on_transaction_hash_asset_name_type", map: "uq_masp_on_transaction_hash_asset_name_type")
+  @@map("masp")
 }
 
-model MaspTransactionHead {
+model MaspHead {
   id         Int    @id
   block_hash String @db.VarChar
 
-  @@map("masp_transaction_head")
+  @@map("masp_head")
 }

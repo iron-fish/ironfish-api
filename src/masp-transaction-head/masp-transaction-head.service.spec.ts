@@ -4,17 +4,15 @@
 import { INestApplication } from '@nestjs/common';
 import { v4 as uuid } from 'uuid';
 import { bootstrapTestApp } from '../test/test-app';
-import { MaspTransactionHeadService } from './masp-transaction-head.service';
+import { MaspHeadService } from './masp-transaction-head.service';
 
-describe('MaspTransactionHeadService', () => {
+describe('MaspHeadService', () => {
   let app: INestApplication;
-  type NewType = MaspTransactionHeadService;
-
-  let maspTransactionHeadService: NewType;
+  let maspHeadService: MaspHeadService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
-    maspTransactionHeadService = app.get(MaspTransactionHeadService);
+    maspHeadService = app.get(MaspHeadService);
     await app.init();
   });
 
@@ -25,7 +23,7 @@ describe('MaspTransactionHeadService', () => {
   describe('upsert', () => {
     it('upserts a MaspTransactionHead record', async () => {
       const hash = uuid();
-      const record = await maspTransactionHeadService.upsert(hash);
+      const record = await maspHeadService.upsert(hash);
       expect(record).toMatchObject({
         id: 1,
         block_hash: hash,

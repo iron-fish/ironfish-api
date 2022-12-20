@@ -9,21 +9,21 @@ import { v4 as uuid } from 'uuid';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { BlockOperation } from '../blocks/enums/block-operation';
 import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
-import { MaspTransactionHeadService } from '../masp-transaction-head/masp-transaction-head.service';
+import { MaspHeadService } from '../masp-transaction-head/masp-transaction-head.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
 import {
   MaspTransactionDto,
   UpsertMaspTransactionsDto,
 } from './dto/upsert-masp.dto';
-import { MaspTransactionsUpsertService } from './masp.upsert.service';
+import { MaspUpsertService } from './masp.upsert.service';
 
 describe('MaspController', () => {
   let app: INestApplication;
   let config: ApiConfigService;
-  let maspTransactionsUpsertService: MaspTransactionsUpsertService;
+  let maspUpsertService: MaspUpsertService;
   let graphileWorkerService: GraphileWorkerService;
-  let maspTransactionHeadService: MaspTransactionHeadService;
+  let maspHeadService: MaspHeadService;
   let usersService: UsersService;
   let API_KEY: string;
   let user1Graffiti: string;
@@ -35,8 +35,8 @@ describe('MaspController', () => {
   beforeAll(async () => {
     app = await bootstrapTestApp();
     config = app.get(ApiConfigService);
-    maspTransactionsUpsertService = app.get(MaspTransactionsUpsertService);
-    maspTransactionHeadService = app.get(MaspTransactionHeadService);
+    maspUpsertService = app.get(MaspUpsertService);
+    maspHeadService = app.get(MaspHeadService);
     graphileWorkerService = app.get(GraphileWorkerService);
     usersService = app.get(UsersService);
     API_KEY = config.get<string>('IRONFISH_API_KEY');
@@ -46,13 +46,21 @@ describe('MaspController', () => {
     user2Graffiti = 'user2maspcontroller';
     transaction1 = {
       hash: 'transactionHash1',
-      type: EventType.MASP_MINT,
-      assetName: user1Graffiti,
+      masps: [
+        {
+          type: EventType.MASP_MINT,
+          assetName: user1Graffiti,
+        },
+      ],
     };
     transaction2 = {
       hash: 'transactionHash2',
-      type: EventType.MASP_BURN,
-      assetName: user2Graffiti,
+      masps: [
+        {
+          type: EventType.MASP_BURN,
+          assetName: user2Graffiti,
+        },
+      ],
     };
     payload = {
       operations: [
@@ -105,7 +113,7 @@ describe('MaspController', () => {
 
   describe('GET /masp/head', () => {
     it('returns the latest deposit submitted', async () => {
-      const head = await maspTransactionHeadService.head();
+      const head = await maspHeadService.head();
 
       const operation = {
         ...payload.operations[0],
@@ -114,8 +122,8 @@ describe('MaspController', () => {
           previousBlockHash: head?.block_hash || uuid(),
         },
       };
-      await maspTransactionsUpsertService.upsert(operation);
-      await maspTransactionsUpsertService.upsert(payload.operations[1]);
+      await maspUpsertService.upsert(operation);
+      await maspUpsertService.upsert(payload.operations[1]);
 
       const response = await request(app.getHttpServer())
         .get(`/masp/head`)
@@ -128,7 +136,7 @@ describe('MaspController', () => {
     });
 
     it('returns the latest deposit if a block is disconnected', async () => {
-      const head = await maspTransactionHeadService.head();
+      const head = await maspHeadService.head();
 
       const operation = {
         ...payload.operations[0],
@@ -137,8 +145,8 @@ describe('MaspController', () => {
           previousBlockHash: head?.block_hash || uuid(),
         },
       };
-      await maspTransactionsUpsertService.upsert(operation);
-      await maspTransactionsUpsertService.upsert({
+      await maspUpsertService.upsert(operation);
+      await maspUpsertService.upsert({
         ...operation,
         transactions: [],
         type: BlockOperation.DISCONNECTED,
@@ -158,7 +166,7 @@ describe('MaspController', () => {
   describe('POST /masp', () => {
     it('upserts new masp transaction', async () => {
       const bulkUpsert = jest
-        .spyOn(maspTransactionsUpsertService, 'bulkUpsert')
+        .spyOn(maspUpsertService, 'bulkUpsert')
         .mockImplementationOnce(jest.fn());
 
       await request(app.getHttpServer())

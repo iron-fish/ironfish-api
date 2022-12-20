@@ -17,12 +17,12 @@ import { Response } from 'express';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpsertMaspTransactionsDto } from './dto/upsert-masp.dto';
-import { MaspTransactionsUpsertService } from './masp.upsert.service';
+import { MaspUpsertService } from './masp.upsert.service';
 @ApiTags('Masp')
 @Controller('masp')
 export class MaspController {
   constructor(
-    private readonly maspTransactionUpsertService: MaspTransactionsUpsertService,
+    private readonly maspUpsertService: MaspUpsertService,
     private readonly prisma: PrismaService,
   ) {}
 
@@ -30,16 +30,16 @@ export class MaspController {
   @ApiExcludeEndpoint()
   @Get('head')
   async head(): Promise<{ block_hash: string }> {
-    const maspTransactionhead = await this.prisma.maspTransactionHead.findFirst(
-      { where: { id: 1 } },
-    );
+    const maspHead = await this.prisma.maspHead.findFirst({
+      where: { id: 1 },
+    });
 
-    if (!maspTransactionhead) {
+    if (!maspHead) {
       throw new NotFoundException();
     }
 
     return {
-      block_hash: maspTransactionhead.block_hash,
+      block_hash: maspHead.block_hash,
     };
   }
 
@@ -56,7 +56,7 @@ export class MaspController {
     data: UpsertMaspTransactionsDto,
     @Res() res: Response,
   ): Promise<void> {
-    await this.maspTransactionUpsertService.bulkUpsert(data.operations);
+    await this.maspUpsertService.bulkUpsert(data.operations);
     res.sendStatus(HttpStatus.ACCEPTED);
   }
 }

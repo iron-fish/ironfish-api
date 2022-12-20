@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { Deposit, EventType, MaspTransaction } from '.prisma/client';
+import { Deposit, EventType, Masp } from '.prisma/client';
 
 export interface CreateEventOptions {
   blockId?: number;
@@ -11,5 +11,5 @@ export interface CreateEventOptions {
   userId: number;
   url?: string;
   deposit?: Deposit;
-  maspTransaction?: MaspTransaction;
+  masp?: Masp;
 }
