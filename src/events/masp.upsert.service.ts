@@ -187,7 +187,7 @@ export class MaspUpsertService {
           await prisma.event.deleteMany({
             where: {
               masp_id: {
-                in: masps.map((maspTransaction) => maspTransaction.id),
+                in: masps.map((masp) => masp.id),
               },
             },
           });

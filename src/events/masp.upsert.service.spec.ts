@@ -153,7 +153,9 @@ describe('MaspTransactionUpsertService', () => {
 
     it('updates MASP block hash on reorg', async () => {
       // setup
-      await prismaService.masp.delete({ where: { id: 1 } });
+      await prismaService.masp.deleteMany();
+      await prismaService.event.deleteMany();
+      await maspHeadService.upsert('previousblockhash1');
       const individualPayload = payload.operations[0];
 
       // test
@@ -185,7 +187,9 @@ describe('MaspTransactionUpsertService', () => {
     describe('on DISCONNECTED operations', () => {
       it('removes events', async () => {
         // connected operation
-        await prismaService.masp.delete({ where: { id: 1 } });
+        await prismaService.masp.deleteMany();
+        await prismaService.event.deleteMany();
+        await maspHeadService.upsert('previousblockhash1');
         await maspUpsertService.upsert(payload.operations[0]);
 
         //disconnected operation
