@@ -2,13 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable, NotFoundException } from '@nestjs/common';
-import assert, { AssertionError } from 'assert';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
-import {
-  UpsertUserPointsOptions,
-  UserPointsOptions,
-} from './interfaces/upsert-user-points-options';
+import { UpsertUserPointsOptions } from './interfaces/upsert-user-points-options';
 import { EventType, Prisma, UserPoints } from '.prisma/client';
 
 @Injectable()

@@ -48,3 +48,11 @@ export const POINTS_PER_CATEGORY: Record<EventType, number> = {
   [EventType.MULTI_ASSET_BURN]: 1,
   [EventType.POOL4]: 0,
 };
+
+export const POOL_4_CATEGORIES: Array<EventType> = [
+  EventType.BUG_CAUGHT,
+  EventType.NODE_UPTIME,
+  EventType.MASP_MINT,
+  EventType.MASP_BURN,
+  EventType.MASP_TRANSFER,
+];

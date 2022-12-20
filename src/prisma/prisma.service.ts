@@ -19,9 +19,13 @@ export class PrismaService
           url: config.dbPoolUrl,
         },
       },
+      // uncomment to log queries
+      // log: ['query', 'info', 'warn', 'error'],
     });
     this.readClient = new PrismaClient({
       datasources: { db: { url: config.readDbPoolUrl } },
+      // uncomment to log queries
+      // log: ['query', 'info', 'warn', 'error'],
     });
   }
 

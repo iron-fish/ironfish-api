@@ -347,7 +347,7 @@ describe('EventsService', () => {
   });
 
   describe('getLifetimeEventMetricsForUser', () => {
-    it.only('sums up all the events for the users', async () => {
+    it('sums up all the events for the users', async () => {
       const eventCounts: Record<Exclude<EventType, 'POOL4'>, number> = {
         BLOCK_MINED: 4,
         BUG_CAUGHT: 1,
@@ -387,8 +387,6 @@ describe('EventsService', () => {
 
       const lifetimeMetrics =
         eventsService.getLifetimeEventMetricsForUser(userPoints);
-
-      expect(lifetimeMetrics.POOL4.count).toBe(5);
 
       const lifetimeCounts = {
         [EventType.BLOCK_MINED]: lifetimeMetrics[EventType.BLOCK_MINED].count,
