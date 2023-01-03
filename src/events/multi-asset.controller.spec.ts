@@ -18,7 +18,7 @@ import {
 } from './dto/upsert-multi-asset.dto';
 import { MultiAssetUpsertService } from './multi-asset.upsert.service';
 
-describe('MaspController', () => {
+describe('MultiAssetController', () => {
   let app: INestApplication;
   let config: ApiConfigService;
   let multiAssetUpsertService: MultiAssetUpsertService;

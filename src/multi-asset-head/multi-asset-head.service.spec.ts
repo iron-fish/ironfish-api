@@ -6,7 +6,7 @@ import { v4 as uuid } from 'uuid';
 import { bootstrapTestApp } from '../test/test-app';
 import { MultiAssetHeadService } from './multi-asset-head.service';
 
-describe('MaspHeadService', () => {
+describe('MultiAssetHeadService', () => {
   let app: INestApplication;
   let multiAssetHeadService: MultiAssetHeadService;
 
@@ -21,7 +21,7 @@ describe('MaspHeadService', () => {
   });
 
   describe('upsert', () => {
-    it('upserts a MaspTransactionHead record', async () => {
+    it('upserts a MultiAssetHead record', async () => {
       const hash = uuid();
       const record = await multiAssetHeadService.upsert(hash);
       expect(record).toMatchObject({

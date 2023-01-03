@@ -10,4 +10,4 @@ import { MultiAssetHeadService } from './multi-asset-head.service';
   imports: [PrismaModule],
   providers: [MultiAssetHeadService],
 })
-export class MaspTransactionHeadModule {}
+export class MultiAssetHeadModule {}

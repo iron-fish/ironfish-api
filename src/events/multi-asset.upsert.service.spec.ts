@@ -139,28 +139,28 @@ describe('MultiAssetUpsertService', () => {
       expect(user1Events).toHaveLength(1);
       expect(user2Events).toHaveLength(1);
 
-      const user1Masps = await prismaService.multiAsset.findMany({
+      const user1MultiAsset = await prismaService.multiAsset.findMany({
         where: {
           asset_name: user1.graffiti,
         },
       });
 
-      const user2Masps = await prismaService.multiAsset.findMany({
+      const user2MultiAsset = await prismaService.multiAsset.findMany({
         where: {
           asset_name: user2.graffiti,
         },
       });
 
-      expect(user1Masps).toHaveLength(1);
-      expect(user1Masps[0].asset_name).toEqual(user1.graffiti);
-      expect(user1Masps[0].type).toEqual(EventType.MULTI_ASSET_MINT);
-      expect(user2Masps).toHaveLength(1);
-      expect(user2Masps[0].asset_name).toEqual(user2.graffiti);
-      expect(user2Masps[0].type).toEqual(EventType.MULTI_ASSET_BURN);
+      expect(user1MultiAsset).toHaveLength(1);
+      expect(user1MultiAsset[0].asset_name).toEqual(user1.graffiti);
+      expect(user1MultiAsset[0].type).toEqual(EventType.MULTI_ASSET_MINT);
+      expect(user2MultiAsset).toHaveLength(1);
+      expect(user2MultiAsset[0].asset_name).toEqual(user2.graffiti);
+      expect(user2MultiAsset[0].type).toEqual(EventType.MULTI_ASSET_BURN);
 
-      expect(user1Events[0].multi_asset_id).toEqual(user1Masps[0].id);
+      expect(user1Events[0].multi_asset_id).toEqual(user1MultiAsset[0].id);
       expect(user1Events[0].type).toEqual(EventType.MULTI_ASSET_MINT);
-      expect(user2Events[0].multi_asset_id).toEqual(user2Masps[0].id);
+      expect(user2Events[0].multi_asset_id).toEqual(user2MultiAsset[0].id);
       expect(user2Events[0].type).toEqual(EventType.MULTI_ASSET_BURN);
     });
 
@@ -184,16 +184,16 @@ describe('MultiAssetUpsertService', () => {
           hash: updatedHash,
         },
       });
-      const user1MaspTransactions = await prismaService.multiAsset.findMany({
+      const user1MultiAsset = await prismaService.multiAsset.findMany({
         where: {
           asset_name: user1.graffiti,
         },
       });
 
-      expect(user1MaspTransactions).toHaveLength(1);
-      expect(user1MaspTransactions[0].asset_name).toEqual(user1.graffiti);
-      expect(user1MaspTransactions[0].type).toEqual(EventType.MULTI_ASSET_MINT);
-      expect(user1MaspTransactions[0].block_hash).toBe(updatedHash);
+      expect(user1MultiAsset).toHaveLength(1);
+      expect(user1MultiAsset[0].asset_name).toEqual(user1.graffiti);
+      expect(user1MultiAsset[0].type).toEqual(EventType.MULTI_ASSET_MINT);
+      expect(user1MultiAsset[0].block_hash).toBe(updatedHash);
     });
     describe('on DISCONNECTED operations', () => {
       it('removes events', async () => {
@@ -217,14 +217,14 @@ describe('MultiAssetUpsertService', () => {
           },
         });
 
-        const user1MaspTransactions = await prismaService.multiAsset.findMany({
+        const user1MultiAsset = await prismaService.multiAsset.findMany({
           where: {
             asset_name: user1.graffiti,
           },
         });
 
         expect(user1Events).toHaveLength(0);
-        expect(user1MaspTransactions[0].main).toBe(false);
+        expect(user1MultiAsset[0].main).toBe(false);
       });
     });
 

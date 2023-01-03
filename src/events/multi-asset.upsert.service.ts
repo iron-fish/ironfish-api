@@ -8,6 +8,7 @@ import { ApiConfigService } from '../api-config/api-config.service';
 import { BlockOperation } from '../blocks/enums/block-operation';
 import { POINTS_PER_CATEGORY } from '../common/constants';
 import { standardizeHash } from '../common/utils/hash';
+import { LoggerService } from '../logger/logger.service';
 import { MultiAssetHeadService as MultiAssetHeadService } from '../multi-asset-head/multi-asset-head.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
@@ -19,6 +20,7 @@ import { EventsService } from './events.service';
 export class MultiAssetUpsertService {
   constructor(
     private readonly config: ApiConfigService,
+    private readonly loggerService: LoggerService,
     private readonly multiAssetHeadService: MultiAssetHeadService,
     private readonly eventsService: EventsService,
     private readonly prisma: PrismaService,
@@ -29,11 +31,11 @@ export class MultiAssetUpsertService {
     for (const operation of operations) {
       // We only want to handle multi asset transactions that deal with the main chain
       // (not forks). This will only be connected and disconnected events
-      const shouldUpsertMaspTransactions =
+      const shouldUpsertMultiAsset =
         operation.type === BlockOperation.CONNECTED ||
         operation.type === BlockOperation.DISCONNECTED;
 
-      if (shouldUpsertMaspTransactions) {
+      if (shouldUpsertMultiAsset) {
         await this.upsert(operation);
       }
     }
@@ -63,20 +65,16 @@ export class MultiAssetUpsertService {
     const [multiAssets, users] = await this.prisma.$transaction(
       async (prisma) => {
         let users: Map<string, User>;
-        let multi_assets = new Array<MultiAsset>();
+        let multiAssets = new Array<MultiAsset>();
         const head = await this.multiAssetHeadService.head();
 
         if (operation.type === BlockOperation.CONNECTED) {
-          const userGraffitis = operation.transactions.reduce<string[]>(
-            (acc, transaction) =>
-              acc.concat(
-                transaction.multiAssets.reduce<string[]>(
-                  (acc2, multiAsset) => acc2.concat(multiAsset.assetName),
-                  [],
-                ),
-              ),
-            [],
-          );
+          const userGraffitis = [];
+          for (const transaction of operation.transactions) {
+            for (const multiAsset of transaction.multiAssets) {
+              userGraffitis.push(multiAsset.assetName);
+            }
+          }
           users = await this.usersService.findManyAndMapByGraffiti(
             userGraffitis,
           );
@@ -99,8 +97,11 @@ export class MultiAssetUpsertService {
           }>();
           for (const transaction of operation.transactions) {
             for (const multiAsset of transaction.multiAssets) {
-              // Masp assetName should match user grafitti
+              // Multi Asset -> assetName should match user graffiti
               if (!users.has(multiAsset.assetName)) {
+                this.loggerService.debug(
+                  `Multi Asset with name "${multiAsset.assetName}" has no corresponding user with the same graffiti`,
+                );
                 continue;
               }
 
@@ -115,7 +116,7 @@ export class MultiAssetUpsertService {
               });
             }
           }
-          // MASP transactions are shared between blocks, so we need to reassign all the ones on other blocks
+          // Multi asset events are shared between blocks, so we need to reassign all the ones on other blocks
           if (multiAssetParams.length) {
             await prisma.multiAsset.updateMany({
               data: {
@@ -140,14 +141,14 @@ export class MultiAssetUpsertService {
             skipDuplicates: true,
           });
 
-          multi_assets = await prisma.multiAsset.findMany({
+          multiAssets = await prisma.multiAsset.findMany({
             where: {
               block_hash: blockHash,
               network_version: networkVersion,
             },
           });
           const currentPhase3Week = phase3Week(operation.block.timestamp);
-          const eventPayloads = multi_assets.map((multiAsset) => {
+          const eventPayloads = multiAssets.map((multiAsset) => {
             const user = users.get(multiAsset.asset_name);
             assert(user);
 
@@ -183,19 +184,19 @@ export class MultiAssetUpsertService {
             },
           });
 
-          multi_assets = await prisma.multiAsset.findMany({
+          multiAssets = await prisma.multiAsset.findMany({
             where: {
               block_hash: blockHash,
               network_version: networkVersion,
             },
           });
           users = await this.usersService.findManyAndMapByGraffiti(
-            multi_assets.map((transaction) => transaction.asset_name),
+            multiAssets.map((transaction) => transaction.asset_name),
           );
           await prisma.event.deleteMany({
             where: {
               multi_asset_id: {
-                in: multi_assets.map((multi_asset) => multi_asset.id),
+                in: multiAssets.map((multi_asset) => multi_asset.id),
               },
             },
           });
@@ -210,7 +211,7 @@ export class MultiAssetUpsertService {
 
         await this.multiAssetHeadService.upsert(headHash);
 
-        return [multi_assets, users];
+        return [multiAssets, users];
       },
     );
 

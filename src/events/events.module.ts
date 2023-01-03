@@ -7,7 +7,8 @@ import { BlocksModule } from '../blocks/blocks.module';
 import { DepositHeadsModule } from '../deposit-heads/deposit-heads.module';
 import { GraphileWorkerModule } from '../graphile-worker/graphile-worker.module';
 import { InfluxDbModule } from '../influxdb/influxdb.module';
-import { MaspTransactionHeadModule } from '../multi-asset-head/multi-asset-head.module';
+import { LoggerModule } from '../logger/logger.module';
+import { MultiAssetHeadModule } from '../multi-asset-head/multi-asset-head.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { UserPointsModule } from '../user-points/user-points.module';
 import { UsersModule } from '../users/users.module';
@@ -27,9 +28,10 @@ import { MultiAssetUpsertService } from './multi-asset.upsert.service';
     ApiConfigModule,
     BlocksModule,
     DepositHeadsModule,
-    MaspTransactionHeadModule,
+    MultiAssetHeadModule,
     GraphileWorkerModule,
     InfluxDbModule,
+    LoggerModule,
     PrismaModule,
     UserPointsModule,
     UsersModule,

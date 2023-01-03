@@ -18,9 +18,9 @@ import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpsertMultiAssetDto } from './dto/upsert-multi-asset.dto';
 import { MultiAssetUpsertService } from './multi-asset.upsert.service';
-@ApiTags('Masp')
+@ApiTags('MultiAsset')
 @Controller('multi_asset')
-export class MaspController {
+export class MultiAssetController {
   constructor(
     private readonly multiAssetUpsertService: MultiAssetUpsertService,
     private readonly prisma: PrismaService,

@@ -22,6 +22,7 @@ export class MultiAssetDto {
   @IsString()
   readonly assetName!: string;
 }
+
 export class MultiAssetsDto {
   @IsString()
   readonly hash!: string;
