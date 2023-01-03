@@ -317,7 +317,7 @@ describe('Weekly transaction limit', () => {
     // test
     await multiAssetService.upsert(initialOperation);
     await multiAssetService.upsert(secondOperation);
-    const greedUserMasps = await prismaService.multiAsset.findMany({
+    const greedUserMultiAssets = await prismaService.multiAsset.findMany({
       where: {
         asset_name: greedyUser.graffiti,
       },
@@ -327,7 +327,7 @@ describe('Weekly transaction limit', () => {
         user_id: greedyUser.id,
       },
     });
-    expect(greedyUserTransactions).toHaveLength(2);
+    expect(greedUserMultiAssets).toHaveLength(2);
     expect(greedyUserEvents).toHaveLength(1);
   });
 
