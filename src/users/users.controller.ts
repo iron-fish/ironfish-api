@@ -124,9 +124,9 @@ export class UsersController {
         main: await this.eventsService.getLifetimeEventsMetricsForUser(user, [
           EventType.BUG_CAUGHT,
           EventType.NODE_UPTIME,
-          EventType.MASP_BURN,
-          EventType.MASP_MINT,
-          EventType.MASP_TRANSFER,
+          EventType.MULTI_ASSET_BURN,
+          EventType.MULTI_ASSET_MINT,
+          EventType.MULTI_ASSET_TRANSFER,
         ]),
         code: await this.eventsService.getLifetimeEventsMetricsForUser(user, [
           EventType.PULL_REQUEST_MERGED,
@@ -168,9 +168,9 @@ export class UsersController {
           eventMetrics[EventType.SOCIAL_MEDIA_PROMOTION],
         node_uptime: eventMetrics[EventType.NODE_UPTIME],
         send_transaction: eventMetrics[EventType.SEND_TRANSACTION],
-        masp_burn: eventMetrics[EventType.MASP_BURN],
-        masp_mint: eventMetrics[EventType.MASP_MINT],
-        masp_transfer: eventMetrics[EventType.MASP_TRANSFER],
+        multi_asset_burn: eventMetrics[EventType.MULTI_ASSET_BURN],
+        multi_asset_mint: eventMetrics[EventType.MULTI_ASSET_MINT],
+        multi_asset_transfer: eventMetrics[EventType.MULTI_ASSET_TRANSFER],
       },
     };
   }

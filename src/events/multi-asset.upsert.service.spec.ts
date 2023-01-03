@@ -7,46 +7,58 @@ import assert from 'assert';
 import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { BlockOperation } from '../blocks/enums/block-operation';
-import { MaspHeadService } from '../masp-transaction-head/masp-transaction-head.service';
+import { MultiAssetHeadService } from '../multi-asset-head/multi-asset-head.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
 import {
-  MaspTransactionDto,
-  UpsertMaspTransactionsDto,
-} from './dto/upsert-masp.dto';
-import { MaspUpsertService } from './masp.upsert.service';
-describe('MaspTransactionUpsertService', () => {
+  MultiAssetsDto,
+  UpsertMultiAssetDto,
+} from './dto/upsert-multi-asset.dto';
+import { MultiAssetUpsertService } from './multi-asset.upsert.service';
+describe('MultiAssetUpsertService', () => {
   let app: INestApplication;
-  let maspHeadService: MaspHeadService;
-  let maspUpsertService: MaspUpsertService;
+  let multiAssetHeadService: MultiAssetHeadService;
+  let multiAssetUpsertService: MultiAssetUpsertService;
   let prismaService: PrismaService;
   let usersService: UsersService;
 
   let user1: User;
   let user2: User;
-  let transaction1: MaspTransactionDto;
-  let transaction2: MaspTransactionDto;
-  let transaction3: MaspTransactionDto;
-  let payload: UpsertMaspTransactionsDto;
+  let transaction1: MultiAssetsDto;
+  let transaction2: MultiAssetsDto;
+  let transaction3: MultiAssetsDto;
+  let payload: UpsertMultiAssetDto;
 
   beforeAll(async () => {
-    const user1Graffiti = 'user1masp';
-    const user2Graffiti = 'user2masp';
+    const user1Graffiti = 'user1multiasset';
+    const user2Graffiti = 'user2multiasset';
     transaction1 = {
       hash: 'transactionHash1',
-      type: EventType.MASP_MINT,
-      assetName: user1Graffiti,
+      multiAssets: [
+        {
+          type: EventType.MULTI_ASSET_MINT,
+          assetName: user1Graffiti,
+        },
+      ],
     };
     transaction2 = {
       hash: 'transactionHash2',
-      type: EventType.MASP_BURN,
-      assetName: user2Graffiti,
+      multiAssets: [
+        {
+          type: EventType.MULTI_ASSET_BURN,
+          assetName: user2Graffiti,
+        },
+      ],
     };
     transaction3 = {
       hash: 'transactionHash3',
-      type: EventType.MASP_MINT,
-      assetName: user2Graffiti,
+      multiAssets: [
+        {
+          type: EventType.MULTI_ASSET_MINT,
+          assetName: user2Graffiti,
+        },
+      ],
     };
     payload = {
       operations: [
@@ -54,7 +66,7 @@ describe('MaspTransactionUpsertService', () => {
           transactions: [transaction1, transaction2],
           type: BlockOperation.CONNECTED,
           block: {
-            hash: 'maspupsertblockhash1',
+            hash: 'multiassetupsertblockhash1',
             previousBlockHash: 'previousblockhash1',
             timestamp: new Date(),
             sequence: 3,
@@ -64,7 +76,7 @@ describe('MaspTransactionUpsertService', () => {
           transactions: [transaction3],
           type: BlockOperation.CONNECTED,
           block: {
-            hash: 'maspupsertblockhash2',
+            hash: 'multiassetupsertblockhash2',
             previousBlockHash: 'previousblockhash2',
             timestamp: new Date(),
             sequence: 4,
@@ -73,8 +85,8 @@ describe('MaspTransactionUpsertService', () => {
       ],
     };
     app = await bootstrapTestApp();
-    maspUpsertService = app.get(MaspUpsertService);
-    maspHeadService = app.get(MaspHeadService);
+    multiAssetUpsertService = app.get(MultiAssetUpsertService);
+    multiAssetHeadService = app.get(MultiAssetHeadService);
     prismaService = app.get(PrismaService);
     usersService = app.get(UsersService);
     await app.init();
@@ -101,79 +113,78 @@ describe('MaspTransactionUpsertService', () => {
   });
 
   describe('upsert', () => {
-    it('upserts new masp transactions and events', async () => {
+    it('upserts new multiasset transactions and events', async () => {
       // setup
+      await prismaService.multiAssetHead.deleteMany();
 
       const individualPayload = payload.operations[0];
 
       // test
-      await maspUpsertService.upsert(individualPayload);
+      await multiAssetUpsertService.upsert(individualPayload);
 
       const user1Events = await prismaService.event.findMany({
         where: {
           user_id: user1.id,
-          type: transaction1.type,
+          type: transaction1.multiAssets[0].type,
         },
       });
 
       const user2Events = await prismaService.event.findMany({
         where: {
           user_id: user2.id,
-          type: transaction2.type,
+          type: transaction2.multiAssets[0].type,
         },
       });
 
       expect(user1Events).toHaveLength(1);
       expect(user2Events).toHaveLength(1);
 
-      const user1MaspTransactions = await prismaService.masp.findMany({
+      const user1Masps = await prismaService.multiAsset.findMany({
         where: {
           asset_name: user1.graffiti,
         },
       });
 
-      const user2MaspTransactions = await prismaService.masp.findMany({
+      const user2Masps = await prismaService.multiAsset.findMany({
         where: {
           asset_name: user2.graffiti,
         },
       });
 
-      expect(user1MaspTransactions).toHaveLength(1);
-      expect(user1MaspTransactions[0].asset_name).toEqual(user1.graffiti);
-      expect(user1MaspTransactions[0].type).toEqual(EventType.MASP_MINT);
-      expect(user2MaspTransactions).toHaveLength(1);
-      expect(user2MaspTransactions[0].asset_name).toEqual(user2.graffiti);
-      expect(user2MaspTransactions[0].type).toEqual(EventType.MASP_BURN);
+      expect(user1Masps).toHaveLength(1);
+      expect(user1Masps[0].asset_name).toEqual(user1.graffiti);
+      expect(user1Masps[0].type).toEqual(EventType.MULTI_ASSET_MINT);
+      expect(user2Masps).toHaveLength(1);
+      expect(user2Masps[0].asset_name).toEqual(user2.graffiti);
+      expect(user2Masps[0].type).toEqual(EventType.MULTI_ASSET_BURN);
 
-      expect(user1Events[0].masp_id).toEqual(user1MaspTransactions[0].id);
-      expect(user1Events[0].type).toEqual(EventType.MASP_MINT);
-      expect(user2Events[0].masp_id).toEqual(user2MaspTransactions[0].id);
-      expect(user2Events[0].type).toEqual(EventType.MASP_BURN);
+      expect(user1Events[0].multi_asset_id).toEqual(user1Masps[0].id);
+      expect(user1Events[0].type).toEqual(EventType.MULTI_ASSET_MINT);
+      expect(user2Events[0].multi_asset_id).toEqual(user2Masps[0].id);
+      expect(user2Events[0].type).toEqual(EventType.MULTI_ASSET_BURN);
     });
 
     it('updates MASP block hash on reorg', async () => {
       // setup
-      await prismaService.masp.deleteMany();
-      await prismaService.event.deleteMany();
-      await maspHeadService.upsert('previousblockhash1');
+      await prismaService.multiAssetHead.deleteMany();
       const individualPayload = payload.operations[0];
 
       // test
-      await maspUpsertService.upsert(individualPayload);
-      await maspUpsertService.upsert({
+      await multiAssetUpsertService.upsert(individualPayload);
+      await multiAssetUpsertService.upsert({
         ...individualPayload,
         transactions: [],
         type: BlockOperation.DISCONNECTED,
       });
       const updatedHash = 'newhash';
-      await maspUpsertService.upsert({
+      await multiAssetUpsertService.upsert({
         ...individualPayload,
         block: {
           ...individualPayload.block,
           hash: updatedHash,
         },
       });
-      const user1MaspTransactions = await prismaService.masp.findMany({
+      const user1MaspTransactions = await prismaService.multiAsset.findMany({
         where: {
           asset_name: user1.graffiti,
         },
@@ -181,16 +192,14 @@ describe('MaspTransactionUpsertService', () => {
 
       expect(user1MaspTransactions).toHaveLength(1);
       expect(user1MaspTransactions[0].asset_name).toEqual(user1.graffiti);
-      expect(user1MaspTransactions[0].type).toEqual(EventType.MASP_MINT);
+      expect(user1MaspTransactions[0].type).toEqual(EventType.MULTI_ASSET_MINT);
       expect(user1MaspTransactions[0].block_hash).toBe(updatedHash);
     });
     describe('on DISCONNECTED operations', () => {
       it('removes events', async () => {
         // connected operation
-        await prismaService.masp.deleteMany();
-        await prismaService.event.deleteMany();
-        await maspHeadService.upsert('previousblockhash1');
-        await maspUpsertService.upsert(payload.operations[0]);
+        await prismaService.multiAssetHead.deleteMany();
+        await multiAssetUpsertService.upsert(payload.operations[0]);
 
         //disconnected operation
         const disconnectingOperation = {
@@ -199,16 +208,16 @@ describe('MaspTransactionUpsertService', () => {
           type: BlockOperation.DISCONNECTED,
         };
 
-        await maspUpsertService.upsert(disconnectingOperation);
+        await multiAssetUpsertService.upsert(disconnectingOperation);
 
         const user1Events = await prismaService.event.findMany({
           where: {
             user_id: user1.id,
-            type: payload.operations[0].transactions[0].type,
+            type: payload.operations[0].transactions[0].multiAssets[0].type,
           },
         });
 
-        const user1MaspTransactions = await prismaService.masp.findMany({
+        const user1MaspTransactions = await prismaService.multiAsset.findMany({
           where: {
             asset_name: user1.graffiti,
           },
@@ -219,23 +228,23 @@ describe('MaspTransactionUpsertService', () => {
       });
     });
 
-    it('updates the masp transactions head', async () => {
-      const head = await maspHeadService.head();
+    it('updates the multi asset transactions head', async () => {
+      const head = await multiAssetHeadService.head();
       assert(head);
       const operation = {
         transactions: [transaction1, transaction2],
         type: BlockOperation.CONNECTED,
         block: {
-          hash: 'maspupsertblockhash1',
+          hash: 'multiassetupsertblockhash1',
           previousBlockHash: head.block_hash,
           timestamp: new Date(),
           sequence: 3,
         },
       };
 
-      await maspUpsertService.upsert(operation);
+      await multiAssetUpsertService.upsert(operation);
 
-      await expect(maspHeadService.head()).resolves.toMatchObject({
+      await expect(multiAssetHeadService.head()).resolves.toMatchObject({
         block_hash: payload.operations[0].block.hash,
       });
     });
@@ -244,14 +253,14 @@ describe('MaspTransactionUpsertService', () => {
 
 describe('Weekly transaction limit', () => {
   let app: INestApplication;
-  let maspTransactionHeadService: MaspHeadService;
-  let maspUpsertService: MaspUpsertService;
+  let multiAssetHeadService: MultiAssetHeadService;
+  let multiAssetService: MultiAssetUpsertService;
   let prismaService: PrismaService;
   let usersService: UsersService;
   beforeAll(async () => {
     app = await bootstrapTestApp();
-    maspUpsertService = app.get(MaspUpsertService);
-    maspTransactionHeadService = app.get(MaspHeadService);
+    multiAssetService = app.get(MultiAssetUpsertService);
+    multiAssetHeadService = app.get(MultiAssetHeadService);
     prismaService = app.get(PrismaService);
     usersService = app.get(UsersService);
     await app.init();
@@ -264,13 +273,17 @@ describe('Weekly transaction limit', () => {
       graffiti: uuid(),
       country_code: faker.address.countryCode(),
     });
-    const head = await maspTransactionHeadService.head();
+    const head = await multiAssetHeadService.head();
     const initialOperation = {
       transactions: [
         {
           hash: 'limitUserHash',
-          type: EventType.MASP_MINT,
-          assetName: greedyUser.graffiti,
+          multiAssets: [
+            {
+              type: EventType.MULTI_ASSET_MINT,
+              assetName: greedyUser.graffiti,
+            },
+          ],
         },
       ],
       type: BlockOperation.CONNECTED,
@@ -285,8 +298,12 @@ describe('Weekly transaction limit', () => {
       transactions: [
         {
           hash: 'limitUserHash2',
-          type: EventType.MASP_MINT,
-          assetName: greedyUser.graffiti,
+          multiAssets: [
+            {
+              type: EventType.MULTI_ASSET_MINT,
+              assetName: greedyUser.graffiti,
+            },
+          ],
         },
       ],
       type: BlockOperation.CONNECTED,
@@ -298,9 +315,9 @@ describe('Weekly transaction limit', () => {
       },
     };
     // test
-    await maspUpsertService.upsert(initialOperation);
-    await maspUpsertService.upsert(secondOperation);
-    const greedyUserTransactions = await prismaService.masp.findMany({
+    await multiAssetService.upsert(initialOperation);
+    await multiAssetService.upsert(secondOperation);
+    const greedUserMasps = await prismaService.multiAsset.findMany({
       where: {
         asset_name: greedyUser.graffiti,
       },
@@ -321,13 +338,17 @@ describe('Weekly transaction limit', () => {
       graffiti: uuid(),
       country_code: faker.address.countryCode(),
     });
-    const head = await maspTransactionHeadService.head();
+    const head = await multiAssetHeadService.head();
     const initialOperation = {
       transactions: [
         {
           hash: 'originaldisconnectedhash',
-          type: EventType.MASP_MINT,
-          assetName: legitUser.graffiti,
+          multiAssets: [
+            {
+              type: EventType.MULTI_ASSET_MINT,
+              assetName: legitUser.graffiti,
+            },
+          ],
         },
       ],
       type: BlockOperation.CONNECTED,
@@ -347,8 +368,12 @@ describe('Weekly transaction limit', () => {
       transactions: [
         {
           hash: 'validnewtransaction',
-          type: EventType.MASP_MINT,
-          assetName: legitUser.graffiti,
+          multiAssets: [
+            {
+              type: EventType.MULTI_ASSET_MINT,
+              assetName: legitUser.graffiti,
+            },
+          ],
         },
       ],
       type: BlockOperation.CONNECTED,
@@ -360,10 +385,10 @@ describe('Weekly transaction limit', () => {
       },
     };
     // test
-    await maspUpsertService.upsert(initialOperation);
-    await maspUpsertService.upsert(disconnectOperation);
-    await maspUpsertService.upsert(secondOperation);
-    const legitUserTransactions = await prismaService.masp.findMany({
+    await multiAssetService.upsert(initialOperation);
+    await multiAssetService.upsert(disconnectOperation);
+    await multiAssetService.upsert(secondOperation);
+    const legitUserTransactions = await prismaService.multiAsset.findMany({
       where: {
         asset_name: legitUser.graffiti,
       },
@@ -388,7 +413,10 @@ describe('Weekly transaction limit', () => {
     expect(legitUserEvents).toHaveLength(1);
     expect(legitUserEvents).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ type: EventType.MASP_MINT, week: 2773 }),
+        expect.objectContaining({
+          type: EventType.MULTI_ASSET_MINT,
+          week: 2773,
+        }),
       ]),
     );
   });

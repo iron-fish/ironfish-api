@@ -3,11 +3,11 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '../prisma/prisma.module';
-import { MaspHeadService } from './masp-transaction-head.service';
+import { MultiAssetHeadService } from './multi-asset-head.service';
 
 @Module({
-  exports: [MaspHeadService],
+  exports: [MultiAssetHeadService],
   imports: [PrismaModule],
-  providers: [MaspHeadService],
+  providers: [MultiAssetHeadService],
 })
 export class MaspTransactionHeadModule {}

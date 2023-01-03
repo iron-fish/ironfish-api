@@ -9,7 +9,7 @@ import { UsersModule } from '../users/users.module';
 import { DepositsController } from './deposits.controller';
 import { EventsController } from './events.controller';
 import { EventsModule } from './events.module';
-import { MaspController } from './masp.controller';
+import { MaspController } from './multi-asset.controller';
 
 @Module({
   controllers: [EventsController, DepositsController, MaspController],

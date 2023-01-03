@@ -44,9 +44,9 @@ export class UserPointsService {
       const socialMediaPromotion = points[EventType.SOCIAL_MEDIA_PROMOTION];
       const nodeUptime = points[EventType.NODE_UPTIME];
       const transactionSent = points[EventType.SEND_TRANSACTION];
-      const maspMint = points[EventType.MASP_MINT];
-      const maspBurn = points[EventType.MASP_BURN];
-      const maspTransfer = points[EventType.MASP_TRANSFER];
+      const multiAssetMint = points[EventType.MULTI_ASSET_MINT];
+      const multiAssetBurn = points[EventType.MULTI_ASSET_BURN];
+      const multiAssetTransfer = points[EventType.MULTI_ASSET_TRANSFER];
 
       if (blockMined) {
         options.block_mined_last_occurred_at = blockMined.latestOccurredAt;
@@ -87,20 +87,23 @@ export class UserPointsService {
         options.send_transaction_points = transactionSent.points;
         options.send_transaction_count = transactionSent.count;
       }
-      if (maspMint) {
-        options.masp_mint_last_occurred_at = maspMint.latestOccurredAt;
-        options.masp_mint_points = maspMint.points;
-        options.masp_mint_count = maspMint.count;
+      if (multiAssetMint) {
+        options.multi_asset_mint_last_occurred_at =
+          multiAssetMint.latestOccurredAt;
+        options.multi_asset_mint_points = multiAssetMint.points;
+        options.multi_asset_mint_count = multiAssetMint.count;
       }
-      if (maspBurn) {
-        options.masp_burn_last_occurred_at = maspBurn.latestOccurredAt;
-        options.masp_burn_points = maspBurn.points;
-        options.masp_burn_count = maspBurn.count;
+      if (multiAssetBurn) {
+        options.multi_asset_burn_last_occurred_at =
+          multiAssetBurn.latestOccurredAt;
+        options.multi_asset_burn_points = multiAssetBurn.points;
+        options.multi_asset_burn_count = multiAssetBurn.count;
       }
-      if (maspTransfer) {
-        options.masp_transfer_last_occurred_at = maspTransfer.latestOccurredAt;
-        options.masp_transfer_points = maspTransfer.points;
-        options.masp_transfer_count = maspTransfer.count;
+      if (multiAssetTransfer) {
+        options.multi_asset_transfer_last_occurred_at =
+          multiAssetTransfer.latestOccurredAt;
+        options.multi_asset_transfer_points = multiAssetTransfer.points;
+        options.multi_asset_transfer_count = multiAssetTransfer.count;
       }
     }
 

@@ -210,20 +210,20 @@ export class EventsService {
         user,
         EventType.SEND_TRANSACTION,
       );
-    const maspMintAggregate =
+    const multiAssetMintAggregate =
       await this.getLifetimePointsAndOccurredAtForUserAndType(
         user,
-        EventType.MASP_MINT,
+        EventType.MULTI_ASSET_MINT,
       );
-    const maspBurnAggregate =
+    const multiAssetBurnAggregate =
       await this.getLifetimePointsAndOccurredAtForUserAndType(
         user,
-        EventType.MASP_BURN,
+        EventType.MULTI_ASSET_BURN,
       );
-    const maspTransferAggregate =
+    const multiAssetTransferAggregate =
       await this.getLifetimePointsAndOccurredAtForUserAndType(
         user,
-        EventType.MASP_TRANSFER,
+        EventType.MULTI_ASSET_TRANSFER,
       );
     const totalPoints =
       blockMinedAggregate.points +
@@ -233,9 +233,9 @@ export class EventsService {
       socialMediaAggregate.points +
       nodeUptimeAggregate.points +
       sendTransactionAggregate.points +
-      maspMintAggregate.points +
-      maspBurnAggregate.points +
-      maspTransferAggregate.points;
+      multiAssetMintAggregate.points +
+      multiAssetBurnAggregate.points +
+      multiAssetTransferAggregate.points;
 
     return {
       userId: user.id,
@@ -248,9 +248,9 @@ export class EventsService {
         SOCIAL_MEDIA_PROMOTION: socialMediaAggregate,
         NODE_UPTIME: nodeUptimeAggregate,
         SEND_TRANSACTION: sendTransactionAggregate,
-        MASP_BURN: maspBurnAggregate,
-        MASP_MINT: maspMintAggregate,
-        MASP_TRANSFER: maspTransferAggregate,
+        MULTI_ASSET_BURN: multiAssetBurnAggregate,
+        MULTI_ASSET_MINT: multiAssetMintAggregate,
+        MULTI_ASSET_TRANSFER: multiAssetTransferAggregate,
       },
     };
   }
@@ -317,17 +317,17 @@ export class EventsService {
         count: points.social_media_promotion_count,
         points: points.social_media_promotion_points,
       },
-      MASP_BURN: {
-        count: points.masp_burn_count,
-        points: points.masp_burn_points,
+      MULTI_ASSET_BURN: {
+        count: points.multi_asset_burn_count,
+        points: points.multi_asset_burn_points,
       },
-      MASP_MINT: {
-        count: points.masp_mint_count,
-        points: points.masp_mint_points,
+      MULTI_ASSET_MINT: {
+        count: points.multi_asset_mint_count,
+        points: points.multi_asset_mint_points,
       },
-      MASP_TRANSFER: {
-        count: points.masp_transfer_count,
-        points: points.masp_transfer_points,
+      MULTI_ASSET_TRANSFER: {
+        count: points.multi_asset_transfer_count,
+        points: points.multi_asset_transfer_points,
       },
     };
   }
@@ -404,21 +404,21 @@ export class EventsService {
           start,
           end,
         ),
-        MASP_BURN: await this.getTotalEventTypeMetricsForUser(
+        MULTI_ASSET_BURN: await this.getTotalEventTypeMetricsForUser(
           user,
-          EventType.MASP_BURN,
+          EventType.MULTI_ASSET_BURN,
           start,
           end,
         ),
-        MASP_MINT: await this.getTotalEventTypeMetricsForUser(
+        MULTI_ASSET_MINT: await this.getTotalEventTypeMetricsForUser(
           user,
-          EventType.MASP_MINT,
+          EventType.MULTI_ASSET_MINT,
           start,
           end,
         ),
-        MASP_TRANSFER: await this.getTotalEventTypeMetricsForUser(
+        MULTI_ASSET_TRANSFER: await this.getTotalEventTypeMetricsForUser(
           user,
-          EventType.MASP_TRANSFER,
+          EventType.MULTI_ASSET_TRANSFER,
           start,
           end,
         ),

@@ -9,30 +9,30 @@ datasource db {
 }
 
 model Event {
-  id          Int       @id @default(autoincrement())
-  created_at  DateTime  @default(now()) @db.Timestamp(6)
-  updated_at  DateTime  @default(now()) @updatedAt @db.Timestamp(6)
-  type        EventType
-  occurred_at DateTime  @db.Timestamp(6)
-  points      Int
-  user_id     Int
-  week        Int?
-  deposit_id  Int?      @unique(map: "uq_events_on_deposit_id")
-  block_id    Int?      @unique(map: "uq_events_on_block_id")
-  deposit     Deposit?  @relation(fields: [deposit_id], references: [id])
-  block       Block?    @relation(fields: [block_id], references: [id])
-  user        User      @relation(fields: [user_id], references: [id])
-  url         String?   @db.VarChar
-  masp_id     Int?      @unique(map: "uq_events_on_masp_id")
-  Masp        Masp?     @relation(fields: [masp_id], references: [id])
+  id             Int         @id @default(autoincrement())
+  created_at     DateTime    @default(now()) @db.Timestamp(6)
+  updated_at     DateTime    @default(now()) @updatedAt @db.Timestamp(6)
+  type           EventType
+  occurred_at    DateTime    @db.Timestamp(6)
+  points         Int
+  user_id        Int
+  week           Int?
+  deposit_id     Int?        @unique(map: "uq_events_on_deposit_id")
+  block_id       Int?        @unique(map: "uq_events_on_block_id")
+  deposit        Deposit?    @relation(fields: [deposit_id], references: [id])
+  block          Block?      @relation(fields: [block_id], references: [id])
+  user           User        @relation(fields: [user_id], references: [id])
+  url            String?     @db.VarChar
+  multi_asset_id Int?        @unique(map: "uq_events_on_multi_asset_id")
+  MultiAsset     MultiAsset? @relation(fields: [multi_asset_id], references: [id])
 
-  // below unique was created manually in the 20221123000635_unique_weekly_masp_events
+  // below unique was created manually in the 20221123000635_unique_weekly_multi_asset_events
   // currently unique not null isn't supported in prisma: https://github.com/prisma/prisma/issues/3387
   // leaving the line below will cause yarn db:migrate to try adding new migration everytime
-  // @@unique([user_id, type, week], name: "uq_masp_on_user_id_type_week", map: "uq_masp_on_user_id_type_week")
+  // @@unique([user_id, type, week], name: "uq_multi_asset_on_user_id_type_week", map: "uq_multi_asset_on_user_id_type_week")
 
   @@index([deposit_id], name: "index_events_on_deposit_id")
-  @@index([masp_id], name: "index_events_on_masp_id")
+  @@index([multi_asset_id], name: "index_events_on_multi_asset_id")
   @@index([block_id], name: "index_events_on_block_id")
   @@index([user_id], name: "index_events_on_user_id")
   @@map("events")
@@ -177,9 +177,9 @@ enum EventType {
   SOCIAL_MEDIA_PROMOTION
   NODE_UPTIME
   SEND_TRANSACTION
-  MASP_TRANSFER
-  MASP_BURN
-  MASP_MINT
+  MULTI_ASSET_TRANSFER
+  MULTI_ASSET_BURN
+  MULTI_ASSET_MINT
 
   @@map("event_type")
 }
@@ -211,15 +211,15 @@ model UserPoints {
   send_transaction_points                 Int       @default(0)
   send_transaction_count                  Int       @default(0)
   send_transaction_last_occurred_at       DateTime? @db.Timestamp(6)
-  masp_mint_points                        Int       @default(0)
-  masp_mint_count                         Int       @default(0)
-  masp_mint_last_occurred_at              DateTime? @db.Timestamp(6)
-  masp_burn_points                        Int       @default(0)
-  masp_burn_count                         Int       @default(0)
-  masp_burn_last_occurred_at              DateTime? @db.Timestamp(6)
-  masp_transfer_points                    Int       @default(0)
-  masp_transfer_count                     Int       @default(0)
-  masp_transfer_last_occurred_at          DateTime? @db.Timestamp(6)
+  multi_asset_mint_points                 Int       @default(0)
+  multi_asset_mint_count                  Int       @default(0)
+  multi_asset_mint_last_occurred_at       DateTime? @db.Timestamp(6)
+  multi_asset_burn_points                 Int       @default(0)
+  multi_asset_burn_count                  Int       @default(0)
+  multi_asset_burn_last_occurred_at       DateTime? @db.Timestamp(6)
+  multi_asset_transfer_points             Int       @default(0)
+  multi_asset_transfer_count              Int       @default(0)
+  multi_asset_transfer_last_occurred_at   DateTime? @db.Timestamp(6)
   user                                    User      @relation(fields: [user_id], references: [id])
 
   @@index([user_id], map: "index_user_points_on_user_id")
@@ -258,7 +258,7 @@ model DepositHead {
   @@map("deposit_head")
 }
 
-model Masp {
+model MultiAsset {
   id               Int       @id @default(autoincrement())
   created_at       DateTime  @default(now()) @db.Timestamp(6)
   updated_at       DateTime  @default(now()) @updatedAt @db.Timestamp(6)
@@ -271,13 +271,13 @@ model Masp {
   main             Boolean
   event            Event?
 
-  @@unique([transaction_hash, asset_name, type], name: "uq_masp_on_transaction_hash_asset_name_type", map: "uq_masp_on_transaction_hash_asset_name_type")
-  @@map("masp")
+  @@unique([transaction_hash, asset_name, type], name: "uq_multi_asset_on_transaction_hash_asset_name_type", map: "uq_multi_asset_on_transaction_hash_asset_name_type")
+  @@map("multi_asset")
 }
 
-model MaspHead {
+model MultiAssetHead {
   id         Int    @id
   block_hash String @db.VarChar
 
-  @@map("masp_head")
+  @@map("multi_asset_head")
 }

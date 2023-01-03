@@ -367,12 +367,12 @@ export class UsersService {
         return 'send_transaction_points';
       case EventType.SOCIAL_MEDIA_PROMOTION:
         return 'social_media_promotion_points';
-      case EventType.MASP_BURN:
-        return 'masp_burn_points';
-      case EventType.MASP_MINT:
-        return 'masp_mint_points';
-      case EventType.MASP_TRANSFER:
-        return 'masp_transfer_points';
+      case EventType.MULTI_ASSET_BURN:
+        return 'multi_asset_burn_points';
+      case EventType.MULTI_ASSET_MINT:
+        return 'multi_asset_mint_points';
+      case EventType.MULTI_ASSET_TRANSFER:
+        return 'multi_asset_transfer_points';
     }
   }
 
@@ -404,12 +404,12 @@ export class UsersService {
         return 'send_transaction_last_occurred_at';
       case EventType.SOCIAL_MEDIA_PROMOTION:
         return 'social_media_promotion_last_occurred_at';
-      case EventType.MASP_BURN:
-        return 'masp_burn_last_occurred_at';
-      case EventType.MASP_MINT:
-        return 'masp_mint_last_occurred_at';
-      case EventType.MASP_TRANSFER:
-        return 'masp_transfer_last_occurred_at';
+      case EventType.MULTI_ASSET_BURN:
+        return 'multi_asset_burn_last_occurred_at';
+      case EventType.MULTI_ASSET_MINT:
+        return 'multi_asset_mint_last_occurred_at';
+      case EventType.MULTI_ASSET_TRANSFER:
+        return 'multi_asset_transfer_last_occurred_at';
     }
   }
 
