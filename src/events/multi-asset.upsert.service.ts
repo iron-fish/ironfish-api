@@ -176,20 +176,17 @@ export class MultiAssetUpsertService {
           }
           await prisma.multiAsset.updateMany({
             data: {
+              main: false,
+            },
+            where: {
               block_hash: blockHash,
-              main: true,
+              network_version: networkVersion,
             },
           });
 
           multiAssets = await prisma.multiAsset.findMany({
             where: {
-              OR: maspParams.map((masp) => ({
-                AND: {
-                  transaction_hash: masp.transaction_hash,
-                  asset_name: masp.asset_name,
-                  type: masp.type,
-                },
-              })),
+              block_hash: blockHash,
               network_version: networkVersion,
             },
           });
@@ -206,40 +203,11 @@ export class MultiAssetUpsertService {
         } else {
           assert(false);
         }
-        await prisma.masp.updateMany({
-          data: {
-            main: false,
-          },
-          where: {
-            block_hash: blockHash,
-            network_version: networkVersion,
-          },
-        });
 
-        masps = await prisma.masp.findMany({
-          where: {
-            block_hash: blockHash,
-            network_version: networkVersion,
-          },
-        });
-        users = await this.usersService.findManyAndMapByGraffiti(
-          masps.map((transaction) => transaction.asset_name),
-        );
-        await prisma.event.deleteMany({
-          where: {
-            masp_id: {
-              in: masps.map((masp) => masp.id),
-            },
-          },
-        });
-      } else {
-        assert(false);
-      }
-
-      const headHash =
-        operation.type === BlockOperation.CONNECTED
-          ? standardizeHash(operation.block.hash)
-          : standardizeHash(operation.block.previousBlockHash);
+        const headHash =
+          operation.type === BlockOperation.CONNECTED
+            ? standardizeHash(operation.block.hash)
+            : standardizeHash(operation.block.previousBlockHash);
 
         await this.multiAssetHeadService.upsert(headHash);
 

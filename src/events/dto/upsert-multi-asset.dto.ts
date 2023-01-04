@@ -22,15 +22,8 @@ export class MultiAssetDto {
   @IsString()
   readonly assetName!: string;
 }
-export class MaspTransactionDto {
-  @IsString()
-  readonly hash!: string;
 
-  @Type(() => MultiAssetDto)
-  readonly multiAssets!: MultiAssetDto[];
-}
-
-export class MultiAssetsDto {
+export class MultiAssetTransactionsDto {
   @IsString()
   readonly hash!: string;
 
@@ -64,8 +57,8 @@ export class UpsertMultiAssetOperationDto {
 
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => MultiAssetsDto)
-  readonly transactions!: MultiAssetsDto[];
+  @Type(() => MultiAssetTransactionsDto)
+  readonly transactions!: MultiAssetTransactionsDto[];
 }
 
 export class UpsertMultiAssetDto {

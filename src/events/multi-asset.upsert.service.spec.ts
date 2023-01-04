@@ -12,7 +12,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
 import {
-  MultiAssetsDto,
+  MultiAssetTransactionsDto,
   UpsertMultiAssetDto,
 } from './dto/upsert-multi-asset.dto';
 import { MultiAssetUpsertService } from './multi-asset.upsert.service';
@@ -25,9 +25,9 @@ describe('MultiAssetUpsertService', () => {
 
   let user1: User;
   let user2: User;
-  let transaction1: MultiAssetsDto;
-  let transaction2: MultiAssetsDto;
-  let transaction3: MultiAssetsDto;
+  let transaction1: MultiAssetTransactionsDto;
+  let transaction2: MultiAssetTransactionsDto;
+  let transaction3: MultiAssetTransactionsDto;
   let payload: UpsertMultiAssetDto;
 
   beforeAll(async () => {
@@ -167,6 +167,9 @@ describe('MultiAssetUpsertService', () => {
     it('updates multiasset block hash on reorg', async () => {
       // setup
       await prismaService.multiAssetHead.deleteMany();
+      await prismaService.multiAsset.deleteMany();
+      await prismaService.event.deleteMany();
+      await multiAssetHeadService.upsert('previousblockhash1');
       const individualPayload = payload.operations[0];
 
       // test
@@ -199,6 +202,9 @@ describe('MultiAssetUpsertService', () => {
       it('removes events', async () => {
         // connected operation
         await prismaService.multiAssetHead.deleteMany();
+        await prismaService.multiAsset.deleteMany();
+        await prismaService.event.deleteMany();
+        await multiAssetHeadService.upsert('previousblockhash1');
         await multiAssetUpsertService.upsert(payload.operations[0]);
 
         //disconnected operation

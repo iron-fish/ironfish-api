@@ -13,7 +13,7 @@ import { MultiAssetHeadService } from '../multi-asset-head/multi-asset-head.serv
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
 import {
-  MultiAssetsDto,
+  MultiAssetTransactionsDto,
   UpsertMultiAssetDto,
 } from './dto/upsert-multi-asset.dto';
 import { MultiAssetUpsertService } from './multi-asset.upsert.service';
@@ -28,8 +28,8 @@ describe('MultiAssetController', () => {
   let API_KEY: string;
   let user1Graffiti: string;
   let user2Graffiti: string;
-  let transaction1: MultiAssetsDto;
-  let transaction2: MultiAssetsDto;
+  let transaction1: MultiAssetTransactionsDto;
+  let transaction2: MultiAssetTransactionsDto;
   let payload: UpsertMultiAssetDto;
 
   beforeAll(async () => {
