@@ -9,7 +9,7 @@ import { BlockOperation } from '../blocks/enums/block-operation';
 import { POINTS_PER_CATEGORY } from '../common/constants';
 import { standardizeHash } from '../common/utils/hash';
 import { LoggerService } from '../logger/logger.service';
-import { MultiAssetHeadService as MultiAssetHeadService } from '../multi-asset-head/multi-asset-head.service';
+import { MultiAssetHeadService } from '../multi-asset-head/multi-asset-head.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
 import { phase3Week } from '../users/utils/week';
