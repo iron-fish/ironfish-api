@@ -332,7 +332,7 @@ describe('UsersService', () => {
       });
     });
 
-    it('MultiAsset queries work as expected', async () => {
+    it('multi asset queries work as expected', async () => {
       const graffiti = uuid();
       const now = new Date();
 
