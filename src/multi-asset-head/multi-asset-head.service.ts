@@ -2,15 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable } from '@nestjs/common';
-import { MaspTransactionHead } from '@prisma/client';
+import { MultiAssetHead } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
-export class MaspTransactionHeadService {
+export class MultiAssetHeadService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async upsert(blockHash: string): Promise<MaspTransactionHead> {
-    return this.prisma.maspTransactionHead.upsert({
+  async upsert(blockHash: string): Promise<MultiAssetHead> {
+    return this.prisma.multiAssetHead.upsert({
       create: {
         id: 1,
         block_hash: blockHash,
@@ -22,8 +22,8 @@ export class MaspTransactionHeadService {
     });
   }
 
-  async head(): Promise<MaspTransactionHead | null> {
-    return this.prisma.maspTransactionHead.findFirst({
+  async head(): Promise<MultiAssetHead | null> {
+    return this.prisma.multiAssetHead.findFirst({
       where: { id: 1 },
     });
   }

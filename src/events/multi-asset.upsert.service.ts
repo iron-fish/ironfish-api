@@ -2,48 +2,46 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable } from '@nestjs/common';
-import { EventType, MaspTransaction, User } from '@prisma/client';
+import { EventType, MultiAsset, User } from '@prisma/client';
 import assert from 'assert';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { BlockOperation } from '../blocks/enums/block-operation';
 import { POINTS_PER_CATEGORY } from '../common/constants';
 import { standardizeHash } from '../common/utils/hash';
-import { MaspTransactionHeadService } from '../masp-transaction-head/masp-transaction-head.service';
+import { LoggerService } from '../logger/logger.service';
+import { MultiAssetHeadService } from '../multi-asset-head/multi-asset-head.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
 import { phase3Week } from '../users/utils/week';
-import { UpsertMaspTransactionsOperationDto } from './dto/upsert-masp.dto';
+import { UpsertMultiAssetOperationDto } from './dto/upsert-multi-asset.dto';
 import { EventsService } from './events.service';
 
 @Injectable()
-export class MaspTransactionsUpsertService {
+export class MultiAssetUpsertService {
   constructor(
     private readonly config: ApiConfigService,
-    private readonly maspTransactionHeadService: MaspTransactionHeadService,
+    private readonly loggerService: LoggerService,
+    private readonly multiAssetHeadService: MultiAssetHeadService,
     private readonly eventsService: EventsService,
     private readonly prisma: PrismaService,
     private readonly usersService: UsersService,
   ) {}
 
-  async bulkUpsert(
-    operations: UpsertMaspTransactionsOperationDto[],
-  ): Promise<void> {
+  async bulkUpsert(operations: UpsertMultiAssetOperationDto[]): Promise<void> {
     for (const operation of operations) {
-      // We only want to handle masp transactions that deal with the main chain
+      // We only want to handle multi asset transactions that deal with the main chain
       // (not forks). This will only be connected and disconnected events
-      const shouldUpsertMaspTransactions =
+      const shouldUpsertMultiAsset =
         operation.type === BlockOperation.CONNECTED ||
         operation.type === BlockOperation.DISCONNECTED;
 
-      if (shouldUpsertMaspTransactions) {
+      if (shouldUpsertMultiAsset) {
         await this.upsert(operation);
       }
     }
   }
 
-  async upsert(
-    operation: UpsertMaspTransactionsOperationDto,
-  ): Promise<MaspTransaction[]> {
+  async upsert(operation: UpsertMultiAssetOperationDto): Promise<MultiAsset[]> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
     const blockHash = standardizeHash(operation.block.hash);
 
@@ -64,16 +62,19 @@ export class MaspTransactionsUpsertService {
       operation.block.previousBlockHash,
     );
 
-    const [maspTransactions, users] = await this.prisma.$transaction(
+    const [multiAssets, users] = await this.prisma.$transaction(
       async (prisma) => {
         let users: Map<string, User>;
-        let maspTransactions = new Array<MaspTransaction>();
-        const head = await this.maspTransactionHeadService.head();
+        let multiAssets = new Array<MultiAsset>();
+        const head = await this.multiAssetHeadService.head();
 
         if (operation.type === BlockOperation.CONNECTED) {
-          const userGraffitis = operation.transactions.map(
-            (transaction) => transaction.assetName,
-          );
+          const userGraffitis = [];
+          for (const transaction of operation.transactions) {
+            for (const multiAsset of transaction.multiAssets) {
+              userGraffitis.push(multiAsset.assetName);
+            }
+          }
           users = await this.usersService.findManyAndMapByGraffiti(
             userGraffitis,
           );
@@ -84,8 +85,8 @@ export class MaspTransactionsUpsertService {
               )}, expecting ${previousBlockHash}`,
             );
           }
-          // Create masp transaction params
-          const maspTransactionParams = new Array<{
+          // Create multiAsset transaction params
+          const multiAssetParams = new Array<{
             transaction_hash: string;
             block_hash: string;
             block_sequence: number;
@@ -95,63 +96,69 @@ export class MaspTransactionsUpsertService {
             main: boolean;
           }>();
           for (const transaction of operation.transactions) {
-            // Masp assetName should match user grafitti
-            if (!users.has(transaction.assetName)) {
-              continue;
-            }
+            for (const multiAsset of transaction.multiAssets) {
+              // Multi Asset -> assetName should match user graffiti
+              if (!users.has(multiAsset.assetName)) {
+                this.loggerService.debug(
+                  `Multi Asset with name "${multiAsset.assetName}" has no corresponding user with the same graffiti`,
+                );
+                continue;
+              }
 
-            maspTransactionParams.push({
-              asset_name: transaction.assetName,
-              type: transaction.type,
-              transaction_hash: standardizeHash(transaction.hash),
-              block_hash: blockHash,
-              block_sequence: operation.block.sequence,
-              main: true,
-              network_version: networkVersion,
-            });
+              multiAssetParams.push({
+                asset_name: multiAsset.assetName,
+                type: multiAsset.type,
+                transaction_hash: standardizeHash(transaction.hash),
+                block_hash: blockHash,
+                block_sequence: operation.block.sequence,
+                main: true,
+                network_version: networkVersion,
+              });
+            }
           }
-          // MASP transactions are shared between blocks, so we need to reassign all the ones on other blocks
-          if (maspTransactionParams.length) {
-            await prisma.maspTransaction.updateMany({
+          // Multi asset events are shared between blocks, so we need to reassign all the ones on other blocks
+          if (multiAssetParams.length) {
+            await prisma.multiAsset.updateMany({
               data: {
                 block_hash: blockHash,
                 main: true,
               },
               where: {
-                OR: maspTransactionParams.map((masp) => ({
+                OR: multiAssetParams.map((multiAsset) => ({
                   AND: {
-                    transaction_hash: masp.transaction_hash,
-                    asset_name: masp.asset_name,
+                    transaction_hash: multiAsset.transaction_hash,
+                    asset_name: multiAsset.asset_name,
+                    type: multiAsset.type,
                   },
                 })),
                 network_version: networkVersion,
               },
             });
           }
-          // Now create new not existing masp transactions
-          await prisma.maspTransaction.createMany({
-            data: maspTransactionParams,
+          // Now create new not existing multi asset transactions
+          await prisma.multiAsset.createMany({
+            data: multiAssetParams,
             skipDuplicates: true,
           });
 
-          maspTransactions = await prisma.maspTransaction.findMany({
+          multiAssets = await prisma.multiAsset.findMany({
             where: {
               block_hash: blockHash,
               network_version: networkVersion,
             },
           });
           const currentPhase3Week = phase3Week(operation.block.timestamp);
-          const eventPayloads = maspTransactions.map((maspTransaction) => {
-            const user = users.get(maspTransaction.asset_name);
+          const eventPayloads = multiAssets.map((multiAsset) => {
+            const user = users.get(multiAsset.asset_name);
             assert(user);
 
             return {
               occurred_at: operation.block.timestamp.toISOString(),
-              type: maspTransaction.type,
+              type: multiAsset.type,
               user_id: user.id,
               week: currentPhase3Week,
-              points: POINTS_PER_CATEGORY[maspTransaction.type],
-              masp_transaction_id: maspTransaction.id,
+              points: POINTS_PER_CATEGORY[multiAsset.type],
+              multi_asset_id: multiAsset.id,
             };
           });
 
@@ -167,7 +174,7 @@ export class MaspTransactionsUpsertService {
               )}`,
             );
           }
-          await prisma.maspTransaction.updateMany({
+          await prisma.multiAsset.updateMany({
             data: {
               main: false,
             },
@@ -177,21 +184,19 @@ export class MaspTransactionsUpsertService {
             },
           });
 
-          maspTransactions = await prisma.maspTransaction.findMany({
+          multiAssets = await prisma.multiAsset.findMany({
             where: {
               block_hash: blockHash,
               network_version: networkVersion,
             },
           });
           users = await this.usersService.findManyAndMapByGraffiti(
-            maspTransactions.map((transaction) => transaction.asset_name),
+            multiAssets.map((transaction) => transaction.asset_name),
           );
           await prisma.event.deleteMany({
             where: {
-              masp_transaction_id: {
-                in: maspTransactions.map(
-                  (maspTransaction) => maspTransaction.id,
-                ),
+              multi_asset_id: {
+                in: multiAssets.map((multi_asset) => multi_asset.id),
               },
             },
           });
@@ -204,20 +209,20 @@ export class MaspTransactionsUpsertService {
             ? standardizeHash(operation.block.hash)
             : standardizeHash(operation.block.previousBlockHash);
 
-        await this.maspTransactionHeadService.upsert(headHash);
+        await this.multiAssetHeadService.upsert(headHash);
 
-        return [maspTransactions, users];
+        return [multiAssets, users];
       },
     );
 
-    for (const maspTransaction of maspTransactions) {
-      const user = users.get(maspTransaction.asset_name);
+    for (const multiAsset of multiAssets) {
+      const user = users.get(multiAsset.asset_name);
       assert(user);
       await this.eventsService.addUpdateLatestPointsJob(
         user.id,
-        maspTransaction.type,
+        multiAsset.type,
       );
     }
-    return maspTransactions;
+    return multiAssets;
   }
 }

@@ -154,17 +154,17 @@ describe('UserPointsJobsController', () => {
             count: 0,
             latestOccurredAt: new Date(),
           },
-          MASP_MINT: {
+          MULTI_ASSET_MINT: {
             points: 0,
             count: 0,
             latestOccurredAt: new Date(),
           },
-          MASP_BURN: {
+          MULTI_ASSET_BURN: {
             points: 0,
             count: 0,
             latestOccurredAt: new Date(),
           },
-          MASP_TRANSFER: {
+          MULTI_ASSET_TRANSFER: {
             points: 0,
             count: 0,
             latestOccurredAt: new Date(),
@@ -227,17 +227,17 @@ describe('UserPointsJobsController', () => {
             count: 0,
             latestOccurredAt: new Date(),
           },
-          MASP_MINT: {
+          MULTI_ASSET_MINT: {
             points: 0,
             count: 0,
             latestOccurredAt: new Date(),
           },
-          MASP_BURN: {
+          MULTI_ASSET_BURN: {
             points: 0,
             count: 0,
             latestOccurredAt: new Date(),
           },
-          MASP_TRANSFER: {
+          MULTI_ASSET_TRANSFER: {
             points: 0,
             count: 0,
             latestOccurredAt: new Date(),

@@ -16,13 +16,13 @@ import { ApiExcludeEndpoint, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { PrismaService } from '../prisma/prisma.service';
-import { UpsertMaspTransactionsDto } from './dto/upsert-masp.dto';
-import { MaspTransactionsUpsertService } from './masp.upsert.service';
-@ApiTags('Masp')
-@Controller('masp')
-export class MaspController {
+import { UpsertMultiAssetDto } from './dto/upsert-multi-asset.dto';
+import { MultiAssetUpsertService } from './multi-asset.upsert.service';
+@ApiTags('MultiAsset')
+@Controller('multi_asset')
+export class MultiAssetController {
   constructor(
-    private readonly maspTransactionUpsertService: MaspTransactionsUpsertService,
+    private readonly multiAssetUpsertService: MultiAssetUpsertService,
     private readonly prisma: PrismaService,
   ) {}
 
@@ -30,16 +30,16 @@ export class MaspController {
   @ApiExcludeEndpoint()
   @Get('head')
   async head(): Promise<{ block_hash: string }> {
-    const maspTransactionhead = await this.prisma.maspTransactionHead.findFirst(
-      { where: { id: 1 } },
-    );
+    const multiAssetHead = await this.prisma.multiAssetHead.findFirst({
+      where: { id: 1 },
+    });
 
-    if (!maspTransactionhead) {
+    if (!multiAssetHead) {
       throw new NotFoundException();
     }
 
     return {
-      block_hash: maspTransactionhead.block_hash,
+      block_hash: multiAssetHead.block_hash,
     };
   }
 
@@ -53,10 +53,10 @@ export class MaspController {
         transform: true,
       }),
     )
-    data: UpsertMaspTransactionsDto,
+    data: UpsertMultiAssetDto,
     @Res() res: Response,
   ): Promise<void> {
-    await this.maspTransactionUpsertService.bulkUpsert(data.operations);
+    await this.multiAssetUpsertService.bulkUpsert(data.operations);
     res.sendStatus(HttpStatus.ACCEPTED);
   }
 }

@@ -15,10 +15,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { BlockOperation } from '../../blocks/enums/block-operation';
-export class MaspTransactionDto {
-  @IsString()
-  readonly hash!: string;
-
+export class MultiAssetDto {
   @IsString()
   readonly type!: EventType;
 
@@ -26,7 +23,15 @@ export class MaspTransactionDto {
   readonly assetName!: string;
 }
 
-export class UpsertMaspTransactionBlockDto {
+export class MultiAssetsDto {
+  @IsString()
+  readonly hash!: string;
+
+  @Type(() => MultiAssetDto)
+  readonly multiAssets!: MultiAssetDto[];
+}
+
+export class UpsertMultiAssetBlockDto {
   @IsString()
   readonly hash!: string;
 
@@ -43,23 +48,23 @@ export class UpsertMaspTransactionBlockDto {
   readonly sequence!: number;
 }
 
-export class UpsertMaspTransactionsOperationDto {
+export class UpsertMultiAssetOperationDto {
   @IsEnum(BlockOperation)
   readonly type!: BlockOperation;
 
-  @Type(() => UpsertMaspTransactionBlockDto)
-  readonly block!: UpsertMaspTransactionBlockDto;
+  @Type(() => UpsertMultiAssetBlockDto)
+  readonly block!: UpsertMultiAssetBlockDto;
 
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => MaspTransactionDto)
-  readonly transactions!: MaspTransactionDto[];
+  @Type(() => MultiAssetsDto)
+  readonly transactions!: MultiAssetsDto[];
 }
 
-export class UpsertMaspTransactionsDto {
+export class UpsertMultiAssetDto {
   @IsArray()
   @ArrayMinSize(1)
   @ValidateNested({ each: true })
-  @Type(() => UpsertMaspTransactionsOperationDto)
-  readonly operations!: UpsertMaspTransactionsOperationDto[];
+  @Type(() => UpsertMultiAssetOperationDto)
+  readonly operations!: UpsertMultiAssetOperationDto[];
 }

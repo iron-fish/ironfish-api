@@ -332,7 +332,7 @@ describe('UsersService', () => {
       });
     });
 
-    it('MASP queries work as expected', async () => {
+    it('multi asset queries work as expected', async () => {
       const graffiti = uuid();
       const now = new Date();
 
@@ -343,7 +343,7 @@ describe('UsersService', () => {
       });
 
       await eventsService.create({
-        type: EventType.MASP_BURN,
+        type: EventType.MULTI_ASSET_BURN,
         userId: userA.id,
         occurredAt: now,
         points: 5,
@@ -353,7 +353,7 @@ describe('UsersService', () => {
       );
 
       await eventsService.create({
-        type: EventType.MASP_MINT,
+        type: EventType.MULTI_ASSET_MINT,
         userId: userA.id,
         occurredAt: new Date(now.valueOf() - 1000),
         points: 5,
@@ -363,7 +363,7 @@ describe('UsersService', () => {
       );
 
       await eventsService.create({
-        type: EventType.MASP_BURN,
+        type: EventType.MULTI_ASSET_BURN,
         userId: userA.id,
         occurredAt: new Date(now.valueOf() + 1000),
         points: 5,
@@ -373,19 +373,19 @@ describe('UsersService', () => {
       );
 
       const { data: mintRecords } = await usersService.listWithRank({
-        eventType: 'MASP_MINT',
+        eventType: 'MULTI_ASSET_MINT',
         search: graffiti,
         limit: 1,
       });
       expect(mintRecords).toHaveLength(1);
       const { data: burnRecords } = await usersService.listWithRank({
-        eventType: 'MASP_BURN',
+        eventType: 'MULTI_ASSET_BURN',
         search: graffiti,
         limit: 1,
       });
       expect(burnRecords).toHaveLength(1);
       const { data: transferRecords } = await usersService.listWithRank({
-        eventType: 'MASP_TRANSFER',
+        eventType: 'MULTI_ASSET_TRANSFER',
         search: graffiti,
         limit: 1,
       });

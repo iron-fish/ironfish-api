@@ -16,9 +16,9 @@ export interface SerializedUserMetrics {
     social_media_contributions: SerializedEventMetrics;
     node_uptime: SerializedEventMetrics;
     send_transaction: SerializedEventMetrics;
-    masp_mint: SerializedEventMetrics;
-    masp_burn: SerializedEventMetrics;
-    masp_transfer: SerializedEventMetrics;
+    multi_asset_mint: SerializedEventMetrics;
+    multi_asset_burn: SerializedEventMetrics;
+    multi_asset_transfer: SerializedEventMetrics;
   };
   pools?: {
     main: SerializedEventMetrics;

@@ -9,50 +9,58 @@ import { v4 as uuid } from 'uuid';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { BlockOperation } from '../blocks/enums/block-operation';
 import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
-import { MaspTransactionHeadService } from '../masp-transaction-head/masp-transaction-head.service';
+import { MultiAssetHeadService } from '../multi-asset-head/multi-asset-head.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
 import {
-  MaspTransactionDto,
-  UpsertMaspTransactionsDto,
-} from './dto/upsert-masp.dto';
-import { MaspTransactionsUpsertService } from './masp.upsert.service';
+  MultiAssetsDto,
+  UpsertMultiAssetDto,
+} from './dto/upsert-multi-asset.dto';
+import { MultiAssetUpsertService } from './multi-asset.upsert.service';
 
-describe('MaspController', () => {
+describe('MultiAssetController', () => {
   let app: INestApplication;
   let config: ApiConfigService;
-  let maspTransactionsUpsertService: MaspTransactionsUpsertService;
+  let multiAssetUpsertService: MultiAssetUpsertService;
   let graphileWorkerService: GraphileWorkerService;
-  let maspTransactionHeadService: MaspTransactionHeadService;
+  let multiAssetHeadService: MultiAssetHeadService;
   let usersService: UsersService;
   let API_KEY: string;
   let user1Graffiti: string;
   let user2Graffiti: string;
-  let transaction1: MaspTransactionDto;
-  let transaction2: MaspTransactionDto;
-  let payload: UpsertMaspTransactionsDto;
+  let transaction1: MultiAssetsDto;
+  let transaction2: MultiAssetsDto;
+  let payload: UpsertMultiAssetDto;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
     config = app.get(ApiConfigService);
-    maspTransactionsUpsertService = app.get(MaspTransactionsUpsertService);
-    maspTransactionHeadService = app.get(MaspTransactionHeadService);
+    multiAssetUpsertService = app.get(MultiAssetUpsertService);
+    multiAssetHeadService = app.get(MultiAssetHeadService);
     graphileWorkerService = app.get(GraphileWorkerService);
     usersService = app.get(UsersService);
     API_KEY = config.get<string>('IRONFISH_API_KEY');
     await app.init();
 
-    user1Graffiti = 'user1maspcontroller';
-    user2Graffiti = 'user2maspcontroller';
+    user1Graffiti = 'user1multiassetcontroller';
+    user2Graffiti = 'user2multiassetcontroller';
     transaction1 = {
       hash: 'transactionHash1',
-      type: EventType.MASP_MINT,
-      assetName: user1Graffiti,
+      multiAssets: [
+        {
+          type: EventType.MULTI_ASSET_MINT,
+          assetName: user1Graffiti,
+        },
+      ],
     };
     transaction2 = {
       hash: 'transactionHash2',
-      type: EventType.MASP_BURN,
-      assetName: user2Graffiti,
+      multiAssets: [
+        {
+          type: EventType.MULTI_ASSET_BURN,
+          assetName: user2Graffiti,
+        },
+      ],
     };
     payload = {
       operations: [
@@ -103,9 +111,9 @@ describe('MaspController', () => {
     jest.clearAllMocks();
   });
 
-  describe('GET /masp/head', () => {
+  describe('GET /multi_asset/head', () => {
     it('returns the latest deposit submitted', async () => {
-      const head = await maspTransactionHeadService.head();
+      const head = await multiAssetHeadService.head();
 
       const operation = {
         ...payload.operations[0],
@@ -114,11 +122,11 @@ describe('MaspController', () => {
           previousBlockHash: head?.block_hash || uuid(),
         },
       };
-      await maspTransactionsUpsertService.upsert(operation);
-      await maspTransactionsUpsertService.upsert(payload.operations[1]);
+      await multiAssetUpsertService.upsert(operation);
+      await multiAssetUpsertService.upsert(payload.operations[1]);
 
       const response = await request(app.getHttpServer())
-        .get(`/masp/head`)
+        .get(`/multi_asset/head`)
         .set('Authorization', `Bearer ${API_KEY}`)
         .expect(HttpStatus.OK);
 
@@ -128,7 +136,7 @@ describe('MaspController', () => {
     });
 
     it('returns the latest deposit if a block is disconnected', async () => {
-      const head = await maspTransactionHeadService.head();
+      const head = await multiAssetHeadService.head();
 
       const operation = {
         ...payload.operations[0],
@@ -137,15 +145,15 @@ describe('MaspController', () => {
           previousBlockHash: head?.block_hash || uuid(),
         },
       };
-      await maspTransactionsUpsertService.upsert(operation);
-      await maspTransactionsUpsertService.upsert({
+      await multiAssetUpsertService.upsert(operation);
+      await multiAssetUpsertService.upsert({
         ...operation,
         transactions: [],
         type: BlockOperation.DISCONNECTED,
       });
 
       const response = await request(app.getHttpServer())
-        .get(`/masp/head`)
+        .get(`/multi_asset/head`)
         .set('Authorization', `Bearer ${API_KEY}`)
         .expect(HttpStatus.OK);
 
@@ -155,14 +163,14 @@ describe('MaspController', () => {
     });
   });
 
-  describe('POST /masp', () => {
-    it('upserts new masp transaction', async () => {
+  describe('POST /multi_asset', () => {
+    it('upserts new multi_asset transaction', async () => {
       const bulkUpsert = jest
-        .spyOn(maspTransactionsUpsertService, 'bulkUpsert')
+        .spyOn(multiAssetUpsertService, 'bulkUpsert')
         .mockImplementationOnce(jest.fn());
 
       await request(app.getHttpServer())
-        .post(`/masp`)
+        .post(`/multi_asset`)
         .send(payload)
         .set('Authorization', `Bearer ${API_KEY}`)
         .expect(HttpStatus.ACCEPTED);
