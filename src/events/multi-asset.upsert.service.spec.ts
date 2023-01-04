@@ -164,7 +164,7 @@ describe('MultiAssetUpsertService', () => {
       expect(user2Events[0].type).toEqual(EventType.MULTI_ASSET_BURN);
     });
 
-    it('updates MASP block hash on reorg', async () => {
+    it('updates multiasset block hash on reorg', async () => {
       // setup
       await prismaService.multiAssetHead.deleteMany();
       const individualPayload = payload.operations[0];
@@ -331,7 +331,7 @@ describe('Weekly transaction limit', () => {
     expect(greedyUserEvents).toHaveLength(1);
   });
 
-  it('creates new MASP transaction AND MASP event if previousblock was disconnected', async () => {
+  it('creates new multi asset event if previousblock was disconnected', async () => {
     // setup
     const legitUser = await usersService.create({
       email: faker.internet.email(),
