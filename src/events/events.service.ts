@@ -14,11 +14,13 @@ import {
   NODE_UPTIME_CREDIT_HOURS,
   ORE_TO_IRON,
   POINTS_PER_CATEGORY,
+  POOL_4_CATEGORIES,
 } from '../common/constants';
 import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
 import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
+import { RefreshPool4Options } from '../user-points/interfaces/refresh-pool-4-options';
 import { UserPointsService } from '../user-points/user-points.service';
 import { DepositsService } from './deposits.service';
 import { CreateEventOptions } from './interfaces/create-event-options';
@@ -32,6 +34,11 @@ const PHASE_1_START = new Date(Date.UTC(2021, 11, 1, 20, 0, 0));
 // 2022 March 12 8 PM UTC
 const PHASE_1_END = new Date(Date.UTC(2022, 2, 12, 20, 0, 0));
 
+export type PointValues = {
+  points: number;
+  count: number;
+  latestOccurredAt: Date | null;
+};
 @Injectable()
 export class EventsService {
   constructor(
@@ -169,89 +176,96 @@ export class EventsService {
 
   async getUpsertPointsOptions(user: User): Promise<{
     userId: number;
-    points: Record<
-      EventType,
-      { points: number; count: number; latestOccurredAt: Date | null }
-    >;
+    points: Record<EventType, PointValues>;
     totalPoints: number;
   }> {
-    const blockMinedAggregate =
-      await this.getLifetimePointsAndOccurredAtForUserAndType(
+    const aggregates: Record<EventType, PointValues> = {
+      BLOCK_MINED: await this.getLifetimePointsAndOccurredAtForUserAndType(
         user,
         EventType.BLOCK_MINED,
-      );
-    const bugCaughtAggregate =
-      await this.getLifetimePointsAndOccurredAtForUserAndType(
+      ),
+      BUG_CAUGHT: await this.getLifetimePointsAndOccurredAtForUserAndType(
         user,
         EventType.BUG_CAUGHT,
-      );
-    const communityContributionAggregate =
-      await this.getLifetimePointsAndOccurredAtForUserAndType(
-        user,
-        EventType.COMMUNITY_CONTRIBUTION,
-      );
-    const pullRequestAggregate =
-      await this.getLifetimePointsAndOccurredAtForUserAndType(
-        user,
-        EventType.PULL_REQUEST_MERGED,
-      );
-    const socialMediaAggregate =
-      await this.getLifetimePointsAndOccurredAtForUserAndType(
-        user,
-        EventType.SOCIAL_MEDIA_PROMOTION,
-      );
-    const nodeUptimeAggregate =
-      await this.getLifetimePointsAndOccurredAtForUserAndType(
+      ),
+      COMMUNITY_CONTRIBUTION:
+        await this.getLifetimePointsAndOccurredAtForUserAndType(
+          user,
+          EventType.COMMUNITY_CONTRIBUTION,
+        ),
+      PULL_REQUEST_MERGED:
+        await this.getLifetimePointsAndOccurredAtForUserAndType(
+          user,
+          EventType.PULL_REQUEST_MERGED,
+        ),
+      SOCIAL_MEDIA_PROMOTION:
+        await this.getLifetimePointsAndOccurredAtForUserAndType(
+          user,
+          EventType.SOCIAL_MEDIA_PROMOTION,
+        ),
+      NODE_UPTIME: await this.getLifetimePointsAndOccurredAtForUserAndType(
         user,
         EventType.NODE_UPTIME,
-      );
-    const sendTransactionAggregate =
-      await this.getLifetimePointsAndOccurredAtForUserAndType(
+      ),
+      SEND_TRANSACTION: await this.getLifetimePointsAndOccurredAtForUserAndType(
         user,
         EventType.SEND_TRANSACTION,
-      );
-    const multiAssetMintAggregate =
-      await this.getLifetimePointsAndOccurredAtForUserAndType(
+      ),
+      MULTI_ASSET_MINT: await this.getLifetimePointsAndOccurredAtForUserAndType(
         user,
         EventType.MULTI_ASSET_MINT,
-      );
-    const multiAssetBurnAggregate =
-      await this.getLifetimePointsAndOccurredAtForUserAndType(
+      ),
+      MULTI_ASSET_BURN: await this.getLifetimePointsAndOccurredAtForUserAndType(
         user,
         EventType.MULTI_ASSET_BURN,
-      );
-    const multiAssetTransferAggregate =
-      await this.getLifetimePointsAndOccurredAtForUserAndType(
-        user,
-        EventType.MULTI_ASSET_TRANSFER,
-      );
-    const totalPoints =
-      blockMinedAggregate.points +
-      bugCaughtAggregate.points +
-      communityContributionAggregate.points +
-      pullRequestAggregate.points +
-      socialMediaAggregate.points +
-      nodeUptimeAggregate.points +
-      sendTransactionAggregate.points +
-      multiAssetMintAggregate.points +
-      multiAssetBurnAggregate.points +
-      multiAssetTransferAggregate.points;
+      ),
+      MULTI_ASSET_TRANSFER:
+        await this.getLifetimePointsAndOccurredAtForUserAndType(
+          user,
+          EventType.MULTI_ASSET_TRANSFER,
+        ),
+      POOL4: { points: 0, count: 0, latestOccurredAt: null },
+    };
+
+    const totalPoints = Object.values(aggregates).reduce(
+      (memo, curr) => memo + curr.points,
+      0,
+    );
+
+    aggregates.POOL4 = Object.entries(aggregates).reduce<PointValues>(
+      (memo, [eventType, points]) => {
+        if (!POOL_4_CATEGORIES.includes(eventType as EventType)) {
+          return memo;
+        }
+
+        if (!points.latestOccurredAt) {
+          return memo;
+        }
+
+        if (
+          !memo.latestOccurredAt ||
+          points.latestOccurredAt > memo.latestOccurredAt
+        ) {
+          memo.latestOccurredAt = points.latestOccurredAt;
+        }
+
+        return {
+          points: memo.points + points.points,
+          count: memo.count + points.count,
+          latestOccurredAt: memo.latestOccurredAt,
+        };
+      },
+      {
+        points: 0,
+        count: 0,
+        latestOccurredAt: null,
+      },
+    );
 
     return {
       userId: user.id,
       totalPoints,
-      points: {
-        BLOCK_MINED: blockMinedAggregate,
-        BUG_CAUGHT: bugCaughtAggregate,
-        COMMUNITY_CONTRIBUTION: communityContributionAggregate,
-        PULL_REQUEST_MERGED: pullRequestAggregate,
-        SOCIAL_MEDIA_PROMOTION: socialMediaAggregate,
-        NODE_UPTIME: nodeUptimeAggregate,
-        SEND_TRANSACTION: sendTransactionAggregate,
-        MULTI_ASSET_BURN: multiAssetBurnAggregate,
-        MULTI_ASSET_MINT: multiAssetMintAggregate,
-        MULTI_ASSET_TRANSFER: multiAssetTransferAggregate,
-      },
+      points: aggregates,
     };
   }
 
@@ -328,6 +342,10 @@ export class EventsService {
       MULTI_ASSET_TRANSFER: {
         count: points.multi_asset_transfer_count,
         points: points.multi_asset_transfer_points,
+      },
+      POOL4: {
+        count: points.pool4_count,
+        points: points.pool4_points,
       },
     };
   }
@@ -422,12 +440,17 @@ export class EventsService {
           start,
           end,
         ),
+        POOL4: {
+          count: null,
+          points: null,
+          rank: null,
+        },
       },
       points: pointsAggregate._sum.points || 0,
     };
   }
 
-  private async getTotalEventTypeMetricsForUser(
+  async getTotalEventTypeMetricsForUser(
     { id }: User,
     type: EventType,
     start: Date,
@@ -446,6 +469,9 @@ export class EventsService {
       _count: {
         points: true,
       },
+      _max: {
+        occurred_at: true,
+      },
       where: {
         type,
         user_id: id,
@@ -455,6 +481,7 @@ export class EventsService {
     return {
       count: aggregate._count.points || 0,
       points: aggregate._sum.points || 0,
+      latestOccurredAt: aggregate._max.occurred_at,
     };
   }
 
@@ -638,6 +665,17 @@ export class EventsService {
         },
       },
     });
+
+    if (POOL_4_CATEGORIES.includes(type)) {
+      await this.graphileWorkerService.addJob<RefreshPool4Options>(
+        GraphileWorkerPattern.REFRESH_POOL_4_POINTS,
+        { userId },
+        {
+          jobKey: `refresh_pool_4:${userId}`,
+          queueName: `refresh_pool4`,
+        },
+      );
+    }
   }
 
   async upsertBlockMined(block: Block, user: User): Promise<Event | null> {

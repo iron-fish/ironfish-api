@@ -14,6 +14,7 @@ import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
 import { UserPointsJobsController } from './user-points.jobs.controller';
 import { UserPointsService } from './user-points.service';
+import { EventType } from '.prisma/client';
 
 describe('UserPointsJobsController', () => {
   let app: INestApplication;
@@ -169,6 +170,11 @@ describe('UserPointsJobsController', () => {
             count: 0,
             latestOccurredAt: new Date(),
           },
+          POOL4: {
+            points: 0,
+            count: 0,
+            latestOccurredAt: new Date(),
+          },
         },
       };
       jest
@@ -242,6 +248,11 @@ describe('UserPointsJobsController', () => {
             count: 0,
             latestOccurredAt: new Date(),
           },
+          POOL4: {
+            points: 0,
+            count: 0,
+            latestOccurredAt: new Date(),
+          },
         },
       };
       jest
@@ -252,6 +263,64 @@ describe('UserPointsJobsController', () => {
       const { requeue } = await userPointsJobsController.refreshUserPoints({
         userId: user.id,
       });
+      expect(requeue).toBe(false);
+    });
+  });
+
+  describe('refreshPool4Points', () => {
+    it('refreshes pool 4 points for a given user', async () => {
+      const userA = await usersService.create({
+        email: faker.internet.email(),
+        graffiti: uuid(),
+        country_code: faker.address.countryCode('alpha-3'),
+      });
+      const startingPoints = await userPointsService.findOrThrow(userA.id);
+      expect(startingPoints.pool4_count).toBe(0);
+      expect(startingPoints.pool4_points).toBe(0);
+      expect(startingPoints.pool4_last_occurred_at).toBeNull();
+
+      // add points
+      const latestDateMint = new Date(2023, 1, 2);
+      const latestDateBurn = new Date(2023, 1, 3);
+      await eventsService.create({
+        userId: userA.id,
+        points: 1,
+        type: EventType.MULTI_ASSET_MINT,
+        occurredAt: latestDateMint,
+      });
+      await eventsService.create({
+        userId: userA.id,
+        points: 1,
+        type: EventType.MULTI_ASSET_BURN,
+        occurredAt: latestDateBurn,
+      });
+
+      // refresh points
+      await userPointsJobsController.refreshPool4Points({
+        userId: userA.id,
+        endDate: new Date(2023, 3, 1),
+      });
+
+      // check that points were refreshed
+      const endingPoints = await userPointsService.findOrThrow(userA.id);
+      expect(endingPoints.pool4_count).toBe(2);
+      expect(endingPoints.pool4_points).toBe(2);
+      expect(endingPoints.pool4_last_occurred_at).toEqual(latestDateBurn);
+    });
+
+    it('does not requeue', async () => {
+      const user = await usersService.create({
+        email: faker.internet.email(),
+        graffiti: uuid(),
+        country_code: faker.address.countryCode('alpha-3'),
+      });
+      jest
+        .spyOn(usersService, 'list')
+        .mockImplementationOnce(() =>
+          Promise.resolve({ data: [user], hasPrevious: false, hasNext: false }),
+        );
+
+      const { requeue } = await userPointsJobsController.refreshUsersPoints();
       expect(requeue).toBe(false);
     });
   });

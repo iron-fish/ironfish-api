@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Controller, UseFilters } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
+import { POOL_4_CATEGORIES } from '../common/constants';
 import { EventsService } from '../events/events.service';
 import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
 import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
@@ -10,7 +11,9 @@ import { GraphileWorkerException } from '../graphile-worker/graphile-worker-exce
 import { GraphileWorkerHandlerResponse } from '../graphile-worker/interfaces/graphile-worker-handler-response';
 import { LoggerService } from '../logger/logger.service';
 import { UsersService } from '../users/users.service';
+import { RefreshPool4Options } from './interfaces/refresh-pool-4-options';
 import { RefreshUserPointsOptions } from './interfaces/refresh-user-points-options';
+import { UserPointsOptions } from './interfaces/upsert-user-points-options';
 import { UserPointsService } from './user-points.service';
 import { User } from '.prisma/client';
 
@@ -66,6 +69,65 @@ export class UserPointsJobsController {
 
     const options = await this.eventsService.getUpsertPointsOptions(user);
     await this.userPointsService.upsert(options);
+    return { requeue: false };
+  }
+
+  @MessagePattern(GraphileWorkerPattern.REFRESH_POOL_4_POINTS)
+  @UseFilters(new GraphileWorkerException())
+  async refreshPool4Points({
+    userId,
+    endDate,
+  }: RefreshPool4Options): Promise<GraphileWorkerHandlerResponse> {
+    const user = await this.usersService.find(userId);
+    const end = endDate ?? new Date();
+
+    if (!user) {
+      this.loggerService.error(`No user found for '${userId}'`, '');
+      return { requeue: false };
+    }
+
+    const eventPoints = await Promise.all(
+      POOL_4_CATEGORIES.map(async (eventType) => {
+        return await this.eventsService.getTotalEventTypeMetricsForUser(
+          user,
+          eventType,
+          // Any points after Jan 1, 2023 are by definition from phase 3
+          new Date(2023, 1, 1),
+          end,
+        );
+      }),
+    );
+
+    const pool4Points = eventPoints.reduce<UserPointsOptions>(
+      (memo, category) => {
+        if (!category.latestOccurredAt) {
+          return memo;
+        }
+
+        let latestOccurredAt: Date | null;
+        if (!memo.latestOccurredAt) {
+          latestOccurredAt = category.latestOccurredAt;
+        } else {
+          latestOccurredAt =
+            memo.latestOccurredAt > category.latestOccurredAt
+              ? memo.latestOccurredAt
+              : category.latestOccurredAt;
+        }
+
+        return {
+          points: (memo.points || 0) + (category.points || 0),
+          count: (memo.count || 0) + (category.count || 0),
+          latestOccurredAt: latestOccurredAt,
+        };
+      },
+      { points: 0, count: 0, latestOccurredAt: null },
+    );
+
+    await this.userPointsService.upsert({
+      userId,
+      points: { POOL4: pool4Points },
+    });
+
     return { requeue: false };
   }
 }

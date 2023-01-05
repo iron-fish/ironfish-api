@@ -129,6 +129,7 @@ export class UsersService {
         ],
       },
     });
+
     if (existingRecord) {
       throw new UnprocessableEntityException(
         `User already exists for '${
@@ -136,6 +137,7 @@ export class UsersService {
         }'`,
       );
     }
+
     return this.prisma.$transaction(async (prisma) => {
       const user = await prisma.user.create({
         data: {
@@ -147,10 +149,12 @@ export class UsersService {
           country_code: countryCode,
         },
       });
+
       await this.userPointsService.upsertWithClient(
         { userId: user.id },
         prisma,
       );
+
       return user;
     });
   }
@@ -244,7 +248,7 @@ export class UsersService {
     const totalPointsAt = this.totalPointsAtForUserPoints(eventType);
 
     const query = `
-      WITH 
+      WITH
         user_latest_events AS (
           SELECT
             user_id,
@@ -373,6 +377,8 @@ export class UsersService {
         return 'multi_asset_mint_points';
       case EventType.MULTI_ASSET_TRANSFER:
         return 'multi_asset_transfer_points';
+      case EventType.POOL4:
+        return 'pool4_points';
     }
   }
 
@@ -386,9 +392,11 @@ export class UsersService {
           node_uptime_last_occurred_at,
           pull_request_merged_last_occurred_at,
           send_transaction_last_occurred_at,
-          social_media_promotion_last_occurred_at
+          social_media_promotion_last_occurred_at,
+          pool4_last_occurred_at
         )`;
     }
+
     switch (type) {
       case EventType.BLOCK_MINED:
         return 'block_mined_last_occurred_at';
@@ -410,6 +418,8 @@ export class UsersService {
         return 'multi_asset_mint_last_occurred_at';
       case EventType.MULTI_ASSET_TRANSFER:
         return 'multi_asset_transfer_last_occurred_at';
+      case EventType.POOL4:
+        return 'pool4_last_occurred_at';
     }
   }
 
@@ -430,13 +440,10 @@ export class UsersService {
     userOrId: User | number,
     eventType?: EventType,
   ): Promise<number> {
-    let id: number;
     if (typeof userOrId === 'number') {
-      const record = await this.findOrThrow(userOrId);
-      id = record.id;
-    } else {
-      id = userOrId.id;
+      userOrId = await this.findOrThrow(userOrId);
     }
+
     const rankResponse = await this.prisma.$queryRawUnsafe<{ rank: number }[]>(
       `SELECT
         id,
@@ -449,7 +456,7 @@ export class UsersService {
               ORDER BY
                 ${this.totalPointsAtForUserPoints(eventType)} DESC,
                 COALESCE(
-                  ${this.latestEventOccurredAtForUserPoints(eventType)}, 
+                  ${this.latestEventOccurredAtForUserPoints(eventType)},
                   NOW()
                 ) ASC,
                 users.created_at ASC
@@ -463,8 +470,9 @@ export class UsersService {
         ) user_ranks
       WHERE
         id = $1`,
-      id,
+      userOrId.id,
     );
+
     if (
       !is.array(rankResponse) ||
       rankResponse.length !== 1 ||
@@ -474,6 +482,7 @@ export class UsersService {
     ) {
       throw new Error('Unexpected database response');
     }
+
     return rankResponse[0].rank;
   }
 

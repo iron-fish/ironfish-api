@@ -32,6 +32,7 @@ export const WEEKLY_POINT_LIMITS_BY_EVENT_TYPE: Record<EventType, number> = {
   [EventType.MULTI_ASSET_TRANSFER]: 1,
   [EventType.MULTI_ASSET_MINT]: 1,
   [EventType.MULTI_ASSET_BURN]: 1,
+  [EventType.POOL4]: 0,
 };
 
 export const POINTS_PER_CATEGORY: Record<EventType, number> = {
@@ -45,4 +46,13 @@ export const POINTS_PER_CATEGORY: Record<EventType, number> = {
   [EventType.MULTI_ASSET_TRANSFER]: 1,
   [EventType.MULTI_ASSET_MINT]: 1,
   [EventType.MULTI_ASSET_BURN]: 1,
+  [EventType.POOL4]: 0,
 };
+
+export const POOL_4_CATEGORIES: Array<EventType> = [
+  EventType.BUG_CAUGHT,
+  EventType.NODE_UPTIME,
+  EventType.MULTI_ASSET_MINT,
+  EventType.MULTI_ASSET_BURN,
+  EventType.MULTI_ASSET_TRANSFER,
+];

@@ -36,6 +36,7 @@ export class UserPointsService {
     client: BasePrismaClient,
   ): Promise<UserPoints> {
     const options: Prisma.UserPointsUpdateInput = { total_points: totalPoints };
+
     if (points) {
       const blockMined = points[EventType.BLOCK_MINED];
       const bugCaught = points[EventType.BUG_CAUGHT];
@@ -47,40 +48,53 @@ export class UserPointsService {
       const multiAssetMint = points[EventType.MULTI_ASSET_MINT];
       const multiAssetBurn = points[EventType.MULTI_ASSET_BURN];
       const multiAssetTransfer = points[EventType.MULTI_ASSET_TRANSFER];
+      const pool4 = points[EventType.POOL4];
+
+      if (pool4) {
+        options.pool4_last_occurred_at = pool4.latestOccurredAt;
+        options.pool4_points = pool4.points;
+        options.pool4_count = pool4.count;
+      }
 
       if (blockMined) {
         options.block_mined_last_occurred_at = blockMined.latestOccurredAt;
         options.block_mined_points = blockMined.points;
         options.block_mined_count = blockMined.count;
       }
-      if (bugCaught) {
-        options.bug_caught_last_occurred_at = bugCaught.latestOccurredAt;
-        options.bug_caught_points = bugCaught.points;
-        options.bug_caught_count = bugCaught.count;
-      }
+
       if (communityContribution) {
         options.community_contribution_last_occurred_at =
           communityContribution.latestOccurredAt;
         options.community_contribution_points = communityContribution.points;
         options.community_contribution_count = communityContribution.count;
       }
+
+      if (bugCaught) {
+        options.bug_caught_last_occurred_at = bugCaught.latestOccurredAt;
+        options.bug_caught_points = bugCaught.points;
+        options.bug_caught_count = bugCaught.count;
+      }
+
       if (pullRequestMerged) {
         options.pull_request_merged_last_occurred_at =
           pullRequestMerged.latestOccurredAt;
         options.pull_request_merged_points = pullRequestMerged.points;
         options.pull_request_merged_count = pullRequestMerged.count;
       }
+
       if (socialMediaPromotion) {
         options.social_media_promotion_last_occurred_at =
           socialMediaPromotion.latestOccurredAt;
         options.social_media_promotion_points = socialMediaPromotion.points;
         options.social_media_promotion_count = socialMediaPromotion.count;
       }
+
       if (nodeUptime) {
         options.node_uptime_last_occurred_at = nodeUptime.latestOccurredAt;
         options.node_uptime_points = nodeUptime.points;
         options.node_uptime_count = nodeUptime.count;
       }
+
       if (transactionSent) {
         options.send_transaction_last_occurred_at =
           transactionSent.latestOccurredAt;

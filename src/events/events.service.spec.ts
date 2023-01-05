@@ -348,7 +348,7 @@ describe('EventsService', () => {
 
   describe('getLifetimeEventMetricsForUser', () => {
     it('sums up all the events for the users', async () => {
-      const eventCounts: Record<EventType, number> = {
+      const eventCounts: Record<Exclude<EventType, 'POOL4'>, number> = {
         BLOCK_MINED: 4,
         BUG_CAUGHT: 1,
         COMMUNITY_CONTRIBUTION: 0,
@@ -407,6 +407,7 @@ describe('EventsService', () => {
         [EventType.MULTI_ASSET_TRANSFER]:
           lifetimeMetrics[EventType.MULTI_ASSET_TRANSFER].count,
       };
+
       expect(lifetimeCounts).toEqual(eventCounts);
     });
   });
@@ -414,12 +415,14 @@ describe('EventsService', () => {
   describe('getTotalEventMetricsForUser', () => {
     it('returns sums of event counts within the provided time range', async () => {
       const now = new Date();
+
       const user = await usersService.create({
         email: faker.internet.email(),
         graffiti: uuid(),
         country_code: faker.address.countryCode('alpha-3'),
       });
-      const eventCountsToReturn: Record<EventType, number> = {
+
+      const eventCountsToReturn: Record<Exclude<EventType, 'POOL4'>, number> = {
         BLOCK_MINED: 2,
         BUG_CAUGHT: 4,
         COMMUNITY_CONTRIBUTION: 0,
@@ -431,7 +434,8 @@ describe('EventsService', () => {
         MULTI_ASSET_MINT: 0,
         MULTI_ASSET_TRANSFER: 0,
       };
-      const eventCountsToIgnore: Record<EventType, number> = {
+
+      const eventCountsToIgnore: Record<Exclude<EventType, 'POOL4'>, number> = {
         BLOCK_MINED: 1,
         BUG_CAUGHT: 1,
         COMMUNITY_CONTRIBUTION: 0,
@@ -448,6 +452,7 @@ describe('EventsService', () => {
       for (const [eventType, count] of Object.entries(eventCountsToReturn)) {
         for (let i = 0; i < count; i++) {
           const pointsForEvent = Math.floor(Math.random() * 10);
+
           await prisma.event.create({
             data: {
               user_id: user.id,
