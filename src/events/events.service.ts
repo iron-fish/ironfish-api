@@ -233,25 +233,25 @@ export class EventsService {
     );
 
     aggregates.POOL4 = Object.entries(aggregates).reduce<PointValues>(
-      (memo, entry) => {
-        const pointValues = entry[1];
-        if (
-          !pointValues.latestOccurredAt ||
-          !POOL_4_CATEGORIES.includes(entry[0] as EventType)
-        ) {
+      (memo, [eventType, points]) => {
+        if (!POOL_4_CATEGORIES.includes(eventType as EventType)) {
+          return memo;
+        }
+
+        if (!points.latestOccurredAt) {
           return memo;
         }
 
         if (
           !memo.latestOccurredAt ||
-          pointValues.latestOccurredAt > memo.latestOccurredAt
+          points.latestOccurredAt > memo.latestOccurredAt
         ) {
-          memo.latestOccurredAt = pointValues.latestOccurredAt;
+          memo.latestOccurredAt = points.latestOccurredAt;
         }
 
         return {
-          points: memo.points + pointValues.points,
-          count: memo.count + pointValues.count,
+          points: memo.points + points.points,
+          count: memo.count + points.count,
           latestOccurredAt: memo.latestOccurredAt,
         };
       },
