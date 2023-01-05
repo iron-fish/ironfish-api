@@ -118,6 +118,7 @@ export class UserPointsService {
           multiAssetTransfer.latestOccurredAt;
         options.multi_asset_transfer_points = multiAssetTransfer.points;
         options.multi_asset_transfer_count = multiAssetTransfer.count;
+      }
     }
 
     let record = await client.userPoints.findUnique({

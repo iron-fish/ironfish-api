@@ -285,13 +285,13 @@ describe('UserPointsJobsController', () => {
       await eventsService.create({
         userId: userA.id,
         points: 1,
-        type: EventType.MASP_MINT,
+        type: EventType.MULTI_ASSET_MINT,
         occurredAt: latestDateMint,
       });
       await eventsService.create({
         userId: userA.id,
         points: 1,
-        type: EventType.MASP_BURN,
+        type: EventType.MULTI_ASSET_BURN,
         occurredAt: latestDateBurn,
       });
 

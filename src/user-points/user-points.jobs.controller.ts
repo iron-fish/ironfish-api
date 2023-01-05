@@ -80,6 +80,7 @@ export class UserPointsJobsController {
   }: RefreshPool4Options): Promise<GraphileWorkerHandlerResponse> {
     const user = await this.usersService.find(userId);
     const end = endDate ?? new Date();
+
     if (!user) {
       this.loggerService.error(`No user found for '${userId}'`, '');
       return { requeue: false };
@@ -121,10 +122,12 @@ export class UserPointsJobsController {
       },
       { points: 0, count: 0, latestOccurredAt: null },
     );
+
     await this.userPointsService.upsert({
       userId,
       points: { POOL4: pool4Points },
     });
+
     return { requeue: false };
   }
 }
