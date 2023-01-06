@@ -420,4 +420,37 @@ describe('Weekly transaction limit', () => {
       ]),
     );
   });
+
+  it('rejects disconnect where transactions are provided', async () => {
+    // setup
+    const user = await usersService.create({
+      email: faker.internet.email(),
+      graffiti: uuid(),
+      country_code: faker.address.countryCode(),
+    });
+    const head = await multiAssetHeadService.head();
+    const invalidDisconnect = {
+      transactions: [
+        {
+          hash: 'originaldisconnectedhash',
+          multiAssets: [
+            {
+              type: EventType.MULTI_ASSET_MINT,
+              assetName: user.graffiti,
+            },
+          ],
+        },
+      ],
+      type: BlockOperation.DISCONNECTED,
+      block: {
+        hash: 'goingtodisconnectblock',
+        previousBlockHash: head?.block_hash || 'foo',
+        timestamp: new Date('2023/03/01'),
+        sequence: 1,
+      },
+    };
+    await expect(multiAssetService.upsert(invalidDisconnect)).rejects.toThrow(
+      'Transactions should not be sent with disconnected blocks',
+    );
+  });
 });
