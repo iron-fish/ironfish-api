@@ -29,9 +29,9 @@ export const WEEKLY_POINT_LIMITS_BY_EVENT_TYPE: Record<EventType, number> = {
   [EventType.SOCIAL_MEDIA_PROMOTION]: 1000,
   [EventType.NODE_UPTIME]: 140,
   [EventType.SEND_TRANSACTION]: Number.MAX_VALUE,
-  [EventType.MULTI_ASSET_TRANSFER]: 1,
-  [EventType.MULTI_ASSET_MINT]: 1,
-  [EventType.MULTI_ASSET_BURN]: 1,
+  [EventType.MULTI_ASSET_TRANSFER]: 200,
+  [EventType.MULTI_ASSET_MINT]: 200,
+  [EventType.MULTI_ASSET_BURN]: 200,
   [EventType.POOL4]: 0,
 };
 
@@ -43,9 +43,9 @@ export const POINTS_PER_CATEGORY: Record<EventType, number> = {
   [EventType.SOCIAL_MEDIA_PROMOTION]: 100,
   [EventType.NODE_UPTIME]: 10,
   [EventType.SEND_TRANSACTION]: 1,
-  [EventType.MULTI_ASSET_TRANSFER]: 1,
-  [EventType.MULTI_ASSET_MINT]: 1,
-  [EventType.MULTI_ASSET_BURN]: 1,
+  [EventType.MULTI_ASSET_TRANSFER]: 200,
+  [EventType.MULTI_ASSET_MINT]: 200,
+  [EventType.MULTI_ASSET_BURN]: 200,
   [EventType.POOL4]: 0,
 };
 
