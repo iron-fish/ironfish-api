@@ -499,10 +499,10 @@
   dependencies:
     node-gyp-build "^3.9.0"
 
-"@datadog/native-iast-rewriter@1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@datadog/native-iast-rewriter/-/native-iast-rewriter-1.0.0.tgz#02bf338055cdcd3c5b3e8d528afe6d967985cf11"
-  integrity sha512-DGN4cQd30mUaAB349gKeoDTt7acviBERnNYlyk8G+PlobuomTSEohJri5Jo4X+/5oRJPJngGX2VBq7YwMHiing==
+"@datadog/native-iast-rewriter@1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@datadog/native-iast-rewriter/-/native-iast-rewriter-1.0.1.tgz#92262a2995642e93d844d4a62a3a82b53167ce32"
+  integrity sha512-UBN8Ce4OSiBhMQWY8COD4Zn/TkqIuUyYQgA9tasda73njVqcZ3FZqFhPNow1j5r5Ka3a/PCrGdUs9U5uuod0YA==
   dependencies:
     node-gyp-build "^4.5.0"
 
@@ -2323,13 +2323,13 @@ data-urls@^2.0.0:
     whatwg-mimetype "^2.3.0"
     whatwg-url "^8.0.0"
 
-dd-trace@3.9.3:
-  version "3.9.3"
-  resolved "https://registry.yarnpkg.com/dd-trace/-/dd-trace-3.9.3.tgz#99c44a30a172fb7f91f75e18ff7f7001df54854b"
-  integrity sha512-30F9AoYozo9v3I6ycmDJl22XLbLapo2SmirAJh6ULjQ8q/Gb9yP1vf57bnFlTWjtdFgxxeBxVY/ksnTRzZcsew==
+dd-trace@3.10.0:
+  version "3.10.0"
+  resolved "https://registry.yarnpkg.com/dd-trace/-/dd-trace-3.10.0.tgz#3b182a4c962627db09c2d87586794157e98dc4c7"
+  integrity sha512-m5xVH4E1meD3W4wLgyIzYFGb7suw6XpDn+h6oDjMIarzgU4yUdz3D5uny0PU3psyE8DUI2nSwCZVF1fulzxPkw==
   dependencies:
     "@datadog/native-appsec" "2.0.0"
-    "@datadog/native-iast-rewriter" "1.0.0"
+    "@datadog/native-iast-rewriter" "1.0.1"
     "@datadog/native-iast-taint-tracking" "1.0.0"
     "@datadog/native-metrics" "^1.5.0"
     "@datadog/pprof" "^1.1.1"
