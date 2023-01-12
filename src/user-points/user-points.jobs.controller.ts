@@ -92,7 +92,8 @@ export class UserPointsJobsController {
           user,
           eventType,
           // Any points after Jan 1, 2023 are by definition from phase 3
-          new Date(2023, 1, 1),
+          // (0 is January in JS date)
+          new Date(2023, 0, 1),
           end,
         );
       }),

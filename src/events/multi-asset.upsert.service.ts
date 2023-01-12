@@ -148,6 +148,15 @@ export class MultiAssetUpsertService {
             },
           });
           const currentPhase3Week = phase3Week(operation.block.timestamp);
+
+          const blocks = await this.prisma.block.findMany({
+            where: {
+              hash: {
+                in: multiAssets.map((m) => m.block_hash),
+              },
+            },
+          });
+          const blockMap = new Map(blocks.map((b) => [b.hash, b.id]));
           const eventPayloads = multiAssets.map((multiAsset) => {
             const user = users.get(multiAsset.asset_name);
             assert(user);
@@ -159,6 +168,7 @@ export class MultiAssetUpsertService {
               week: currentPhase3Week,
               points: POINTS_PER_CATEGORY[multiAsset.type],
               multi_asset_id: multiAsset.id,
+              block_id: blockMap.get(multiAsset.block_hash),
             };
           });
 

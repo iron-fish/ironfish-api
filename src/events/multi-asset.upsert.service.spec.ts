@@ -113,12 +113,25 @@ describe('MultiAssetUpsertService', () => {
   });
 
   describe('upsert', () => {
-    it('upserts new multiasset transactions and events', async () => {
+    it('upserts new multiasset transactions and events, links block', async () => {
       // setup
       await prismaService.multiAssetHead.deleteMany();
 
       const individualPayload = payload.operations[0];
-
+      const block = await prismaService.block.create({
+        data: {
+          hash: payload.operations[0].block.hash,
+          main: true,
+          sequence: 1,
+          timestamp: new Date(),
+          transactions_count: 0,
+          graffiti: uuid(),
+          previous_block_hash: uuid(),
+          network_version: 0,
+          size: faker.datatype.number(),
+          difficulty: faker.datatype.number(),
+        },
+      });
       // test
       await multiAssetUpsertService.upsert(individualPayload);
 
@@ -160,8 +173,10 @@ describe('MultiAssetUpsertService', () => {
 
       expect(user1Events[0].multi_asset_id).toEqual(user1MultiAsset[0].id);
       expect(user1Events[0].type).toEqual(EventType.MULTI_ASSET_MINT);
+      expect(user1Events[0].block_id).toEqual(block.id);
       expect(user2Events[0].multi_asset_id).toEqual(user2MultiAsset[0].id);
       expect(user2Events[0].type).toEqual(EventType.MULTI_ASSET_BURN);
+      expect(user2Events[0].block_id).toEqual(block.id);
     });
 
     it('updates multiasset block hash on reorg', async () => {
