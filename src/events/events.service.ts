@@ -27,6 +27,7 @@ import { CreateEventOptions } from './interfaces/create-event-options';
 import { EventWithMetadata } from './interfaces/event-with-metadata';
 import { ListEventsOptions } from './interfaces/list-events-options';
 import { SerializedEventMetrics } from './interfaces/serialized-event-metrics';
+import { MultiAssetService } from './multi-asset.service';
 import { Block, Event, EventType, Prisma, User } from '.prisma/client';
 
 // 2021 December 1 8 PM UTC
@@ -47,6 +48,7 @@ export class EventsService {
     private readonly prisma: PrismaService,
     private readonly userPointsService: UserPointsService,
     private readonly depositsService: DepositsService,
+    private readonly multiAssetService: MultiAssetService,
     private readonly graphileWorkerService: GraphileWorkerService,
   ) {}
 
@@ -126,9 +128,9 @@ export class EventsService {
         };
       }
       if (record.multi_asset_id) {
-        const multi_asset = await this.prisma.multiAsset.findFirstOrThrow({
-          where: { id: record.multi_asset_id },
-        });
+        const multi_asset = await this.multiAssetService.findOrThrow(
+          record.multi_asset_id,
+        );
 
         metadata = {
           transaction_hash: multi_asset.transaction_hash,

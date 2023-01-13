@@ -15,6 +15,7 @@ import { UsersModule } from '../users/users.module';
 import { DepositsService } from './deposits.service';
 import { DepositsUpsertService } from './deposits.upsert.service';
 import { EventsService } from './events.service';
+import { MultiAssetService } from './multi-asset.service';
 import { MultiAssetUpsertService } from './multi-asset.upsert.service';
 
 @Module({
@@ -22,6 +23,7 @@ import { MultiAssetUpsertService } from './multi-asset.upsert.service';
     EventsService,
     DepositsService,
     DepositsUpsertService,
+    MultiAssetService,
     MultiAssetUpsertService,
   ],
   imports: [
@@ -41,6 +43,7 @@ import { MultiAssetUpsertService } from './multi-asset.upsert.service';
     DepositsService,
     DepositsUpsertService,
     MultiAssetUpsertService,
+    MultiAssetService,
   ],
 })
 export class EventsModule {}
