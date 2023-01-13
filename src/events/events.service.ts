@@ -125,6 +125,16 @@ export class EventsService {
           block_hash: deposit.block_hash,
         };
       }
+      if (record.multi_asset_id) {
+        const multi_asset = await this.prisma.multiAsset.findFirstOrThrow({
+          where: { id: record.multi_asset_id },
+        });
+
+        metadata = {
+          transaction_hash: multi_asset.transaction_hash,
+          block_hash: multi_asset.block_hash,
+        };
+      }
       data.push({
         ...record,
         metadata,
