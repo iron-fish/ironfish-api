@@ -18,7 +18,7 @@ model Event {
   user_id        Int
   week           Int?
   deposit_id     Int?        @unique(map: "uq_events_on_deposit_id")
-  block_id       Int?        @unique(map: "uq_events_on_block_id")
+  block_id       Int?        
   deposit        Deposit?    @relation(fields: [deposit_id], references: [id])
   block          Block?      @relation(fields: [block_id], references: [id])
   user           User        @relation(fields: [user_id], references: [id])
@@ -30,7 +30,6 @@ model Event {
   // currently unique not null isn't supported in prisma: https://github.com/prisma/prisma/issues/3387
   // leaving the line below will cause yarn db:migrate to try adding new migration everytime
   // @@unique([user_id, type, week], name: "uq_multi_asset_on_user_id_type_week", map: "uq_multi_asset_on_user_id_type_week")
-
   @@index([deposit_id], name: "index_events_on_deposit_id")
   @@index([multi_asset_id], name: "index_events_on_multi_asset_id")
   @@index([block_id], name: "index_events_on_block_id")
@@ -86,7 +85,7 @@ model Block {
   size                     Int?
   difficulty               BigInt
   blocks_transactions      BlockTransaction[]
-  event                    Event?
+  events                    Event[]
 
   @@unique([hash, network_version], name: "uq_blocks_on_hash_and_network_version", map: "uq_blocks_on_hash_and_network_version")
   @@index([hash], name: "index_blocks_on_hash")

@@ -714,7 +714,7 @@ describe('EventsService', () => {
         });
         assert(event);
         const eventToDelete = await eventsService.findOrThrow(event.id);
-        await eventsService.delete(eventToDelete);
+        await eventsService.delete([eventToDelete]);
 
         const newPoints = 500;
         const event2 = await eventsService.create({
@@ -836,13 +836,6 @@ describe('EventsService', () => {
   });
 
   describe('deleteBlockMined', () => {
-    describe('when the event does not exist', () => {
-      it('returns null', async () => {
-        const { block } = await setupBlockMined();
-        expect(await eventsService.deleteBlockMined(block)).toBeNull();
-      });
-    });
-
     describe('when the event exists', () => {
       it('deletes the record', async () => {
         const { block, event } = await setupBlockMinedWithEvent();
@@ -895,7 +888,7 @@ describe('EventsService', () => {
     it('subtracts points from the user total points', async () => {
       const { event, user } = await setupBlockMinedWithEvent();
       const currentUserPoints = await userPointsService.findOrThrow(user.id);
-      await eventsService.delete(event);
+      await eventsService.delete([event]);
       await eventsJobsController.updateLatestPoints({
         userId: user.id,
         type: EventType.BLOCK_MINED,
@@ -924,7 +917,7 @@ describe('EventsService', () => {
     it('subtracts points from user_points total points', async () => {
       const { event, user } = await setupBlockMinedWithEvent();
       const currentUserPoints = await userPointsService.findOrThrow(user.id);
-      await eventsService.delete(event);
+      await eventsService.delete([event]);
       await eventsJobsController.updateLatestPoints({
         userId: user.id,
         type: EventType.BLOCK_MINED,

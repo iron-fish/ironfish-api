@@ -533,9 +533,11 @@ export class EventsService {
       metadata = { ...metadata, url };
       existingEvent = await this.getEventByUrl(url);
     } else if (blockId) {
-      existingEvent = await client.event.findUnique({
+      existingEvent = await client.event.findFirst({
         where: {
           block_id: blockId,
+          user_id: userId,
+          type: type,
         },
       });
 
@@ -692,37 +694,38 @@ export class EventsService {
     });
   }
 
-  async deleteBlockMined(block: Block): Promise<Event | null> {
-    const event = await this.prisma.event.findUnique({
+  async deleteBlockMined(block: Block): Promise<void> {
+    const events = await this.prisma.event.findMany({
       where: {
         block_id: block.id,
       },
     });
-    if (event) {
-      return this.delete(event);
+    if (events) {
+      await this.delete(events);
     }
-    return event;
   }
 
-  async delete(event: Event): Promise<Event> {
-    return this.prisma.$transaction(async (prisma) => {
-      return this.deleteWithClient(event, prisma);
+  async delete(events: Event[]): Promise<void> {
+    await this.prisma.$transaction(async (prisma) => {
+      return this.deleteWithClient(events, prisma);
     });
   }
 
   async deleteWithClient(
-    event: Event,
+    events: Event[],
     prisma: BasePrismaClient,
-  ): Promise<Event> {
-    const record = await prisma.event.delete({
+  ): Promise<void> {
+    await prisma.event.deleteMany({
       where: {
-        id: event.id,
+        id: {
+          in: events.map((e) => e.id),
+        },
       },
     });
 
-    await this.addUpdateLatestPointsJob(event.user_id, event.type);
-
-    return record;
+    for (const event of events) {
+      await this.addUpdateLatestPointsJob(event.user_id, event.type);
+    }
   }
 
   async getLifetimeEventsMetricsForUser(

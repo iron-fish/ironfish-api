@@ -101,6 +101,6 @@ export class EventsController {
     id: number,
   ): Promise<void> {
     const event = await this.eventsService.findOrThrow(id);
-    await this.eventsService.delete(event);
+    await this.eventsService.delete([event]);
   }
 }

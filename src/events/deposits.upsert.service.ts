@@ -65,7 +65,7 @@ export class DepositsUpsertService {
       });
 
       if (event) {
-        await this.eventsService.deleteWithClient(event, prisma);
+        await this.eventsService.deleteWithClient([event], prisma);
       }
     }
 
