@@ -616,11 +616,7 @@ export class EventsService {
 
   addUpdateLatestPointsJob(userId: number, type: EventType): Promise<Job> {
     const updateLatestPointsQueues = 4;
-    const maxJobFrequencyMinutes = 10;
-
     const queueNumber = Math.floor(Math.random() * updateLatestPointsQueues);
-    const runAt = new Date();
-    runAt.setMinutes(runAt.getMinutes() + maxJobFrequencyMinutes);
 
     return this.graphileWorkerService.addJob(
       GraphileWorkerPattern.UPDATE_LATEST_POINTS,
@@ -629,7 +625,6 @@ export class EventsService {
         jobKey: `ulp:${userId}:${type}`,
         jobKeyMode: `preserve_run_at`,
         queueName: `update_latest_points_${queueNumber}`,
-        runAt,
       },
     );
   }
