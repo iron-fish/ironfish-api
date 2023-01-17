@@ -453,4 +453,16 @@ describe('Weekly transaction limit', () => {
       'Transactions should not be sent with disconnected blocks',
     );
   });
+
+  it('returns false for comparison of dates newer than', () => {
+    process.env.PHASE3_LAUNCH_TIMESTAMP = '1674064800000'; // 1pm ET 2023-01-18
+    const beforeLaunch = new Date('2023-01-01');
+    const afterLaunch = new Date('2023-01-20');
+    const beforeLaunchTs = new Date(1674064799999);
+    const afterLaunchTs = new Date(1674064800001);
+    expect(multiAssetService.occurredAfterLaunch(beforeLaunch)).toBe(false);
+    expect(multiAssetService.occurredAfterLaunch(afterLaunch)).toBe(true);
+    expect(multiAssetService.occurredAfterLaunch(beforeLaunchTs)).toBe(false);
+    expect(multiAssetService.occurredAfterLaunch(afterLaunchTs)).toBe(true);
+  });
 });

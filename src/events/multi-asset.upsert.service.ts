@@ -35,10 +35,19 @@ export class MultiAssetUpsertService {
         operation.type === BlockOperation.CONNECTED ||
         operation.type === BlockOperation.DISCONNECTED;
 
-      if (shouldUpsertMultiAsset) {
+      if (
+        shouldUpsertMultiAsset &&
+        this.occurredAfterLaunch(operation.block.timestamp)
+      ) {
         await this.upsert(operation);
       }
     }
+  }
+
+  private occurredAfterLaunch(comparisonDate: Date): boolean {
+    const timestamp = this.config.get<string>('PHASE3_LAUNCH_TIMESTAMP');
+    const launch = new Date(+timestamp);
+    return launch < comparisonDate;
   }
 
   async upsert(operation: UpsertMultiAssetOperationDto): Promise<MultiAsset[]> {
