@@ -279,6 +279,7 @@ export class UsersService {
             user_latest_events
           ON
             user_latest_events.user_id = users.id
+          WHERE graffiti ILIKE $1
         )
 
       SELECT
@@ -291,7 +292,6 @@ export class UsersService {
       FROM
         user_ranks
       WHERE
-        graffiti ILIKE $1 AND
         CASE WHEN $2
           THEN
             rank > $3
