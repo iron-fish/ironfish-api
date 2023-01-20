@@ -213,6 +213,9 @@ export class MultiAssetUpsertService {
 
         return [multiAssets, users];
       },
+      {
+        timeout: 30000,
+      },
     );
 
     for (const multiAsset of multiAssets) {
