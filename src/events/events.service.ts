@@ -734,7 +734,7 @@ export class EventsService {
 
   async getLifetimeEventsMetricsForUser(
     user: User,
-    events: EventType[],
+    events: EventType,
   ): Promise<SerializedEventMetrics> {
     const rank = await this.getLifetimeEventsRankForUser(user, events);
 
@@ -747,55 +747,23 @@ export class EventsService {
 
   async getLifetimeEventsRankForUser(
     user: User,
-    events: EventType[],
+    eventType: EventType,
   ): Promise<{
     points: number | null;
     count: number | null;
     rank: number | null;
   }> {
-    const queryPoints = events
-      .map((e) => e.toLowerCase() + '_points')
-      .join(' + ');
-    const queryCounts = events
-      .map((e) => e.toLowerCase() + '_count')
-      .join(' + ');
-    const queryLastOccurredAt = events
-      .map((e) => e.toLowerCase() + '_last_occurred_at')
-      .join(', ');
-
+    await this.prisma.refreshRanksMaterializedViews();
     const query = `
-      WITH user_ranks AS (
-        SELECT
-          users.id as user_id,
-          ${queryPoints} as points,
-          ${queryCounts} as count,
-          RANK() OVER (
-            ORDER BY
-              COALESCE(${queryPoints}, 0) DESC,
-              COALESCE(LEAST(${queryLastOccurredAt}), NOW()) ASC,
-              users.created_at ASC
-          ) as rank
-        FROM
-          users
-        INNER JOIN
-          (
-            SELECT *
-            FROM user_points
-            WHERE ${queryPoints} != 0
-          ) up
-        ON
-          up.user_id = users.id
-      )
-
       SELECT
-        user_id,
-        points,
-        count,
+        id,
+        total_points as points,
+        total_counts as count,
         rank::INTEGER
       FROM
-        user_ranks
+        ${eventType}_user_ranks
       WHERE
-        user_id = $1
+        id = $1
       LIMIT
         1;`;
 

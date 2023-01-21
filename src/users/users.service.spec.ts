@@ -259,6 +259,7 @@ describe('UsersService', () => {
         await eventsService.getUpsertPointsOptions(userC),
       );
 
+      await prisma.refreshRanksMaterializedViews();
       const { data: records } = await usersService.listWithRank({
         eventType: 'SOCIAL_MEDIA_PROMOTION',
         search: graffiti,
@@ -371,7 +372,7 @@ describe('UsersService', () => {
       await userPointsService.upsert(
         await eventsService.getUpsertPointsOptions(userA),
       );
-
+      await prisma.refreshRanksMaterializedViews();
       const { data: mintRecords } = await usersService.listWithRank({
         eventType: 'MULTI_ASSET_MINT',
         search: graffiti,
@@ -394,6 +395,7 @@ describe('UsersService', () => {
 
     describe(`when 'event_type' is provided`, () => {
       it('returns a chunk of users by event when specified', async () => {
+        await prisma.refreshRanksMaterializedViews();
         const { data: records } = await usersService.listWithRank({
           eventType: 'BUG_CAUGHT',
         });
@@ -568,6 +570,7 @@ describe('UsersService', () => {
       // Because secondUser caught a bug first, we consider secondUser to be
       // ranked earlier than firstUser. The last event for secondUser doesn't
       // count because it has 0 points.
+      await prisma.refreshRanksMaterializedViews();
       expect(await usersService.getRank(secondUser)).toBe(1);
       expect(await usersService.getRank(firstUser)).toBe(2);
       expect(await usersService.getRank(thirdUser)).toBe(3);

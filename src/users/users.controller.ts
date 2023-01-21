@@ -121,16 +121,14 @@ export class UsersController {
         this.eventsService.getLifetimeEventMetricsForUser(userPoints);
 
       pools = {
-        main: await this.eventsService.getLifetimeEventsMetricsForUser(user, [
-          EventType.BUG_CAUGHT,
-          EventType.NODE_UPTIME,
-          EventType.MULTI_ASSET_BURN,
-          EventType.MULTI_ASSET_MINT,
-          EventType.MULTI_ASSET_TRANSFER,
-        ]),
-        code: await this.eventsService.getLifetimeEventsMetricsForUser(user, [
+        main: await this.eventsService.getLifetimeEventsMetricsForUser(
+          user,
+          EventType.POOL4,
+        ),
+        code: await this.eventsService.getLifetimeEventsMetricsForUser(
+          user,
           EventType.PULL_REQUEST_MERGED,
-        ]),
+        ),
       };
 
       const uptime = await this.nodeUptimeService.get(user);

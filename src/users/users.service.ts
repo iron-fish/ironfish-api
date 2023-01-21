@@ -235,6 +235,7 @@ export class UsersService {
     hasNext: boolean;
     hasPrevious: boolean;
   }> {
+    await this.prisma.refreshRanksMaterializedViews();
     let rankCursor: number;
     const cursorId = before ?? after;
     if (cursorId !== undefined) {
@@ -243,44 +244,8 @@ export class UsersService {
       // Ranks start at 1, so get everything after 0
       rankCursor = 0;
     }
-
     const searchFilter = `%${search ?? ''}%`;
-    const totalPointsAt = this.totalPointsAtForUserPoints(eventType);
-
     const query = `
-      WITH
-        user_latest_events AS (
-          SELECT
-            user_id,
-            ${totalPointsAt} AS total_points,
-            ${this.latestEventOccurredAtForUserPoints(
-              eventType,
-            )} AS latest_event_occurred_at
-          FROM
-            user_points
-          ${search ? '' : 'WHERE ' + totalPointsAt + ' != 0'}
-        ),
-        user_ranks as (
-          SELECT
-            id,
-            graffiti,
-            total_points,
-            country_code,
-            created_at,
-            RANK () OVER (
-              ORDER BY
-                total_points DESC,
-                COALESCE(latest_event_occurred_at, NOW()) ASC,
-                created_at ASC
-            ) AS rank
-          FROM
-            users
-          INNER JOIN
-            user_latest_events
-          ON
-            user_latest_events.user_id = users.id
-        )
-
       SELECT
         id,
         graffiti,
@@ -289,8 +254,9 @@ export class UsersService {
         created_at,
         rank::INTEGER
       FROM
-        user_ranks
+        ${eventType ? eventType + '_user_ranks' : 'total_points_user_ranks'}
       WHERE
+        ${search ? '' : 'total_points != 0 AND'}
         graffiti ILIKE $1 AND
         CASE WHEN $2
           THEN
@@ -352,77 +318,6 @@ export class UsersService {
     };
   }
 
-  private totalPointsAtForUserPoints(type?: EventType): string {
-    if (!type) {
-      return 'total_points';
-    }
-    switch (type) {
-      case EventType.BLOCK_MINED:
-        return 'block_mined_points';
-      case EventType.BUG_CAUGHT:
-        return 'bug_caught_points';
-      case EventType.COMMUNITY_CONTRIBUTION:
-        return 'community_contribution_points';
-      case EventType.NODE_UPTIME:
-        return 'node_uptime_points';
-      case EventType.PULL_REQUEST_MERGED:
-        return 'pull_request_merged_points';
-      case EventType.SEND_TRANSACTION:
-        return 'send_transaction_points';
-      case EventType.SOCIAL_MEDIA_PROMOTION:
-        return 'social_media_promotion_points';
-      case EventType.MULTI_ASSET_BURN:
-        return 'multi_asset_burn_points';
-      case EventType.MULTI_ASSET_MINT:
-        return 'multi_asset_mint_points';
-      case EventType.MULTI_ASSET_TRANSFER:
-        return 'multi_asset_transfer_points';
-      case EventType.POOL4:
-        return 'pool4_points';
-    }
-  }
-
-  private latestEventOccurredAtForUserPoints(type?: EventType): string {
-    if (!type) {
-      return `
-        GREATEST(
-          block_mined_last_occurred_at,
-          bug_caught_last_occurred_at,
-          community_contribution_last_occurred_at,
-          node_uptime_last_occurred_at,
-          pull_request_merged_last_occurred_at,
-          send_transaction_last_occurred_at,
-          social_media_promotion_last_occurred_at,
-          pool4_last_occurred_at
-        )`;
-    }
-
-    switch (type) {
-      case EventType.BLOCK_MINED:
-        return 'block_mined_last_occurred_at';
-      case EventType.BUG_CAUGHT:
-        return 'bug_caught_last_occurred_at';
-      case EventType.COMMUNITY_CONTRIBUTION:
-        return 'community_contribution_last_occurred_at';
-      case EventType.NODE_UPTIME:
-        return 'node_uptime_last_occurred_at';
-      case EventType.PULL_REQUEST_MERGED:
-        return 'pull_request_merged_last_occurred_at';
-      case EventType.SEND_TRANSACTION:
-        return 'send_transaction_last_occurred_at';
-      case EventType.SOCIAL_MEDIA_PROMOTION:
-        return 'social_media_promotion_last_occurred_at';
-      case EventType.MULTI_ASSET_BURN:
-        return 'multi_asset_burn_last_occurred_at';
-      case EventType.MULTI_ASSET_MINT:
-        return 'multi_asset_mint_last_occurred_at';
-      case EventType.MULTI_ASSET_TRANSFER:
-        return 'multi_asset_transfer_last_occurred_at';
-      case EventType.POOL4:
-        return 'pool4_last_occurred_at';
-    }
-  }
-
   async updateLastLoginAt(user: User): Promise<User> {
     return this.prisma.$transaction(async (prisma) => {
       return prisma.user.update({
@@ -444,30 +339,12 @@ export class UsersService {
       userOrId = await this.findOrThrow(userOrId);
     }
 
+    // Uses materialized view
     const rankResponse = await this.prisma.$queryRawUnsafe<{ rank: number }[]>(
       `SELECT
         id,
         rank::INTEGER
-      FROM
-        (
-          SELECT
-            users.id,
-            RANK () OVER (
-              ORDER BY
-                ${this.totalPointsAtForUserPoints(eventType)} DESC,
-                COALESCE(
-                  ${this.latestEventOccurredAtForUserPoints(eventType)},
-                  NOW()
-                ) ASC,
-                users.created_at ASC
-            ) AS rank
-          FROM
-            users
-          JOIN
-            user_points
-          ON
-            user_points.user_id = users.id
-        ) user_ranks
+      FROM ${eventType ? eventType + 'user_ranks' : 'total_points_user_ranks'}
       WHERE
         id = $1`,
       userOrId.id,

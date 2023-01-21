@@ -255,7 +255,6 @@ describe('UsersController', () => {
           userId: user.id,
           type: EventType.BUG_CAUGHT,
         });
-
         const { body } = await request(app.getHttpServer())
           .get(`/users/${user.id}/metrics`)
           .query({
