@@ -25,7 +25,7 @@ CREATE MATERIALIZED VIEW block_mined_user_ranks AS (WITH user_latest_events AS
                                                            created_at,
                                                            rank,
                                                            now() refresh_time
-                                                    FROM user_ranks);
+                                                    FROM user_ranks WHERE total_points != 0);
 
 
 CREATE MATERIALIZED VIEW bug_caught_user_ranks AS (WITH user_latest_events AS
@@ -55,7 +55,7 @@ CREATE MATERIALIZED VIEW bug_caught_user_ranks AS (WITH user_latest_events AS
                                                           created_at,
                                                           rank,
                                                           now() refresh_time
-                                                   FROM user_ranks);
+                                                   FROM user_ranks WHERE total_points != 0);
 
 
 CREATE MATERIALIZED VIEW community_contribution_user_ranks AS (WITH user_latest_events AS
@@ -85,7 +85,7 @@ CREATE MATERIALIZED VIEW community_contribution_user_ranks AS (WITH user_latest_
                                                                       created_at,
                                                                       rank,
                                                                       now() refresh_time
-                                                               FROM user_ranks);
+                                                               FROM user_ranks WHERE total_points != 0);
 
 
 CREATE MATERIALIZED VIEW pull_request_merged_user_ranks AS (WITH user_latest_events AS
@@ -115,7 +115,7 @@ CREATE MATERIALIZED VIEW pull_request_merged_user_ranks AS (WITH user_latest_eve
                                                                    created_at,
                                                                    rank,
                                                                    now() refresh_time
-                                                            FROM user_ranks);
+                                                            FROM user_ranks WHERE total_points != 0);
 
 
 CREATE MATERIALIZED VIEW social_media_promotion_user_ranks AS (WITH user_latest_events AS
@@ -145,7 +145,7 @@ CREATE MATERIALIZED VIEW social_media_promotion_user_ranks AS (WITH user_latest_
                                                                       created_at,
                                                                       rank,
                                                                       now() refresh_time
-                                                               FROM user_ranks);
+                                                               FROM user_ranks WHERE total_points != 0);
 
 
 CREATE MATERIALIZED VIEW node_uptime_user_ranks AS (WITH user_latest_events AS
@@ -174,7 +174,7 @@ CREATE MATERIALIZED VIEW node_uptime_user_ranks AS (WITH user_latest_events AS
                                                                         created_at,
                                                                         rank,
                                                                         now() refresh_time
-                                                    FROM user_ranks);
+                                                    FROM user_ranks WHERE total_points != 0);
 
 
 CREATE MATERIALIZED VIEW send_transaction_user_ranks AS (WITH user_latest_events AS
@@ -204,7 +204,7 @@ CREATE MATERIALIZED VIEW send_transaction_user_ranks AS (WITH user_latest_events
                                                                 created_at,
                                                                 rank,
                                                                 now() refresh_time
-                                                         FROM user_ranks);
+                                                         FROM user_ranks WHERE total_points != 0);
 
 
 CREATE MATERIALIZED VIEW multi_asset_transfer_user_ranks AS (WITH user_latest_events AS
@@ -234,7 +234,7 @@ CREATE MATERIALIZED VIEW multi_asset_transfer_user_ranks AS (WITH user_latest_ev
                                                                     created_at,
                                                                     rank,
                                                                     now() refresh_time
-                                                             FROM user_ranks);
+                                                             FROM user_ranks WHERE total_points != 0);
 
 
 CREATE MATERIALIZED VIEW multi_asset_burn_user_ranks AS (WITH user_latest_events AS
@@ -264,7 +264,7 @@ CREATE MATERIALIZED VIEW multi_asset_burn_user_ranks AS (WITH user_latest_events
                                                                 created_at,
                                                                 rank,
                                                                 now() refresh_time
-                                                         FROM user_ranks);
+                                                         FROM user_ranks WHERE total_points != 0);
 
 
 CREATE MATERIALIZED VIEW multi_asset_mint_user_ranks AS (WITH user_latest_events AS
@@ -294,7 +294,7 @@ CREATE MATERIALIZED VIEW multi_asset_mint_user_ranks AS (WITH user_latest_events
                                                                 created_at,
                                                                 rank,
                                                                 now() refresh_time
-                                                         FROM user_ranks);
+                                                         FROM user_ranks WHERE total_points != 0);
 
 
 CREATE MATERIALIZED VIEW pool4_user_ranks AS (WITH user_latest_events AS
@@ -324,7 +324,7 @@ CREATE MATERIALIZED VIEW pool4_user_ranks AS (WITH user_latest_events AS
                                                      created_at,
                                                      rank,
                                                      now() refresh_time
-                                              FROM user_ranks);
+                                              FROM user_ranks WHERE total_points != 0);
 
 
 CREATE MATERIALIZED VIEW total_points_user_ranks AS (WITH user_latest_events AS
@@ -354,4 +354,4 @@ CREATE MATERIALIZED VIEW total_points_user_ranks AS (WITH user_latest_events AS
                                                             created_at,
                                                             rank,
                                                             now() refresh_time
-                                                     FROM user_ranks);
+                                                     FROM user_ranks WHERE total_points != 0);

@@ -6,7 +6,6 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import is from '@sindresorhus/is';
 import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
 import { standardizeEmail } from '../common/utils/email';
@@ -14,11 +13,9 @@ import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { UserPointsService } from '../user-points/user-points.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { ListUsersWithRankOptions } from './interfaces/list-by-rank-options';
 import { ListUsersOptions } from './interfaces/list-users-options';
-import { SerializedUserWithRank } from './interfaces/serialized-user-with-rank';
 import { UpdateUserOptions } from './interfaces/update-user-options';
-import { EventType, Prisma, User } from '.prisma/client';
+import { Prisma, User } from '.prisma/client';
 
 @Injectable()
 export class UsersService {
@@ -223,101 +220,6 @@ export class UsersService {
     };
   }
 
-  async listWithRank({
-    after,
-    before,
-    limit,
-    search,
-    countryCode,
-    eventType,
-  }: ListUsersWithRankOptions): Promise<{
-    data: SerializedUserWithRank[];
-    hasNext: boolean;
-    hasPrevious: boolean;
-  }> {
-    await this.prisma.refreshRanksMaterializedViews();
-    let rankCursor: number;
-    const cursorId = before ?? after;
-    if (cursorId !== undefined) {
-      rankCursor = await this.getRank(cursorId, eventType);
-    } else {
-      // Ranks start at 1, so get everything after 0
-      rankCursor = 0;
-    }
-    const searchFilter = `%${search ?? ''}%`;
-    const query = `
-      SELECT
-        id,
-        graffiti,
-        total_points,
-        country_code,
-        created_at,
-        rank::INTEGER
-      FROM
-        ${eventType ? eventType + '_user_ranks' : 'total_points_user_ranks'}
-      WHERE
-        ${search ? '' : 'total_points != 0 AND'}
-        graffiti ILIKE $1 AND
-        CASE WHEN $2
-          THEN
-            rank > $3
-          ELSE
-            rank < $3
-        END AND
-        CASE WHEN $5::text IS NOT NULL
-          THEN
-            country_code = $5
-          ELSE
-            TRUE
-        END
-      ORDER BY
-        CASE WHEN $2
-          THEN
-            rank
-          ELSE
-            -rank
-        END ASC
-      LIMIT
-        $4`;
-
-    const data = await this.prisma.$queryRawUnsafe<SerializedUserWithRank[]>(
-      query,
-      searchFilter,
-      before === undefined,
-      rankCursor,
-      limit,
-      countryCode,
-    );
-
-    // If fetching a previous page, the ranks are sorted in opposite order.
-    // Reverse the data so the returned chunk is in ascending order.
-    if (before !== undefined) {
-      data.reverse();
-    }
-
-    if (data.length === 0) {
-      return {
-        data: [],
-        hasNext: false,
-        hasPrevious: false,
-      };
-    }
-
-    const nextRecords = await this.prisma.$queryRawUnsafe<
-      SerializedUserWithRank[]
-    >(query, searchFilter, true, data[data.length - 1].rank, 1, countryCode);
-
-    const previousRecords = await this.prisma.$queryRawUnsafe<
-      SerializedUserWithRank[]
-    >(query, searchFilter, false, data[0].rank, 1, countryCode);
-
-    return {
-      data: data,
-      hasNext: nextRecords.length > 0,
-      hasPrevious: previousRecords.length > 0,
-    };
-  }
-
   async updateLastLoginAt(user: User): Promise<User> {
     return this.prisma.$transaction(async (prisma) => {
       return prisma.user.update({
@@ -329,38 +231,6 @@ export class UsersService {
         },
       });
     });
-  }
-
-  async getRank(
-    userOrId: User | number,
-    eventType?: EventType,
-  ): Promise<number> {
-    if (typeof userOrId === 'number') {
-      userOrId = await this.findOrThrow(userOrId);
-    }
-
-    // Uses materialized view
-    const rankResponse = await this.prisma.$queryRawUnsafe<{ rank: number }[]>(
-      `SELECT
-        id,
-        rank::INTEGER
-      FROM ${eventType ? eventType + 'user_ranks' : 'total_points_user_ranks'}
-      WHERE
-        id = $1`,
-      userOrId.id,
-    );
-
-    if (
-      !is.array(rankResponse) ||
-      rankResponse.length !== 1 ||
-      !is.object(rankResponse[0]) ||
-      !('id' in rankResponse[0]) ||
-      !('rank' in rankResponse[0])
-    ) {
-      throw new Error('Unexpected database response');
-    }
-
-    return rankResponse[0].rank;
   }
 
   async findDuplicateUser(

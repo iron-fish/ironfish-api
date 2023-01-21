@@ -22,6 +22,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { RefreshPool4Options } from '../user-points/interfaces/refresh-pool-4-options';
 import { UserPointsService } from '../user-points/user-points.service';
+import { UserRanksService } from '../user-rank/user-ranks.service';
 import { DepositsService } from './deposits.service';
 import { CreateEventOptions } from './interfaces/create-event-options';
 import { EventWithMetadata } from './interfaces/event-with-metadata';
@@ -47,6 +48,7 @@ export class EventsService {
     private readonly config: ApiConfigService,
     private readonly prisma: PrismaService,
     private readonly userPointsService: UserPointsService,
+    private readonly userRankService: UserRanksService,
     private readonly depositsService: DepositsService,
     private readonly multiAssetService: MultiAssetService,
     private readonly graphileWorkerService: GraphileWorkerService,
@@ -736,57 +738,15 @@ export class EventsService {
     user: User,
     events: EventType,
   ): Promise<SerializedEventMetrics> {
-    const rank = await this.getLifetimeEventsRankForUser(user, events);
+    const rank = await this.userRankService.getLifetimeEventsRankForUser(
+      user.id,
+      events,
+    );
 
     return {
       rank: rank.rank,
       points: rank.points,
       count: rank.count,
-    };
-  }
-
-  async getLifetimeEventsRankForUser(
-    user: User,
-    eventType: EventType,
-  ): Promise<{
-    points: number | null;
-    count: number | null;
-    rank: number | null;
-  }> {
-    await this.prisma.refreshRanksMaterializedViews();
-    const query = `
-      SELECT
-        id,
-        total_points as points,
-        total_counts as count,
-        rank::INTEGER
-      FROM
-        ${eventType}_user_ranks
-      WHERE
-        id = $1
-      LIMIT
-        1;`;
-
-    const rank = await this.prisma.readClient.$queryRawUnsafe<
-      {
-        points: number;
-        count: number;
-        rank: number;
-      }[]
-    >(query, user.id);
-
-    if (rank.length === 0) {
-      return {
-        rank: null,
-        points: null,
-        count: null,
-      };
-    }
-
-    return {
-      rank: rank[0].rank,
-      points: rank[0].points,
-      count: rank[0].count,
     };
   }
 
