@@ -4,7 +4,7 @@
 import { Module } from '@nestjs/common';
 import { ApiConfigModule } from '../api-config/api-config.module';
 import { InfluxDbModule } from '../influxdb/influxdb.module';
-import { NodeUptimesModule } from '../node-uptimes/node-uptimes.module';
+import { NodeUptimesLoaderModule } from '../node-uptimes/node-uptimes-loader.module';
 import { UsersModule } from '../users/users.module';
 import { VersionsModule } from '../versions/versions.module';
 import { TelemetryController } from './telemetry.controller';
@@ -14,7 +14,7 @@ import { TelemetryController } from './telemetry.controller';
   imports: [
     ApiConfigModule,
     InfluxDbModule,
-    NodeUptimesModule,
+    NodeUptimesLoaderModule,
     UsersModule,
     VersionsModule,
   ],

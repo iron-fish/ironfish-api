@@ -41,7 +41,7 @@ describe('NodeUptimesService', () => {
       const now = new Date();
       const user = await createUser();
 
-      const uptime = await nodeUptimesService.addUptime(user);
+      const uptime = await nodeUptimesService.addUptime(user, prisma);
 
       expect(uptime).toMatchObject({
         user_id: user.id,
@@ -67,7 +67,7 @@ describe('NodeUptimesService', () => {
         },
       });
 
-      const uptime = await nodeUptimesService.addUptime(user);
+      const uptime = await nodeUptimesService.addUptime(user, prisma);
 
       expect(uptime).toMatchObject({
         user_id: user.id,
@@ -92,7 +92,7 @@ describe('NodeUptimesService', () => {
         },
       });
 
-      const uptime = await nodeUptimesService.addUptime(user);
+      const uptime = await nodeUptimesService.addUptime(user, prisma);
       expect(uptime).toEqual(existingUptime);
     });
   });

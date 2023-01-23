@@ -3,13 +3,19 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Module } from '@nestjs/common';
 import { EventsModule } from '../events/events.module';
+import { GraphileWorkerModule } from '../graphile-worker/graphile-worker.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { NodeUptimesModule } from './node-uptimes.module';
 import { NodeUptimesLoader } from './node-uptimes-loader';
 
 @Module({
   exports: [NodeUptimesLoader],
-  imports: [EventsModule, NodeUptimesModule, PrismaModule],
+  imports: [
+    EventsModule,
+    GraphileWorkerModule,
+    NodeUptimesModule,
+    PrismaModule,
+  ],
   providers: [NodeUptimesLoader],
 })
 export class NodeUptimesLoaderModule {}

@@ -38,7 +38,10 @@ describe('NodeUptimesJobsController', () => {
   describe('createNodeUptimeEvent', () => {
     describe('with a missing user', () => {
       it('does not update', async () => {
-        const createEvent = jest.spyOn(nodeUptimesLoader, 'createEvent');
+        const createEvent = jest.spyOn(
+          nodeUptimesLoader,
+          'incrementUptimeAndCreateEvent',
+        );
 
         await nodeUptimesJobsController.createNodeUptimeEvent({
           userId: 99999,
@@ -50,7 +53,10 @@ describe('NodeUptimesJobsController', () => {
 
     describe('with a valid user', () => {
       it('creates an event with the loader', async () => {
-        const createEvent = jest.spyOn(nodeUptimesLoader, 'createEvent');
+        const createEvent = jest.spyOn(
+          nodeUptimesLoader,
+          'incrementUptimeAndCreateEvent',
+        );
         const user = await setupUser();
         const occurredAt = new Date();
 

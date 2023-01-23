@@ -6,6 +6,8 @@ import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { NODE_UPTIME_CREDIT_HOURS } from '../common/constants';
 import { EventsService } from '../events/events.service';
+import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
+import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
@@ -15,19 +17,33 @@ import { NodeUptimesLoader } from './node-uptimes-loader';
 describe('NodeUptimesLoader', () => {
   let app: INestApplication;
   let eventsService: EventsService;
+  let graphileWorkerService: GraphileWorkerService;
   let nodeUptimesLoader: NodeUptimesLoader;
   let nodeUptimesService: NodeUptimesService;
   let prisma: PrismaService;
   let usersService: UsersService;
 
+  let addJob: jest.SpyInstance;
+
   beforeAll(async () => {
     app = await bootstrapTestApp();
     eventsService = app.get(EventsService);
+    graphileWorkerService = app.get(GraphileWorkerService);
     nodeUptimesLoader = app.get(NodeUptimesLoader);
     nodeUptimesService = app.get(NodeUptimesService);
     prisma = app.get(PrismaService);
     usersService = app.get(UsersService);
     await app.init();
+  });
+
+  beforeEach(() => {
+    addJob = jest
+      .spyOn(graphileWorkerService, 'addJob')
+      .mockImplementationOnce(jest.fn());
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   afterAll(async () => {
@@ -42,7 +58,7 @@ describe('NodeUptimesLoader', () => {
     });
   };
 
-  describe('createEvent', () => {
+  describe('incrementUptimeAndCreateEvent', () => {
     describe('with no uptime', () => {
       it('does nothing', async () => {
         const createNodeUptimeEventWithClient = jest.spyOn(
@@ -55,7 +71,7 @@ describe('NodeUptimesLoader', () => {
         );
         const user = await setupUser();
 
-        await nodeUptimesLoader.createEvent(user, new Date());
+        await nodeUptimesLoader.incrementUptimeAndCreateEvent(user, new Date());
         expect(createNodeUptimeEventWithClient).not.toHaveBeenCalled();
         expect(decrementCountedHoursWithClient).not.toHaveBeenCalled();
       });
@@ -79,7 +95,7 @@ describe('NodeUptimesLoader', () => {
           },
         });
 
-        await nodeUptimesLoader.createEvent(user, new Date());
+        await nodeUptimesLoader.incrementUptimeAndCreateEvent(user, new Date());
         expect(createNodeUptimeEventWithClient).not.toHaveBeenCalled();
         expect(decrementCountedHoursWithClient).not.toHaveBeenCalled();
       });
@@ -105,7 +121,7 @@ describe('NodeUptimesLoader', () => {
         });
         const occurredAt = new Date();
 
-        await nodeUptimesLoader.createEvent(user, occurredAt);
+        await nodeUptimesLoader.incrementUptimeAndCreateEvent(user, occurredAt);
 
         expect(createNodeUptimeEventWithClient).toHaveBeenCalledTimes(1);
         expect(createNodeUptimeEventWithClient).toHaveBeenCalledWith(
@@ -122,6 +138,23 @@ describe('NodeUptimesLoader', () => {
           expect.anything(),
         );
       });
+    });
+  });
+
+  describe('addUptime', () => {
+    it('enqueues a graphile job to create a node uptime event', async () => {
+      const user = await setupUser();
+      await nodeUptimesLoader.addUptime(user);
+
+      expect(addJob).toHaveBeenCalledTimes(1);
+      expect(addJob).toHaveBeenCalledWith(
+        GraphileWorkerPattern.CREATE_NODE_UPTIME_EVENT,
+        {
+          occurredAt: expect.any(Date),
+          userId: user.id,
+        },
+        expect.anything(),
+      );
     });
   });
 });

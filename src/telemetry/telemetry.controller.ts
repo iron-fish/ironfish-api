@@ -15,7 +15,7 @@ import semver from 'semver';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { InfluxDbService } from '../influxdb/influxdb.service';
 import { CreatePointOptions } from '../influxdb/interfaces/create-point-options';
-import { NodeUptimesService } from '../node-uptimes/node-uptimes.service';
+import { NodeUptimesLoader } from '../node-uptimes/node-uptimes-loader';
 import { UsersService } from '../users/users.service';
 import { VersionsService } from '../versions/versions.service';
 import {
@@ -86,7 +86,7 @@ export class TelemetryController {
   constructor(
     private readonly config: ApiConfigService,
     private readonly influxDbService: InfluxDbService,
-    private readonly nodeUptimes: NodeUptimesService,
+    private readonly nodeUptimesLoader: NodeUptimesLoader,
     private readonly usersService: UsersService,
     private readonly versionsService: VersionsService,
   ) {}
@@ -140,7 +140,7 @@ export class TelemetryController {
       return;
     }
 
-    await this.nodeUptimes.addUptime(user);
+    await this.nodeUptimesLoader.addUptime(user);
   }
 
   private processPoints(points: WriteTelemetryPointDto[]): {
