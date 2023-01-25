@@ -12,6 +12,8 @@ import { EventsJobsController } from '../events/events.jobs.controller';
 import { EventsService } from '../events/events.service';
 import { MagicLinkService } from '../magic-link/magic-link.service';
 import { bootstrapTestApp } from '../test/test-app';
+import { UserPointsJobsController } from '../user-points/user-points.jobs.controller';
+import { UserRanksService } from '../user-rank/user-ranks.service';
 import { UsersService } from './users.service';
 
 const API_KEY = 'test';
@@ -22,6 +24,8 @@ describe('UsersController', () => {
   let usersService: UsersService;
   let eventsService: EventsService;
   let eventsJobsController: EventsJobsController;
+  let userPointsJobsController: UserPointsJobsController;
+  let userRankService: UserRanksService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
@@ -29,6 +33,8 @@ describe('UsersController', () => {
     usersService = app.get(UsersService);
     eventsService = app.get(EventsService);
     eventsJobsController = app.get(EventsJobsController);
+    userPointsJobsController = app.get(UserPointsJobsController);
+    userRankService = app.get(UserRanksService);
 
     await app.init();
   });
@@ -250,11 +256,16 @@ describe('UsersController', () => {
           userId: user.id,
           type: EventType.PULL_REQUEST_MERGED,
         });
-
         await eventsJobsController.updateLatestPoints({
           userId: user.id,
           type: EventType.BUG_CAUGHT,
         });
+        // refresh points
+        await userPointsJobsController.refreshPool4Points({
+          userId: user.id,
+          endDate: new Date(2024, 3, 1),
+        });
+        await userRankService.updateRanks();
 
         const { body } = await request(app.getHttpServer())
           .get(`/users/${user.id}/metrics`)
@@ -445,6 +456,7 @@ describe('UsersController', () => {
 
     describe('with `order_by` provided', () => {
       it('returns ranks with the users (and no country_code provided)', async () => {
+        await userRankService.updateRanks();
         const { body } = await request(app.getHttpServer())
           .get(`/users`)
           .query({ order_by: 'rank' })

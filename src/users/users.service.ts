@@ -6,7 +6,6 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import is from '@sindresorhus/is';
 import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
 import { standardizeEmail } from '../common/utils/email';
@@ -14,11 +13,9 @@ import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { UserPointsService } from '../user-points/user-points.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { ListUsersWithRankOptions } from './interfaces/list-by-rank-options';
 import { ListUsersOptions } from './interfaces/list-users-options';
-import { SerializedUserWithRank } from './interfaces/serialized-user-with-rank';
 import { UpdateUserOptions } from './interfaces/update-user-options';
-import { EventType, Prisma, User } from '.prisma/client';
+import { Prisma, User } from '.prisma/client';
 
 @Injectable()
 export class UsersService {
@@ -223,206 +220,6 @@ export class UsersService {
     };
   }
 
-  async listWithRank({
-    after,
-    before,
-    limit,
-    search,
-    countryCode,
-    eventType,
-  }: ListUsersWithRankOptions): Promise<{
-    data: SerializedUserWithRank[];
-    hasNext: boolean;
-    hasPrevious: boolean;
-  }> {
-    let rankCursor: number;
-    const cursorId = before ?? after;
-    if (cursorId !== undefined) {
-      rankCursor = await this.getRank(cursorId, eventType);
-    } else {
-      // Ranks start at 1, so get everything after 0
-      rankCursor = 0;
-    }
-
-    const searchFilter = `%${search ?? ''}%`;
-    const totalPointsAt = this.totalPointsAtForUserPoints(eventType);
-
-    const query = `
-      WITH
-        user_latest_events AS (
-          SELECT
-            user_id,
-            ${totalPointsAt} AS total_points,
-            ${this.latestEventOccurredAtForUserPoints(
-              eventType,
-            )} AS latest_event_occurred_at
-          FROM
-            user_points
-          ${search ? '' : 'WHERE ' + totalPointsAt + ' != 0'}
-        ),
-        user_ranks as (
-          SELECT
-            id,
-            graffiti,
-            total_points,
-            country_code,
-            created_at,
-            RANK () OVER (
-              ORDER BY
-                total_points DESC,
-                COALESCE(latest_event_occurred_at, NOW()) ASC,
-                created_at ASC
-            ) AS rank
-          FROM
-            users
-          INNER JOIN
-            user_latest_events
-          ON
-            user_latest_events.user_id = users.id
-        )
-
-      SELECT
-        id,
-        graffiti,
-        total_points,
-        country_code,
-        created_at,
-        rank::INTEGER
-      FROM
-        user_ranks
-      WHERE
-        graffiti ILIKE $1 AND
-        CASE WHEN $2
-          THEN
-            rank > $3
-          ELSE
-            rank < $3
-        END AND
-        CASE WHEN $5::text IS NOT NULL
-          THEN
-            country_code = $5
-          ELSE
-            TRUE
-        END
-      ORDER BY
-        CASE WHEN $2
-          THEN
-            rank
-          ELSE
-            -rank
-        END ASC
-      LIMIT
-        $4`;
-
-    const data = await this.prisma.$queryRawUnsafe<SerializedUserWithRank[]>(
-      query,
-      searchFilter,
-      before === undefined,
-      rankCursor,
-      limit,
-      countryCode,
-    );
-
-    // If fetching a previous page, the ranks are sorted in opposite order.
-    // Reverse the data so the returned chunk is in ascending order.
-    if (before !== undefined) {
-      data.reverse();
-    }
-
-    if (data.length === 0) {
-      return {
-        data: [],
-        hasNext: false,
-        hasPrevious: false,
-      };
-    }
-
-    const nextRecords = await this.prisma.$queryRawUnsafe<
-      SerializedUserWithRank[]
-    >(query, searchFilter, true, data[data.length - 1].rank, 1, countryCode);
-
-    const previousRecords = await this.prisma.$queryRawUnsafe<
-      SerializedUserWithRank[]
-    >(query, searchFilter, false, data[0].rank, 1, countryCode);
-
-    return {
-      data: data,
-      hasNext: nextRecords.length > 0,
-      hasPrevious: previousRecords.length > 0,
-    };
-  }
-
-  private totalPointsAtForUserPoints(type?: EventType): string {
-    if (!type) {
-      return 'total_points';
-    }
-    switch (type) {
-      case EventType.BLOCK_MINED:
-        return 'block_mined_points';
-      case EventType.BUG_CAUGHT:
-        return 'bug_caught_points';
-      case EventType.COMMUNITY_CONTRIBUTION:
-        return 'community_contribution_points';
-      case EventType.NODE_UPTIME:
-        return 'node_uptime_points';
-      case EventType.PULL_REQUEST_MERGED:
-        return 'pull_request_merged_points';
-      case EventType.SEND_TRANSACTION:
-        return 'send_transaction_points';
-      case EventType.SOCIAL_MEDIA_PROMOTION:
-        return 'social_media_promotion_points';
-      case EventType.MULTI_ASSET_BURN:
-        return 'multi_asset_burn_points';
-      case EventType.MULTI_ASSET_MINT:
-        return 'multi_asset_mint_points';
-      case EventType.MULTI_ASSET_TRANSFER:
-        return 'multi_asset_transfer_points';
-      case EventType.POOL4:
-        return 'pool4_points';
-    }
-  }
-
-  private latestEventOccurredAtForUserPoints(type?: EventType): string {
-    if (!type) {
-      return `
-        GREATEST(
-          block_mined_last_occurred_at,
-          bug_caught_last_occurred_at,
-          community_contribution_last_occurred_at,
-          node_uptime_last_occurred_at,
-          pull_request_merged_last_occurred_at,
-          send_transaction_last_occurred_at,
-          social_media_promotion_last_occurred_at,
-          pool4_last_occurred_at
-        )`;
-    }
-
-    switch (type) {
-      case EventType.BLOCK_MINED:
-        return 'block_mined_last_occurred_at';
-      case EventType.BUG_CAUGHT:
-        return 'bug_caught_last_occurred_at';
-      case EventType.COMMUNITY_CONTRIBUTION:
-        return 'community_contribution_last_occurred_at';
-      case EventType.NODE_UPTIME:
-        return 'node_uptime_last_occurred_at';
-      case EventType.PULL_REQUEST_MERGED:
-        return 'pull_request_merged_last_occurred_at';
-      case EventType.SEND_TRANSACTION:
-        return 'send_transaction_last_occurred_at';
-      case EventType.SOCIAL_MEDIA_PROMOTION:
-        return 'social_media_promotion_last_occurred_at';
-      case EventType.MULTI_ASSET_BURN:
-        return 'multi_asset_burn_last_occurred_at';
-      case EventType.MULTI_ASSET_MINT:
-        return 'multi_asset_mint_last_occurred_at';
-      case EventType.MULTI_ASSET_TRANSFER:
-        return 'multi_asset_transfer_last_occurred_at';
-      case EventType.POOL4:
-        return 'pool4_last_occurred_at';
-    }
-  }
-
   async updateLastLoginAt(user: User): Promise<User> {
     return this.prisma.$transaction(async (prisma) => {
       return prisma.user.update({
@@ -434,56 +231,6 @@ export class UsersService {
         },
       });
     });
-  }
-
-  async getRank(
-    userOrId: User | number,
-    eventType?: EventType,
-  ): Promise<number> {
-    if (typeof userOrId === 'number') {
-      userOrId = await this.findOrThrow(userOrId);
-    }
-
-    const rankResponse = await this.prisma.$queryRawUnsafe<{ rank: number }[]>(
-      `SELECT
-        id,
-        rank::INTEGER
-      FROM
-        (
-          SELECT
-            users.id,
-            RANK () OVER (
-              ORDER BY
-                ${this.totalPointsAtForUserPoints(eventType)} DESC,
-                COALESCE(
-                  ${this.latestEventOccurredAtForUserPoints(eventType)},
-                  NOW()
-                ) ASC,
-                users.created_at ASC
-            ) AS rank
-          FROM
-            users
-          JOIN
-            user_points
-          ON
-            user_points.user_id = users.id
-        ) user_ranks
-      WHERE
-        id = $1`,
-      userOrId.id,
-    );
-
-    if (
-      !is.array(rankResponse) ||
-      rankResponse.length !== 1 ||
-      !is.object(rankResponse[0]) ||
-      !('id' in rankResponse[0]) ||
-      !('rank' in rankResponse[0])
-    ) {
-      throw new Error('Unexpected database response');
-    }
-
-    return rankResponse[0].rank;
   }
 
   async findDuplicateUser(

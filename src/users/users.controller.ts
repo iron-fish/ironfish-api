@@ -33,6 +33,7 @@ import { EventsService } from '../events/events.service';
 import { SerializedEventMetrics } from '../events/interfaces/serialized-event-metrics';
 import { NodeUptimesService } from '../node-uptimes/node-uptimes.service';
 import { UserPointsService } from '../user-points/user-points.service';
+import { UserRanksService } from '../user-rank/user-ranks.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserMetricsQueryDto } from './dto/user-metrics-query.dto';
@@ -55,6 +56,7 @@ export class UsersController {
     private readonly eventsService: EventsService,
     private readonly nodeUptimeService: NodeUptimesService,
     private readonly userPointsService: UserPointsService,
+    private readonly userRankService: UserRanksService,
     private readonly usersService: UsersService,
     private readonly usersUpdater: UsersUpdater,
   ) {}
@@ -121,16 +123,14 @@ export class UsersController {
         this.eventsService.getLifetimeEventMetricsForUser(userPoints);
 
       pools = {
-        main: await this.eventsService.getLifetimeEventsMetricsForUser(user, [
-          EventType.BUG_CAUGHT,
-          EventType.NODE_UPTIME,
-          EventType.MULTI_ASSET_BURN,
-          EventType.MULTI_ASSET_MINT,
-          EventType.MULTI_ASSET_TRANSFER,
-        ]),
-        code: await this.eventsService.getLifetimeEventsMetricsForUser(user, [
+        main: await this.eventsService.getLifetimeEventsMetricsForUser(
+          user,
+          EventType.POOL4,
+        ),
+        code: await this.eventsService.getLifetimeEventsMetricsForUser(
+          user,
           EventType.PULL_REQUEST_MERGED,
-        ]),
+        ),
       };
 
       const uptime = await this.nodeUptimeService.get(user);
@@ -240,7 +240,7 @@ export class UsersController {
   ): Promise<PaginatedList<SerializedUser | SerializedUserWithRank>> {
     if (orderBy !== undefined) {
       const { data, hasNext, hasPrevious } =
-        await this.usersService.listWithRank({
+        await this.userRankService.listWithRank({
           after,
           before,
           limit: Math.min(MAX_LIMIT, limit || DEFAULT_LIMIT),
