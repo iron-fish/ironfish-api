@@ -243,29 +243,15 @@ export class DepositsUpsertService {
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
 
     const blockHash = standardizeHash(operation.block.hash);
-    const previousBlockHash = standardizeHash(
-      operation.block.previousBlockHash,
-    );
-
     // The type is wrong in the DTO this is a strong
     const blockTimestamp = new Date(operation.block.timestamp);
 
     const [deposits, users] = await this.prisma.$transaction(
       async (prisma) => {
-        const head = await this.depositsService.head();
-
         let deposits = new Array<Deposit>();
         let users = new Map<string, User>();
 
         if (operation.type === BlockOperation.CONNECTED) {
-          if (head && head.block_hash !== previousBlockHash) {
-            throw new Error(
-              `Cannot connect block ${blockHash} to ${String(
-                head.block_hash,
-              )}, expecting ${previousBlockHash}`,
-            );
-          }
-
           let depositParams = new Array<{
             transaction_hash: string;
             block_hash: string;
@@ -309,25 +295,6 @@ export class DepositsUpsertService {
 
           // Filter deposits made by unknown users
           depositParams = depositParams.filter((d) => users.has(d.graffiti));
-
-          // Deposits are shared between blocks, so we need to reassign all the ones on other blocks
-          if (depositParams.length) {
-            await prisma.deposit.updateMany({
-              data: {
-                block_hash: blockHash,
-                main: true,
-              },
-              where: {
-                OR: depositParams.map((deposit) => ({
-                  AND: {
-                    transaction_hash: deposit.transaction_hash,
-                    graffiti: deposit.graffiti,
-                  },
-                })),
-                network_version: networkVersion,
-              },
-            });
-          }
 
           // Create new deposits
           await prisma.deposit.createMany({
@@ -387,52 +354,7 @@ export class DepositsUpsertService {
           await prisma.event.createMany({
             data: eventPayloads,
           });
-        } else if (operation.type === BlockOperation.DISCONNECTED) {
-          if (!head || head.block_hash !== operation.block.hash) {
-            throw new Error(
-              `Cannot disconnect ${blockHash}, expecting ${String(
-                head?.block_hash,
-              )}`,
-            );
-          }
-
-          await prisma.deposit.updateMany({
-            data: {
-              main: false,
-            },
-            where: {
-              block_hash: blockHash,
-              network_version: networkVersion,
-            },
-          });
-
-          deposits = await prisma.deposit.findMany({
-            where: {
-              block_hash: blockHash,
-              network_version: networkVersion,
-            },
-          });
-
-          await prisma.event.deleteMany({
-            where: {
-              deposit_id: {
-                in: deposits.map((deposit) => deposit.id),
-              },
-            },
-          });
-
-          users = await this.usersService.findManyAndMapByGraffiti(
-            deposits.map((d) => d.graffiti),
-          );
         }
-
-        const headHash =
-          operation.type === BlockOperation.CONNECTED
-            ? standardizeHash(operation.block.hash)
-            : standardizeHash(operation.block.previousBlockHash);
-
-        await this.depositHeadsService.upsert(headHash);
-
         return [deposits, users];
       },
       { timeout: 120000 },
