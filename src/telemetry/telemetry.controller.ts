@@ -33,6 +33,7 @@ const TELEMETRY_WHITELIST = new Map<string, true | Array<string>>([
   [
     'node_stats',
     [
+      'create_new_block_template_duration',
       'heap_total',
       'heap_used',
       'peers_count',
