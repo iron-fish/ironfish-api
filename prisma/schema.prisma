@@ -1,6 +1,7 @@
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["interactiveTransactions"]
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -50,9 +51,10 @@ model User {
   discord             String?     @db.VarChar
   telegram            String?     @db.VarChar
   github              String?     @db.VarChar
+  hashed_ip_address   String?     @db.VarChar
   events              Event[]
-  points              UserPoints?
   node_uptime         NodeUptime?
+  points              UserPoints?
 
   @@index([email], name: "index_users_on_email")
   @@index([graffiti], name: "index_users_on_graffiti")
