@@ -6,6 +6,7 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
+import { createHash } from 'crypto';
 import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
 import { standardizeEmail } from '../common/utils/email';
@@ -280,6 +281,21 @@ export class UsersService {
       },
       where: {
         id: user.id,
+      },
+    });
+  }
+
+  async updateHashedIpAddress(user: User, ipAddress: string): Promise<User> {
+    const hash = createHash('sha256');
+    hash.update(ipAddress);
+    hash.end();
+
+    return this.prisma.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        hashed_ip_address: hash.digest().toString('hex'),
       },
     });
   }

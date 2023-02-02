@@ -105,19 +105,24 @@ export class TelemetryController {
     { points, graffiti }: WriteTelemetryPointsDto,
   ): Promise<void> {
     const { options, nodeVersion } = this.processPoints(points);
+    const ipAddress = this.fetchIpAddressFromRequest(request);
 
     if (graffiti && nodeVersion) {
-      await this.addUptime(graffiti, nodeVersion);
+      await this.addUptime(graffiti, nodeVersion, ipAddress);
     }
 
     if (options.length) {
       this.influxDbService.writePoints(options);
     }
 
-    this.submitIpWithoutNodeFieldsToTelemetry(request);
+    this.submitIpWithoutNodeFieldsToTelemetry(nodeVersion, ipAddress);
   }
 
-  async addUptime(graffiti: string, nodeVersion: string): Promise<void> {
+  async addUptime(
+    graffiti: string,
+    nodeVersion: string,
+    ipAddress?: string,
+  ): Promise<void> {
     const nodeUptimeEnabled = this.config.get<boolean>(
       'ALLOW_NODE_UPTIME_POINTS',
     );
@@ -142,6 +147,9 @@ export class TelemetryController {
     }
 
     await this.nodeUptimes.addUptime(user);
+    if (ipAddress) {
+      await this.usersService.updateHashedIpAddress(user, ipAddress);
+    }
   }
 
   private processPoints(points: WriteTelemetryPointDto[]): {
@@ -203,27 +211,40 @@ export class TelemetryController {
     return semver.gte(parsed, this.MINIMUM_TELEMETRY_VERSION);
   }
 
-  private submitIpWithoutNodeFieldsToTelemetry(request: Request): void {
+  private fetchIpAddressFromRequest(request: Request): string | undefined {
     const xForwardedFor = request.header('X-Forwarded-For');
     if (xForwardedFor) {
       const addresses = xForwardedFor.split(',');
       if (addresses.length) {
-        const ip = addresses[0].trim();
-        this.influxDbService.writePoints([
-          {
-            measurement: 'node_addresses',
-            fields: [
-              {
-                name: 'ip',
-                type: 'string',
-                value: ip,
-              },
-            ],
-            tags: [],
-            timestamp: new Date(),
-          },
-        ]);
+        return addresses[0].trim();
       }
+    }
+  }
+
+  private submitIpWithoutNodeFieldsToTelemetry(
+    nodeVersion: string | null,
+    ipAddress?: string,
+  ): void {
+    if (nodeVersion && ipAddress) {
+      this.influxDbService.writePoints([
+        {
+          measurement: 'node_addresses',
+          fields: [
+            {
+              name: 'ip',
+              type: 'string',
+              value: ipAddress,
+            },
+          ],
+          tags: [
+            {
+              name: 'version',
+              value: nodeVersion,
+            },
+          ],
+          timestamp: new Date(),
+        },
+      ]);
     }
   }
 }

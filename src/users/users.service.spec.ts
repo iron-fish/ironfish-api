@@ -739,4 +739,24 @@ describe('UsersService', () => {
       });
     });
   });
+
+  describe('storeHashedIpAddress', () => {
+    it('stores a hashed ip address for the user', async () => {
+      const user = await usersService.create({
+        country_code: faker.address.countryCode('alpha-3'),
+        email: faker.internet.email(),
+        graffiti: uuid(),
+        telegram: ulid(),
+      });
+
+      const updatedUser = await usersService.updateHashedIpAddress(
+        user,
+        '127.0.0.1',
+      );
+      expect(updatedUser).toMatchObject({
+        hashed_ip_address:
+          '12ca17b49af2289436f303e0166030a21e525d266e209267433801a8fd4071a0',
+      });
+    });
+  });
 });
