@@ -115,7 +115,7 @@ export class TelemetryController {
       this.influxDbService.writePoints(options);
     }
 
-    this.submitIpWithoutNodeFieldsToTelemetry(ipAddress);
+    this.submitIpWithoutNodeFieldsToTelemetry(nodeVersion, ipAddress);
   }
 
   async addUptime(
@@ -221,8 +221,11 @@ export class TelemetryController {
     }
   }
 
-  private submitIpWithoutNodeFieldsToTelemetry(ipAddress?: string): void {
-    if (ipAddress) {
+  private submitIpWithoutNodeFieldsToTelemetry(
+    nodeVersion: string | null,
+    ipAddress?: string,
+  ): void {
+    if (nodeVersion && ipAddress) {
       this.influxDbService.writePoints([
         {
           measurement: 'node_addresses',
@@ -233,7 +236,12 @@ export class TelemetryController {
               value: ipAddress,
             },
           ],
-          tags: [],
+          tags: [
+            {
+              name: 'version',
+              value: nodeVersion,
+            },
+          ],
           timestamp: new Date(),
         },
       ]);
