@@ -37,4 +37,8 @@ export class CreateUserDto {
   @IsOptional()
   @IsString()
   readonly github?: string;
+
+  @IsOptional()
+  @IsString()
+  readonly recaptcha?: string;
 }
