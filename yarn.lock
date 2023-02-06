@@ -3321,10 +3321,10 @@ hexoid@^1.0.0:
   resolved "https://registry.yarnpkg.com/hexoid/-/hexoid-1.0.0.tgz#ad10c6573fb907de23d9ec63a711267d9dc9bc18"
   integrity sha512-QFLV0taWQOZtvIRIAdBChesmogZrtuXvVWsFHZTk2SU+anspqZ2vMnoLg7IE1+Uk16N19APic1BuF8bC8c2m5g==
 
-hot-shots@9.3.0:
-  version "9.3.0"
-  resolved "https://registry.yarnpkg.com/hot-shots/-/hot-shots-9.3.0.tgz#1a0b54b81d9efb27af96a971befe343908b0397b"
-  integrity sha512-e4tgWptiBvlIMnAX0ORe+dNEt0HznD+T2ckzXDUwCBsU7uWr2mwq5UtoT+Df5r9hD5S/DuP8rTxJUQvqAFSFKA==
+hot-shots@10.0.0:
+  version "10.0.0"
+  resolved "https://registry.yarnpkg.com/hot-shots/-/hot-shots-10.0.0.tgz#d360f9dd252da78297aca1cb08fd84a8936739c2"
+  integrity sha512-uy/uGpuJk7yuyiKRfZMBNkF1GAOX5O2ifO9rDCaX9jw8fu6eW9QeWC7WRPDI+O98frW1HQgV3+xwjWsZPECIzQ==
   optionalDependencies:
     unix-dgram "2.x"
 
