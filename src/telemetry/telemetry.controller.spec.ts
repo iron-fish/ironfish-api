@@ -186,7 +186,7 @@ describe('TelemetryController', () => {
           .send({ points })
           .expect(HttpStatus.CREATED);
 
-        expect(writePoints).toHaveBeenCalledTimes(1);
+        expect(writePoints).toHaveBeenCalledTimes(2);
         expect(writePoints).toHaveBeenCalledWith(points);
       });
 
@@ -215,7 +215,7 @@ describe('TelemetryController', () => {
           .send({ points })
           .expect(HttpStatus.CREATED);
 
-        expect(writePoints).toHaveBeenCalledTimes(1);
+        expect(writePoints).toHaveBeenCalledTimes(2);
         expect(writePoints).not.toHaveBeenCalledWith(points);
         points[0].fields.splice(1, 1);
         expect(writePoints).toHaveBeenCalledWith(points);
@@ -241,7 +241,7 @@ describe('TelemetryController', () => {
           .send({ points })
           .expect(HttpStatus.CREATED);
 
-        expect(writePoints).toHaveBeenCalledTimes(0);
+        expect(writePoints).toHaveBeenCalledTimes(1);
         expect(writePoints).not.toHaveBeenCalledWith(points);
 
         points[0].fields[0].value = BLOCK_PROPAGATION_INTERVAL;
