@@ -8,11 +8,11 @@ import {
   Get,
   HttpException,
   HttpStatus,
-  Ip,
   Param,
   Post,
   Put,
   Query,
+  Req,
   UnprocessableEntityException,
   UseGuards,
   ValidationPipe,
@@ -23,6 +23,7 @@ import {
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
+import { Request } from 'express';
 import { MagicLinkGuard } from '../auth/guards/magic-link.guard';
 import { DEFAULT_LIMIT, MAX_LIMIT, MS_PER_DAY } from '../common/constants';
 import { Context } from '../common/decorators/context';
@@ -31,6 +32,7 @@ import { MetricsPool } from '../common/enums/metrics-pool';
 import { MagicLinkContext } from '../common/interfaces/magic-link-context';
 import { PaginatedList } from '../common/interfaces/paginated-list';
 import { IntIsSafeForPrismaPipe } from '../common/pipes/int-is-safe-for-prisma.pipe';
+import { fetchIpAddressFromRequest } from '../common/utils/request';
 import { EventsService } from '../events/events.service';
 import { SerializedEventMetrics } from '../events/interfaces/serialized-event-metrics';
 import { NodeUptimesService } from '../node-uptimes/node-uptimes.service';
@@ -301,9 +303,9 @@ export class UsersController {
       }),
     )
     dto: CreateUserDto,
-    @Ip()
-    remoteIp: string,
+    @Req() request: Request,
   ): Promise<User> {
+    const remoteIp = fetchIpAddressFromRequest(request);
     const isRecaptchaValid = await this.recaptchaVerificationService.verify(
       dto.recaptcha,
       remoteIp,
