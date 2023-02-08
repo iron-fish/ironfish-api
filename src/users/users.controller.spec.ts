@@ -570,6 +570,7 @@ describe('UsersController', () => {
             graffiti,
             discord,
             country_code: faker.address.countryCode('alpha-3'),
+            recaptcha: 'token',
           })
           .expect(HttpStatus.CREATED);
 
@@ -580,6 +581,58 @@ describe('UsersController', () => {
           created_at: expect.any(String),
           graffiti,
           discord,
+        });
+      });
+
+      describe('recaptcha verification failure', () => {
+        afterEach(() => {
+          jest.clearAllMocks();
+        });
+
+        it('return 400 on missing recaptcha token', async () => {
+          const email = faker.internet.email().toUpperCase();
+          const recaptchaVerification = jest.spyOn(
+            recaptchaVerificationService,
+            'verify',
+          );
+
+          const graffiti = uuid();
+          const discord = faker.internet.userName();
+          await request(app.getHttpServer())
+            .post(`/users`)
+            .set('Authorization', `Bearer ${API_KEY}`)
+            .send({
+              email,
+              graffiti,
+              discord,
+              country_code: faker.address.countryCode('alpha-3'),
+            })
+            .expect(HttpStatus.BAD_REQUEST);
+
+          expect(recaptchaVerification).toHaveBeenCalledTimes(1);
+        });
+
+        it('return 422 on failed verification', async () => {
+          const email = faker.internet.email().toUpperCase();
+          const recaptchaVerification = jest
+            .spyOn(recaptchaVerificationService, 'verify')
+            .mockImplementation(() => Promise.resolve(false));
+
+          const graffiti = uuid();
+          const discord = faker.internet.userName();
+          await request(app.getHttpServer())
+            .post(`/users`)
+            .set('Authorization', `Bearer ${API_KEY}`)
+            .send({
+              email,
+              graffiti,
+              discord,
+              country_code: faker.address.countryCode('alpha-3'),
+              recaptcha: 'token',
+            })
+            .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+
+          expect(recaptchaVerification).toHaveBeenCalledTimes(1);
         });
       });
     });
