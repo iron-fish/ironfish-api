@@ -8,6 +8,7 @@ import {
   Get,
   HttpException,
   HttpStatus,
+  Ip,
   Param,
   Post,
   Put,
@@ -300,9 +301,12 @@ export class UsersController {
       }),
     )
     dto: CreateUserDto,
+    @Ip()
+    remoteIp: string,
   ): Promise<User> {
     const isRecaptchaValid = await this.recaptchaVerificationService.verify(
       dto.recaptcha,
+      remoteIp,
     );
 
     if (!isRecaptchaValid) {

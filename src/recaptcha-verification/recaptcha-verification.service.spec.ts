@@ -36,13 +36,16 @@ describe('RecaptchaVerificationService', () => {
       });
 
       const recaptchaToken = 'token';
+      const remoteIp = 'localhost';
       const recaptchaSecret = configService.get<string>('RECAPTCHA_SECRET_KEY');
 
       const response = await recaptchaVerificationService.verify(
         recaptchaToken,
+        remoteIp,
       );
 
-      const expectedUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${recaptchaSecret}&response=${recaptchaToken}`;
+      const expectedUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${recaptchaSecret}&response=${recaptchaToken}&remoteip=${remoteIp}`;
+
       expect(mockedPost).toHaveBeenCalledWith(expectedUrl);
       expect(response).toBe(true);
     });

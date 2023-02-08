@@ -9,13 +9,13 @@ import { ApiConfigService } from '../api-config/api-config.service';
 export class RecaptchaVerificationService {
   constructor(private readonly configService: ApiConfigService) {}
 
-  async verify(recaptcha: string): Promise<boolean> {
+  async verify(recaptcha: string, remoteIp: string): Promise<boolean> {
     const recaptchaSecret = this.configService.get<string>(
       'RECAPTCHA_SECRET_KEY',
     );
 
     const recaptchaBaseUrl = 'https://www.google.com/recaptcha/api/siteverify';
-    const recaptchaVerificationUrl = `${recaptchaBaseUrl}?secret=${recaptchaSecret}&response=${recaptcha}`;
+    const recaptchaVerificationUrl = `${recaptchaBaseUrl}?secret=${recaptchaSecret}&response=${recaptcha}&remoteip=${remoteIp}`;
 
     try {
       const response =
