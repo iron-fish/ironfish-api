@@ -22,7 +22,6 @@ import {
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
-import { ApiConfigService } from '../api-config/api-config.service';
 import { MagicLinkGuard } from '../auth/guards/magic-link.guard';
 import { DEFAULT_LIMIT, MAX_LIMIT, MS_PER_DAY } from '../common/constants';
 import { Context } from '../common/decorators/context';
@@ -34,6 +33,7 @@ import { IntIsSafeForPrismaPipe } from '../common/pipes/int-is-safe-for-prisma.p
 import { EventsService } from '../events/events.service';
 import { SerializedEventMetrics } from '../events/interfaces/serialized-event-metrics';
 import { NodeUptimesService } from '../node-uptimes/node-uptimes.service';
+import { RecaptchaVerificationService } from '../recaptcha-verification/recaptcha-verification.service';
 import { UserPointsService } from '../user-points/user-points.service';
 import { UserRanksService } from '../user-rank/user-ranks.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -55,13 +55,13 @@ const MAX_SUPPORTED_TIME_RANGE_IN_DAYS = 30;
 @Controller('users')
 export class UsersController {
   constructor(
-    private readonly configService: ApiConfigService,
     private readonly eventsService: EventsService,
     private readonly nodeUptimeService: NodeUptimesService,
     private readonly userPointsService: UserPointsService,
     private readonly userRankService: UserRanksService,
     private readonly usersService: UsersService,
     private readonly usersUpdater: UsersUpdater,
+    private readonly recaptchaVerificationService: RecaptchaVerificationService,
   ) {}
 
   @ApiOperation({ summary: `Gets a specific User by 'graffiti'` })
@@ -301,37 +301,11 @@ export class UsersController {
     )
     dto: CreateUserDto,
   ): Promise<User> {
-    const recaptcha = dto.recaptcha;
-    if (recaptcha === undefined) {
-      throw new HttpException(
-        "Missing 'recaptcha' field",
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    const recaptchaSecret = this.configService.get<string>(
-      'RECAPTCHA_SECRET_KEY',
+    const isRecaptchaValid = await this.recaptchaVerificationService.verify(
+      dto.recaptcha,
     );
 
-    const recaptchaVerificationUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${recaptchaSecret}&response=${recaptcha}`;
-
-    const isVerified = await fetch(recaptchaVerificationUrl)
-      .then((response) => response.json())
-      .then(
-        (response: {
-          success: boolean;
-          challenge_ts: Date;
-          hostname: string;
-          'error-codes'?: string[];
-        }) => {
-          if (response.success) {
-            return true;
-          }
-          return false;
-        },
-      );
-
-    if (!isVerified) {
+    if (!isRecaptchaValid) {
       throw new HttpException(
         'ReCAPTCHA verification failed',
         HttpStatus.UNAUTHORIZED,

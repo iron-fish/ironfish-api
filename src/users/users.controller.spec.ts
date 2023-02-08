@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { EventType } from '@prisma/client';
+import assert from 'assert';
 import faker from 'faker';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
@@ -11,6 +12,7 @@ import { standardizeEmail } from '../common/utils/email';
 import { EventsJobsController } from '../events/events.jobs.controller';
 import { EventsService } from '../events/events.service';
 import { MagicLinkService } from '../magic-link/magic-link.service';
+import { RecaptchaVerificationService } from '../recaptcha-verification/recaptcha-verification.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UserPointsJobsController } from '../user-points/user-points.jobs.controller';
 import { UserRanksService } from '../user-rank/user-ranks.service';
@@ -26,6 +28,7 @@ describe('UsersController', () => {
   let eventsJobsController: EventsJobsController;
   let userPointsJobsController: UserPointsJobsController;
   let userRankService: UserRanksService;
+  let recaptchaVerificationService: RecaptchaVerificationService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
@@ -35,6 +38,7 @@ describe('UsersController', () => {
     eventsJobsController = app.get(EventsJobsController);
     userPointsJobsController = app.get(UserPointsJobsController);
     userRankService = app.get(UserRanksService);
+    recaptchaVerificationService = app.get(RecaptchaVerificationService);
 
     await app.init();
   });
@@ -553,6 +557,10 @@ describe('UsersController', () => {
     describe('with valid arguments', () => {
       it('creates a user', async () => {
         const email = faker.internet.email().toUpperCase();
+        const recaptchaVerification = jest
+          .spyOn(recaptchaVerificationService, 'verify')
+          .mockImplementation(() => Promise.resolve(true));
+
         const graffiti = uuid();
         const discord = faker.internet.userName();
         const { body } = await request(app.getHttpServer())
@@ -566,6 +574,8 @@ describe('UsersController', () => {
           })
           .expect(HttpStatus.CREATED);
 
+        expect(recaptchaVerification).toHaveBeenCalledTimes(1);
+        assert.ok(recaptchaVerification.mock.calls);
         expect(body).toMatchObject({
           id: expect.any(Number),
           email: standardizeEmail(email),
