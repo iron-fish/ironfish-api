@@ -51,7 +51,7 @@ describe('UsersController', () => {
       const user = await usersService.create({
         email: faker.internet.email(),
         graffiti: uuid(),
-        country_code: faker.address.countryCode(),
+        countryCode: faker.address.countryCode(),
       });
 
       const { body } = await request(app.getHttpServer())
@@ -78,7 +78,7 @@ describe('UsersController', () => {
       const user = await usersService.create({
         email: faker.internet.email(),
         graffiti: uuid(),
-        country_code: faker.address.countryCode(),
+        countryCode: faker.address.countryCode(),
       });
 
       const { body } = await request(app.getHttpServer())
@@ -206,7 +206,7 @@ describe('UsersController', () => {
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: uuid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
 
         const { body } = await request(app.getHttpServer())
@@ -240,7 +240,7 @@ describe('UsersController', () => {
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: uuid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
 
         await eventsService.create({
@@ -332,7 +332,7 @@ describe('UsersController', () => {
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: uuid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
         const { body } = await request(app.getHttpServer())
           .get(`/users/${user.id}/metrics`)
@@ -365,7 +365,7 @@ describe('UsersController', () => {
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: uuid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
 
         const start = new Date(Date.now() - 1).toISOString();
@@ -543,7 +543,7 @@ describe('UsersController', () => {
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: uuid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
         await request(app.getHttpServer())
           .post(`/users`)
@@ -654,7 +654,7 @@ describe('UsersController', () => {
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: uuid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
 
         jest
@@ -676,7 +676,7 @@ describe('UsersController', () => {
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: uuid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
 
         jest
@@ -704,7 +704,7 @@ describe('UsersController', () => {
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: uuid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
 
         jest

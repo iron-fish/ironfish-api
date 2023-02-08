@@ -315,7 +315,7 @@ export class UsersController {
     return this.usersService.create({
       email: dto.email,
       graffiti: dto.graffiti,
-      country_code: dto.country_code,
+      countryCode: dto.country_code,
       discord: dto.discord,
       telegram: dto.telegram,
       github: dto.github,

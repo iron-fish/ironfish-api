@@ -56,7 +56,7 @@ describe('EventsJobsController', () => {
       const user = await usersService.create({
         email: faker.internet.email(),
         graffiti: ulid(),
-        country_code: faker.address.countryCode('alpha-3'),
+        countryCode: faker.address.countryCode('alpha-3'),
       });
       const occurredAt = new Date();
       const type = EventType.BUG_CAUGHT;
@@ -106,7 +106,7 @@ describe('EventsJobsController', () => {
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: ulid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
 
         await eventsJobsController.upsertBlockMinedEvent({
@@ -121,7 +121,7 @@ describe('EventsJobsController', () => {
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: ulid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
 
         const { requeue } = await eventsJobsController.upsertBlockMinedEvent({
@@ -149,7 +149,7 @@ describe('EventsJobsController', () => {
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: ulid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
 
         const { requeue } = await eventsJobsController.upsertBlockMinedEvent({
@@ -175,7 +175,7 @@ describe('EventsJobsController', () => {
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: ulid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
 
         const upsertBlockMined = jest.spyOn(eventsService, 'upsertBlockMined');

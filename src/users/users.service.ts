@@ -109,7 +109,7 @@ export class UsersService {
   async create({
     email,
     graffiti,
-    country_code: countryCode,
+    countryCode,
     discord,
     telegram,
     github,

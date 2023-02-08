@@ -59,7 +59,7 @@ describe('UsersUpdater', () => {
       discord: faker.internet.userName(),
       email: faker.internet.email(),
       graffiti,
-      country_code: faker.address.countryCode('alpha-3'),
+      countryCode: faker.address.countryCode('alpha-3'),
       telegram: faker.internet.userName(),
     });
     await userPointsService.upsert({
@@ -85,7 +85,7 @@ describe('UsersUpdater', () => {
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: ulid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
 
         assert.ok(existingUser.discord);
@@ -111,12 +111,12 @@ describe('UsersUpdater', () => {
         const firstUser = await usersService.create({
           email: faker.internet.email(),
           graffiti: ulid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
         const secondUser = await usersService.create({
           email: faker.internet.email(),
           graffiti: ulid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
         const graffiti = ulid();
 
@@ -140,13 +140,13 @@ describe('UsersUpdater', () => {
           discord: faker.internet.userName(),
           email: faker.internet.email(),
           graffiti: ulid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
           telegram: faker.internet.userName(),
         });
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: ulid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
 
         await expect(
@@ -161,7 +161,7 @@ describe('UsersUpdater', () => {
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: ulid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
 
         assert.ok(existingUser.telegram);
@@ -181,7 +181,7 @@ describe('UsersUpdater', () => {
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: ulid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
 
         const updatedUser = await usersUpdater.update(user, options);

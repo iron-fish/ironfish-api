@@ -32,7 +32,7 @@ describe('UserPointsService', () => {
     const user = await usersService.create({
       email: faker.internet.email(),
       graffiti: uuid(),
-      country_code: faker.address.countryCode('alpha-3'),
+      countryCode: faker.address.countryCode('alpha-3'),
     });
 
     await userPointsService.upsert({
@@ -48,7 +48,7 @@ describe('UserPointsService', () => {
       const user = await usersService.create({
         email: faker.internet.email(),
         graffiti: uuid(),
-        country_code: faker.address.countryCode('alpha-3'),
+        countryCode: faker.address.countryCode('alpha-3'),
       });
 
       const points = {

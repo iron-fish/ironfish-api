@@ -47,13 +47,13 @@ describe('DepositsUpsertService', () => {
     user1 = await usersService.create({
       email: faker.internet.email(),
       graffiti: 'user1',
-      country_code: faker.address.countryCode(),
+      countryCode: faker.address.countryCode(),
     });
 
     user2 = await usersService.create({
       email: faker.internet.email(),
       graffiti: 'user2',
-      country_code: faker.address.countryCode(),
+      countryCode: faker.address.countryCode(),
     });
 
     transaction1 = transaction(
@@ -118,13 +118,13 @@ describe('DepositsUpsertService', () => {
     it('upserts deposits and events', async () => {
       const user1 = await usersService.create({
         email: faker.internet.email(),
-        country_code: faker.address.countryCode(),
+        countryCode: faker.address.countryCode(),
         graffiti: uuid(),
       });
 
       const user2 = await usersService.create({
         email: faker.internet.email(),
-        country_code: faker.address.countryCode(),
+        countryCode: faker.address.countryCode(),
         graffiti: uuid(),
       });
 
@@ -170,7 +170,7 @@ describe('DepositsUpsertService', () => {
     it('should not reassign any deposits', async () => {
       const user = await usersService.create({
         email: faker.internet.email(),
-        country_code: faker.address.countryCode(),
+        countryCode: faker.address.countryCode(),
         graffiti: uuid(),
       });
 
@@ -243,7 +243,7 @@ describe('DepositsUpsertService', () => {
 
       const user = await usersService.create({
         email: faker.internet.email(),
-        country_code: faker.address.countryCode(),
+        countryCode: faker.address.countryCode(),
         graffiti: uuid(),
       });
 
@@ -257,13 +257,13 @@ describe('DepositsUpsertService', () => {
     it('on disconnect removes events', async () => {
       const user1 = await usersService.create({
         email: faker.internet.email(),
-        country_code: faker.address.countryCode(),
+        countryCode: faker.address.countryCode(),
         graffiti: uuid(),
       });
 
       const user2 = await usersService.create({
         email: faker.internet.email(),
-        country_code: faker.address.countryCode(),
+        countryCode: faker.address.countryCode(),
         graffiti: uuid(),
       });
 

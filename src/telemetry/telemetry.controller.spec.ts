@@ -275,7 +275,7 @@ describe('TelemetryController', () => {
           const user = await usersService.create({
             email: faker.internet.email(),
             graffiti,
-            country_code: faker.address.countryCode(),
+            countryCode: faker.address.countryCode(),
           });
 
           const points = mockTelemetryPoints();
@@ -302,7 +302,7 @@ describe('TelemetryController', () => {
           const user = await usersService.create({
             email: faker.internet.email(),
             graffiti,
-            country_code: faker.address.countryCode(),
+            countryCode: faker.address.countryCode(),
           });
 
           const points = mockTelemetryPoints();
@@ -331,7 +331,7 @@ describe('TelemetryController', () => {
           const user = await usersService.create({
             email: faker.internet.email(),
             graffiti: uuid(),
-            country_code: faker.address.countryCode(),
+            countryCode: faker.address.countryCode(),
           });
 
           await prisma.nodeUptime.create({
@@ -376,7 +376,7 @@ describe('TelemetryController', () => {
           await usersService.create({
             email: faker.internet.email(),
             graffiti,
-            country_code: faker.address.countryCode(),
+            countryCode: faker.address.countryCode(),
           });
 
           const points = mockTelemetryPoints();
@@ -405,7 +405,7 @@ describe('TelemetryController', () => {
           await usersService.create({
             email: faker.internet.email(),
             graffiti,
-            country_code: faker.address.countryCode(),
+            countryCode: faker.address.countryCode(),
           });
 
           await request(app.getHttpServer())

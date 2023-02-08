@@ -94,13 +94,13 @@ describe('MultiAssetUpsertService', () => {
     user1 = await usersService.create({
       email: faker.internet.email(),
       graffiti: user1Graffiti,
-      country_code: faker.address.countryCode(),
+      countryCode: faker.address.countryCode(),
     });
 
     user2 = await usersService.create({
       email: faker.internet.email(),
       graffiti: user2Graffiti,
-      country_code: faker.address.countryCode(),
+      countryCode: faker.address.countryCode(),
     });
   });
 
@@ -271,7 +271,7 @@ describe('Weekly transaction limit', () => {
     const greedyUser = await usersService.create({
       email: faker.internet.email(),
       graffiti: uuid(),
-      country_code: faker.address.countryCode(),
+      countryCode: faker.address.countryCode(),
     });
     const head = await multiAssetHeadService.head();
     const initialOperation = {
@@ -336,7 +336,7 @@ describe('Weekly transaction limit', () => {
     const legitUser = await usersService.create({
       email: faker.internet.email(),
       graffiti: uuid(),
-      country_code: faker.address.countryCode(),
+      countryCode: faker.address.countryCode(),
     });
     const head = await multiAssetHeadService.head();
     const initialOperation = {
@@ -426,7 +426,7 @@ describe('Weekly transaction limit', () => {
     const user = await usersService.create({
       email: faker.internet.email(),
       graffiti: uuid(),
-      country_code: faker.address.countryCode(),
+      countryCode: faker.address.countryCode(),
     });
     const head = await multiAssetHeadService.head();
     const invalidDisconnect = {
