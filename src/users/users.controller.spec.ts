@@ -589,7 +589,7 @@ describe('UsersController', () => {
           jest.clearAllMocks();
         });
 
-        it('return 400 on missing recaptcha token', async () => {
+        it('returns 400 on missing recaptcha token', async () => {
           const email = faker.internet.email().toUpperCase();
           const recaptchaVerification = jest.spyOn(
             recaptchaVerificationService,
@@ -612,7 +612,7 @@ describe('UsersController', () => {
           expect(recaptchaVerification).toHaveBeenCalledTimes(1);
         });
 
-        it('return 422 on failed verification', async () => {
+        it('returns 422 on failed verification', async () => {
           const email = faker.internet.email().toUpperCase();
           const recaptchaVerification = jest
             .spyOn(recaptchaVerificationService, 'verify')

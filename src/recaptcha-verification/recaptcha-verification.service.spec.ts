@@ -11,6 +11,7 @@ describe('RecaptchaVerificationService', () => {
   let app: INestApplication;
   let recaptchaVerificationService: RecaptchaVerificationService;
   let configService: ApiConfigService;
+
   beforeAll(async () => {
     app = await bootstrapTestApp();
     recaptchaVerificationService = app.get(RecaptchaVerificationService);

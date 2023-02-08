@@ -18,13 +18,11 @@ export class RecaptchaVerificationService {
     const recaptchaVerificationUrl = `${recaptchaBaseUrl}?secret=${recaptchaSecret}&response=${recaptcha}`;
 
     try {
-      const isVerified = await axios
-        .post<GoogleRecaptchaVerificationJsonResponse>(recaptchaVerificationUrl)
-        .then(({ data }) => {
-          return data.success;
-        });
-
-      return isVerified;
+      const response =
+        await axios.post<GoogleRecaptchaVerificationJsonResponse>(
+          recaptchaVerificationUrl,
+        );
+      return response.data.success;
     } catch (error) {
       if (axios.isAxiosError(error)) {
         throw new HttpException(
