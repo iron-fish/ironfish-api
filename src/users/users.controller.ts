@@ -301,12 +301,6 @@ export class UsersController {
     )
     dto: CreateUserDto,
   ): Promise<User> {
-    if (dto.recaptcha === undefined) {
-      throw new HttpException(
-        "Missing 'recaptcha' field",
-        HttpStatus.BAD_REQUEST,
-      );
-    }
     const isRecaptchaValid = await this.recaptchaVerificationService.verify(
       dto.recaptcha,
     );
@@ -318,7 +312,14 @@ export class UsersController {
       );
     }
 
-    return this.usersService.create(dto);
+    return this.usersService.create({
+      email: dto.email,
+      graffiti: dto.graffiti,
+      country_code: dto.country_code,
+      discord: dto.discord,
+      telegram: dto.telegram,
+      github: dto.github,
+    });
   }
 
   @ApiExcludeEndpoint()

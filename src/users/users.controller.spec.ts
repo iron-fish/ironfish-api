@@ -589,7 +589,7 @@ describe('UsersController', () => {
           jest.clearAllMocks();
         });
 
-        it('returns 400 on missing recaptcha token', async () => {
+        it('returns 422 on missing recaptcha token', async () => {
           const email = faker.internet.email().toUpperCase();
           const recaptchaVerification = jest.spyOn(
             recaptchaVerificationService,
@@ -607,7 +607,7 @@ describe('UsersController', () => {
               discord,
               country_code: faker.address.countryCode('alpha-3'),
             })
-            .expect(HttpStatus.BAD_REQUEST);
+            .expect(HttpStatus.UNPROCESSABLE_ENTITY);
 
           expect(recaptchaVerification).toHaveBeenCalledTimes(1);
         });
