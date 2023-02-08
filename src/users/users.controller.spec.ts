@@ -3,7 +3,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { EventType } from '@prisma/client';
-import assert from 'assert';
 import faker from 'faker';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
@@ -575,7 +574,6 @@ describe('UsersController', () => {
           .expect(HttpStatus.CREATED);
 
         expect(recaptchaVerification).toHaveBeenCalledTimes(1);
-        assert.ok(recaptchaVerification.mock.calls);
         expect(body).toMatchObject({
           id: expect.any(Number),
           email: standardizeEmail(email),

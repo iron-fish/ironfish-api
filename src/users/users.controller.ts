@@ -301,6 +301,12 @@ export class UsersController {
     )
     dto: CreateUserDto,
   ): Promise<User> {
+    if (dto.recaptcha === undefined) {
+      throw new HttpException(
+        "Missing 'recaptcha' field",
+        HttpStatus.BAD_REQUEST,
+      );
+    }
     const isRecaptchaValid = await this.recaptchaVerificationService.verify(
       dto.recaptcha,
     );
@@ -308,7 +314,7 @@ export class UsersController {
     if (!isRecaptchaValid) {
       throw new HttpException(
         'ReCAPTCHA verification failed',
-        HttpStatus.UNAUTHORIZED,
+        HttpStatus.UNPROCESSABLE_ENTITY,
       );
     }
 

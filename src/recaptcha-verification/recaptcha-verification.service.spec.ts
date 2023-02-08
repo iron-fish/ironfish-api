@@ -1,9 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-
 import { INestApplication } from '@nestjs/common';
-import assert from 'assert';
 import { bootstrapTestApp } from '../test/test-app';
 import { RecaptchaVerificationService } from './recaptcha-verification.service';
 
@@ -30,7 +28,6 @@ describe('RecaptchaVerificationService', () => {
       );
       const response = await recaptchaVerificationService.verify('token');
       expect(verifyRecaptcha).toHaveBeenCalled();
-      assert.ok(verifyRecaptcha.mock.calls);
       expect(response).toBe(true);
     });
   });
