@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { INestApplication } from '@nestjs/common';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { RecaptchaVerificationService } from './recaptcha-verification.service';
@@ -25,6 +25,10 @@ describe('RecaptchaVerificationService', () => {
   });
 
   describe('verify', () => {
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
     it('should return true if the recaptcha verification is successful', async () => {
       const mockedPost = jest.spyOn(axios, 'post').mockResolvedValueOnce({
         data: {
@@ -48,6 +52,19 @@ describe('RecaptchaVerificationService', () => {
 
       expect(mockedPost).toHaveBeenCalledWith(expectedUrl);
       expect(response).toBe(true);
+    });
+
+    it('should throw if axios request throws', async () => {
+      jest.spyOn(axios, 'post').mockImplementationOnce(() => {
+        throw new AxiosError('error');
+      });
+
+      const recaptchaToken = 'token';
+      const remoteIp = 'localhost';
+
+      await expect(
+        recaptchaVerificationService.verify(recaptchaToken, remoteIp),
+      ).rejects.toThrow();
     });
   });
 });
