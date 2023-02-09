@@ -293,7 +293,7 @@ model Asset {
   created_at             DateTime           @default(now()) @db.Timestamp(6)
   updated_at             DateTime           @default(now()) @updatedAt @db.Timestamp(6)
   created_transaction_id Int
-  identifier             String
+  identifier             String             @unique(map: "uq_assets_on_identifier")
   metadata               String
   name                   String
   owner                  String
