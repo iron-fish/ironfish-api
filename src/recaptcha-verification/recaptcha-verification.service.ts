@@ -9,7 +9,11 @@ import { ApiConfigService } from '../api-config/api-config.service';
 export class RecaptchaVerificationService {
   constructor(private readonly configService: ApiConfigService) {}
 
-  async verify(recaptcha: string, remoteIp: string): Promise<boolean> {
+  async verify(
+    recaptcha: string,
+    remoteIp: string,
+    action: string,
+  ): Promise<boolean> {
     const recaptchaSecret = this.configService.get<string>(
       'RECAPTCHA_SECRET_KEY',
     );
@@ -22,7 +26,13 @@ export class RecaptchaVerificationService {
         await axios.post<GoogleRecaptchaVerificationJsonResponse>(
           recaptchaVerificationUrl,
         );
-      return response.data.success;
+
+      const verified =
+        response.data.success &&
+        response.data.action === action &&
+        response.data.score >= 0.5;
+
+      return verified;
     } catch (error) {
       if (axios.isAxiosError(error)) {
         throw new HttpException(
@@ -44,6 +54,7 @@ export class RecaptchaVerificationService {
 type GoogleRecaptchaVerificationJsonResponse = {
   success: boolean;
   challenge_ts: string;
+  action: string;
   hostname: string;
   score: number;
   'error-codes': string[];

@@ -35,6 +35,7 @@ describe('RecaptchaVerificationService', () => {
           success: true,
           challenge_ts: '2023-02-08T17:44:20Z',
           score: 0.9,
+          action: 'signup',
           hostname: 'localhost',
         },
       });
@@ -46,6 +47,7 @@ describe('RecaptchaVerificationService', () => {
       const response = await recaptchaVerificationService.verify(
         recaptchaToken,
         remoteIp,
+        'signup',
       );
 
       const expectedUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${recaptchaSecret}&response=${recaptchaToken}&remoteip=${remoteIp}`;
@@ -63,7 +65,7 @@ describe('RecaptchaVerificationService', () => {
       const remoteIp = 'localhost';
 
       await expect(
-        recaptchaVerificationService.verify(recaptchaToken, remoteIp),
+        recaptchaVerificationService.verify(recaptchaToken, remoteIp, 'signup'),
       ).rejects.toThrow();
     });
   });
