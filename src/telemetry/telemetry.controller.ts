@@ -13,6 +13,7 @@ import { ApiExcludeEndpoint } from '@nestjs/swagger';
 import { Request } from 'express';
 import semver from 'semver';
 import { ApiConfigService } from '../api-config/api-config.service';
+import { fetchIpAddressFromRequest } from '../common/utils/request';
 import { InfluxDbService } from '../influxdb/influxdb.service';
 import { CreatePointOptions } from '../influxdb/interfaces/create-point-options';
 import { NodeUptimesService } from '../node-uptimes/node-uptimes.service';
@@ -105,7 +106,7 @@ export class TelemetryController {
     { points, graffiti }: WriteTelemetryPointsDto,
   ): Promise<void> {
     const { options, nodeVersion } = this.processPoints(points);
-    const ipAddress = this.fetchIpAddressFromRequest(request);
+    const ipAddress = fetchIpAddressFromRequest(request);
 
     if (graffiti && nodeVersion) {
       await this.addUptime(graffiti, nodeVersion, ipAddress);
@@ -121,7 +122,7 @@ export class TelemetryController {
   async addUptime(
     graffiti: string,
     nodeVersion: string,
-    ipAddress?: string,
+    ipAddress: string,
   ): Promise<void> {
     const nodeUptimeEnabled = this.config.get<boolean>(
       'ALLOW_NODE_UPTIME_POINTS',
@@ -147,9 +148,8 @@ export class TelemetryController {
     }
 
     await this.nodeUptimes.addUptime(user);
-    if (ipAddress) {
-      await this.usersService.updateHashedIpAddress(user, ipAddress);
-    }
+
+    await this.usersService.updateHashedIpAddress(user, ipAddress);
   }
 
   private processPoints(points: WriteTelemetryPointDto[]): {
@@ -211,21 +211,11 @@ export class TelemetryController {
     return semver.gte(parsed, this.MINIMUM_TELEMETRY_VERSION);
   }
 
-  private fetchIpAddressFromRequest(request: Request): string | undefined {
-    const xForwardedFor = request.header('X-Forwarded-For');
-    if (xForwardedFor) {
-      const addresses = xForwardedFor.split(',');
-      if (addresses.length) {
-        return addresses[0].trim();
-      }
-    }
-  }
-
   private submitIpWithoutNodeFieldsToTelemetry(
     nodeVersion: string | null,
-    ipAddress?: string,
+    ipAddress: string,
   ): void {
-    if (nodeVersion && ipAddress) {
+    if (nodeVersion) {
       this.influxDbService.writePoints([
         {
           measurement: 'node_addresses',

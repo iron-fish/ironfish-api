@@ -13,7 +13,7 @@ import { standardizeEmail } from '../common/utils/email';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { UserPointsService } from '../user-points/user-points.service';
-import { CreateUserDto } from './dto/create-user.dto';
+import { CreateUserOptions } from './interfaces/create-user-options';
 import { ListUsersOptions } from './interfaces/list-users-options';
 import { UpdateUserOptions } from './interfaces/update-user-options';
 import { Prisma, User } from '.prisma/client';
@@ -109,11 +109,11 @@ export class UsersService {
   async create({
     email,
     graffiti,
-    country_code: countryCode,
+    countryCode,
     discord,
     telegram,
     github,
-  }: CreateUserDto): Promise<User> {
+  }: CreateUserOptions): Promise<User> {
     email = standardizeEmail(email);
     const existingRecord = await this.prisma.user.findFirst({
       where: {

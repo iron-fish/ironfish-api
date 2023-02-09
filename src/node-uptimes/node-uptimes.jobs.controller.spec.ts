@@ -31,7 +31,7 @@ describe('NodeUptimesJobsController', () => {
     return usersService.create({
       email: faker.internet.email(),
       graffiti: uuid(),
-      country_code: faker.address.countryCode(),
+      countryCode: faker.address.countryCode(),
     });
   };
 

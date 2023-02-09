@@ -6,11 +6,13 @@ import {
   Controller,
   ForbiddenException,
   Get,
+  HttpException,
   HttpStatus,
   Param,
   Post,
   Put,
   Query,
+  Req,
   UnprocessableEntityException,
   UseGuards,
   ValidationPipe,
@@ -21,6 +23,7 @@ import {
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
+import { Request } from 'express';
 import { MagicLinkGuard } from '../auth/guards/magic-link.guard';
 import { DEFAULT_LIMIT, MAX_LIMIT, MS_PER_DAY } from '../common/constants';
 import { Context } from '../common/decorators/context';
@@ -29,9 +32,11 @@ import { MetricsPool } from '../common/enums/metrics-pool';
 import { MagicLinkContext } from '../common/interfaces/magic-link-context';
 import { PaginatedList } from '../common/interfaces/paginated-list';
 import { IntIsSafeForPrismaPipe } from '../common/pipes/int-is-safe-for-prisma.pipe';
+import { fetchIpAddressFromRequest } from '../common/utils/request';
 import { EventsService } from '../events/events.service';
 import { SerializedEventMetrics } from '../events/interfaces/serialized-event-metrics';
 import { NodeUptimesService } from '../node-uptimes/node-uptimes.service';
+import { RecaptchaVerificationService } from '../recaptcha-verification/recaptcha-verification.service';
 import { UserPointsService } from '../user-points/user-points.service';
 import { UserRanksService } from '../user-rank/user-ranks.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -59,6 +64,7 @@ export class UsersController {
     private readonly userRankService: UserRanksService,
     private readonly usersService: UsersService,
     private readonly usersUpdater: UsersUpdater,
+    private readonly recaptchaVerificationService: RecaptchaVerificationService,
   ) {}
 
   @ApiOperation({ summary: `Gets a specific User by 'graffiti'` })
@@ -297,8 +303,29 @@ export class UsersController {
       }),
     )
     dto: CreateUserDto,
+    @Req() request: Request,
   ): Promise<User> {
-    return this.usersService.create(dto);
+    const remoteIp = fetchIpAddressFromRequest(request);
+    const isRecaptchaValid = await this.recaptchaVerificationService.verify(
+      dto.recaptcha,
+      remoteIp,
+    );
+
+    if (!isRecaptchaValid) {
+      throw new HttpException(
+        'ReCAPTCHA verification failed',
+        HttpStatus.UNPROCESSABLE_ENTITY,
+      );
+    }
+
+    return this.usersService.create({
+      email: dto.email,
+      graffiti: dto.graffiti,
+      countryCode: dto.country_code,
+      discord: dto.discord,
+      telegram: dto.telegram,
+      github: dto.github,
+    });
   }
 
   @ApiExcludeEndpoint()

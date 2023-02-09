@@ -91,7 +91,7 @@ describe('BlocksService', () => {
       const user = await usersService.create({
         email: faker.internet.email(),
         graffiti,
-        country_code: faker.address.countryCode('alpha-3'),
+        countryCode: faker.address.countryCode('alpha-3'),
       });
       const options = {
         hash: uuid(),
@@ -151,7 +151,7 @@ describe('BlocksService', () => {
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti,
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
         const options = {
           hash: uuid(),

@@ -64,7 +64,7 @@ describe('EventsService', () => {
     const user = await usersService.create({
       email: faker.internet.email(),
       graffiti: uuid(),
-      country_code: faker.address.countryCode('alpha-3'),
+      countryCode: faker.address.countryCode('alpha-3'),
     });
     await userPointsService.upsert({
       userId: user.id,
@@ -133,7 +133,7 @@ describe('EventsService', () => {
       const user = await usersService.create({
         email: faker.internet.email(),
         graffiti: uuid(),
-        country_code: faker.address.countryCode('alpha-3'),
+        countryCode: faker.address.countryCode('alpha-3'),
       });
       const firstEvent = await prisma.event.create({
         data: {
@@ -168,7 +168,7 @@ describe('EventsService', () => {
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: uuid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
         const { data: records } = await eventsService.list({ userId: user.id });
         expect(records).toHaveLength(0);
@@ -264,7 +264,7 @@ describe('EventsService', () => {
       const user = await usersService.create({
         email: faker.internet.email(),
         graffiti: uuid(),
-        country_code: faker.address.countryCode('alpha-3'),
+        countryCode: faker.address.countryCode('alpha-3'),
       });
       const eventA = await eventsService.create({
         type: EventType.PULL_REQUEST_MERGED,
@@ -364,7 +364,7 @@ describe('EventsService', () => {
       const user = await usersService.create({
         email: faker.internet.email(),
         graffiti: uuid(),
-        country_code: faker.address.countryCode('alpha-3'),
+        countryCode: faker.address.countryCode('alpha-3'),
       });
 
       for (const [eventType, count] of Object.entries(eventCounts)) {
@@ -419,7 +419,7 @@ describe('EventsService', () => {
       const user = await usersService.create({
         email: faker.internet.email(),
         graffiti: uuid(),
-        country_code: faker.address.countryCode('alpha-3'),
+        countryCode: faker.address.countryCode('alpha-3'),
       });
 
       const eventCountsToReturn: Record<Exclude<EventType, 'POOL4'>, number> = {
@@ -516,7 +516,7 @@ describe('EventsService', () => {
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: uuid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
         const type = EventType.PULL_REQUEST_MERGED;
 
@@ -537,7 +537,7 @@ describe('EventsService', () => {
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: uuid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
         const type = EventType.PULL_REQUEST_MERGED;
 
@@ -556,7 +556,7 @@ describe('EventsService', () => {
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: uuid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
         const type = EventType.PULL_REQUEST_MERGED;
 
@@ -575,7 +575,7 @@ describe('EventsService', () => {
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: uuid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
         const type = EventType.BLOCK_MINED;
 
@@ -596,7 +596,7 @@ describe('EventsService', () => {
       const user = await usersService.create({
         email: faker.internet.email(),
         graffiti: uuid(),
-        country_code: faker.address.countryCode('alpha-3'),
+        countryCode: faker.address.countryCode('alpha-3'),
       });
       const points = 100;
 
@@ -631,7 +631,7 @@ describe('EventsService', () => {
       const user = await usersService.create({
         email: faker.internet.email(),
         graffiti: uuid(),
-        country_code: faker.address.countryCode('alpha-3'),
+        countryCode: faker.address.countryCode('alpha-3'),
       });
       const type = EventType.BLOCK_MINED;
       const points = 100;
