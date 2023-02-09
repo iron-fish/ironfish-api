@@ -309,11 +309,12 @@ export class UsersController {
     const isRecaptchaValid = await this.recaptchaVerificationService.verify(
       dto.recaptcha,
       remoteIp,
+      'signup',
     );
 
     if (!isRecaptchaValid) {
       throw new HttpException(
-        'ReCAPTCHA verification failed',
+        'Failed to sign up',
         HttpStatus.UNPROCESSABLE_ENTITY,
       );
     }
