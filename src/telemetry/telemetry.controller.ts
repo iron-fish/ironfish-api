@@ -215,7 +215,7 @@ export class TelemetryController {
     nodeVersion: string | null,
     ipAddress: string,
   ): void {
-    if (nodeVersion && ipAddress) {
+    if (nodeVersion) {
       this.influxDbService.writePoints([
         {
           measurement: 'node_addresses',
