@@ -57,6 +57,8 @@ describe('BlocksTransactionsLoader', () => {
         size: faker.datatype.number(),
         notes: [{ commitment: uuid() }],
         spends: [{ nullifier: uuid() }],
+        mints: [],
+        burns: [],
       };
       const blocks = await blocksTransactionsLoader.createMany({
         blocks: [
