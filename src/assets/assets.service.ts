@@ -2,15 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { CreateAssetOptions } from './interfaces/create-asset-options';
 import { Asset, Transaction } from '.prisma/client';
 
 @Injectable()
 export class AssetsService {
-  constructor(private readonly prisma: PrismaService) {}
-
   async findByIdentifierOrThrow(
     identifier: string,
     prisma: BasePrismaClient,
