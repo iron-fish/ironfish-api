@@ -13,6 +13,8 @@ export function serializedUserFromRecord(
     id: user.id,
     country_code: user.country_code,
     graffiti: user.graffiti,
+    is_verified: user.last_login_at != null,
+    node_uptime_score: userPoints.node_uptime_count,
     total_points: userPoints.total_points,
     created_at: user.created_at.toISOString(),
   };
@@ -27,6 +29,8 @@ export function serializedUserFromRecordWithRank(
     id: user.id,
     country_code: user.country_code,
     graffiti: user.graffiti,
+    is_verified: user.last_login_at != null,
+    node_uptime_score: userPoints.node_uptime_count,
     total_points: userPoints.total_points,
     created_at: user.created_at.toISOString(),
     rank,

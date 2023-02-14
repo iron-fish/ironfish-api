@@ -5,6 +5,8 @@ export interface SerializedUser {
   id: number;
   graffiti: string;
   total_points: number;
+  is_verified: boolean;
+  node_uptime_score: number;
   country_code: string;
   created_at: string;
 }
