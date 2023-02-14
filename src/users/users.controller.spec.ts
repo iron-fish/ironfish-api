@@ -12,6 +12,8 @@ import { EventsJobsController } from '../events/events.jobs.controller';
 import { EventsService } from '../events/events.service';
 import { MagicLinkService } from '../magic-link/magic-link.service';
 import { bootstrapTestApp } from '../test/test-app';
+import { UpsertUserPointsOptions } from '../user-points/interfaces/upsert-user-points-options';
+import { UserPointsService } from '../user-points/user-points.service';
 import { UsersService } from './users.service';
 
 const API_KEY = 'test';
@@ -81,6 +83,71 @@ describe('UsersController', () => {
       expect(body).toMatchObject({
         id: user.id,
         graffiti: user.graffiti,
+        is_verified: false,
+        node_uptime_score: 0,
+        total_points: expect.any(Number),
+        created_at: user.created_at.toISOString(),
+      });
+    });
+
+    it('gives proper answer for is_verified', async () => {
+      const user = await usersService.create({
+        email: faker.internet.email(),
+        graffiti: uuid(),
+        country_code: faker.address.countryCode(),
+      });
+      await usersService.updateLastLoginAt(user);
+
+      const { body } = await request(app.getHttpServer())
+        .get(`/users/find`)
+        .query({ graffiti: user.graffiti })
+        .expect(HttpStatus.OK);
+
+      expect(body).not.toHaveProperty('rank');
+      expect(body).toMatchObject({
+        id: user.id,
+        graffiti: user.graffiti,
+        is_verified: true,
+        total_points: expect.any(Number),
+        created_at: user.created_at.toISOString(),
+      });
+    });
+
+    it('gives proper answer for node_uptime_score', async () => {
+      const userPointsService = app.get(UserPointsService);
+      const expectedPoints = 5;
+
+      const user = await usersService.create({
+        email: faker.internet.email(),
+        graffiti: uuid(),
+        country_code: faker.address.countryCode(),
+      });
+
+      const points = {
+        [EventType.NODE_UPTIME]: {
+          points: 150,
+          count: expectedPoints,
+          latestOccurredAt: new Date(),
+        },
+      };
+
+      const options: UpsertUserPointsOptions = {
+        userId: user.id,
+        points: points,
+      };
+
+      await userPointsService.upsert(options);
+
+      const { body } = await request(app.getHttpServer())
+        .get(`/users/find`)
+        .query({ graffiti: user.graffiti })
+        .expect(HttpStatus.OK);
+
+      expect(body).not.toHaveProperty('rank');
+      expect(body).toMatchObject({
+        id: user.id,
+        graffiti: user.graffiti,
+        node_uptime_score: expectedPoints,
         total_points: expect.any(Number),
         created_at: user.created_at.toISOString(),
       });
