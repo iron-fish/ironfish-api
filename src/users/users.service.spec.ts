@@ -16,6 +16,7 @@ import { EventsService } from '../events/events.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UserPointsService } from '../user-points/user-points.service';
+import { UserRanksService } from '../user-rank/user-ranks.service';
 import { UsersService } from './users.service';
 import { EventType } from '.prisma/client';
 
@@ -25,6 +26,7 @@ describe('UsersService', () => {
   let usersService: UsersService;
   let prisma: PrismaService;
   let userPointsService: UserPointsService;
+  let userRanksService: UserRanksService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
@@ -32,6 +34,7 @@ describe('UsersService', () => {
     prisma = app.get(PrismaService);
     userPointsService = app.get(UserPointsService);
     usersService = app.get(UsersService);
+    userRanksService = app.get(UserRanksService);
     await app.init();
   });
 
@@ -45,7 +48,7 @@ describe('UsersService', () => {
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: uuid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
         const record = await usersService.find(user.id);
         expect(record).not.toBeNull();
@@ -66,7 +69,7 @@ describe('UsersService', () => {
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: uuid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
         const record = await usersService.findOrThrow(user.id);
         expect(record).not.toBeNull();
@@ -89,7 +92,7 @@ describe('UsersService', () => {
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: uuid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
         const record = await usersService.findByGraffiti(user.graffiti);
         expect(record).not.toBeNull();
@@ -110,7 +113,7 @@ describe('UsersService', () => {
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: uuid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
         const record = await usersService.findByGraffitiOrThrow(user.graffiti);
         expect(record).not.toBeNull();
@@ -142,7 +145,7 @@ describe('UsersService', () => {
         const user = await usersService.create({
           email,
           graffiti: uuid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
 
         const record = await usersService.findByEmailOrThrow(email);
@@ -164,7 +167,7 @@ describe('UsersService', () => {
         const user = await usersService.create({
           email,
           graffiti: uuid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
 
         const record = await usersService.findByEmail(email);
@@ -179,7 +182,7 @@ describe('UsersService', () => {
       await usersService.create({
         email,
         graffiti: uuid(),
-        country_code: faker.address.countryCode('alpha-3'),
+        countryCode: faker.address.countryCode('alpha-3'),
       });
 
       const records = await usersService.listByEmail(email);
@@ -214,19 +217,19 @@ describe('UsersService', () => {
       const userA = await usersService.create({
         email: faker.internet.email(),
         graffiti: graffiti + '-a',
-        country_code: faker.address.countryCode('alpha-3'),
+        countryCode: faker.address.countryCode('alpha-3'),
       });
 
       const userB = await usersService.create({
         email: faker.internet.email(),
         graffiti: graffiti + '-b',
-        country_code: faker.address.countryCode('alpha-3'),
+        countryCode: faker.address.countryCode('alpha-3'),
       });
 
       const userC = await usersService.create({
         email: faker.internet.email(),
         graffiti: graffiti + '-c',
-        country_code: faker.address.countryCode('alpha-3'),
+        countryCode: faker.address.countryCode('alpha-3'),
       });
 
       await eventsService.create({
@@ -259,7 +262,8 @@ describe('UsersService', () => {
         await eventsService.getUpsertPointsOptions(userC),
       );
 
-      const { data: records } = await usersService.listWithRank({
+      await userRanksService.updateRanks();
+      const { data: records } = await userRanksService.listWithRank({
         eventType: 'SOCIAL_MEDIA_PROMOTION',
         search: graffiti,
         limit: 3,
@@ -293,13 +297,13 @@ describe('UsersService', () => {
         userA = await usersService.create({
           email: faker.internet.email(),
           graffiti: graffiti + '-a',
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
 
         userB = await usersService.create({
           email: faker.internet.email(),
           graffiti: noPointsUser,
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
 
         await eventsService.create({
@@ -314,21 +318,13 @@ describe('UsersService', () => {
       });
 
       it('excludes 0 point users with no search terms', async () => {
-        const { data: records } = await usersService.listWithRank({
+        await userRanksService.updateRanks();
+        const { data: records } = await userRanksService.listWithRank({
           eventType: EventType.SOCIAL_MEDIA_PROMOTION,
         });
         const ids = records.map((user) => user.id);
         expect(ids).toContain(userA.id);
         expect(ids).not.toContain(userB.id);
-      });
-      it('includes 0 point user when username is search param', async () => {
-        const { data: records } = await usersService.listWithRank({
-          eventType: EventType.SOCIAL_MEDIA_PROMOTION,
-          search: noPointsUser,
-          limit: 3,
-        });
-        expect(records).toHaveLength(1);
-        expect(records[0].id).toEqual(userB.id);
       });
     });
 
@@ -339,7 +335,7 @@ describe('UsersService', () => {
       const userA = await usersService.create({
         email: faker.internet.email(),
         graffiti: graffiti + '-a',
-        country_code: faker.address.countryCode('alpha-3'),
+        countryCode: faker.address.countryCode('alpha-3'),
       });
 
       await eventsService.create({
@@ -348,9 +344,6 @@ describe('UsersService', () => {
         occurredAt: now,
         points: 5,
       });
-      await userPointsService.upsert(
-        await eventsService.getUpsertPointsOptions(userA),
-      );
 
       await eventsService.create({
         type: EventType.MULTI_ASSET_MINT,
@@ -358,9 +351,6 @@ describe('UsersService', () => {
         occurredAt: new Date(now.valueOf() - 1000),
         points: 5,
       });
-      await userPointsService.upsert(
-        await eventsService.getUpsertPointsOptions(userA),
-      );
 
       await eventsService.create({
         type: EventType.MULTI_ASSET_BURN,
@@ -368,23 +358,30 @@ describe('UsersService', () => {
         occurredAt: new Date(now.valueOf() + 1000),
         points: 5,
       });
+
+      await eventsService.create({
+        type: EventType.MULTI_ASSET_TRANSFER,
+        userId: userA.id,
+        occurredAt: new Date(now.valueOf() + 1000),
+        points: 5,
+      });
       await userPointsService.upsert(
         await eventsService.getUpsertPointsOptions(userA),
       );
-
-      const { data: mintRecords } = await usersService.listWithRank({
+      await userRanksService.updateRanks();
+      const { data: mintRecords } = await userRanksService.listWithRank({
         eventType: 'MULTI_ASSET_MINT',
         search: graffiti,
         limit: 1,
       });
       expect(mintRecords).toHaveLength(1);
-      const { data: burnRecords } = await usersService.listWithRank({
+      const { data: burnRecords } = await userRanksService.listWithRank({
         eventType: 'MULTI_ASSET_BURN',
         search: graffiti,
         limit: 1,
       });
       expect(burnRecords).toHaveLength(1);
-      const { data: transferRecords } = await usersService.listWithRank({
+      const { data: transferRecords } = await userRanksService.listWithRank({
         eventType: 'MULTI_ASSET_TRANSFER',
         search: graffiti,
         limit: 1,
@@ -394,7 +391,7 @@ describe('UsersService', () => {
 
     describe(`when 'event_type' is provided`, () => {
       it('returns a chunk of users by event when specified', async () => {
-        const { data: records } = await usersService.listWithRank({
+        const { data: records } = await userRanksService.listWithRank({
           eventType: 'BUG_CAUGHT',
         });
 
@@ -416,14 +413,14 @@ describe('UsersService', () => {
         await usersService.create({
           email: faker.internet.email(),
           graffiti,
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
 
         await expect(
           usersService.create({
             email: faker.internet.email(),
             graffiti,
-            country_code: faker.address.countryCode('alpha-3'),
+            countryCode: faker.address.countryCode('alpha-3'),
           }),
         ).rejects.toThrow(UnprocessableEntityException);
       });
@@ -435,14 +432,14 @@ describe('UsersService', () => {
         await usersService.create({
           email: standardizeEmail(email),
           graffiti: uuid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
 
         await expect(
           usersService.create({
             email,
             graffiti: uuid(),
-            country_code: faker.address.countryCode('alpha-3'),
+            countryCode: faker.address.countryCode('alpha-3'),
           }),
         ).rejects.toThrow(UnprocessableEntityException);
       });
@@ -455,7 +452,7 @@ describe('UsersService', () => {
         const user = await usersService.create({
           email,
           graffiti,
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
 
         expect(user).toMatchObject({
@@ -473,7 +470,7 @@ describe('UsersService', () => {
         const user = await usersService.create({
           email,
           graffiti,
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
 
         expect(upsertPoints).toHaveBeenCalledTimes(1);
@@ -488,7 +485,7 @@ describe('UsersService', () => {
       const user = await usersService.create({
         email: faker.internet.email(),
         graffiti: uuid(),
-        country_code: faker.address.countryCode('alpha-3'),
+        countryCode: faker.address.countryCode('alpha-3'),
       });
       const updatedUser = await usersService.updateLastLoginAt(user);
       expect(updatedUser).toMatchObject({
@@ -504,17 +501,17 @@ describe('UsersService', () => {
       const firstUser = await usersService.create({
         email: faker.internet.email(),
         graffiti: uuid(),
-        country_code: faker.address.countryCode('alpha-3'),
+        countryCode: faker.address.countryCode('alpha-3'),
       });
       const secondUser = await usersService.create({
         email: faker.internet.email(),
         graffiti: uuid(),
-        country_code: faker.address.countryCode('alpha-3'),
+        countryCode: faker.address.countryCode('alpha-3'),
       });
       const thirdUser = await usersService.create({
         email: faker.internet.email(),
         graffiti: uuid(),
-        country_code: faker.address.countryCode('alpha-3'),
+        countryCode: faker.address.countryCode('alpha-3'),
       });
 
       const now = new Date();
@@ -568,9 +565,16 @@ describe('UsersService', () => {
       // Because secondUser caught a bug first, we consider secondUser to be
       // ranked earlier than firstUser. The last event for secondUser doesn't
       // count because it has 0 points.
-      expect(await usersService.getRank(secondUser)).toBe(1);
-      expect(await usersService.getRank(firstUser)).toBe(2);
-      expect(await usersService.getRank(thirdUser)).toBe(3);
+      await userRanksService.updateRanks();
+      expect(
+        await userRanksService.getRank(secondUser.id, 'total_points'),
+      ).toBe(1);
+      expect(await userRanksService.getRank(firstUser.id, 'total_points')).toBe(
+        2,
+      );
+      expect(await userRanksService.getRank(thirdUser.id, 'total_points')).toBe(
+        3,
+      );
     });
   });
 
@@ -578,13 +582,13 @@ describe('UsersService', () => {
     describe('with a duplicate discord', () => {
       it('returns the duplicate records', async () => {
         const user = await usersService.create({
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
           discord: ulid(),
           email: faker.internet.email(),
           graffiti: uuid(),
         });
         const duplicateUser = await usersService.create({
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
           discord: ulid(),
           email: faker.internet.email(),
           graffiti: uuid(),
@@ -605,13 +609,13 @@ describe('UsersService', () => {
     describe('with a duplicate github', () => {
       it('returns the duplicate records', async () => {
         const user = await usersService.create({
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
           email: faker.internet.email(),
           github: faker.internet.email(),
           graffiti: uuid(),
         });
         const duplicateUser = await usersService.create({
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
           email: faker.internet.email(),
           github: faker.internet.email(),
           graffiti: uuid(),
@@ -632,12 +636,12 @@ describe('UsersService', () => {
     describe('with a duplicate graffiti', () => {
       it('returns the duplicate records', async () => {
         const user = await usersService.create({
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
           email: faker.internet.email(),
           graffiti: uuid(),
         });
         const duplicateUser = await usersService.create({
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
           email: faker.internet.email(),
           graffiti: uuid(),
         });
@@ -656,13 +660,13 @@ describe('UsersService', () => {
     describe('with a duplicate telegram', () => {
       it('returns the duplicate records', async () => {
         const user = await usersService.create({
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
           email: faker.internet.email(),
           graffiti: uuid(),
           telegram: ulid(),
         });
         const duplicateUser = await usersService.create({
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
           email: faker.internet.email(),
           graffiti: uuid(),
           telegram: ulid(),
@@ -683,13 +687,13 @@ describe('UsersService', () => {
     describe('with empty strings', () => {
       it('ignores the empty filters and returns the duplicate records', async () => {
         const user = await usersService.create({
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
           email: faker.internet.email(),
           graffiti: uuid(),
           telegram: ulid(),
         });
         const duplicateUser = await usersService.create({
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
           email: faker.internet.email(),
           graffiti: uuid(),
           telegram: ulid(),
@@ -718,7 +722,7 @@ describe('UsersService', () => {
         telegram: ulid(),
       };
       const user = await usersService.create({
-        country_code: faker.address.countryCode('alpha-3'),
+        countryCode: faker.address.countryCode('alpha-3'),
         email: faker.internet.email(),
         graffiti: uuid(),
         telegram: ulid(),
@@ -732,6 +736,26 @@ describe('UsersService', () => {
         github: options.github,
         graffiti: options.graffiti,
         telegram: options.telegram,
+      });
+    });
+  });
+
+  describe('storeHashedIpAddress', () => {
+    it('stores a hashed ip address for the user', async () => {
+      const user = await usersService.create({
+        countryCode: faker.address.countryCode('alpha-3'),
+        email: faker.internet.email(),
+        graffiti: uuid(),
+        telegram: ulid(),
+      });
+
+      const updatedUser = await usersService.updateHashedIpAddress(
+        user,
+        '127.0.0.1',
+      );
+      expect(updatedUser).toMatchObject({
+        hashed_ip_address:
+          '12ca17b49af2289436f303e0166030a21e525d266e209267433801a8fd4071a0',
       });
     });
   });

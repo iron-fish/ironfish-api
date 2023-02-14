@@ -89,6 +89,8 @@ Object {
     "graffiti should not be empty",
     "\\"discord\\" or \\"telegram\\" required when registering",
     "\\"discord\\" or \\"telegram\\" required when registering",
+    "recaptcha must be a string",
+    "recaptcha should not be empty",
   ],
   "statusCode": 422,
 }
@@ -104,6 +106,8 @@ Object {
     "graffiti should not be empty",
     "\\"discord\\" or \\"telegram\\" required when registering",
     "\\"discord\\" or \\"telegram\\" required when registering",
+    "recaptcha must be a string",
+    "recaptcha should not be empty",
   ],
   "statusCode": 422,
 }

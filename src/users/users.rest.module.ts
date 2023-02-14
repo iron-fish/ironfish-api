@@ -5,7 +5,9 @@ import { Module } from '@nestjs/common';
 import { ApiConfigModule } from '../api-config/api-config.module';
 import { EventsModule } from '../events/events.module';
 import { NodeUptimesModule } from '../node-uptimes/node-uptimes.module';
+import { RecaptchaVerificationModule } from '../recaptcha-verification/recaptcha-verification.module';
 import { UserPointsModule } from '../user-points/user-points.module';
+import { UserRanksModule } from '../user-rank/user-ranks.module';
 import { MeController } from './me.controller';
 import { UsersController } from './users.controller';
 import { UsersModule } from './users.module';
@@ -16,10 +18,12 @@ import { UsersUpdaterModule } from './users-updater.module';
   imports: [
     ApiConfigModule,
     EventsModule,
+    NodeUptimesModule,
     UserPointsModule,
+    UserRanksModule,
     UsersModule,
     UsersUpdaterModule,
-    NodeUptimesModule,
+    RecaptchaVerificationModule,
   ],
 })
 export class UsersRestModule {}

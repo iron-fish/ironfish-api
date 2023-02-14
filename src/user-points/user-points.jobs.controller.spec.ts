@@ -54,12 +54,12 @@ describe('UserPointsJobsController', () => {
       const userA = await usersService.create({
         email: faker.internet.email(),
         graffiti: uuid(),
-        country_code: faker.address.countryCode('alpha-3'),
+        countryCode: faker.address.countryCode('alpha-3'),
       });
       const userB = await usersService.create({
         email: faker.internet.email(),
         graffiti: uuid(),
-        country_code: faker.address.countryCode('alpha-3'),
+        countryCode: faker.address.countryCode('alpha-3'),
       });
       jest
         .spyOn(usersService, 'list')
@@ -87,7 +87,7 @@ describe('UserPointsJobsController', () => {
       const user = await usersService.create({
         email: faker.internet.email(),
         graffiti: uuid(),
-        country_code: faker.address.countryCode('alpha-3'),
+        countryCode: faker.address.countryCode('alpha-3'),
       });
       jest
         .spyOn(usersService, 'list')
@@ -114,7 +114,7 @@ describe('UserPointsJobsController', () => {
       const user = await usersService.create({
         email: faker.internet.email(),
         graffiti: uuid(),
-        country_code: faker.address.countryCode('alpha-3'),
+        countryCode: faker.address.countryCode('alpha-3'),
       });
       const options = {
         userId: user.id,
@@ -192,7 +192,7 @@ describe('UserPointsJobsController', () => {
       const user = await usersService.create({
         email: faker.internet.email(),
         graffiti: uuid(),
-        country_code: faker.address.countryCode('alpha-3'),
+        countryCode: faker.address.countryCode('alpha-3'),
       });
       const options = {
         userId: user.id,
@@ -272,7 +272,7 @@ describe('UserPointsJobsController', () => {
       const userA = await usersService.create({
         email: faker.internet.email(),
         graffiti: uuid(),
-        country_code: faker.address.countryCode('alpha-3'),
+        countryCode: faker.address.countryCode('alpha-3'),
       });
       const startingPoints = await userPointsService.findOrThrow(userA.id);
       expect(startingPoints.pool4_count).toBe(0);
@@ -312,7 +312,7 @@ describe('UserPointsJobsController', () => {
       const user = await usersService.create({
         email: faker.internet.email(),
         graffiti: uuid(),
-        country_code: faker.address.countryCode('alpha-3'),
+        countryCode: faker.address.countryCode('alpha-3'),
       });
       jest
         .spyOn(usersService, 'list')

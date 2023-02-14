@@ -41,7 +41,7 @@ describe('MeController', () => {
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: uuid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
 
         jest

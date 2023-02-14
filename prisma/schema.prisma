@@ -1,6 +1,6 @@
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["interactiveTransactions"]
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -50,9 +50,10 @@ model User {
   discord             String?     @db.VarChar
   telegram            String?     @db.VarChar
   github              String?     @db.VarChar
+  hashed_ip_address   String?     @db.VarChar
   events              Event[]
-  points              UserPoints?
   node_uptime         NodeUptime?
+  points              UserPoints?
 
   @@index([email], name: "index_users_on_email")
   @@index([graffiti], name: "index_users_on_graffiti")
@@ -87,7 +88,6 @@ model Block {
   difficulty               BigInt
   blocks_transactions      BlockTransaction[]
   event                    Event?
-
   @@unique([hash, network_version], name: "uq_blocks_on_hash_and_network_version", map: "uq_blocks_on_hash_and_network_version")
   @@index([hash], name: "index_blocks_on_hash")
   @@index([hash, network_version], name: "index_blocks_on_hash_and_network_version")
@@ -100,11 +100,13 @@ model Transaction {
   created_at          DateTime           @default(now()) @db.Timestamp(6)
   updated_at          DateTime           @default(now()) @updatedAt @db.Timestamp(6)
   hash                String             @db.VarChar
-  network_version     Int
   fee                 Float
   size                Int
   notes               Json
   spends              Json
+  network_version     Int
+  asset_descriptions  AssetDescription[]
+  created_assets      Asset[]
   blocks_transactions BlockTransaction[]
 
   @@unique([hash, network_version], name: "uq_transactions_on_hash_and_network_version", map: "uq_transactions_on_hash_and_network_version")
@@ -284,4 +286,44 @@ model MultiAssetHead {
   block_hash String @db.VarChar
 
   @@map("multi_asset_head")
+}
+
+model Asset {
+  id                     Int                @id @default(autoincrement())
+  created_at             DateTime           @default(now()) @db.Timestamp(6)
+  updated_at             DateTime           @default(now()) @updatedAt @db.Timestamp(6)
+  created_transaction_id Int
+  identifier             String             @unique(map: "uq_assets_on_identifier")
+  metadata               String
+  name                   String
+  owner                  String
+  supply                 BigInt
+  descriptions           AssetDescription[]
+  created_transaction    Transaction        @relation(fields: [created_transaction_id], references: [id])
+
+  @@index([created_transaction_id], map: "index_assets_on_created_transaction_id")
+  @@map("assets")
+}
+
+model AssetDescription {
+  id             Int                  @id @default(autoincrement())
+  created_at     DateTime             @default(now()) @db.Timestamp(6)
+  updated_at     DateTime             @default(now()) @updatedAt @db.Timestamp(6)
+  type           AssetDescriptionType
+  value          BigInt
+  asset_id       Int
+  transaction_id Int
+  asset          Asset                @relation(fields: [asset_id], references: [id])
+  transaction    Transaction          @relation(fields: [transaction_id], references: [id])
+
+  @@index([asset_id], map: "index_asset_descriptions_on_asset_id")
+  @@index([transaction_id], map: "index_asset_descriptions_on_transaction_id")
+  @@map("asset_descriptions")
+}
+
+enum AssetDescriptionType {
+  BURN
+  MINT
+
+  @@map("asset_description_type")
 }

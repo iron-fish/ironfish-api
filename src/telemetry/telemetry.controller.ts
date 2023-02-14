@@ -13,6 +13,7 @@ import { ApiExcludeEndpoint } from '@nestjs/swagger';
 import { Request } from 'express';
 import semver from 'semver';
 import { ApiConfigService } from '../api-config/api-config.service';
+import { fetchIpAddressFromRequest } from '../common/utils/request';
 import { InfluxDbService } from '../influxdb/influxdb.service';
 import { CreatePointOptions } from '../influxdb/interfaces/create-point-options';
 import { NodeUptimesService } from '../node-uptimes/node-uptimes.service';
@@ -33,6 +34,7 @@ const TELEMETRY_WHITELIST = new Map<string, true | Array<string>>([
   [
     'node_stats',
     [
+      'create_new_block_template_duration',
       'heap_total',
       'heap_used',
       'peers_count',
@@ -104,19 +106,24 @@ export class TelemetryController {
     { points, graffiti }: WriteTelemetryPointsDto,
   ): Promise<void> {
     const { options, nodeVersion } = this.processPoints(points);
+    const ipAddress = fetchIpAddressFromRequest(request);
 
     if (graffiti && nodeVersion) {
-      await this.addUptime(graffiti, nodeVersion);
+      await this.addUptime(graffiti, nodeVersion, ipAddress);
     }
 
     if (options.length) {
       this.influxDbService.writePoints(options);
     }
 
-    this.submitIpWithoutNodeFieldsToTelemetry(request);
+    this.submitIpWithoutNodeFieldsToTelemetry(nodeVersion, ipAddress);
   }
 
-  async addUptime(graffiti: string, nodeVersion: string): Promise<void> {
+  async addUptime(
+    graffiti: string,
+    nodeVersion: string,
+    ipAddress: string,
+  ): Promise<void> {
     const nodeUptimeEnabled = this.config.get<boolean>(
       'ALLOW_NODE_UPTIME_POINTS',
     );
@@ -141,6 +148,8 @@ export class TelemetryController {
     }
 
     await this.nodeUptimes.addUptime(user);
+
+    await this.usersService.updateHashedIpAddress(user, ipAddress);
   }
 
   private processPoints(points: WriteTelemetryPointDto[]): {
@@ -202,27 +211,30 @@ export class TelemetryController {
     return semver.gte(parsed, this.MINIMUM_TELEMETRY_VERSION);
   }
 
-  private submitIpWithoutNodeFieldsToTelemetry(request: Request): void {
-    const xForwardedFor = request.header('X-Forwarded-For');
-    if (xForwardedFor) {
-      const addresses = xForwardedFor.split(',');
-      if (addresses.length) {
-        const ip = addresses[0].trim();
-        this.influxDbService.writePoints([
-          {
-            measurement: 'node_addresses',
-            fields: [
-              {
-                name: 'ip',
-                type: 'string',
-                value: ip,
-              },
-            ],
-            tags: [],
-            timestamp: new Date(),
-          },
-        ]);
-      }
+  private submitIpWithoutNodeFieldsToTelemetry(
+    nodeVersion: string | null,
+    ipAddress: string,
+  ): void {
+    if (nodeVersion) {
+      this.influxDbService.writePoints([
+        {
+          measurement: 'node_addresses',
+          fields: [
+            {
+              name: 'ip',
+              type: 'string',
+              value: ipAddress,
+            },
+          ],
+          tags: [
+            {
+              name: 'version',
+              value: nodeVersion,
+            },
+          ],
+          timestamp: new Date(),
+        },
+      ]);
     }
   }
 }
