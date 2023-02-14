@@ -61,6 +61,17 @@ export class TransactionsService {
     });
   }
 
+  async findByHashOrThrow(
+    hash: string,
+    prisma: BasePrismaClient,
+  ): Promise<Transaction> {
+    return prisma.transaction.findFirstOrThrow({
+      where: {
+        hash,
+      },
+    });
+  }
+
   async createMany(
     transactions: UpsertTransactionOptions[],
   ): Promise<Transaction[]> {

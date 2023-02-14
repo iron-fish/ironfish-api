@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable } from '@nestjs/common';
 import { Block, Transaction } from '@prisma/client';
+import { AssetsLoader } from '../assets-loader/assets-loader';
 import { BlocksService } from '../blocks/blocks.service';
 import { BlockDto, UpsertBlocksDto } from '../blocks/dto/upsert-blocks.dto';
 import { BlocksDailyService } from '../blocks-daily/blocks-daily.service';
@@ -19,6 +20,7 @@ import { TransactionsService } from '../transactions/transactions.service';
 @Injectable()
 export class BlocksTransactionsLoader {
   constructor(
+    private readonly assetsLoader: AssetsLoader,
     private readonly blocksDailyService: BlocksDailyService,
     private readonly blocksService: BlocksService,
     private readonly blocksTransactionsService: BlocksTransactionsService,
@@ -117,6 +119,8 @@ export class BlocksTransactionsLoader {
             createdBlock,
             indexedTransactions,
           );
+
+          await this.assetsLoader.loadDescriptions(block, prisma);
 
           records.push({ ...createdBlock, transactions });
         },

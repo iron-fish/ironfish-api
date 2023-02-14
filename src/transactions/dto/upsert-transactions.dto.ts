@@ -8,7 +8,6 @@ import {
   ArrayMinSize,
   IsArray,
   IsInt,
-  IsOptional,
   IsString,
   Max,
   ValidateNested,
@@ -40,15 +39,13 @@ export class TransactionDto {
   @ValidateNested({ each: true })
   readonly spends!: SpendDto[];
 
-  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
-  readonly mints?: MintDto[];
+  readonly mints!: MintDto[];
 
-  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
-  readonly burns?: BurnDto[];
+  readonly burns!: BurnDto[];
 }
 
 export class UpsertTransactionsDto {
