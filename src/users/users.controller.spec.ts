@@ -100,7 +100,7 @@ describe('UsersController', () => {
       });
     });
 
-    it('gives proper answer for is_verified', async () => {
+    it('gives proper answer for verified', async () => {
       const user = await usersService.create({
         email: faker.internet.email(),
         graffiti: uuid(),
@@ -123,7 +123,7 @@ describe('UsersController', () => {
       });
     });
 
-    it('gives proper answer for node_uptime_score', async () => {
+    it('gives proper answer for node_uptime_count', async () => {
       const userPointsService = app.get(UserPointsService);
       const expectedPoints = 5;
 
