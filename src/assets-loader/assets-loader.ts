@@ -7,6 +7,7 @@ import { AssetDescriptionsService } from '../asset-descriptions/asset-descriptio
 import { AssetsService } from '../assets/assets.service';
 import { BlockDto } from '../blocks/dto/upsert-blocks.dto';
 import { BlockOperation } from '../blocks/enums/block-operation';
+import { standardizeHash } from '../common/utils/hash';
 import { LoggerService } from '../logger/logger.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { TransactionDto } from '../transactions/dto/upsert-transactions.dto';
@@ -29,7 +30,7 @@ export class AssetsLoader {
 
     for (const dto of block.transactions) {
       const transaction = await this.transactionsService.findByHashOrThrow(
-        dto.hash,
+        standardizeHash(dto.hash),
         prisma,
       );
 
