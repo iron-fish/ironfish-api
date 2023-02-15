@@ -46,17 +46,7 @@ export class AssetsLoader {
     transaction: Transaction,
     prisma: BasePrismaClient,
   ): Promise<void> {
-    const existingDescriptions =
-      await this.assetDescriptionsService.findByTransaction(
-        transaction,
-        prisma,
-      );
-    if (existingDescriptions.length > 0) {
-      this.logger.debug(
-        `Skipping description loading for transaction '${transaction.hash}'`,
-      );
-      return;
-    }
+    await this.deleteAssetDescriptions(transaction, prisma);
 
     for (const mint of dto.mints) {
       const asset = await this.assetsService.upsert(
@@ -105,6 +95,14 @@ export class AssetsLoader {
         transaction,
         prisma,
       );
+
+    if (assetDescriptions.length === 0) {
+      return;
+    }
+
+    this.logger.debug(
+      `Deleting and re-processing descriptions for '${transaction.hash}'`,
+    );
 
     for (const assetDescription of assetDescriptions) {
       const asset = await this.assetsService.findOrThrow(

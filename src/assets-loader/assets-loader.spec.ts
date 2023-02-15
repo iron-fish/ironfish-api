@@ -42,7 +42,7 @@ describe('AssetsLoader', () => {
   describe('loadDescriptions', () => {
     describe('for a main block', () => {
       describe('when the transaction has already been loaded', () => {
-        it('does nothing', async () => {
+        it('deletes and reprocesses descriptions', async () => {
           const identifier = 'asdflkjasdf';
           const mint = {
             id: identifier,
@@ -78,7 +78,9 @@ describe('AssetsLoader', () => {
             transactions: [transactionDto],
           };
 
-          await transactionsService.createMany([transactionDto]);
+          const transaction = (
+            await transactionsService.createMany([transactionDto])
+          )[0];
           await assetsLoader.loadDescriptions(blockDto, prisma);
 
           const assetsUpsert = jest.spyOn(assetsService, 'upsert');
@@ -89,9 +91,55 @@ describe('AssetsLoader', () => {
           const assetsUpdateSupply = jest.spyOn(assetsService, 'updateSupply');
 
           await assetsLoader.loadDescriptions(blockDto, prisma);
-          expect(assetsUpsert).not.toHaveBeenCalled();
-          expect(assetDescriptionsCreate).not.toHaveBeenCalled();
-          expect(assetsUpdateSupply).not.toHaveBeenCalled();
+          expect(assetsUpsert).toHaveBeenCalledTimes(1);
+          expect(assetsUpsert).toHaveBeenCalledWith(
+            {
+              identifier: mint.id,
+              metadata: mint.metadata,
+              name: mint.name,
+              owner: mint.owner,
+            },
+            transaction,
+            prisma,
+          );
+
+          expect(assetDescriptionsCreate).toHaveBeenCalledTimes(2);
+          expect(assetDescriptionsCreate).toHaveBeenCalledWith(
+            AssetDescriptionType.MINT,
+            BigInt(mint.value),
+            expect.objectContaining({ identifier }),
+            transaction,
+            prisma,
+          );
+          expect(assetDescriptionsCreate).toHaveBeenCalledWith(
+            AssetDescriptionType.BURN,
+            BigInt(burn.value),
+            expect.objectContaining({ identifier }),
+            transaction,
+            prisma,
+          );
+
+          expect(assetsUpdateSupply).toHaveBeenCalledTimes(4);
+          expect(assetsUpdateSupply).toHaveBeenCalledWith(
+            expect.objectContaining({ identifier }),
+            -BigInt(mint.value),
+            prisma,
+          );
+          expect(assetsUpdateSupply).toHaveBeenCalledWith(
+            expect.objectContaining({ identifier }),
+            BigInt(burn.value),
+            prisma,
+          );
+          expect(assetsUpdateSupply).toHaveBeenCalledWith(
+            expect.objectContaining({ identifier }),
+            BigInt(mint.value),
+            prisma,
+          );
+          expect(assetsUpdateSupply).toHaveBeenCalledWith(
+            expect.objectContaining({ identifier }),
+            -BigInt(burn.value),
+            prisma,
+          );
         });
       });
 
