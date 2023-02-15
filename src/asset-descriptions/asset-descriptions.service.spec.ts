@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { INestApplication } from '@nestjs/common';
 import { AssetDescriptionType } from '@prisma/client';
+import { v4 as uuid } from 'uuid';
 import { AssetsService } from '../assets/assets.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
@@ -161,6 +162,68 @@ describe('AssetDescriptionsService', () => {
       expect(
         await assetDescriptionsService.findByTransaction(transaction, prisma),
       ).toEqual([]);
+    });
+  });
+
+  describe('list', () => {
+    it('returns the associated records for an asset', async () => {
+      const transaction = (
+        await transactionsService.createMany([
+          {
+            fee: 0,
+            hash: uuid(),
+            notes: [],
+            size: 0,
+            spends: [],
+          },
+        ])
+      )[0];
+
+      const asset = await assetsService.upsert(
+        {
+          identifier: uuid(),
+          metadata: uuid(),
+          name: uuid(),
+          owner: uuid(),
+        },
+        transaction,
+        prisma,
+      );
+
+      const assetDescription = await assetDescriptionsService.create(
+        AssetDescriptionType.MINT,
+        BigInt(1),
+        asset,
+        transaction,
+        prisma,
+      );
+
+      const secondTransaction = (
+        await transactionsService.createMany([
+          {
+            fee: 0,
+            hash: 'foo',
+            notes: [],
+            size: 0,
+            spends: [],
+          },
+        ])
+      )[0];
+      const secondAssetDescription = await assetDescriptionsService.create(
+        AssetDescriptionType.BURN,
+        BigInt(1),
+        asset,
+        secondTransaction,
+        prisma,
+      );
+
+      expect(
+        await assetDescriptionsService.list({ assetId: asset.id }),
+      ).toEqual({
+        data: [secondAssetDescription, assetDescription],
+        hasNext: false,
+        hasPrevious: false,
+      });
     });
   });
 });
