@@ -5,6 +5,7 @@ import { Module } from '@nestjs/common';
 import { AssetDescriptionsModule } from '../asset-descriptions/asset-descriptions.module';
 import { AssetsModule } from '../assets/assets.module';
 import { LoggerModule } from '../logger/logger.module';
+import { PrismaModule } from '../prisma/prisma.module';
 import { TransactionsModule } from '../transactions/transactions.module';
 import { AssetsLoader } from './assets-loader';
 
@@ -14,6 +15,7 @@ import { AssetsLoader } from './assets-loader';
     AssetsModule,
     AssetDescriptionsModule,
     LoggerModule,
+    PrismaModule,
     TransactionsModule,
   ],
   providers: [AssetsLoader],

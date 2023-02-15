@@ -5,8 +5,10 @@ import { Injectable } from '@nestjs/common';
 import { Block, Transaction } from '@prisma/client';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { AssetsLoader } from '../assets-loader/assets-loader';
+import { LoadDescriptionsOptions } from '../assets-loader/interfaces/load-descriptions-options';
 import { BlocksService } from '../blocks/blocks.service';
 import { BlockDto, UpsertBlocksDto } from '../blocks/dto/upsert-blocks.dto';
+import { BlockOperation } from '../blocks/enums/block-operation';
 import { BlocksDailyService } from '../blocks-daily/blocks-daily.service';
 import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
 import { standardizeHash } from '../common/utils/hash';
@@ -122,8 +124,6 @@ export class BlocksTransactionsLoader {
             indexedTransactions,
           );
 
-          await this.assetsLoader.loadDescriptions(block, prisma);
-
           records.push({ ...createdBlock, transactions });
         },
         {
@@ -132,6 +132,16 @@ export class BlocksTransactionsLoader {
           timeout: this.config.get<number>('BLOCK_LOADER_TRANSACTION_TIMEOUT'),
         },
       );
+
+      for (const transaction of block.transactions) {
+        await this.graphileWorkerService.addJob<LoadDescriptionsOptions>(
+          GraphileWorkerPattern.LOAD_ASSET_DESCRIPTIONS,
+          { main: block.type === BlockOperation.CONNECTED, transaction },
+          {
+            queueName: 'load_asset_descriptions',
+          },
+        );
+      }
     }
 
     if (updateMinedBlockEvents) {

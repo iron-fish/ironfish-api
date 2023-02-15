@@ -5,10 +5,9 @@ import { Injectable } from '@nestjs/common';
 import { AssetDescriptionType, Transaction } from '@prisma/client';
 import { AssetDescriptionsService } from '../asset-descriptions/asset-descriptions.service';
 import { AssetsService } from '../assets/assets.service';
-import { BlockDto } from '../blocks/dto/upsert-blocks.dto';
-import { BlockOperation } from '../blocks/enums/block-operation';
 import { standardizeHash } from '../common/utils/hash';
 import { LoggerService } from '../logger/logger.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { TransactionDto } from '../transactions/dto/upsert-transactions.dto';
 import { TransactionsService } from '../transactions/transactions.service';
@@ -19,16 +18,12 @@ export class AssetsLoader {
     private readonly assetsService: AssetsService,
     private readonly assetDescriptionsService: AssetDescriptionsService,
     private readonly logger: LoggerService,
+    private readonly prisma: PrismaService,
     private readonly transactionsService: TransactionsService,
   ) {}
 
-  async loadDescriptions(
-    block: BlockDto,
-    prisma: BasePrismaClient,
-  ): Promise<void> {
-    const main = block.type === BlockOperation.CONNECTED;
-
-    for (const dto of block.transactions) {
+  async loadDescriptions(main: boolean, dto: TransactionDto): Promise<void> {
+    await this.prisma.$transaction(async (prisma) => {
       const transaction = await this.transactionsService.findByHashOrThrow(
         standardizeHash(dto.hash),
         prisma,
@@ -39,7 +34,7 @@ export class AssetsLoader {
       } else {
         await this.deleteAssetDescriptions(transaction, prisma);
       }
-    }
+    });
   }
 
   private async createAssetDescriptions(
