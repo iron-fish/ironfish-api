@@ -7,8 +7,6 @@ import { Test } from '@nestjs/testing';
 import { json } from 'express';
 import joi from 'joi';
 import { JOBS_MODULES, REST_MODULES } from '../app.module';
-import { AssetDescriptionsModule } from '../asset-descriptions/asset-descriptions.module';
-import { AssetsModule } from '../assets/assets.module';
 import { AuthModule } from '../auth/auth.module';
 import { DatadogModule } from '../datadog/datadog.module';
 
@@ -45,9 +43,6 @@ export async function bootstrapTestApp(): Promise<INestApplication> {
       DatadogModule,
       ...JOBS_MODULES,
       ...REST_MODULES,
-      // TODO(rohanjadvani): Remove when loader is added
-      AssetsModule,
-      AssetDescriptionsModule,
     ],
   }).compile();
 

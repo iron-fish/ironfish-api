@@ -104,6 +104,8 @@ describe('BlocksController', () => {
                 size: faker.datatype.number(),
                 notes: [{ commitment: uuid() }],
                 spends: [{ nullifier: uuid() }],
+                mints: [],
+                burns: [],
               },
             ],
           });
@@ -143,6 +145,8 @@ describe('BlocksController', () => {
                   size: faker.datatype.number(),
                   notes: [{ commitment: uuid() }],
                   spends: [{ nullifier: uuid() }],
+                  mints: [],
+                  burns: [],
                 },
               ],
             },

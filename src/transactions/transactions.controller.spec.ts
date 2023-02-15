@@ -396,6 +396,8 @@ describe('TransactionsController', () => {
         size: faker.datatype.number(),
         notes: [{ commitment: uuid() }],
         spends: [{ nullifier: uuid() }],
+        mints: [],
+        burns: [],
       };
 
       const transaction2 = {
@@ -404,6 +406,8 @@ describe('TransactionsController', () => {
         size: faker.datatype.number(),
         notes: [{ commitment: uuid() }],
         spends: [{ nullifier: uuid() }],
+        mints: [],
+        burns: [],
       };
 
       const API_KEY = 'test';

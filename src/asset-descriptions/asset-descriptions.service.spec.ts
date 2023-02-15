@@ -69,4 +69,98 @@ describe('AssetDescriptionsService', () => {
       });
     });
   });
+
+  describe('findByTransaction', () => {
+    it('returns record with matching transaction ids', async () => {
+      const transaction = (
+        await transactionsService.createMany([
+          {
+            fee: 0,
+            hash: 'find-by-hash',
+            notes: [],
+            size: 0,
+            spends: [],
+          },
+        ])
+      )[0];
+      const asset = await assetsService.upsert(
+        {
+          identifier: 'foo',
+          metadata: 'test',
+          name: 'bar',
+          owner: 'baz',
+        },
+        transaction,
+        prisma,
+      );
+      const assetDescription = await assetDescriptionsService.create(
+        AssetDescriptionType.MINT,
+        BigInt(1),
+        asset,
+        transaction,
+        prisma,
+      );
+
+      const otherTransaction = (
+        await transactionsService.createMany([
+          {
+            fee: 0,
+            hash: 'foo',
+            notes: [],
+            size: 0,
+            spends: [],
+          },
+        ])
+      )[0];
+      await assetDescriptionsService.create(
+        AssetDescriptionType.MINT,
+        BigInt(1),
+        asset,
+        otherTransaction,
+        prisma,
+      );
+
+      expect(
+        await assetDescriptionsService.findByTransaction(transaction, prisma),
+      ).toEqual([assetDescription]);
+    });
+  });
+
+  describe('deleteByTransaction', () => {
+    it('deletes records with matching transaction ids', async () => {
+      const transaction = (
+        await transactionsService.createMany([
+          {
+            fee: 0,
+            hash: 'delete-hash',
+            notes: [],
+            size: 0,
+            spends: [],
+          },
+        ])
+      )[0];
+      const asset = await assetsService.upsert(
+        {
+          identifier: 'foo',
+          metadata: 'test',
+          name: 'bar',
+          owner: 'baz',
+        },
+        transaction,
+        prisma,
+      );
+      await assetDescriptionsService.create(
+        AssetDescriptionType.MINT,
+        BigInt(1),
+        asset,
+        transaction,
+        prisma,
+      );
+
+      await assetDescriptionsService.deleteByTransaction(transaction, prisma);
+      expect(
+        await assetDescriptionsService.findByTransaction(transaction, prisma),
+      ).toEqual([]);
+    });
+  });
 });

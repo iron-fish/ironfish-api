@@ -8,6 +8,18 @@ import { Asset, Transaction } from '.prisma/client';
 
 @Injectable()
 export class AssetsService {
+  async findOrThrow(id: number, prisma: BasePrismaClient): Promise<Asset> {
+    const record = await prisma.asset.findUnique({
+      where: {
+        id,
+      },
+    });
+    if (!record) {
+      throw new NotFoundException();
+    }
+    return record;
+  }
+
   async findByIdentifierOrThrow(
     identifier: string,
     prisma: BasePrismaClient,

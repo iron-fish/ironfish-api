@@ -28,4 +28,26 @@ export class AssetDescriptionsService {
       },
     });
   }
+
+  async findByTransaction(
+    transaction: Transaction,
+    prisma: BasePrismaClient,
+  ): Promise<AssetDescription[]> {
+    return prisma.assetDescription.findMany({
+      where: {
+        transaction_id: transaction.id,
+      },
+    });
+  }
+
+  async deleteByTransaction(
+    transaction: Transaction,
+    prisma: BasePrismaClient,
+  ): Promise<void> {
+    await prisma.assetDescription.deleteMany({
+      where: {
+        transaction_id: transaction.id,
+      },
+    });
+  }
 }
