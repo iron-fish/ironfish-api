@@ -7,6 +7,7 @@ export interface SerializedUser {
   total_points: number;
   is_verified: boolean;
   node_uptime_score: number;
+  node_uptime_threshold: number;
   country_code: string;
   created_at: string;
 }

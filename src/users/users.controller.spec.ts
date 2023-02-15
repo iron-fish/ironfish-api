@@ -94,6 +94,7 @@ describe('UsersController', () => {
         graffiti: user.graffiti,
         is_verified: false,
         node_uptime_score: 0,
+        node_uptime_threshold: 14,
         total_points: expect.any(Number),
         created_at: user.created_at.toISOString(),
       });
