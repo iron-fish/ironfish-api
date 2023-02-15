@@ -13,6 +13,10 @@ export function serializedUserFromRecord(
     id: user.id,
     country_code: user.country_code,
     graffiti: user.graffiti,
+    verified: user.last_login_at != null,
+    node_uptime_count: userPoints.node_uptime_count,
+    //this is one week of node_uptime. Being slightly lazy here and hardcoding because this will live for a month
+    node_uptime_threshold: 14,
     total_points: userPoints.total_points,
     created_at: user.created_at.toISOString(),
   };
@@ -27,6 +31,9 @@ export function serializedUserFromRecordWithRank(
     id: user.id,
     country_code: user.country_code,
     graffiti: user.graffiti,
+    verified: user.last_login_at != null,
+    node_uptime_count: userPoints.node_uptime_count,
+    node_uptime_threshold: 14,
     total_points: userPoints.total_points,
     created_at: user.created_at.toISOString(),
     rank,
