@@ -93,7 +93,7 @@ describe('UsersController', () => {
         id: user.id,
         graffiti: user.graffiti,
         is_verified: false,
-        node_uptime_score: 0,
+        node_uptime_count: 0,
         node_uptime_threshold: 14,
         total_points: expect.any(Number),
         created_at: user.created_at.toISOString(),
@@ -157,7 +157,7 @@ describe('UsersController', () => {
       expect(body).toMatchObject({
         id: user.id,
         graffiti: user.graffiti,
-        node_uptime_score: expectedPoints,
+        node_uptime_count: expectedPoints,
         total_points: expect.any(Number),
         created_at: user.created_at.toISOString(),
       });
