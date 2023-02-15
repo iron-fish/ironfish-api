@@ -76,7 +76,7 @@ describe('AssetDescriptionsController', () => {
           prisma,
         );
 
-        const assetDescription = await assetDescriptionsService.create(
+        await assetDescriptionsService.create(
           AssetDescriptionType.MINT,
           BigInt(1),
           asset,
@@ -96,16 +96,35 @@ describe('AssetDescriptionsController', () => {
           ])
         )[0];
         const secondAssetDescription = await assetDescriptionsService.create(
-          AssetDescriptionType.BURN,
+          AssetDescriptionType.MINT,
           BigInt(1),
           asset,
           secondTransaction,
           prisma,
         );
 
+        const thirdTransaction = (
+          await transactionsService.createMany([
+            {
+              fee: 0,
+              hash: 'foo',
+              notes: [],
+              size: 0,
+              spends: [],
+            },
+          ])
+        )[0];
+        const thirdAssetDescription = await assetDescriptionsService.create(
+          AssetDescriptionType.BURN,
+          BigInt(1),
+          asset,
+          thirdTransaction,
+          prisma,
+        );
+
         const { body } = await request(app.getHttpServer())
           .get('/asset_descriptions')
-          .query({ asset: asset.identifier })
+          .query({ asset: asset.identifier, limit: 2 })
           .expect(HttpStatus.OK);
 
         expect(body).toMatchObject({
@@ -113,21 +132,21 @@ describe('AssetDescriptionsController', () => {
           data: [
             {
               object: 'asset_description',
-              id: secondAssetDescription.id,
-              transaction_hash: secondTransaction.hash,
+              id: thirdAssetDescription.id,
+              transaction_hash: thirdTransaction.hash,
               type: AssetDescriptionType.BURN,
-              value: secondAssetDescription.value.toString(),
+              value: thirdAssetDescription.value.toString(),
             },
             {
               object: 'asset_description',
-              id: assetDescription.id,
-              transaction_hash: transaction.hash,
+              id: secondAssetDescription.id,
+              transaction_hash: secondTransaction.hash,
               type: AssetDescriptionType.MINT,
-              value: assetDescription.value.toString(),
+              value: secondAssetDescription.value.toString(),
             },
           ],
           metadata: {
-            has_next: false,
+            has_next: true,
             has_previous: false,
           },
         });
