@@ -29,7 +29,7 @@ describe('AssetsService', () => {
     describe('with a missing identifier', () => {
       it('throws a NotFoundException', async () => {
         await expect(
-          assetsService.findByIdentifierOrThrow('alskdfj', prisma),
+          assetsService.findByIdentifierOrThrow('alskdfj'),
         ).rejects.toThrow(NotFoundException);
       });
     });
@@ -60,7 +60,7 @@ describe('AssetsService', () => {
         );
 
         expect(
-          await assetsService.findByIdentifierOrThrow(asset.identifier, prisma),
+          await assetsService.findByIdentifierOrThrow(asset.identifier),
         ).toEqual(asset);
       });
     });

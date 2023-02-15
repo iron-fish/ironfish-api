@@ -24,15 +24,7 @@ export class AssetsService {
   }
 
   async findByIdentifierOrThrow(identifier: string): Promise<Asset> {
-    const record = await this.prisma.asset.findUnique({
-      where: {
-        identifier,
-      },
-    });
-    if (!record) {
-      throw new NotFoundException();
-    }
-    return record;
+    return this.findByIdentifierOrThrowWithClient(identifier, this.prisma);
   }
 
   async findByIdentifierOrThrowWithClient(
