@@ -63,7 +63,9 @@ export class AssetsService {
   ): Promise<Asset> {
     return prisma.asset.update({
       data: {
-        supply: asset.supply + delta,
+        supply: {
+          increment: delta,
+        },
       },
       where: {
         id: asset.id,
