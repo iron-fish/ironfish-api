@@ -2323,10 +2323,10 @@ data-urls@^2.0.0:
     whatwg-mimetype "^2.3.0"
     whatwg-url "^8.0.0"
 
-dd-trace@3.13.1:
-  version "3.13.1"
-  resolved "https://registry.yarnpkg.com/dd-trace/-/dd-trace-3.13.1.tgz#3a59a70f0e97d8044b34ea2f01bd287434863570"
-  integrity sha512-FXjAZWiIU1vXElfypo1BWwkC+ffczxeAB+Sqkzg7hu09X2uo/WjdX58n7cGRX/079CX0jBi+t0/u9vmea6Vjsg==
+dd-trace@3.13.2:
+  version "3.13.2"
+  resolved "https://registry.yarnpkg.com/dd-trace/-/dd-trace-3.13.2.tgz#95b1ec480ab9ac406e1da7591a8c6f678d3799fd"
+  integrity sha512-POO9nEcAufe5pgp2xV1X3PfWip6wh+6TpEcRSlSgZJCIIMvWVCkcIVL/J2a6KAZq6V3Yjbkl8Ktfe+MOzQf5kw==
   dependencies:
     "@datadog/native-appsec" "2.0.0"
     "@datadog/native-iast-rewriter" "1.1.2"
