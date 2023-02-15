@@ -10,6 +10,7 @@ import {
 import { ConfigModule } from '@nestjs/config';
 import joi from 'joi';
 import { ApiConfigModule } from './api-config/api-config.module';
+import { AssetDescriptionsRestModule } from './asset-descriptions/asset-descriptions.rest.module';
 import { AssetsRestModule } from './assets/assets.rest.module';
 import { AuthModule } from './auth/auth.module';
 import { AuthRestModule } from './auth/auth.rest.module';
@@ -43,6 +44,7 @@ export const JOBS_MODULES = [
 ];
 
 export const REST_MODULES = [
+  AssetDescriptionsRestModule,
   AssetsRestModule,
   AuthRestModule,
   BlocksDailyRestModule,
