@@ -7,8 +7,6 @@ import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { AssetDescriptionsService } from '../asset-descriptions/asset-descriptions.service';
 import { AssetsService } from '../assets/assets.service';
-import { BlockOperation } from '../blocks/enums/block-operation';
-import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { TransactionsService } from '../transactions/transactions.service';
 import { AssetsLoader } from './assets-loader';
@@ -18,7 +16,6 @@ describe('AssetsLoader', () => {
   let assetDescriptionsService: AssetDescriptionsService;
   let assetsLoader: AssetsLoader;
   let assetsService: AssetsService;
-  let prisma: PrismaService;
   let transactionsService: TransactionsService;
 
   beforeAll(async () => {
@@ -26,7 +23,6 @@ describe('AssetsLoader', () => {
     assetDescriptionsService = app.get(AssetDescriptionsService);
     assetsLoader = app.get(AssetsLoader);
     assetsService = app.get(AssetsService);
-    prisma = app.get(PrismaService);
     transactionsService = app.get(TransactionsService);
     await app.init();
   });
@@ -65,23 +61,11 @@ describe('AssetsLoader', () => {
             mints: [mint],
             burns: [burn],
           };
-          const blockDto = {
-            hash: uuid(),
-            difficulty: faker.datatype.number(),
-            type: BlockOperation.CONNECTED,
-            sequence: faker.datatype.number(),
-            timestamp: new Date(),
-            transactions_count: 0,
-            graffiti: uuid(),
-            previous_block_hash: uuid(),
-            size: faker.datatype.number({ min: 1 }),
-            transactions: [transactionDto],
-          };
 
           const transaction = (
             await transactionsService.createMany([transactionDto])
           )[0];
-          await assetsLoader.loadDescriptions(blockDto, prisma);
+          await assetsLoader.loadDescriptions(true, transactionDto);
 
           const assetsUpsert = jest.spyOn(assetsService, 'upsert');
           const assetDescriptionsCreate = jest.spyOn(
@@ -90,55 +74,60 @@ describe('AssetsLoader', () => {
           );
           const assetsUpdateSupply = jest.spyOn(assetsService, 'updateSupply');
 
-          await assetsLoader.loadDescriptions(blockDto, prisma);
+          await assetsLoader.loadDescriptions(true, transactionDto);
           expect(assetsUpsert).toHaveBeenCalledTimes(1);
-          expect(assetsUpsert).toHaveBeenCalledWith(
-            {
-              identifier: mint.id,
-              metadata: mint.metadata,
-              name: mint.name,
-              owner: mint.owner,
-            },
-            transaction,
-            prisma,
-          );
+          expect(assetsUpsert.mock.calls[0][0]).toEqual({
+            identifier: mint.id,
+            metadata: mint.metadata,
+            name: mint.name,
+            owner: mint.owner,
+          });
+          expect(assetsUpsert.mock.calls[0][1]).toEqual(transaction);
 
           expect(assetDescriptionsCreate).toHaveBeenCalledTimes(2);
-          expect(assetDescriptionsCreate).toHaveBeenCalledWith(
+          expect(assetDescriptionsCreate.mock.calls[0][0]).toEqual(
             AssetDescriptionType.MINT,
-            BigInt(mint.value),
-            expect.objectContaining({ identifier }),
-            transaction,
-            prisma,
           );
-          expect(assetDescriptionsCreate).toHaveBeenCalledWith(
+          expect(assetDescriptionsCreate.mock.calls[0][1]).toEqual(
+            BigInt(mint.value),
+          );
+          expect(assetDescriptionsCreate.mock.calls[0][2].identifier).toEqual(
+            identifier,
+          );
+          expect(assetDescriptionsCreate.mock.calls[1][0]).toEqual(
             AssetDescriptionType.BURN,
+          );
+          expect(assetDescriptionsCreate.mock.calls[1][1]).toEqual(
             BigInt(burn.value),
-            expect.objectContaining({ identifier }),
-            transaction,
-            prisma,
+          );
+          expect(assetDescriptionsCreate.mock.calls[1][2].identifier).toEqual(
+            identifier,
           );
 
           expect(assetsUpdateSupply).toHaveBeenCalledTimes(4);
-          expect(assetsUpdateSupply).toHaveBeenCalledWith(
-            expect.objectContaining({ identifier }),
+          expect(assetsUpdateSupply.mock.calls[0][0].identifier).toEqual(
+            identifier,
+          );
+          expect(assetsUpdateSupply.mock.calls[0][1]).toEqual(
             -BigInt(mint.value),
-            prisma,
           );
-          expect(assetsUpdateSupply).toHaveBeenCalledWith(
-            expect.objectContaining({ identifier }),
+          expect(assetsUpdateSupply.mock.calls[1][0].identifier).toEqual(
+            identifier,
+          );
+          expect(assetsUpdateSupply.mock.calls[1][1]).toEqual(
             BigInt(burn.value),
-            prisma,
           );
-          expect(assetsUpdateSupply).toHaveBeenCalledWith(
-            expect.objectContaining({ identifier }),
+          expect(assetsUpdateSupply.mock.calls[2][0].identifier).toEqual(
+            identifier,
+          );
+          expect(assetsUpdateSupply.mock.calls[2][1]).toEqual(
             BigInt(mint.value),
-            prisma,
           );
-          expect(assetsUpdateSupply).toHaveBeenCalledWith(
-            expect.objectContaining({ identifier }),
+          expect(assetsUpdateSupply.mock.calls[3][0].identifier).toEqual(
+            identifier,
+          );
+          expect(assetsUpdateSupply.mock.calls[3][1]).toEqual(
             -BigInt(burn.value),
-            prisma,
           );
         });
       });
@@ -167,18 +156,6 @@ describe('AssetsLoader', () => {
             mints: [mint],
             burns: [burn],
           };
-          const blockDto = {
-            hash: uuid(),
-            difficulty: faker.datatype.number(),
-            type: BlockOperation.CONNECTED,
-            sequence: faker.datatype.number(),
-            timestamp: new Date(),
-            transactions_count: 0,
-            graffiti: uuid(),
-            previous_block_hash: uuid(),
-            size: faker.datatype.number({ min: 1 }),
-            transactions: [transactionDto],
-          };
 
           const assetsUpsert = jest.spyOn(assetsService, 'upsert');
           const assetDescriptionsCreate = jest.spyOn(
@@ -190,46 +167,49 @@ describe('AssetsLoader', () => {
           const transaction = (
             await transactionsService.createMany([transactionDto])
           )[0];
-          await assetsLoader.loadDescriptions(blockDto, prisma);
+          await assetsLoader.loadDescriptions(true, transactionDto);
 
           expect(assetsUpsert).toHaveBeenCalledTimes(1);
-          expect(assetsUpsert).toHaveBeenCalledWith(
-            {
-              identifier: mint.id,
-              metadata: mint.metadata,
-              name: mint.name,
-              owner: mint.owner,
-            },
-            transaction,
-            prisma,
-          );
+          expect(assetsUpsert.mock.calls[0][0]).toEqual({
+            identifier: mint.id,
+            metadata: mint.metadata,
+            name: mint.name,
+            owner: mint.owner,
+          });
+          expect(assetsUpsert.mock.calls[0][1]).toEqual(transaction);
 
           expect(assetDescriptionsCreate).toHaveBeenCalledTimes(2);
-          expect(assetDescriptionsCreate).toHaveBeenCalledWith(
+          expect(assetDescriptionsCreate.mock.calls[0][0]).toEqual(
             AssetDescriptionType.MINT,
-            BigInt(mint.value),
-            expect.objectContaining({ identifier }),
-            transaction,
-            prisma,
           );
-          expect(assetDescriptionsCreate).toHaveBeenCalledWith(
+          expect(assetDescriptionsCreate.mock.calls[0][1]).toEqual(
+            BigInt(mint.value),
+          );
+          expect(assetDescriptionsCreate.mock.calls[0][2].identifier).toEqual(
+            identifier,
+          );
+          expect(assetDescriptionsCreate.mock.calls[1][0]).toEqual(
             AssetDescriptionType.BURN,
+          );
+          expect(assetDescriptionsCreate.mock.calls[1][1]).toEqual(
             BigInt(burn.value),
-            expect.objectContaining({ identifier }),
-            transaction,
-            prisma,
+          );
+          expect(assetDescriptionsCreate.mock.calls[1][2].identifier).toEqual(
+            identifier,
           );
 
           expect(assetsUpdateSupply).toHaveBeenCalledTimes(2);
-          expect(assetsUpdateSupply).toHaveBeenCalledWith(
-            expect.objectContaining({ identifier }),
-            BigInt(mint.value),
-            prisma,
+          expect(assetsUpdateSupply.mock.calls[0][0].identifier).toEqual(
+            identifier,
           );
-          expect(assetsUpdateSupply).toHaveBeenCalledWith(
-            expect.objectContaining({ identifier }),
+          expect(assetsUpdateSupply.mock.calls[0][1]).toEqual(
+            BigInt(mint.value),
+          );
+          expect(assetsUpdateSupply.mock.calls[1][0].identifier).toEqual(
+            identifier,
+          );
+          expect(assetsUpdateSupply.mock.calls[1][1]).toEqual(
             -BigInt(burn.value),
-            prisma,
           );
         });
       });
@@ -259,37 +239,21 @@ describe('AssetsLoader', () => {
           mints: [mint],
           burns: [burn],
         };
-        const blockDto = {
-          hash: uuid(),
-          difficulty: faker.datatype.number(),
-          type: BlockOperation.CONNECTED,
-          sequence: faker.datatype.number(),
-          timestamp: new Date(),
-          transactions_count: 0,
-          graffiti: uuid(),
-          previous_block_hash: uuid(),
-          size: faker.datatype.number({ min: 1 }),
-          transactions: [transactionDto],
-        };
 
         const transaction = (
           await transactionsService.createMany([transactionDto])
         )[0];
-        await assetsLoader.loadDescriptions(blockDto, prisma);
+        await assetsLoader.loadDescriptions(true, transactionDto);
 
         const assetDescriptionsDelete = jest.spyOn(
           assetDescriptionsService,
           'deleteByTransaction',
         );
-        await assetsLoader.loadDescriptions(
-          { ...blockDto, type: BlockOperation.DISCONNECTED },
-          prisma,
-        );
+        await assetsLoader.loadDescriptions(false, transactionDto);
 
         expect(assetDescriptionsDelete).toHaveBeenCalledTimes(1);
-        expect(assetDescriptionsDelete).toHaveBeenCalledWith(
-          transaction,
-          prisma,
+        expect(assetDescriptionsDelete.mock.calls[0][0].id).toEqual(
+          transaction.id,
         );
       });
     });
