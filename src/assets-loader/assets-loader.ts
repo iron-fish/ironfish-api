@@ -72,7 +72,7 @@ export class AssetsLoader {
     }
 
     for (const burn of dto.burns) {
-      const asset = await this.assetsService.findByIdentifierOrThrow(
+      const asset = await this.assetsService.findByIdentifierOrThrowWithClient(
         burn.id,
         prisma,
       );

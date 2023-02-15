@@ -1,0 +1,12 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AssetsController GET /assets/find with an invalid query returns a 422 1`] = `
+Object {
+  "error": "Unprocessable Entity",
+  "message": Array [
+    "\\"id\\" required to query for asset",
+    "id must be a string",
+  ],
+  "statusCode": 422,
+}
+`;
