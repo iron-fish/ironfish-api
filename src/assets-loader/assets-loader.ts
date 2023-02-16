@@ -12,6 +12,8 @@ import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { TransactionDto } from '../transactions/dto/upsert-transactions.dto';
 import { TransactionsService } from '../transactions/transactions.service';
 
+const MAX_MINT_OR_BURN_VALUE = BigInt(100_000_000_000_000_000n);
+
 @Injectable()
 export class AssetsLoader {
   constructor(
@@ -56,6 +58,10 @@ export class AssetsLoader {
         prisma,
       );
 
+      if (BigInt(mint.value) > MAX_MINT_OR_BURN_VALUE) {
+        continue;
+      }
+
       await this.assetDescriptionsService.create(
         AssetDescriptionType.MINT,
         BigInt(mint.value),
@@ -67,10 +73,15 @@ export class AssetsLoader {
     }
 
     for (const burn of dto.burns) {
+      if (BigInt(burn.value) > MAX_MINT_OR_BURN_VALUE) {
+        continue;
+      }
+
       const asset = await this.assetsService.findByIdentifierOrThrowWithClient(
         burn.id,
         prisma,
       );
+
       await this.assetDescriptionsService.create(
         AssetDescriptionType.BURN,
         BigInt(burn.value),
