@@ -137,9 +137,6 @@ export class BlocksTransactionsLoader {
         await this.graphileWorkerService.addJob<LoadDescriptionsOptions>(
           GraphileWorkerPattern.LOAD_ASSET_DESCRIPTIONS,
           { main: block.type === BlockOperation.CONNECTED, transaction },
-          {
-            queueName: 'load_asset_descriptions',
-          },
         );
       }
     }
