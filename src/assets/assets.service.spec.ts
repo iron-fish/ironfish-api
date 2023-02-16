@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { INestApplication, NotFoundException } from '@nestjs/common';
+import { v4 as uuid } from 'uuid';
 import { AssetsService } from '../assets/assets.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
@@ -198,6 +199,49 @@ describe('AssetsService', () => {
       const delta = -BigInt(3);
       asset = await assetsService.updateSupply(asset, delta, prisma);
       expect(asset.supply).toEqual(supply + delta);
+    });
+  });
+
+  describe('list', () => {
+    it('returns a paginated list of assets', async () => {
+      const transaction = (
+        await transactionsService.createMany([
+          {
+            fee: 0,
+            hash: uuid(),
+            notes: [],
+            size: 0,
+            spends: [],
+          },
+        ])
+      )[0];
+
+      const asset = await assetsService.upsert(
+        {
+          identifier: uuid(),
+          metadata: uuid(),
+          name: uuid(),
+          owner: uuid(),
+        },
+        transaction,
+        prisma,
+      );
+      const secondAsset = await assetsService.upsert(
+        {
+          identifier: uuid(),
+          metadata: uuid(),
+          name: uuid(),
+          owner: uuid(),
+        },
+        transaction,
+        prisma,
+      );
+
+      expect(await assetsService.list({ limit: 2 })).toEqual({
+        data: [secondAsset, asset],
+        hasNext: true,
+        hasPrevious: false,
+      });
     });
   });
 });
