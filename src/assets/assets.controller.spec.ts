@@ -88,4 +88,88 @@ describe('AssetsController', () => {
       });
     });
   });
+
+  describe('GET /assets', () => {
+    it('returns the asset descriptions', async () => {
+      const transaction = (
+        await transactionsService.createMany([
+          {
+            fee: 0,
+            hash: uuid(),
+            notes: [],
+            size: 0,
+            spends: [],
+          },
+        ])
+      )[0];
+
+      const asset = await assetsService.upsert(
+        {
+          identifier: uuid(),
+          metadata: uuid(),
+          name: uuid(),
+          owner: uuid(),
+        },
+        transaction,
+        prisma,
+      );
+
+      const secondTransaction = (
+        await transactionsService.createMany([
+          {
+            fee: 0,
+            hash: 'foo',
+            notes: [],
+            size: 0,
+            spends: [],
+          },
+        ])
+      )[0];
+      const secondAsset = await assetsService.upsert(
+        {
+          identifier: uuid(),
+          metadata: uuid(),
+          name: uuid(),
+          owner: uuid(),
+        },
+        secondTransaction,
+        prisma,
+      );
+
+      const { body } = await request(app.getHttpServer())
+        .get('/assets')
+        .query({ limit: 2 })
+        .expect(HttpStatus.OK);
+
+      expect(body).toMatchObject({
+        object: 'list',
+        data: [
+          {
+            object: 'asset',
+            created_transaction_hash: secondTransaction.hash,
+            id: secondAsset.id,
+            identifier: secondAsset.identifier,
+            metadata: secondAsset.metadata,
+            name: secondAsset.name,
+            owner: secondAsset.owner,
+            supply: secondAsset.supply.toString(),
+          },
+          {
+            object: 'asset',
+            created_transaction_hash: transaction.hash,
+            id: asset.id,
+            identifier: asset.identifier,
+            metadata: asset.metadata,
+            name: asset.name,
+            owner: asset.owner,
+            supply: asset.supply.toString(),
+          },
+        ],
+        metadata: {
+          has_next: true,
+          has_previous: false,
+        },
+      });
+    });
+  });
 });
