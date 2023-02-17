@@ -9,9 +9,11 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { PaginatedList } from '../common/interfaces/paginated-list';
 import { TransactionsService } from '../transactions/transactions.service';
 import { AssetsService } from './assets.service';
 import { AssetQueryDto } from './dto/asset-query-dto';
+import { AssetsQueryDto } from './dto/assets-query.dto';
 import { SerializedAsset } from './interfaces/serialized-asset';
 
 @ApiTags('Assets')
@@ -46,6 +48,46 @@ export class AssetsController {
       name: asset.name,
       owner: asset.owner,
       supply: asset.supply.toString(),
+    };
+  }
+
+  @ApiOperation({ summary: 'Lists assets' })
+  @Get()
+  async list(
+    @Query(
+      new ValidationPipe({
+        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        transform: true,
+      }),
+    )
+    dto: AssetsQueryDto,
+  ): Promise<PaginatedList<SerializedAsset>> {
+    const { data, hasNext, hasPrevious } = await this.assetsService.list(dto);
+
+    const serializedData: SerializedAsset[] = [];
+    for (const asset of data) {
+      const transaction = await this.transactionsService.findOrThrow(
+        asset.created_transaction_id,
+      );
+      serializedData.push({
+        object: 'asset',
+        created_transaction_hash: transaction.hash,
+        id: asset.id,
+        identifier: asset.identifier,
+        metadata: asset.metadata,
+        name: asset.name,
+        owner: asset.owner,
+        supply: asset.supply.toString(),
+      });
+    }
+
+    return {
+      object: 'list',
+      data: serializedData,
+      metadata: {
+        has_next: hasNext,
+        has_previous: hasPrevious,
+      },
     };
   }
 }
