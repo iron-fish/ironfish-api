@@ -15,6 +15,7 @@ import { TransactionsService } from '../transactions/transactions.service';
 import { AssetDescriptionsService } from './asset-descriptions.service';
 import { AssetDescriptionsQueryDto } from './dto/asset-descriptions-query.dto';
 import { SerializedAssetDescription } from './interfaces/serialized-asset-description';
+import { serializedAssetDescriptionFromRecord } from './utils/asset-descriptions.translator';
 
 @ApiTags('AssetDescriptions')
 @Controller('asset_descriptions')
@@ -52,13 +53,9 @@ export class AssetDescriptionsController {
       const transaction = await this.transactionsService.findOrThrow(
         record.transaction_id,
       );
-      serializedData.push({
-        object: 'asset_description',
-        id: record.id,
-        transaction_hash: transaction.hash,
-        type: record.type,
-        value: record.value.toString(),
-      });
+      serializedData.push(
+        serializedAssetDescriptionFromRecord(record, transaction),
+      );
     }
 
     return {

@@ -38,6 +38,15 @@ export class AssetDescriptionsService {
 
   async findByTransaction(
     transaction: Transaction,
+  ): Promise<AssetDescription[]> {
+    return this.findByTransactionWithClient(
+      transaction,
+      this.prisma.readClient,
+    );
+  }
+
+  async findByTransactionWithClient(
+    transaction: Transaction,
     prisma: BasePrismaClient,
   ): Promise<AssetDescription[]> {
     return prisma.assetDescription.findMany({
