@@ -1,15 +1,26 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+import { SerializedAssetDescription } from '../../asset-descriptions/interfaces/serialized-asset-description';
+import { serializedAssetDescriptionFromRecord } from '../../asset-descriptions/utils/asset-descriptions.translator';
 import { serializedBlockFromRecord } from '../../blocks/utils/block-translator';
 import { SerializedTransaction } from '../interfaces/serialized-transaction';
 import { SerializedTransactionWithBlocks } from '../interfaces/serialized-transaction-with-blocks';
-import { Transaction } from '.prisma/client';
-import { Block } from '.prisma/client';
+import {
+  AssetDescription,
+  AssetDescriptionType,
+  Block,
+  Transaction,
+} from '.prisma/client';
 
 export function serializedTransactionFromRecord(
   transaction: Transaction,
+  assetDescriptions: AssetDescription[],
 ): SerializedTransaction {
+  const { mints, burns } = mintsAndBurnsFromAssetDescriptions(
+    transaction,
+    assetDescriptions,
+  );
   return {
     id: transaction.id,
     hash: transaction.hash,
@@ -17,15 +28,22 @@ export function serializedTransactionFromRecord(
     size: transaction.size,
     notes: transaction.notes,
     spends: transaction.spends,
+    mints,
+    burns,
     object: 'transaction',
   };
 }
 
 export function serializedTransactionFromRecordWithBlocks(
   transaction: Transaction & { blocks: Block[] },
+  assetDescriptions: AssetDescription[],
 ): SerializedTransactionWithBlocks {
   const blocks = transaction.blocks.map((block) =>
     serializedBlockFromRecord(block),
+  );
+  const { mints, burns } = mintsAndBurnsFromAssetDescriptions(
+    transaction,
+    assetDescriptions,
   );
   return {
     id: transaction.id,
@@ -36,5 +54,35 @@ export function serializedTransactionFromRecordWithBlocks(
     spends: transaction.spends,
     object: 'transaction',
     blocks,
+    mints,
+    burns,
+  };
+}
+
+function mintsAndBurnsFromAssetDescriptions(
+  transaction: Transaction,
+  assetDescriptions: AssetDescription[],
+): {
+  mints: SerializedAssetDescription[];
+  burns: SerializedAssetDescription[];
+} {
+  const mints = [];
+  const burns = [];
+
+  for (const assetDescription of assetDescriptions) {
+    if (assetDescription.type === AssetDescriptionType.MINT) {
+      mints.push(
+        serializedAssetDescriptionFromRecord(assetDescription, transaction),
+      );
+    } else {
+      burns.push(
+        serializedAssetDescriptionFromRecord(assetDescription, transaction),
+      );
+    }
+  }
+
+  return {
+    mints,
+    burns,
   };
 }

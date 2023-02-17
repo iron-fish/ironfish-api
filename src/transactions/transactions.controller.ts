@@ -13,6 +13,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiExcludeEndpoint, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { AssetDescriptionsService } from '../asset-descriptions/asset-descriptions.service';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { List } from '../common/interfaces/list';
 import { TransactionQueryDto } from './dto/transaction-query.dto';
@@ -29,7 +30,10 @@ import {
 @ApiTags('Transactions')
 @Controller('transactions')
 export class TransactionsController {
-  constructor(private readonly transactionsService: TransactionsService) {}
+  constructor(
+    private readonly assetDescriptionsService: AssetDescriptionsService,
+    private readonly transactionsService: TransactionsService,
+  ) {}
 
   @ApiOperation({ summary: `Gets a specific transaction by 'hash'` })
   @Get('find')
@@ -46,12 +50,20 @@ export class TransactionsController {
       hash,
       withBlocks: with_blocks,
     });
-    if (transaction !== null && 'blocks' in transaction) {
-      return serializedTransactionFromRecordWithBlocks(transaction);
-    } else if (transaction !== null) {
-      return serializedTransactionFromRecord(transaction);
-    } else {
+
+    if (!transaction) {
       throw new NotFoundException();
+    }
+
+    const assetDescriptions =
+      await this.assetDescriptionsService.findByTransaction(transaction);
+    if ('blocks' in transaction) {
+      return serializedTransactionFromRecordWithBlocks(
+        transaction,
+        assetDescriptions,
+      );
+    } else {
+      return serializedTransactionFromRecord(transaction, assetDescriptions);
     }
   }
 
@@ -70,11 +82,19 @@ export class TransactionsController {
     const transactions = await this.transactionsService.createMany(
       upsertTransactionsDto.transactions,
     );
+
+    const data = [];
+    for (const transaction of transactions) {
+      const assetDescriptions =
+        await this.assetDescriptionsService.findByTransaction(transaction);
+      data.push(
+        serializedTransactionFromRecord(transaction, assetDescriptions),
+      );
+    }
+
     return {
       object: 'list',
-      data: transactions.map((transaction) =>
-        serializedTransactionFromRecord(transaction),
-      ),
+      data,
     };
   }
 
@@ -96,14 +116,28 @@ export class TransactionsController {
       search,
       withBlocks: with_blocks,
     });
+
+    const data = [];
+    for (const transaction of transactions) {
+      const assetDescriptions =
+        await this.assetDescriptionsService.findByTransaction(transaction);
+
+      if ('blocks' in transaction) {
+        data.push(
+          serializedTransactionFromRecordWithBlocks(
+            transaction,
+            assetDescriptions,
+          ),
+        );
+      } else {
+        data.push(
+          serializedTransactionFromRecord(transaction, assetDescriptions),
+        );
+      }
+    }
+
     return {
-      data: transactions.map((transaction) => {
-        if ('blocks' in transaction) {
-          return serializedTransactionFromRecordWithBlocks(transaction);
-        } else {
-          return serializedTransactionFromRecord(transaction);
-        }
-      }),
+      data,
       object: 'list',
     };
   }

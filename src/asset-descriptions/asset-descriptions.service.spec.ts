@@ -122,7 +122,7 @@ describe('AssetDescriptionsService', () => {
       );
 
       expect(
-        await assetDescriptionsService.findByTransaction(transaction, prisma),
+        await assetDescriptionsService.findByTransaction(transaction),
       ).toEqual([assetDescription]);
     });
   });
@@ -160,7 +160,7 @@ describe('AssetDescriptionsService', () => {
 
       await assetDescriptionsService.deleteByTransaction(transaction, prisma);
       expect(
-        await assetDescriptionsService.findByTransaction(transaction, prisma),
+        await assetDescriptionsService.findByTransaction(transaction),
       ).toEqual([]);
     });
   });

@@ -98,7 +98,7 @@ export class AssetsLoader {
     prisma: BasePrismaClient,
   ): Promise<void> {
     const assetDescriptions =
-      await this.assetDescriptionsService.findByTransaction(
+      await this.assetDescriptionsService.findByTransactionWithClient(
         transaction,
         prisma,
       );
