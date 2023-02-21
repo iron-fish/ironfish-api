@@ -99,7 +99,7 @@ describe('AssetsController', () => {
 
         expect(body).toMatchObject({
           created_transaction_hash: transaction.hash,
-          created_transaction_timestamp: transaction.timestamp.toISOString(),
+          created_transaction_timestamp: block.timestamp.toISOString(),
           identifier: asset.identifier,
           metadata: asset.metadata,
           name: asset.name,
