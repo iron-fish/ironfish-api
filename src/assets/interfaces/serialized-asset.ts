@@ -4,6 +4,7 @@
 export interface SerializedAsset {
   object: 'asset';
   created_transaction_hash: string;
+  created_transaction_timestamp: string;
   id: number;
   identifier: string;
   metadata: string;

@@ -5,10 +5,12 @@ import {
   Controller,
   Get,
   HttpStatus,
+  NotFoundException,
   Query,
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
 import { PaginatedList } from '../common/interfaces/paginated-list';
 import { TransactionsService } from '../transactions/transactions.service';
 import { AssetsService } from './assets.service';
@@ -21,6 +23,7 @@ import { SerializedAsset } from './interfaces/serialized-asset';
 export class AssetsController {
   constructor(
     private readonly assetsService: AssetsService,
+    private readonly blocksTransactionsService: BlocksTransactionsService,
     private readonly transactionsService: TransactionsService,
   ) {}
 
@@ -39,9 +42,19 @@ export class AssetsController {
     const transaction = await this.transactionsService.findOrThrow(
       asset.created_transaction_id,
     );
+
+    const blocks = await this.blocksTransactionsService.findBlocksByTransaction(
+      transaction,
+    );
+    const block = blocks.find((block) => block.main);
+    if (!block) {
+      throw new NotFoundException();
+    }
+
     return {
       object: 'asset',
       created_transaction_hash: transaction.hash,
+      created_transaction_timestamp: block.timestamp.toISOString(),
       id: asset.id,
       identifier: asset.identifier,
       metadata: asset.metadata,
@@ -69,9 +82,20 @@ export class AssetsController {
       const transaction = await this.transactionsService.findOrThrow(
         asset.created_transaction_id,
       );
+
+      const blocks =
+        await this.blocksTransactionsService.findBlocksByTransaction(
+          transaction,
+        );
+      const block = blocks.find((block) => block.main);
+      if (!block) {
+        continue;
+      }
+
       serializedData.push({
         object: 'asset',
         created_transaction_hash: transaction.hash,
+        created_transaction_timestamp: block.timestamp.toISOString(),
         id: asset.id,
         identifier: asset.identifier,
         metadata: asset.metadata,
