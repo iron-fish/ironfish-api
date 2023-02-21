@@ -6,7 +6,12 @@ import { AssetDescriptionType } from '@prisma/client';
 export interface SerializedAssetDescription {
   object: 'asset_description';
   id: number;
+  transaction_hash: string;
   type: AssetDescriptionType;
   value: string;
-  transaction_hash: string;
+}
+
+export interface SerializedAssetDescriptionWithTimestamp
+  extends SerializedAssetDescription {
+  timestamp: string;
 }

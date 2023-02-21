@@ -3,9 +3,13 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { AssetDescriptionType } from '@prisma/client';
+import faker from 'faker';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
 import { AssetsService } from '../assets/assets.service';
+import { BlocksService } from '../blocks/blocks.service';
+import { BlockOperation } from '../blocks/enums/block-operation';
+import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { TransactionsService } from '../transactions/transactions.service';
@@ -15,6 +19,8 @@ describe('AssetDescriptionsController', () => {
   let app: INestApplication;
   let assetDescriptionsService: AssetDescriptionsService;
   let assetsService: AssetsService;
+  let blocksService: BlocksService;
+  let blocksTransactionsService: BlocksTransactionsService;
   let prisma: PrismaService;
   let transactionsService: TransactionsService;
 
@@ -22,6 +28,8 @@ describe('AssetDescriptionsController', () => {
     app = await bootstrapTestApp();
     assetDescriptionsService = app.get(AssetDescriptionsService);
     assetsService = app.get(AssetsService);
+    blocksService = app.get(BlocksService);
+    blocksTransactionsService = app.get(BlocksTransactionsService);
     prisma = app.get(PrismaService);
     transactionsService = app.get(TransactionsService);
     await app.init();
@@ -53,6 +61,17 @@ describe('AssetDescriptionsController', () => {
 
     describe('with a valid identifier', () => {
       it('returns the asset descriptions', async () => {
+        const { block } = await blocksService.upsert(prisma, {
+          hash: uuid(),
+          sequence: faker.datatype.number(),
+          difficulty: faker.datatype.number(),
+          timestamp: new Date(),
+          transactionsCount: 1,
+          type: BlockOperation.CONNECTED,
+          graffiti: uuid(),
+          previousBlockHash: uuid(),
+          size: faker.datatype.number(),
+        });
         const transaction = (
           await transactionsService.createMany([
             {
@@ -64,6 +83,7 @@ describe('AssetDescriptionsController', () => {
             },
           ])
         )[0];
+        await blocksTransactionsService.upsert(prisma, block, transaction, 0);
 
         const asset = await assetsService.upsert(
           {
@@ -95,6 +115,12 @@ describe('AssetDescriptionsController', () => {
             },
           ])
         )[0];
+        await blocksTransactionsService.upsert(
+          prisma,
+          block,
+          secondTransaction,
+          1,
+        );
         const secondAssetDescription = await assetDescriptionsService.create(
           AssetDescriptionType.MINT,
           BigInt(1),
@@ -114,6 +140,12 @@ describe('AssetDescriptionsController', () => {
             },
           ])
         )[0];
+        await blocksTransactionsService.upsert(
+          prisma,
+          block,
+          thirdTransaction,
+          2,
+        );
         const thirdAssetDescription = await assetDescriptionsService.create(
           AssetDescriptionType.BURN,
           BigInt(1),
@@ -133,6 +165,7 @@ describe('AssetDescriptionsController', () => {
             {
               object: 'asset_description',
               id: thirdAssetDescription.id,
+              timestamp: block.timestamp.toISOString(),
               transaction_hash: thirdTransaction.hash,
               type: AssetDescriptionType.BURN,
               value: thirdAssetDescription.value.toString(),
@@ -140,6 +173,7 @@ describe('AssetDescriptionsController', () => {
             {
               object: 'asset_description',
               id: secondAssetDescription.id,
+              timestamp: block.timestamp.toISOString(),
               transaction_hash: secondTransaction.hash,
               type: AssetDescriptionType.MINT,
               value: secondAssetDescription.value.toString(),
