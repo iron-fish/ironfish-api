@@ -55,6 +55,38 @@ describe('AssetsController', () => {
       });
     });
 
+    describe('when the asset has not been added to a block', () => {
+      it('returns a 404', async () => {
+        const transaction = (
+          await transactionsService.createMany([
+            {
+              fee: 0,
+              hash: uuid(),
+              notes: [],
+              size: 0,
+              spends: [],
+            },
+          ])
+        )[0];
+
+        const asset = await assetsService.upsert(
+          {
+            identifier: uuid(),
+            metadata: uuid(),
+            name: uuid(),
+            owner: uuid(),
+          },
+          transaction,
+          prisma,
+        );
+
+        await request(app.getHttpServer())
+          .get('/assets/find')
+          .query({ id: asset.identifier })
+          .expect(HttpStatus.NOT_FOUND);
+      });
+    });
+
     describe('with a valid identifier', () => {
       it('returns the asset', async () => {
         const { block } = await blocksService.upsert(prisma, {
