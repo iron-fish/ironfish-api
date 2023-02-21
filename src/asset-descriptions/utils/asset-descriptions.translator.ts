@@ -3,7 +3,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import {
   SerializedAssetDescription,
-  SerializedAssetDescriptionWithTimestamp,
 } from '../interfaces/serialized-asset-description';
 import { AssetDescription, Block, Transaction } from '.prisma/client';
 
@@ -24,7 +23,7 @@ export function serializedAssetDescriptionWithTimestampFromRecord(
   assetDescription: AssetDescription,
   transaction: Transaction,
   block: Block,
-): SerializedAssetDescriptionWithTimestamp {
+): SerializedAssetDescription {
   return {
     object: 'asset_description',
     id: assetDescription.id,

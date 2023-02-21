@@ -9,5 +9,5 @@ export interface SerializedAssetDescription {
   transaction_hash: string;
   type: AssetDescriptionType;
   value: string;
-  timestamp?: string;
+  block_timestamp?: string;
 }
