@@ -108,7 +108,7 @@ describe('AssetDescriptionsController', () => {
           await transactionsService.createMany([
             {
               fee: 0,
-              hash: 'foo',
+              hash: uuid(),
               notes: [],
               size: 0,
               spends: [],
@@ -133,7 +133,7 @@ describe('AssetDescriptionsController', () => {
           await transactionsService.createMany([
             {
               fee: 0,
-              hash: 'foo',
+              hash: uuid(),
               notes: [],
               size: 0,
               spends: [],
