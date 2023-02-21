@@ -28,7 +28,7 @@ export function serializedAssetDescriptionWithTimestampFromRecord(
   return {
     object: 'asset_description',
     id: assetDescription.id,
-    timestamp: block.timestamp.toISOString(),
+    block_timestamp: block.timestamp.toISOString(),
     transaction_hash: transaction.hash,
     type: assetDescription.type,
     value: assetDescription.value.toString(),

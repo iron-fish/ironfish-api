@@ -15,7 +15,7 @@ import { PaginatedList } from '../common/interfaces/paginated-list';
 import { TransactionsService } from '../transactions/transactions.service';
 import { AssetDescriptionsService } from './asset-descriptions.service';
 import { AssetDescriptionsQueryDto } from './dto/asset-descriptions-query.dto';
-import { SerializedAssetDescriptionWithTimestamp } from './interfaces/serialized-asset-description';
+import { SerializedAssetDescription } from './interfaces/serialized-asset-description';
 import { serializedAssetDescriptionWithTimestampFromRecord } from './utils/asset-descriptions.translator';
 
 @ApiTags('AssetDescriptions')
@@ -38,7 +38,7 @@ export class AssetDescriptionsController {
       }),
     )
     { asset: assetIdentifier, after, before, limit }: AssetDescriptionsQueryDto,
-  ): Promise<PaginatedList<SerializedAssetDescriptionWithTimestamp>> {
+  ): Promise<PaginatedList<SerializedAssetDescription>> {
     const asset = await this.assetsService.findByIdentifierOrThrow(
       assetIdentifier,
     );
@@ -50,7 +50,7 @@ export class AssetDescriptionsController {
         limit,
       });
 
-    const serializedData: SerializedAssetDescriptionWithTimestamp[] = [];
+    const serializedData: SerializedAssetDescription[] = [];
     for (const record of data) {
       const transaction = await this.transactionsService.findOrThrow(
         record.transaction_id,
