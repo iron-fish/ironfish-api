@@ -165,7 +165,7 @@ describe('AssetDescriptionsController', () => {
             {
               object: 'asset_description',
               id: thirdAssetDescription.id,
-              timestamp: block.timestamp.toISOString(),
+              block_timestamp: block.timestamp.toISOString(),
               transaction_hash: thirdTransaction.hash,
               type: AssetDescriptionType.BURN,
               value: thirdAssetDescription.value.toString(),
@@ -173,7 +173,7 @@ describe('AssetDescriptionsController', () => {
             {
               object: 'asset_description',
               id: secondAssetDescription.id,
-              timestamp: block.timestamp.toISOString(),
+              block_timestamp: block.timestamp.toISOString(),
               transaction_hash: secondTransaction.hash,
               type: AssetDescriptionType.MINT,
               value: secondAssetDescription.value.toString(),
