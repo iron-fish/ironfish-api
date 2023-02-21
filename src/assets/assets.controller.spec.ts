@@ -143,7 +143,7 @@ describe('AssetsController', () => {
   });
 
   describe('GET /assets', () => {
-    it('returns the asset descriptions', async () => {
+    it('returns the assets', async () => {
       const { block } = await blocksService.upsert(prisma, {
         hash: uuid(),
         sequence: faker.datatype.number(),
