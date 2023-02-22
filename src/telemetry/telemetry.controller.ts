@@ -17,6 +17,7 @@ import { fetchIpAddressFromRequest } from '../common/utils/request';
 import { InfluxDbService } from '../influxdb/influxdb.service';
 import { CreatePointOptions } from '../influxdb/interfaces/create-point-options';
 import { NodeUptimesService } from '../node-uptimes/node-uptimes.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
 import { VersionsService } from '../versions/versions.service';
 import {
@@ -91,6 +92,7 @@ export class TelemetryController {
     private readonly nodeUptimes: NodeUptimesService,
     private readonly usersService: UsersService,
     private readonly versionsService: VersionsService,
+    private readonly prismaService: PrismaService,
   ) {}
 
   @ApiExcludeEndpoint()
@@ -135,14 +137,20 @@ export class TelemetryController {
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
-    const minVersion = await this.versionsService.getLatestAtDate(oneWeekAgo);
+    const minVersion = await this.versionsService.getLatestAtDate(
+      oneWeekAgo,
+      this.prismaService.readClient,
+    );
 
     // If the API fails to fetch a version, we don't want to punish the user
     if (minVersion && semver.lt(nodeVersion, minVersion.version)) {
       return;
     }
 
-    const user = await this.usersService.findByGraffiti(graffiti);
+    const user = await this.usersService.findByGraffiti(
+      graffiti,
+      this.prismaService.readClient,
+    );
     if (!user) {
       return;
     }
