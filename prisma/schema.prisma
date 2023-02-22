@@ -142,6 +142,8 @@ model FaucetTransaction {
   @@index([email], map: "index_faucet_transactions_on_email")
   @@index([public_key], map: "index_faucet_transactions_on_public_key")
   @@index([hash], map: "index_faucet_transactions_on_hash")
+  @@index([completed_at], map: "index_faucet_transactions_on_completed_at")
+  @@index([started_at, completed_at], map: "index_faucet_transactions_on_completed_at_and_started_at")
   @@map("faucet_transactions")
 }
 
