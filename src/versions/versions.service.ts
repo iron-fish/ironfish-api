@@ -4,6 +4,7 @@
 
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { Version } from '.prisma/client';
 
 @Injectable()
@@ -28,8 +29,12 @@ export class VersionsService {
     });
   }
 
-  async getLatestAtDate(date: Date): Promise<Version | null> {
-    return this.prisma.version.findFirst({
+  async getLatestAtDate(
+    date: Date,
+    prisma?: BasePrismaClient,
+  ): Promise<Version | null> {
+    const client = prisma ?? this.prisma;
+    return client.version.findFirst({
       orderBy: {
         version: 'desc',
       },

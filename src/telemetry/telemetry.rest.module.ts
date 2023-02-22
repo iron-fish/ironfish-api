@@ -5,6 +5,7 @@ import { Module } from '@nestjs/common';
 import { ApiConfigModule } from '../api-config/api-config.module';
 import { InfluxDbModule } from '../influxdb/influxdb.module';
 import { NodeUptimesModule } from '../node-uptimes/node-uptimes.module';
+import { PrismaModule } from '../prisma/prisma.module';
 import { UsersModule } from '../users/users.module';
 import { VersionsModule } from '../versions/versions.module';
 import { TelemetryController } from './telemetry.controller';
@@ -15,6 +16,7 @@ import { TelemetryController } from './telemetry.controller';
     ApiConfigModule,
     InfluxDbModule,
     NodeUptimesModule,
+    PrismaModule,
     UsersModule,
     VersionsModule,
   ],
