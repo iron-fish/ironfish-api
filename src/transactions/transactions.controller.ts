@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 import { ApiExcludeEndpoint, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AssetDescriptionsService } from '../asset-descriptions/asset-descriptions.service';
+import { AssetsService } from '../assets/assets.service';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { List } from '../common/interfaces/list';
 import { TransactionQueryDto } from './dto/transaction-query.dto';
@@ -26,12 +27,14 @@ import {
   serializedTransactionFromRecord,
   serializedTransactionFromRecordWithBlocks,
 } from './utils/transaction-translator';
+import { Asset, AssetDescription, Transaction } from '.prisma/client';
 
 @ApiTags('Transactions')
 @Controller('transactions')
 export class TransactionsController {
   constructor(
     private readonly assetDescriptionsService: AssetDescriptionsService,
+    private readonly assetsService: AssetsService,
     private readonly transactionsService: TransactionsService,
   ) {}
 
@@ -55,15 +58,18 @@ export class TransactionsController {
       throw new NotFoundException();
     }
 
-    const assetDescriptions =
-      await this.assetDescriptionsService.findByTransaction(transaction);
+    const assetDescriptionsWithAssets =
+      await this.getAssetDescriptionsWithAssets(transaction);
     if ('blocks' in transaction) {
       return serializedTransactionFromRecordWithBlocks(
         transaction,
-        assetDescriptions,
+        assetDescriptionsWithAssets,
       );
     } else {
-      return serializedTransactionFromRecord(transaction, assetDescriptions);
+      return serializedTransactionFromRecord(
+        transaction,
+        assetDescriptionsWithAssets,
+      );
     }
   }
 
@@ -85,10 +91,13 @@ export class TransactionsController {
 
     const data = [];
     for (const transaction of transactions) {
-      const assetDescriptions =
-        await this.assetDescriptionsService.findByTransaction(transaction);
+      const assetDescriptionsWithAssets =
+        await this.getAssetDescriptionsWithAssets(transaction);
       data.push(
-        serializedTransactionFromRecord(transaction, assetDescriptions),
+        serializedTransactionFromRecord(
+          transaction,
+          assetDescriptionsWithAssets,
+        ),
       );
     }
 
@@ -119,19 +128,22 @@ export class TransactionsController {
 
     const data = [];
     for (const transaction of transactions) {
-      const assetDescriptions =
-        await this.assetDescriptionsService.findByTransaction(transaction);
+      const assetDescriptionsWithAssets =
+        await this.getAssetDescriptionsWithAssets(transaction);
 
       if ('blocks' in transaction) {
         data.push(
           serializedTransactionFromRecordWithBlocks(
             transaction,
-            assetDescriptions,
+            assetDescriptionsWithAssets,
           ),
         );
       } else {
         data.push(
-          serializedTransactionFromRecord(transaction, assetDescriptions),
+          serializedTransactionFromRecord(
+            transaction,
+            assetDescriptionsWithAssets,
+          ),
         );
       }
     }
@@ -140,5 +152,22 @@ export class TransactionsController {
       data,
       object: 'list',
     };
+  }
+
+  private async getAssetDescriptionsWithAssets(
+    transaction: Transaction,
+  ): Promise<{ asset: Asset; assetDescription: AssetDescription }[]> {
+    const assetDescriptions =
+      await this.assetDescriptionsService.findByTransaction(transaction);
+
+    const assetDescriptionsWithAssets = [];
+    for (const assetDescription of assetDescriptions) {
+      assetDescriptionsWithAssets.push({
+        asset: await this.assetsService.findOrThrow(assetDescription.asset_id),
+        assetDescription,
+      });
+    }
+
+    return assetDescriptionsWithAssets;
   }
 }

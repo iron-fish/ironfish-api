@@ -112,7 +112,7 @@ export class AssetsLoader {
     );
 
     for (const assetDescription of assetDescriptions) {
-      const asset = await this.assetsService.findOrThrow(
+      const asset = await this.assetsService.findOrThrowWithClient(
         assetDescription.asset_id,
         prisma,
       );

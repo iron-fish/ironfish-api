@@ -14,7 +14,14 @@ import { Asset, Prisma, Transaction } from '.prisma/client';
 export class AssetsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findOrThrow(id: number, prisma: BasePrismaClient): Promise<Asset> {
+  async findOrThrow(id: number): Promise<Asset> {
+    return this.findOrThrowWithClient(id, this.prisma.readClient);
+  }
+
+  async findOrThrowWithClient(
+    id: number,
+    prisma: BasePrismaClient,
+  ): Promise<Asset> {
     const record = await prisma.asset.findUnique({
       where: {
         id,

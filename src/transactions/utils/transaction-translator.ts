@@ -7,6 +7,7 @@ import { serializedBlockFromRecord } from '../../blocks/utils/block-translator';
 import { SerializedTransaction } from '../interfaces/serialized-transaction';
 import { SerializedTransactionWithBlocks } from '../interfaces/serialized-transaction-with-blocks';
 import {
+  Asset,
   AssetDescription,
   AssetDescriptionType,
   Block,
@@ -15,7 +16,7 @@ import {
 
 export function serializedTransactionFromRecord(
   transaction: Transaction,
-  assetDescriptions: AssetDescription[],
+  assetDescriptions: { asset: Asset; assetDescription: AssetDescription }[],
 ): SerializedTransaction {
   const { mints, burns } = mintsAndBurnsFromAssetDescriptions(
     transaction,
@@ -36,7 +37,7 @@ export function serializedTransactionFromRecord(
 
 export function serializedTransactionFromRecordWithBlocks(
   transaction: Transaction & { blocks: Block[] },
-  assetDescriptions: AssetDescription[],
+  assetDescriptions: { asset: Asset; assetDescription: AssetDescription }[],
 ): SerializedTransactionWithBlocks {
   const blocks = transaction.blocks.map((block) =>
     serializedBlockFromRecord(block),
@@ -61,7 +62,7 @@ export function serializedTransactionFromRecordWithBlocks(
 
 function mintsAndBurnsFromAssetDescriptions(
   transaction: Transaction,
-  assetDescriptions: AssetDescription[],
+  assetDescriptions: { asset: Asset; assetDescription: AssetDescription }[],
 ): {
   mints: SerializedAssetDescription[];
   burns: SerializedAssetDescription[];
@@ -69,14 +70,22 @@ function mintsAndBurnsFromAssetDescriptions(
   const mints = [];
   const burns = [];
 
-  for (const assetDescription of assetDescriptions) {
+  for (const { asset, assetDescription } of assetDescriptions) {
     if (assetDescription.type === AssetDescriptionType.MINT) {
       mints.push(
-        serializedAssetDescriptionFromRecord(assetDescription, transaction),
+        serializedAssetDescriptionFromRecord(
+          assetDescription,
+          asset,
+          transaction,
+        ),
       );
     } else {
       burns.push(
-        serializedAssetDescriptionFromRecord(assetDescription, transaction),
+        serializedAssetDescriptionFromRecord(
+          assetDescription,
+          asset,
+          transaction,
+        ),
       );
     }
   }

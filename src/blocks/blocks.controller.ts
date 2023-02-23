@@ -17,6 +17,7 @@ import {
 import { ApiExcludeEndpoint, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { AssetDescriptionsService } from '../asset-descriptions/asset-descriptions.service';
+import { AssetsService } from '../assets/assets.service';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { BlocksDailyService } from '../blocks-daily/blocks-daily.service';
 import { BlocksTransactionsLoader } from '../blocks-transactions-loader/blocks-transactions-loader';
@@ -41,6 +42,7 @@ import {
 } from './utils/block-translator';
 import { serializedBlockMetricsFromRecord } from './utils/blocks-metrics-translator';
 import { serializedBlocksStatusFromRecord } from './utils/blocks-status-translator';
+import { Asset, AssetDescription, Transaction } from '.prisma/client';
 
 const MAX_SUPPORTED_TIME_RANGE_IN_DAYS = 90;
 
@@ -49,6 +51,7 @@ const MAX_SUPPORTED_TIME_RANGE_IN_DAYS = 90;
 export class BlocksController {
   constructor(
     private readonly assetDescriptionsService: AssetDescriptionsService,
+    private readonly assetsService: AssetsService,
     private readonly blocksDailyService: BlocksDailyService,
     private readonly blocksService: BlocksService,
     private readonly blocksTransactionsLoader: BlocksTransactionsLoader,
@@ -74,10 +77,13 @@ export class BlocksController {
     for (const block of blocks) {
       const serializedTransactions = [];
       for (const transaction of block.transactions) {
-        const assetDescriptions =
-          await this.assetDescriptionsService.findByTransaction(transaction);
+        const assetDescriptionsWithAssets =
+          await this.getAssetDescriptionsWithAssets(transaction);
         serializedTransactions.push(
-          serializedTransactionFromRecord(transaction, assetDescriptions),
+          serializedTransactionFromRecord(
+            transaction,
+            assetDescriptionsWithAssets,
+          ),
         );
       }
 
@@ -159,10 +165,13 @@ export class BlocksController {
       if ('transactions' in block) {
         const serializedTransactions = [];
         for (const transaction of block.transactions) {
-          const assetDescriptions =
-            await this.assetDescriptionsService.findByTransaction(transaction);
+          const assetDescriptionsWithAssets =
+            await this.getAssetDescriptionsWithAssets(transaction);
           serializedTransactions.push(
-            serializedTransactionFromRecord(transaction, assetDescriptions),
+            serializedTransactionFromRecord(
+              transaction,
+              assetDescriptionsWithAssets,
+            ),
           );
         }
 
@@ -215,10 +224,13 @@ export class BlocksController {
       const serializedTransactions = [];
 
       for (const transaction of block.transactions) {
-        const assetDescriptions =
-          await this.assetDescriptionsService.findByTransaction(transaction);
+        const assetDescriptionsWithAssets =
+          await this.getAssetDescriptionsWithAssets(transaction);
         serializedTransactions.push(
-          serializedTransactionFromRecord(transaction, assetDescriptions),
+          serializedTransactionFromRecord(
+            transaction,
+            assetDescriptionsWithAssets,
+          ),
         );
       }
 
@@ -303,5 +315,22 @@ export class BlocksController {
       };
     }
     return { isValid: true };
+  }
+
+  private async getAssetDescriptionsWithAssets(
+    transaction: Transaction,
+  ): Promise<{ asset: Asset; assetDescription: AssetDescription }[]> {
+    const assetDescriptions =
+      await this.assetDescriptionsService.findByTransaction(transaction);
+
+    const assetDescriptionsWithAssets = [];
+    for (const assetDescription of assetDescriptions) {
+      assetDescriptionsWithAssets.push({
+        asset: await this.assetsService.findOrThrow(assetDescription.asset_id),
+        assetDescription,
+      });
+    }
+
+    return assetDescriptionsWithAssets;
   }
 }
