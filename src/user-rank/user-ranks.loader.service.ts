@@ -16,7 +16,7 @@ export class UserRanksLoader {
     await this.userRankService.updateRanks();
 
     const runAt = new Date();
-    runAt.setMinutes(runAt.getMinutes() + 1);
+    runAt.setMinutes(runAt.getMinutes() + 5);
     await this.graphileWorkerService.addJob(
       GraphileWorkerPattern.UPDATE_USER_RANKS,
       {},
