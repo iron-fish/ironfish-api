@@ -68,6 +68,7 @@ export class AssetDescriptionsController {
       serializedData.push(
         serializedAssetDescriptionWithTimestampFromRecord(
           record,
+          asset,
           transaction,
           block,
         ),

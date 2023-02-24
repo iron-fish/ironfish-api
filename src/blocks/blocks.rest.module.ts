@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Module } from '@nestjs/common';
 import { AssetDescriptionsModule } from '../asset-descriptions/asset-descriptions.module';
+import { AssetsModule } from '../assets/assets.module';
 import { BlocksDailyModule } from '../blocks-daily/blocks-daily.module';
 import { BlocksTransactionsLoaderModule } from '../blocks-transactions-loader/blocks-transactions-loader.module';
 import { UsersModule } from '../users/users.module';
@@ -13,6 +14,7 @@ import { BlocksModule } from './blocks.module';
   controllers: [BlocksController],
   imports: [
     AssetDescriptionsModule,
+    AssetsModule,
     BlocksDailyModule,
     BlocksModule,
     BlocksTransactionsLoaderModule,

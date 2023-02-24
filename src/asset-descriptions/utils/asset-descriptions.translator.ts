@@ -2,10 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { SerializedAssetDescription } from '../interfaces/serialized-asset-description';
-import { AssetDescription, Block, Transaction } from '.prisma/client';
+import { Asset, AssetDescription, Block, Transaction } from '.prisma/client';
 
 export function serializedAssetDescriptionFromRecord(
   assetDescription: AssetDescription,
+  asset: Asset,
   transaction: Transaction,
 ): SerializedAssetDescription {
   return {
@@ -14,11 +15,16 @@ export function serializedAssetDescriptionFromRecord(
     transaction_hash: transaction.hash,
     type: assetDescription.type,
     value: assetDescription.value.toString(),
+    asset: {
+      identifier: asset.identifier,
+      name: asset.name,
+    },
   };
 }
 
 export function serializedAssetDescriptionWithTimestampFromRecord(
   assetDescription: AssetDescription,
+  asset: Asset,
   transaction: Transaction,
   block: Block,
 ): SerializedAssetDescription {
@@ -29,5 +35,9 @@ export function serializedAssetDescriptionWithTimestampFromRecord(
     transaction_hash: transaction.hash,
     type: assetDescription.type,
     value: assetDescription.value.toString(),
+    asset: {
+      identifier: asset.identifier,
+      name: asset.name,
+    },
   };
 }
