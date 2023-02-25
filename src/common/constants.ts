@@ -56,3 +56,6 @@ export const POOL_4_CATEGORIES: Array<EventType> = [
   EventType.MULTI_ASSET_BURN,
   EventType.MULTI_ASSET_TRANSFER,
 ];
+
+// 2022 Feb 26 12 AM UTC
+export const PHASE_3_END = new Date(Date.UTC(2023, 1, 26, 0, 0, 0));
