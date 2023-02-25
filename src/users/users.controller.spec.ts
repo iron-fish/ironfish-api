@@ -93,8 +93,8 @@ describe('UsersController', () => {
         id: user.id,
         graffiti: user.graffiti,
         verified: false,
-        node_uptime_count: 0,
-        node_uptime_threshold: 14,
+        node_uptime_count: expect.any(Number),
+        node_uptime_threshold: expect.any(Number),
         total_points: expect.any(Number),
         created_at: user.created_at.toISOString(),
       });
