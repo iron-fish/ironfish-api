@@ -15,8 +15,7 @@ export function serializedUserFromRecord(
     graffiti: user.graffiti,
     verified: user.last_login_at != null,
     node_uptime_count: userPoints.node_uptime_count,
-    //this is one week of node_uptime. Being slightly lazy here and hardcoding because this will live for a month
-    node_uptime_threshold: 14,
+    node_uptime_threshold: 0,
     total_points: userPoints.total_points,
     created_at: user.created_at.toISOString(),
   };
