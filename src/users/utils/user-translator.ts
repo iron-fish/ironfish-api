@@ -32,7 +32,7 @@ export function serializedUserFromRecordWithRank(
     graffiti: user.graffiti,
     verified: user.last_login_at != null,
     node_uptime_count: userPoints.node_uptime_count,
-    node_uptime_threshold: 14,
+    node_uptime_threshold: 0,
     total_points: userPoints.total_points,
     created_at: user.created_at.toISOString(),
     rank,
