@@ -16,6 +16,7 @@ import {
   UpsertMultiAssetDto,
 } from './dto/upsert-multi-asset.dto';
 import { MultiAssetUpsertService } from './multi-asset.upsert.service';
+
 describe('MultiAssetUpsertService', () => {
   let app: INestApplication;
   let multiAssetHeadService: MultiAssetHeadService;
@@ -68,7 +69,7 @@ describe('MultiAssetUpsertService', () => {
           block: {
             hash: 'multiassetupsertblockhash1',
             previousBlockHash: 'previousblockhash1',
-            timestamp: new Date(),
+            timestamp: new Date('2023-01-01'),
             sequence: 3,
           },
         },
@@ -78,7 +79,7 @@ describe('MultiAssetUpsertService', () => {
           block: {
             hash: 'multiassetupsertblockhash2',
             previousBlockHash: 'previousblockhash2',
-            timestamp: new Date(),
+            timestamp: new Date('2023-01-01'),
             sequence: 4,
           },
         },
@@ -195,6 +196,27 @@ describe('MultiAssetUpsertService', () => {
       expect(user1MultiAsset[0].type).toEqual(EventType.MULTI_ASSET_MINT);
       expect(user1MultiAsset[0].block_hash).toBe(updatedHash);
     });
+
+    describe('on blocks after the phase 3 end', () => {
+      it('returns no events', async () => {
+        await prismaService.multiAssetHead.deleteMany();
+
+        const timestamp = new Date(Date.UTC(2023, 1, 26, 1, 0, 0));
+        const payload = {
+          transactions: [transaction3],
+          type: BlockOperation.CONNECTED,
+          block: {
+            hash: 'multiassetupsertblockhash2',
+            previousBlockHash: 'previousblockhash2',
+            timestamp,
+            sequence: 4,
+          },
+        };
+
+        expect(await multiAssetUpsertService.upsert(payload)).toEqual([]);
+      });
+    });
+
     describe('on DISCONNECTED operations', () => {
       it('removes events', async () => {
         // connected operation
@@ -355,7 +377,7 @@ describe('Weekly transaction limit', () => {
       block: {
         hash: 'goingtodisconnectblock',
         previousBlockHash: head?.block_hash || 'foo',
-        timestamp: new Date('2023/03/01'),
+        timestamp: new Date('2023/02/01'),
         sequence: 1,
       },
     };
@@ -380,7 +402,7 @@ describe('Weekly transaction limit', () => {
       block: {
         hash: 'pointtest2',
         previousBlockHash: head?.block_hash || 'foo',
-        timestamp: new Date('2023/03/01'),
+        timestamp: new Date('2023/02/01'),
         sequence: 2,
       },
     };
@@ -415,7 +437,7 @@ describe('Weekly transaction limit', () => {
       expect.arrayContaining([
         expect.objectContaining({
           type: EventType.MULTI_ASSET_MINT,
-          week: 2773,
+          week: 2769,
         }),
       ]),
     );
@@ -445,7 +467,7 @@ describe('Weekly transaction limit', () => {
       block: {
         hash: 'goingtodisconnectblock',
         previousBlockHash: head?.block_hash || 'foo',
-        timestamp: new Date('2023/03/01'),
+        timestamp: new Date('2023/02/01'),
         sequence: 1,
       },
     };

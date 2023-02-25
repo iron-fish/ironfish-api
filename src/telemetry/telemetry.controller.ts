@@ -13,6 +13,7 @@ import { ApiExcludeEndpoint } from '@nestjs/swagger';
 import { Request } from 'express';
 import semver from 'semver';
 import { ApiConfigService } from '../api-config/api-config.service';
+import { PHASE_3_END } from '../common/constants';
 import { fetchIpAddressFromRequest } from '../common/utils/request';
 import { InfluxDbService } from '../influxdb/influxdb.service';
 import { CreatePointOptions } from '../influxdb/interfaces/create-point-options';
@@ -109,8 +110,9 @@ export class TelemetryController {
   ): Promise<void> {
     const { options, nodeVersion } = this.processPoints(points);
     const ipAddress = fetchIpAddressFromRequest(request);
+    const beforePhase3End = new Date() < PHASE_3_END;
 
-    if (graffiti && nodeVersion) {
+    if (graffiti && nodeVersion && beforePhase3End) {
       await this.addUptime(graffiti, nodeVersion, ipAddress);
     }
 
