@@ -42,7 +42,11 @@ export class MultiAssetUpsertService {
   }
 
   async upsert(operation: UpsertMultiAssetOperationDto): Promise<MultiAsset[]> {
-    if (operation.block.timestamp >= PHASE_3_END) {
+    const skip =
+      this.config.get<boolean>('ENABLE_PHASE_3_END_CHECK') &&
+      operation.block.timestamp >= PHASE_3_END;
+
+    if (skip) {
       return [];
     }
 
