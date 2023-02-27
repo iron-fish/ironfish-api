@@ -113,7 +113,7 @@ export class TelemetryController {
 
     // Only process points before the end of phase 3
     const skipUptime =
-      this.config.get<boolean>('ENABLE_PHASE_3_END_CHECK') ||
+      this.config.get<boolean>('ENABLE_PHASE_3_END_CHECK') &&
       new Date() >= PHASE_3_END;
 
     if (graffiti && nodeVersion && !skipUptime) {
