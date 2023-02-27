@@ -24,6 +24,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { Request } from 'express';
+import { ApiConfigService } from '../api-config/api-config.service';
 import { MagicLinkGuard } from '../auth/guards/magic-link.guard';
 import { DEFAULT_LIMIT, MAX_LIMIT, MS_PER_DAY } from '../common/constants';
 import { Context } from '../common/decorators/context';
@@ -58,6 +59,7 @@ const MAX_SUPPORTED_TIME_RANGE_IN_DAYS = 30;
 @Controller('users')
 export class UsersController {
   constructor(
+    private readonly config: ApiConfigService,
     private readonly eventsService: EventsService,
     private readonly nodeUptimeService: NodeUptimesService,
     private readonly userPointsService: UserPointsService,
@@ -305,6 +307,13 @@ export class UsersController {
     dto: CreateUserDto,
     @Req() request: Request,
   ): Promise<User> {
+    if (!this.config.get<string>('ENABLE_SIGNUP')) {
+      throw new HttpException(
+        'Signup has been disabled',
+        HttpStatus.UNPROCESSABLE_ENTITY,
+      );
+    }
+
     const remoteIp = fetchIpAddressFromRequest(request);
     const isRecaptchaValid = await this.recaptchaVerificationService.verify(
       dto.recaptcha,
