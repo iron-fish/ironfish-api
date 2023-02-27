@@ -82,6 +82,7 @@ export const REST_MODULES = [
         DISABLE_FAUCET: joi.boolean().default(false),
         DISABLE_LOGIN: joi.boolean().default(false),
         ENABLE_PHASE_3_END_CHECK: joi.boolean().default(true),
+        ENABLE_SIGNUP: joi.boolean().default(true),
         GRAPHILE_CONCURRENCY: joi.number().required(),
         INCENTIVIZED_TESTNET_URL: joi.string().required(),
         INFLUXDB_API_TOKEN: joi.string().required(),
