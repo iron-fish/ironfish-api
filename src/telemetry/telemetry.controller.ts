@@ -110,9 +110,13 @@ export class TelemetryController {
   ): Promise<void> {
     const { options, nodeVersion } = this.processPoints(points);
     const ipAddress = fetchIpAddressFromRequest(request);
-    const beforePhase3End = new Date() < PHASE_3_END;
 
-    if (graffiti && nodeVersion && beforePhase3End) {
+    // Only process points before phase 3 and if the check is enabled
+    const processPoints =
+      !this.config.get<boolean>('ENABLE_PHASE_3_END_CHECK') ||
+      new Date() < PHASE_3_END;
+
+    if (graffiti && nodeVersion && processPoints) {
       await this.addUptime(graffiti, nodeVersion, ipAddress);
     }
 

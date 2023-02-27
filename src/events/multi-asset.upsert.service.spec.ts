@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { INestApplication } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { EventType, User } from '@prisma/client';
 import assert from 'assert';
 import faker from 'faker';
@@ -23,6 +24,7 @@ describe('MultiAssetUpsertService', () => {
   let multiAssetUpsertService: MultiAssetUpsertService;
   let prismaService: PrismaService;
   let usersService: UsersService;
+  let config: ConfigService;
 
   let user1: User;
   let user2: User;
@@ -90,6 +92,7 @@ describe('MultiAssetUpsertService', () => {
     multiAssetHeadService = app.get(MultiAssetHeadService);
     prismaService = app.get(PrismaService);
     usersService = app.get(UsersService);
+    config = app.get(ConfigService);
     await app.init();
 
     user1 = await usersService.create({
@@ -213,6 +216,7 @@ describe('MultiAssetUpsertService', () => {
           },
         };
 
+        jest.spyOn(config, 'get').mockImplementationOnce(() => true);
         expect(await multiAssetUpsertService.upsert(payload)).toEqual([]);
       });
     });
