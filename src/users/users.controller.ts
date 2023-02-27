@@ -305,6 +305,11 @@ export class UsersController {
     dto: CreateUserDto,
     @Req() request: Request,
   ): Promise<User> {
+    throw new HttpException(
+      'Signup has been disabled',
+      HttpStatus.UNPROCESSABLE_ENTITY,
+    );
+
     const remoteIp = fetchIpAddressFromRequest(request);
     const isRecaptchaValid = await this.recaptchaVerificationService.verify(
       dto.recaptcha,
