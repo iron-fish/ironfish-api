@@ -10,7 +10,7 @@ import { KycDetails } from '../jumio-kyc/kyc.service';
 export class JumioApiService {
   constructor(private readonly config: ApiConfigService) {}
 
-  async jumioAccountAndTransaction(
+  async createAccountAndTransaction(
     userId: number,
     jumioAccountId: string | null,
   ): Promise<KycDetails> {
