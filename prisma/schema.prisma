@@ -39,23 +39,23 @@ model Event {
 }
 
 model User {
-  id                  Int         @id @default(autoincrement())
-  created_at          DateTime    @default(now()) @db.Timestamp(6)
-  updated_at          DateTime    @default(now()) @updatedAt @db.Timestamp(6)
-  email               String      @unique(map: "uq_users_on_email") @db.VarChar
-  graffiti            String      @unique(map: "uq_users_on_graffiti") @db.VarChar
-  country_code        String      @db.VarChar
-  email_notifications Boolean     @default(false)
-  last_login_at       DateTime?   @db.Timestamp(6)
-  discord             String?     @db.VarChar
-  telegram            String?     @db.VarChar
-  github              String?     @db.VarChar
-  hashed_ip_address   String?     @db.VarChar
+  id                  Int               @id @default(autoincrement())
+  created_at          DateTime          @default(now()) @db.Timestamp(6)
+  updated_at          DateTime          @default(now()) @updatedAt @db.Timestamp(6)
+  email               String            @unique(map: "uq_users_on_email") @db.VarChar
+  graffiti            String            @unique(map: "uq_users_on_graffiti") @db.VarChar
+  country_code        String            @db.VarChar
+  email_notifications Boolean           @default(false)
+  last_login_at       DateTime?         @db.Timestamp(6)
+  discord             String?           @db.VarChar
+  telegram            String?           @db.VarChar
+  github              String?           @db.VarChar
+  hashed_ip_address   String?           @db.VarChar
+  events              Event[]
   redemption          Redemption?
-
-  events      Event[]
-  node_uptime NodeUptime?
-  points      UserPoints?
+  jumio_transaction   JumioTransaction?
+  node_uptime         NodeUptime?
+  points              UserPoints?
 
   @@index([email], name: "index_users_on_email")
   @@index([graffiti], name: "index_users_on_graffiti")
@@ -63,18 +63,31 @@ model User {
 }
 
 model Redemption {
-  id               Int          @id @default(autoincrement())
-  created_at       DateTime     @default(now()) @db.Timestamp(6)
-  updated_at       DateTime     @default(now()) @updatedAt @db.Timestamp(6)
-  user             User         @relation(fields: [user_id], references: [id])
-  user_id          Int          @unique
-  kyc_attempts     Int          @default(0)
+  id               Int       @id @default(autoincrement())
+  created_at       DateTime  @default(now()) @db.Timestamp(6)
+  updated_at       DateTime  @default(now()) @updatedAt @db.Timestamp(6)
+  user             User      @relation(fields: [user_id], references: [id])
+  user_id          Int       @unique
+  kyc_attempts     Int       @default(0)
   kyc_status       KycStatus
-  jumio_account_id String?      @db.VarChar
-  public_address   String       @db.VarChar
+  jumio_account_id String?   @db.VarChar
+  public_address   String    @db.VarChar
 
   @@index([user_id], name: "index_redemption_on_user_id")
   @@map("redemptions")
+}
+
+model JumioTransaction {
+  id                    Int      @id @default(autoincrement())
+  created_at            DateTime @default(now()) @db.Timestamp(6)
+  updated_at            DateTime @default(now()) @updatedAt @db.Timestamp(6)
+  user                  User     @relation(fields: [user_id], references: [id])
+  user_id               Int      @unique
+  workflow_execution_id String   @db.VarChar
+  web_href              String   @db.VarChar
+
+  @@index([user_id], name: "index_jumio_transactions_on_user_id")
+  @@map("jumio_transactions")
 }
 
 model NodeUptime {

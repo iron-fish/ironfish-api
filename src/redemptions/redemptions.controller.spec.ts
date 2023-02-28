@@ -43,11 +43,11 @@ describe('RedemptionsController', () => {
     return user;
   };
 
-  describe('POST /redemption/:id', () => {
+  describe('POST /redemption', () => {
     it('creates new redemption when not created', async () => {
       const user = await mockUser();
       const { body } = await request(app.getHttpServer())
-        .post(`/redemption/${user.id}`)
+        .post(`/redemption`)
         .set('Authorization', 'did-token')
         .send({
           public_address: 'foo',
@@ -62,18 +62,9 @@ describe('RedemptionsController', () => {
     it('fails if user already has redemption', async () => {
       const user = await mockUser();
       // create redemption
-      await redemptionService.create(user, 'bar');
+      await redemptionService.getOrCreate(user, 'bar');
       await request(app.getHttpServer())
-        .post(`/redemption/${user.id}`)
-        .set('Authorization', 'did-token')
-        .send({
-          public_address: 'foo',
-        })
-        .expect(HttpStatus.FORBIDDEN);
-    });
-    it('returns errors when user id does not match', async () => {
-      await request(app.getHttpServer())
-        .post(`/redemption/111111`)
+        .post(`/redemption`)
         .set('Authorization', 'did-token')
         .send({
           public_address: 'foo',
@@ -82,35 +73,29 @@ describe('RedemptionsController', () => {
     });
   });
 
-  describe('GET /redemption/:id', () => {
+  describe('GET /redemption', () => {
     it('retrieves redemption when it exists', async () => {
       const user = await mockUser();
-      const redemption = await redemptionService.create(
+      const redemption = await redemptionService.getOrCreate(
         user,
         'fakePublicAddress',
       );
       const { body } = await request(app.getHttpServer())
-        .get(`/redemption/${user.id}`)
+        .get(`/redemption`)
         .set('Authorization', 'did-token')
         .expect(HttpStatus.OK);
       expect(body).toMatchObject(serializeRedemption(redemption));
     });
     it('retrieves when redemption if already present', async () => {
-      const user = await mockUser();
+      await mockUser();
       // no redemption created for user
       await request(app.getHttpServer())
-        .get(`/redemption/${user.id}`)
+        .get(`/redemption`)
         .set('Authorization', 'did-token')
         .send({
           public_address: 'foo',
         })
         .expect(HttpStatus.NOT_FOUND);
-    });
-    it('returns errors when user id does not match', async () => {
-      await request(app.getHttpServer())
-        .get(`/redemption/111111`)
-        .set('Authorization', 'did-token')
-        .expect(HttpStatus.FORBIDDEN);
     });
   });
 });
