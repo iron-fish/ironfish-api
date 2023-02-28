@@ -25,7 +25,6 @@ export class KycService {
 
   async attempt(user: User, redemption: Redemption): Promise<KycDetails> {
     // Jumio API ties together account creation with transactionc reation
-    // TODO: call ACCOUNT CREATION api
     return this.prisma.$transaction(async (prisma) => {
       await prisma.$executeRawUnsafe(
         'SELECT pg_advisory_xact_lock(HASHTEXT($1));',
