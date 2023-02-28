@@ -1,5 +1,5 @@
 {
-  description = "A prisma test project";
+  description = "Iron Fish API";
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/master";
   inputs.flake-utils.url = "github:numtide/flake-utils";
 
