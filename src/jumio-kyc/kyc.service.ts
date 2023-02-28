@@ -24,7 +24,7 @@ export class KycService {
   ) {}
 
   async attempt(user: User, redemption: Redemption): Promise<KycDetails> {
-    await this.prisma.$transaction(async (prisma) => {
+    return await this.prisma.$transaction(async (prisma) => {
       await prisma.$executeRawUnsafe(
         'SELECT pg_advisory_xact_lock(HASHTEXT($1));',
         user.id,
@@ -40,13 +40,15 @@ export class KycService {
         response.jumio_account_id,
         prisma,
       );
+
       await this.jumioTransactionService.create(
         user,
         response.jumio_workflow_execution_id,
         response.jumio_web_href,
         prisma,
       );
+
+      return response;
     });
-    return response;
   }
 }
