@@ -1,22 +1,14 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { KycStatus, Redemption, User } from '@prisma/client';
-import { ApiConfigService } from '../api-config/api-config.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 
 @Injectable()
 export class RedemptionService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly config: ApiConfigService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async findOrThrow(user: User): Promise<Redemption> {
     const redemption = await this.find(user);

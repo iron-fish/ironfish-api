@@ -6,6 +6,7 @@ import { User } from '@prisma/client';
 import faker from 'faker';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
+import { JumioApiService } from '../jumio-api/jumio-api.service';
 import { MagicLinkService } from '../magic-link/magic-link.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
@@ -17,13 +18,23 @@ describe('RedemptionsController', () => {
   let usersService: UsersService;
   let magicLinkService: MagicLinkService;
   let redemptionService: RedemptionService;
+  let jumioApiService: JumioApiService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
     magicLinkService = app.get(MagicLinkService);
     usersService = app.get(UsersService);
     redemptionService = app.get(RedemptionService);
-
+    jumioApiService = app.get(JumioApiService);
+    jest
+      .spyOn(jumioApiService, 'createAccountAndTransaction')
+      .mockImplementation(() =>
+        Promise.resolve({
+          jumio_account_id: uuid(),
+          jumio_workflow_execution_id: uuid(),
+          jumio_web_href: 'http://foo.test.jumio/?token=asdfaf',
+        }),
+      );
     await app.init();
   });
 

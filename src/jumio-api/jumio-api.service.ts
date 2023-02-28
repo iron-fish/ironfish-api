@@ -5,6 +5,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import axios, { AxiosRequestConfig } from 'axios';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { KycDetails } from '../jumio-kyc/kyc.service';
+import { JumioAccountCreateResponse } from './interfaces/jumio-account-create';
 
 @Injectable()
 export class JumioApiService {

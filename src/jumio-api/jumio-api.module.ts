@@ -3,11 +3,12 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 import { Module } from '@nestjs/common';
+import { ApiConfigModule } from '../api-config/api-config.module';
 import { JumioApiService } from './jumio-api.service';
 
 @Module({
   exports: [JumioApiService],
-  imports: [],
+  imports: [ApiConfigModule],
   providers: [JumioApiService],
 })
 export class JumioApiModule {}
