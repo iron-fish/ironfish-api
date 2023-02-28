@@ -25,7 +25,7 @@ export class RedemptionService {
 
   async update(
     redemption: Redemption,
-    data: { status?: KycStatus; jumio_account_id?: string },
+    data: { kyc_status?: KycStatus; jumio_account_id?: string },
   ): Promise<Redemption> {
     return this.prisma.redemption.update({
       data,

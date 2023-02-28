@@ -7,14 +7,11 @@ import {
   Controller,
   Get,
   HttpStatus,
-  NotFoundException,
   Post,
-  UnprocessableEntityException,
   UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiExcludeEndpoint, ApiTags } from '@nestjs/swagger';
-import { KycStatus } from '@prisma/client';
 import { MagicLinkGuard } from '../auth/guards/magic-link.guard';
 import { Context } from '../common/decorators/context';
 import { MagicLinkContext } from '../common/interfaces/magic-link-context';
@@ -77,14 +74,12 @@ export class KycController {
     if (!jumioTransaction) {
       return null;
     }
-
-    const kycDetails = await this.kycService.status(user, jumioTransaction);
     return serializeKyc(
       redemption,
-      kycDetails.jumio_account_id,
-      kycDetails.status,
-      kycDetails.jumio_workflow_execution_id,
-      kycDetails.jumio_web_href,
+      redemption.jumio_account_id,
+      redemption.kyc_status,
+      jumioTransaction.workflow_execution_id,
+      jumioTransaction.web_href,
     );
   }
 }

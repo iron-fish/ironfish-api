@@ -36,9 +36,15 @@ describe('KycController', () => {
       .spyOn(jumioApiService, 'createAccountAndTransaction')
       .mockImplementation(() =>
         Promise.resolve({
-          jumio_account_id: uuid(),
-          jumio_workflow_execution_id: uuid(),
-          jumio_web_href: 'http://foo.test.jumio/?token=asdfaf',
+          account: {
+            id: uuid(),
+          },
+          web: {
+            href: 'http://kyc/test',
+          },
+          workflowExecution: {
+            id: uuid(),
+          },
         }),
       );
     await app.init();
@@ -79,22 +85,11 @@ describe('KycController', () => {
         serializeKyc(
           redemption,
           redemption.jumio_account_id,
+          redemption.kyc_status,
           jumioTransaction.workflow_execution_id,
           jumioTransaction.web_href,
         ),
       );
-    });
-    it('fails if user already has redemption', async () => {
-      const user = await mockUser();
-      // create redemption
-      await redemptionService.getOrCreate(user, 'bar');
-      await request(app.getHttpServer())
-        .post(`/kyc`)
-        .set('Authorization', 'did-token')
-        .send({
-          public_address: 'foo',
-        })
-        .expect(HttpStatus.UNPROCESSABLE_ENTITY);
     });
   });
 
@@ -123,17 +118,6 @@ describe('KycController', () => {
           kycDetails.jumio_web_href,
         ),
       );
-    });
-    it('fails if already present', async () => {
-      await mockUser();
-      // no redemption created for user
-      await request(app.getHttpServer())
-        .get(`/kyc`)
-        .set('Authorization', 'did-token')
-        .send({
-          public_address: 'foo',
-        })
-        .expect(HttpStatus.NOT_FOUND);
     });
   });
 });

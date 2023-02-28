@@ -39,7 +39,7 @@ export class KycService {
       jumioTransaction.workflow_execution_id,
     );
     await this.redemptionService.update(redemption, {
-      status: jumioStatus.decision.details.label,
+      kyc_status: jumioStatus.decision.details.label,
     });
     return {
       jumio_account_id: 'foo',
@@ -66,7 +66,7 @@ export class KycService {
         redemption.jumio_account_id,
       );
       await this.redemptionService.update(redemption, {
-        status: pendingStatus,
+        kyc_status: pendingStatus,
         jumio_account_id: response.account.id,
       });
       await this.jumioTransactionService.upsert(
