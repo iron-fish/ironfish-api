@@ -12,7 +12,7 @@ import { UsersService } from '../users/users.service';
 import { RedemptionService } from './redemption.service';
 import { serializeRedemption } from './utils/serialize-redemption';
 
-describe('RedemptionController', () => {
+describe('RedemptionsController', () => {
   let app: INestApplication;
   let usersService: UsersService;
   let magicLinkService: MagicLinkService;

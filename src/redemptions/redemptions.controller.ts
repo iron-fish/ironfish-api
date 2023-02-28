@@ -24,7 +24,7 @@ import { serializeRedemption } from './utils/serialize-redemption';
 
 @ApiTags('Redemption')
 @Controller('redemption')
-export class RedemptionController {
+export class RedemptionsController {
   constructor(private readonly redemptionService: RedemptionService) {}
 
   @ApiExcludeEndpoint()
