@@ -715,7 +715,6 @@ describe('UsersService', () => {
   describe('update', () => {
     it('updates the record', async () => {
       const options = {
-        countryCode: faker.address.countryCode('alpha-3'),
         discord: ulid(),
         github: ulid(),
         graffiti: ulid(),
@@ -731,7 +730,6 @@ describe('UsersService', () => {
       const updatedUser = await usersService.update(user, options, prisma);
       expect(updatedUser).toMatchObject({
         id: user.id,
-        country_code: options.countryCode,
         discord: options.discord,
         github: options.github,
         graffiti: options.graffiti,
