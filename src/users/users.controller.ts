@@ -357,7 +357,6 @@ export class UsersController {
       throw new ForbiddenException();
     }
     return this.usersUpdater.update(user, {
-      countryCode: dto.country_code,
       discord: dto.discord,
       github: dto.github,
       graffiti: dto.graffiti,
