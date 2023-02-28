@@ -71,9 +71,7 @@ describe('KycController', () => {
         })
         .expect(HttpStatus.CREATED);
       const redemption = await redemptionService.find(user);
-      const jumioTransaction = await jumioTransactionService.getLastestOrThrow(
-        user,
-      );
+      const jumioTransaction = await jumioTransactionService.findOrThrow(user);
       if (!redemption || !redemption.jumio_account_id) {
         throw Error('Should have been created by api');
       }
@@ -107,7 +105,10 @@ describe('KycController', () => {
         user,
         'fakePublicAddress',
       );
-      const kycDetails = await kycService.attempt(user, redemption);
+      const kycDetails = await kycService.attempt(
+        user,
+        redemption.public_address,
+      );
       const { body } = await request(app.getHttpServer())
         .get(`/kyc`)
         .set('Authorization', 'did-token')
@@ -117,6 +118,7 @@ describe('KycController', () => {
         serializeKyc(
           redemption,
           kycDetails.jumio_account_id,
+          kycDetails.status,
           kycDetails.jumio_workflow_execution_id,
           kycDetails.jumio_web_href,
         ),

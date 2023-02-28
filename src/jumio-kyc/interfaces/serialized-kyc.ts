@@ -4,7 +4,6 @@
 import { KycStatus } from '@prisma/client';
 
 export interface SerializedKyc {
-  object: 'kyc';
   redemption_id: number;
   user_id: number;
   kyc_attempts: number;

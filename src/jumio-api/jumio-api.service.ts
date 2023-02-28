@@ -4,17 +4,36 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import axios, { AxiosRequestConfig } from 'axios';
 import { ApiConfigService } from '../api-config/api-config.service';
-import { KycDetails } from '../jumio-kyc/kyc.service';
 import { JumioAccountCreateResponse } from './interfaces/jumio-account-create';
+import { JumioTransactionRetrieveResponse } from './interfaces/jumio-transaction-retrieve';
 
 @Injectable()
 export class JumioApiService {
   constructor(private readonly config: ApiConfigService) {}
 
+  async transactionStatus(
+    jumio_account_id: string,
+    jumio_workflow_execution_id: string,
+  ): Promise<JumioTransactionRetrieveResponse> {
+    const url = `https://retrieval.amer-1.jumio.ai/api/v1/accounts/${jumio_account_id}/workflow-executions/${jumio_workflow_execution_id}`;
+
+    const response = await axios
+      .get<JumioTransactionRetrieveResponse>(url, this.requestConfig())
+      .catch((error) => {
+        if (axios.isAxiosError(error)) {
+          throw new BadRequestException(
+            `Error creating jumio account: ${error.message}`,
+          );
+        }
+        throw error;
+      });
+    return response.data;
+  }
+
   async createAccountAndTransaction(
     userId: number,
     jumioAccountId: string | null,
-  ): Promise<KycDetails> {
+  ): Promise<JumioAccountCreateResponse> {
     let url = this.config.get<string>('JUMIO_URL') + '/accounts';
 
     if (jumioAccountId) {
@@ -42,11 +61,7 @@ export class JumioApiService {
         throw error;
       });
 
-    return {
-      jumio_account_id: response.data.account.id,
-      jumio_workflow_execution_id: response.data.workflowExecution.id,
-      jumio_web_href: response.data.web.href,
-    };
+    return response.data;
   }
 
   requestConfig = (): AxiosRequestConfig => {

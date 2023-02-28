@@ -23,14 +23,12 @@ export class RedemptionService {
     });
   }
 
-  async addJumioAccountId(
+  async update(
     redemption: Redemption,
-    jumioAccountId: string,
+    data: { status?: KycStatus; jumio_account_id?: string },
   ): Promise<Redemption> {
     return this.prisma.redemption.update({
-      data: {
-        jumio_account_id: jumioAccountId,
-      },
+      data,
       where: {
         id: redemption.id,
       },
@@ -42,7 +40,7 @@ export class RedemptionService {
       create: {
         user: { connect: { id: user.id } },
         public_address,
-        kyc_status: KycStatus.NOT_STARTED,
+        kyc_status: KycStatus.NOT_EXECUTED,
       },
       update: {},
       where: { user_id: user.id },

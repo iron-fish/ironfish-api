@@ -10,8 +10,8 @@ import { JumioTransaction, Prisma } from '.prisma/client';
 export class JumioTransactionService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getLastestOrThrow(user: User): Promise<JumioTransaction> {
-    const jumioTransactions = await this.prisma.jumioTransaction.findMany({
+  async find(user: User): Promise<JumioTransaction | null> {
+    return this.prisma.jumioTransaction.findFirst({
       where: {
         user_id: user.id,
       },
@@ -19,10 +19,13 @@ export class JumioTransactionService {
         created_at: Prisma.SortOrder.desc,
       },
     });
-    if (jumioTransactions.length < 1) {
+  }
+  async findOrThrow(user: User): Promise<JumioTransaction> {
+    const jumioTransaction = await this.find(user);
+    if (!jumioTransaction) {
       throw new NotFoundException('No Jumio Transactions found');
     }
-    return jumioTransactions[0];
+    return jumioTransaction;
   }
 
   async upsert(
