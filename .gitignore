@@ -1,7 +1,9 @@
 *.log
 .env*
+!.envrc
 !.env.template
 !.env.test
 build
 node_modules
 coverage
+.direnv
