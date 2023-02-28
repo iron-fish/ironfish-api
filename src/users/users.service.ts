@@ -239,7 +239,7 @@ export class UsersService {
     options: UpdateUserOptions,
     client: BasePrismaClient,
   ): Promise<User[]> {
-    const { discord, github, graffiti, telegram } = options;
+    const { discord, github, telegram } = options;
 
     const filters = [];
     if (discord) {
@@ -247,9 +247,6 @@ export class UsersService {
     }
     if (github) {
       filters.push({ github });
-    }
-    if (graffiti) {
-      filters.push({ graffiti });
     }
     if (telegram) {
       filters.push({ telegram });
@@ -270,12 +267,11 @@ export class UsersService {
     options: UpdateUserOptions,
     client: BasePrismaClient,
   ): Promise<User> {
-    const { discord, github, graffiti, telegram } = options;
+    const { discord, github, telegram } = options;
     return client.user.update({
       data: {
         discord,
         github,
-        graffiti,
         telegram,
       },
       where: {
