@@ -15,11 +15,13 @@ export class JumioApiService {
     userId: number,
     jumioAccountId: string | null,
   ): Promise<KycDetails> {
-    const jumioUrl = this.config.get<string>('JUMIO_ACCOUNT_URL');
-    const accountSuffix = jumioAccountId ? `/${jumioAccountId}` : '';
-    // Adding the suffix of /<accountId> makes request update, rather than create
-    // https://jumio.github.io/kyx/integration-guide.html
-    const url = `${jumioUrl}${accountSuffix}`;
+    let url = this.config.get<string>('JUMIO_URL') + '/accounts';
+
+    if (jumioAccountId) {
+      // Adding the suffix of /<accountId> makes request update, rather than create
+      // https://jumio.github.io/kyx/integration-guide.html
+      url += `/${jumioAccountId}`;
+    }
 
     const body = {
       customerInternalReference: userId,
@@ -28,26 +30,23 @@ export class JumioApiService {
         key: Number(this.config.get<string>('JUMIO_WORKFLOW_DEFINITION')),
       },
     };
-    try {
-      const response = await axios.post<JumioAccountCreateResponse>(
-        url,
-        body,
-        this.requestConfig(),
-      );
-      return {
-        jumio_account_id: response.data.account.id,
-        jumio_workflow_execution_id: response.data.workflowExecution.id,
-        jumio_web_href: response.data.web.href,
-      };
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        throw new BadRequestException(
-          `Error creating jumio account: ${error.message}`,
-        );
-      } else {
+
+    const response = await axios
+      .post<JumioAccountCreateResponse>(url, body, this.requestConfig())
+      .catch((error) => {
+        if (axios.isAxiosError(error)) {
+          throw new BadRequestException(
+            `Error creating jumio account: ${error.message}`,
+          );
+        }
         throw error;
-      }
-    }
+      });
+
+    return {
+      jumio_account_id: response.data.account.id,
+      jumio_workflow_execution_id: response.data.workflowExecution.id,
+      jumio_web_href: response.data.web.href,
+    };
   }
 
   requestConfig = (): AxiosRequestConfig => {
@@ -57,7 +56,6 @@ export class JumioApiService {
     const token = Buffer.from(authString).toString('base64');
 
     return {
-      method: 'POST',
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json',
