@@ -17,6 +17,5 @@ export function serializeRedemption(
     kyc_status: redemption.kyc_status,
     jumio_account_id: redemption.jumio_account_id,
     public_address: redemption.public_address,
-    email_verified: redemption.email_verified,
   };
 }

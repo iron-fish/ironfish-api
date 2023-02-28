@@ -72,7 +72,6 @@ model Redemption {
   kyc_status       KycStatus
   jumio_account_id String?      @db.VarChar
   public_address   String       @db.VarChar
-  email_verified   Boolean      @default(false)
 
   @@index([user_id], name: "index_redemption_on_user_id")
   @@map("redemptions")

@@ -13,5 +13,5 @@ export interface SerializedRedemption {
   kyc_status: KycStatus;
   jumio_account_id: string | null;
   public_address: string;
-  email_verified: boolean;
+
 }

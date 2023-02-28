@@ -11,7 +11,6 @@ CREATE TABLE "redemptions" (
     "kyc_status" "KycStatus" NOT NULL,
     "jumio_account_id" VARCHAR,
     "public_address" VARCHAR NOT NULL,
-    "email_verified" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "redemptions_pkey" PRIMARY KEY ("id")
 );
