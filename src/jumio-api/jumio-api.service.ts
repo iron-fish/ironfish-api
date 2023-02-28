@@ -26,6 +26,7 @@ export class JumioApiService {
     const body = {
       customerInternalReference: userId,
       userReference: userId,
+      callbackUrl: 'https://foo',
       workflowDefinition: {
         key: Number(this.config.get<string>('JUMIO_WORKFLOW_DEFINITION')),
       },
