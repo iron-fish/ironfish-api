@@ -46,6 +46,7 @@ export class JumioApiService {
     const body = {
       customerInternalReference: userId,
       userReference: userId,
+      callbackUrl: this.getCallbackUrl(),
       workflowDefinition: {
         key: this.config.get<number>('JUMIO_WORKFLOW_DEFINITION'),
       },
@@ -63,6 +64,10 @@ export class JumioApiService {
       });
 
     return response.data;
+  }
+
+  getCallbackUrl(): string {
+    return this.config.get<string>('API_URL') + '/jumio/callback';
   }
 
   requestConfig(): AxiosRequestConfig {

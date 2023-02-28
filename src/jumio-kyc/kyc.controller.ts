@@ -9,6 +9,7 @@ import {
   HttpStatus,
   InternalServerErrorException,
   Post,
+  Res,
   UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
@@ -19,6 +20,7 @@ import { MagicLinkContext } from '../common/interfaces/magic-link-context';
 import { JumioTransactionService } from '../jumio-transactions/jumio-transaction.service';
 import { RedemptionService } from '../redemptions/redemption.service';
 import { CreateKycDto } from './dto/create-kyc.dto';
+import { JumioCallbackDto } from './dto/jumio-callback.dto';
 import { SerializedKyc } from './interfaces/serialized-kyc';
 import { SerializedKycConfig } from './interfaces/serialized-kyc-config';
 import { KycService } from './kyc.service';
@@ -118,4 +120,36 @@ export class KycController {
       ],
     };
   }
+  /**
+   * For more information about the jumio callback, see this
+   * https://github.com/Jumio/implementation-guides/blob/master/api-guide/api_guide.md#callback-parameters
+   */
+  @ApiExcludeEndpoint()
+  @Post('/callback')
+  async callback(
+    @Res() res: Response,
+    @Body()
+    dto: JumioCallbackData,
+  ): Promise<void> {
+    // eslint-disable-next-line no-console
+    console.log(dto);
+    await Promise.resolve(dto);
+
+    // Jumio requires a 200 explicitly
+    res.status(HttpStatus.CREATED).send();
+  }
+}
+
+interface JumioCallbackData {
+  callbackSentAt: string;
+  userReference: string;
+  workflowExecution: {
+    id: string;
+    href: string;
+    status: 'PROCESSED' | 'SESSION_EXPIRED' | 'TOKEN_EXPIRED';
+  };
+  account: {
+    id: string;
+    href: string;
+  };
 }
