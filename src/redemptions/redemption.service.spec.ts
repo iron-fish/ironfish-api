@@ -6,7 +6,7 @@ import {
   HttpException,
   INestApplication,
 } from '@nestjs/common';
-import { DedupeStatus, KycStatus, Redemption, User } from '@prisma/client';
+import { KycStatus, Redemption, User } from '@prisma/client';
 import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { ApiConfigService } from '../api-config/api-config.service';
@@ -74,7 +74,6 @@ describe('RedemptionService', () => {
           data: {
             user: { connect: { id: user.id } },
             public_address: 'testingstatuses',
-            dedupe_status: DedupeStatus.NOT_STARTED,
             kyc_status: kycStatus,
           },
         });

@@ -10,7 +10,6 @@ import { KycStatus, Redemption, User } from '@prisma/client';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
-import { DedupeStatus } from '.prisma/client';
 
 @Injectable()
 export class RedemptionService {
@@ -53,7 +52,6 @@ export class RedemptionService {
       data: {
         user: { connect: { id: user.id } },
         public_address,
-        dedupe_status: DedupeStatus.NOT_STARTED,
         kyc_status: KycStatus.NOT_STARTED,
       },
     });

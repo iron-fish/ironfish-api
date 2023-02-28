@@ -73,7 +73,6 @@ model Redemption {
   jumio_account_id String?      @db.VarChar
   public_address   String       @db.VarChar
   email_verified   Boolean      @default(false)
-  dedupe_status    DedupeStatus
 
   @@index([user_id], name: "index_redemption_on_user_id")
   @@map("redemptions")
@@ -356,10 +355,4 @@ enum KycStatus {
   PENDING
   FAIL_TRANSACTION
   FAIL_MAX_ATTEMPTS
-}
-
-enum DedupeStatus {
-  NOT_STARTED
-  PASS
-  FAIL
 }

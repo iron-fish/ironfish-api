@@ -1,9 +1,6 @@
 -- CreateEnum
 CREATE TYPE "KycStatus" AS ENUM ('NOT_STARTED', 'PASS', 'PENDING', 'FAIL_TRANSACTION', 'FAIL_MAX_ATTEMPTS');
 
--- CreateEnum
-CREATE TYPE "DedupeStatus" AS ENUM ('NOT_STARTED', 'PASS', 'FAIL');
-
 -- CreateTable
 CREATE TABLE "redemptions" (
     "id" SERIAL NOT NULL,
@@ -15,7 +12,6 @@ CREATE TABLE "redemptions" (
     "jumio_account_id" VARCHAR,
     "public_address" VARCHAR NOT NULL,
     "email_verified" BOOLEAN NOT NULL DEFAULT false,
-    "dedupe_status" "DedupeStatus" NOT NULL,
 
     CONSTRAINT "redemptions_pkey" PRIMARY KEY ("id")
 );
