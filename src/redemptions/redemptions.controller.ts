@@ -8,12 +8,14 @@ import {
   Get,
   HttpStatus,
   NotFoundException,
+  Param,
   Post,
   UnprocessableEntityException,
   UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiExcludeEndpoint, ApiTags } from '@nestjs/swagger';
+import { User } from '@prisma/client';
 import { MagicLinkGuard } from '../auth/guards/magic-link.guard';
 import { Context } from '../common/decorators/context';
 import { MagicLinkContext } from '../common/interfaces/magic-link-context';
@@ -27,11 +29,19 @@ import { serializeRedemption } from './utils/serialize-redemption';
 export class RedemptionsController {
   constructor(private readonly redemptionService: RedemptionService) {}
 
+  matchUserOrThrow(id: number, user: User): void {
+    if (id !== user.id) {
+      throw new ForbiddenException('User id does not match magic link user');
+    }
+  }
+
   @ApiExcludeEndpoint()
-  @Post()
+  @Post(':id')
   @UseGuards(MagicLinkGuard)
   async create(
     @Context() { user }: MagicLinkContext,
+    @Param('id', new IntIsSafeForPrismaPipe())
+    id: number,
     @Body(
       new ValidationPipe({
         errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
@@ -39,6 +49,7 @@ export class RedemptionsController {
     )
     dto: CreateRedemptionDto,
   ): Promise<SerializedRedemption> {
+    this.matchUserOrThrow(id, user);
     if (await this.redemptionService.find(user)) {
       throw new UnprocessableEntityException('Redemption already exists');
     }
@@ -50,7 +61,7 @@ export class RedemptionsController {
   }
 
   @ApiExcludeEndpoint()
-  @Get()
+  @Get(':id')
   @UseGuards(MagicLinkGuard)
   async retrieve(
     @Context() { user }: MagicLinkContext,

@@ -263,7 +263,7 @@ describe('MultiAssetUpsertService', () => {
         block: {
           hash: 'multiassetupsertblockhash1',
           previousBlockHash: head.block_hash,
-          timestamp: new Date(),
+          timestamp: new Date(Date.UTC(2023, 1, 25, 1, 0, 0)),
           sequence: 3,
         },
       };

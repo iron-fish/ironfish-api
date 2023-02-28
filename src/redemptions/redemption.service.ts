@@ -5,6 +5,7 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { KycStatus, Redemption, User } from '@prisma/client';
 import { ApiConfigService } from '../api-config/api-config.service';
@@ -66,7 +67,7 @@ export class RedemptionService {
       redemption.kyc_attempts >= maxKyc ||
       redemption.kyc_status === KycStatus.FAIL_MAX_ATTEMPTS
     ) {
-      throw new BadRequestException('KYC terminal failure');
+      throw new UnauthorizedException('KYC terminal failure');
     }
     if (redemption.kyc_status === KycStatus.PASS) {
       throw new BadRequestException('KYC has already passed');

@@ -66,6 +66,7 @@ describe('TelemetryController', () => {
     usersService = app.get(UsersService);
     versionsService = app.get(VersionsService);
     await app.init();
+    jest.useFakeTimers().setSystemTime(new Date('2020-02-25'));
   });
 
   afterAll(async () => {

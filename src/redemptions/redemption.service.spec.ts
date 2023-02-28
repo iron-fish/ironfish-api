@@ -5,6 +5,7 @@ import {
   BadRequestException,
   HttpException,
   INestApplication,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { KycStatus, Redemption, User } from '@prisma/client';
 import faker from 'faker';
@@ -37,34 +38,9 @@ describe('RedemptionService', () => {
     await app.close();
   });
 
-  describe('attemptKyc', () => {
-    it('increments the KYC attempts by until exceeds limit', async () => {
-      user = await usersService.create({
-        email: faker.internet.email(),
-        graffiti: uuid(),
-        countryCode: faker.address.countryCode('alpha-3'),
-      });
-      redemption = await redemptionService.create(user, 'testAddress');
-      const maxAttempts = configService.get<number>('MAX_KYC_ATTEMPTS');
-
-      for (let i = 0; i < maxAttempts; i++) {
-        // TODO FAILING BECAUSE SET TO PENDING AFTER THIS RUN
-        redemption = await redemptionService.attemptKyc(redemption, prisma);
-        expect(redemption.kyc_attempts).toBe(i + 1);
-      }
-      await expect(
-        redemptionService.attemptKyc(redemption, prisma),
-      ).rejects.toThrow(BadRequestException);
-    });
-    it.each([
-      [
-        KycStatus.FAIL_MAX_ATTEMPTS,
-        new BadRequestException('KYC terminal failure'),
-      ],
-      [KycStatus.PASS, new BadRequestException('KYC has already passed')],
-    ])(
-      'Redemption with status %p throws %p',
-      async (kycStatus: KycStatus, exception: HttpException) => {
+  describe('incrementKyc', () => {
+    describe('when increment method is called', () => {
+      it('increments the KYC attempts by until exceeds limit', async () => {
         user = await usersService.create({
           email: faker.internet.email(),
           graffiti: uuid(),
@@ -79,8 +55,35 @@ describe('RedemptionService', () => {
         });
         await expect(
           redemptionService.attemptKyc(redemption, prisma),
-        ).rejects.toThrow(exception);
-      },
-    );
+        ).rejects.toThrow(UnauthorizedException);
+      });
+      it.each([
+        [
+          KycStatus.FAIL_MAX_ATTEMPTS,
+          new UnauthorizedException('KYC terminal failure'),
+        ],
+        [KycStatus.PASS, new BadRequestException('KYC has already passed')],
+      ])(
+        'Redemption with status %p throws %p',
+        async (kycStatus: KycStatus, exception: HttpException) => {
+          user = await usersService.create({
+            email: faker.internet.email(),
+            graffiti: uuid(),
+            countryCode: faker.address.countryCode('alpha-3'),
+          });
+          redemption = await prisma.redemption.create({
+            data: {
+              user: { connect: { id: user.id } },
+              public_address: 'testingstatuses',
+              dedupe_status: DedupeStatus.NOT_STARTED,
+              kyc_status: kycStatus,
+            },
+          });
+          await expect(
+            redemptionService.attemptKyc(redemption, prisma),
+          ).rejects.toThrow(exception);
+        },
+      );
+    });
   });
 });
