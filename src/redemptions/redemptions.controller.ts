@@ -54,7 +54,7 @@ export class RedemptionsController {
   @UseGuards(MagicLinkGuard)
   async retrieve(
     @Context() { user }: MagicLinkContext,
-  ): Promise<SerializedRedemption | null> {
+  ): Promise<SerializedRedemption> {
     const redemption = await this.redemptionService.find(user);
     if (!redemption) {
       throw new NotFoundException('redemption not found');
