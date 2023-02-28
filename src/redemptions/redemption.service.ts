@@ -33,7 +33,7 @@ export class RedemptionService {
   }
 
   async addJumioAccountId(
-    user: User,
+    redemption: Redemption,
     jumioAccountId: string,
     prisma: BasePrismaClient,
   ): Promise<Redemption> {
@@ -42,7 +42,7 @@ export class RedemptionService {
         jumio_account_id: jumioAccountId,
       },
       where: {
-        user_id: user.id,
+        id: redemption.id,
       },
     });
   }
