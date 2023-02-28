@@ -17,7 +17,7 @@ import { ApiExcludeEndpoint, ApiTags } from '@nestjs/swagger';
 import { MagicLinkGuard } from '../auth/guards/magic-link.guard';
 import { Context } from '../common/decorators/context';
 import { MagicLinkContext } from '../common/interfaces/magic-link-context';
-import { RedemptionDto } from './dto/redemption.dto';
+import { CreateRedemptionDto } from './dto/create-redemption.dto';
 import { SerializedRedemption } from './interfaces/serializedRedemption';
 import { RedemptionService } from './redemption.service';
 import { serializeRedemption } from './utils/serialize-redemption';
@@ -37,7 +37,7 @@ export class RedemptionController {
         errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
       }),
     )
-    dto: RedemptionDto,
+    dto: CreateRedemptionDto,
   ): Promise<SerializedRedemption> {
     if (await this.redemptionService.find(user)) {
       throw new UnprocessableEntityException('Redemption already exists');

@@ -3,7 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { IsNotEmpty, IsString } from 'class-validator';
 
-export class RedemptionDto {
+export class CreateRedemptionDto {
   @IsNotEmpty()
   @IsString()
   readonly public_address!: string;
