@@ -4,7 +4,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { KycStatus, Redemption, User } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 
 @Injectable()
 export class RedemptionService {
@@ -27,9 +26,8 @@ export class RedemptionService {
   async addJumioAccountId(
     redemption: Redemption,
     jumioAccountId: string,
-    prisma: BasePrismaClient,
   ): Promise<Redemption> {
-    return prisma.redemption.update({
+    return this.prisma.redemption.update({
       data: {
         jumio_account_id: jumioAccountId,
       },

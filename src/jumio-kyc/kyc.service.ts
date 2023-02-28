@@ -24,30 +24,27 @@ export class KycService {
   ) {}
 
   async attempt(user: User, redemption: Redemption): Promise<KycDetails> {
-    return await this.prisma.$transaction(async (prisma) => {
+    // Jumio API ties together account creation with transactionc reation
+    // TODO: call ACCOUNT CREATION api
+    return this.prisma.$transaction(async (prisma) => {
       await prisma.$executeRawUnsafe(
         'SELECT pg_advisory_xact_lock(HASHTEXT($1));',
-        user.id,
+        `kyc_${user.id}`,
       );
 
       const response = await this.jumioApiService.createAccountAndTransaction(
         user.id,
         redemption.jumio_account_id,
       );
-
       await this.redemptionService.addJumioAccountId(
         redemption,
         response.jumio_account_id,
-        prisma,
       );
-
-      await this.jumioTransactionService.create(
+      await this.jumioTransactionService.upsert(
         user,
         response.jumio_workflow_execution_id,
         response.jumio_web_href,
-        prisma,
       );
-
       return response;
     });
   }

@@ -17,17 +17,19 @@ import { ApiExcludeEndpoint, ApiTags } from '@nestjs/swagger';
 import { MagicLinkGuard } from '../auth/guards/magic-link.guard';
 import { Context } from '../common/decorators/context';
 import { MagicLinkContext } from '../common/interfaces/magic-link-context';
-import { KycService } from '../jumio-kyc/kyc.service';
-import { CreateRedemptionDto } from './dto/create-redemption.dto';
-import { SerializedRedemption } from './interfaces/serializedRedemption';
-import { RedemptionService } from './redemption.service';
-import { serializeRedemption } from './utils/serialize-redemption';
+import { JumioTransactionService } from '../jumio-transactions/jumio-transaction.service';
+import { RedemptionService } from '../redemptions/redemption.service';
+import { CreateKycDto } from './dto/create-kyc.dto';
+import { SerializedKyc } from './interfaces/serialized-kyc';
+import { KycService } from './kyc.service';
+import { serializeKyc } from './utils/serialize-kyc';
 
-@ApiTags('Redemption')
-@Controller('redemption')
-export class RedemptionsController {
+@ApiTags('KYC')
+@Controller('kyc')
+export class KycController {
   constructor(
     private readonly redemptionService: RedemptionService,
+    private readonly jumioTransactionService: JumioTransactionService,
     private readonly kycService: KycService,
   ) {}
 
@@ -41,8 +43,8 @@ export class RedemptionsController {
         errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
       }),
     )
-    dto: CreateRedemptionDto,
-  ): Promise<SerializedRedemption> {
+    dto: CreateKycDto,
+  ): Promise<SerializedKyc> {
     if (await this.redemptionService.find(user)) {
       throw new UnprocessableEntityException('Redemption already exists');
     }
@@ -50,9 +52,14 @@ export class RedemptionsController {
       user,
       dto.public_address,
     );
-    const kyc = this.kycService.attempt(user, redemption);
+    const kyc = await this.kycService.attempt(user, redemption);
 
-    return serializeRedemption(redemption);
+    return serializeKyc(
+      redemption,
+      kyc.jumio_account_id,
+      kyc.jumio_workflow_execution_id,
+      kyc.jumio_web_href,
+    );
   }
 
   @ApiExcludeEndpoint()
@@ -60,11 +67,18 @@ export class RedemptionsController {
   @UseGuards(MagicLinkGuard)
   async retrieve(
     @Context() { user }: MagicLinkContext,
-  ): Promise<SerializedRedemption> {
+  ): Promise<SerializedKyc> {
     const redemption = await this.redemptionService.find(user);
-    if (!redemption) {
+    if (!redemption || !redemption.jumio_account_id) {
       throw new NotFoundException('redemption not found');
     }
-    return serializeRedemption(redemption);
+    const jumioTransaction =
+      await this.jumioTransactionService.getLastestOrThrow(user);
+    return serializeKyc(
+      redemption,
+      redemption.jumio_account_id,
+      jumioTransaction.workflow_execution_id,
+      jumioTransaction.web_href,
+    );
   }
 }

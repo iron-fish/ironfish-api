@@ -26,10 +26,10 @@ import { EventsJobsModule } from './events/events.jobs.module';
 import { EventsRestModule } from './events/events.rest.module';
 import { FaucetTransactionsRestModule } from './faucet-transactions/faucet-transactions.rest.module';
 import { HealthRestModule } from './health/health.rest.module';
+import { KycRestModule } from './jumio-kyc/kyc.rest.module';
 import { LoggerModule } from './logger/logger.module';
 import { MetricsRestModule } from './metrics/metrics.rest.module';
 import { NodeUptimesJobsModule } from './node-uptimes/node-uptimes.jobs.module';
-import { RedemptionRestModule } from './redemptions/redemption.rest.module';
 import { TelemetryRestModule } from './telemetry/telemetry.rest.module';
 import { TransactionsRestModule } from './transactions/transactions.rest.module';
 import { UserPointsJobsModule } from './user-points/user-points.jobs.module';
@@ -56,7 +56,7 @@ export const REST_MODULES = [
   FaucetTransactionsRestModule,
   HealthRestModule,
   MetricsRestModule,
-  RedemptionRestModule,
+  KycRestModule,
   TelemetryRestModule,
   TransactionsRestModule,
   UserPointsRestModule,

@@ -2,20 +2,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Redemption } from '@prisma/client';
-import { SerializedRedemption } from '../interfaces/serializedRedemption';
+import { SerializedKyc } from '../interfaces/serialized-kyc';
 
-export function serializeRedemption(
+export function serializeKyc(
   redemption: Redemption,
-): SerializedRedemption {
+  jumio_account_id: string,
+  jumio_web_href: string,
+  jumio_workflow_execution_id: string,
+): SerializedKyc {
   return {
-    object: 'redemption',
-    id: redemption.id,
-    created_at: redemption.created_at.toString(),
-    updated_at: redemption.updated_at.toString(),
+    object: 'kyc',
+    redemption_id: redemption.id,
     user_id: redemption.user_id,
     kyc_attempts: redemption.kyc_attempts,
     kyc_status: redemption.kyc_status,
-    jumio_account_id: redemption.jumio_account_id,
+    jumio_account_id: jumio_account_id,
+    jumio_workflow_execution_id: jumio_workflow_execution_id,
+    jumio_web_href: jumio_web_href,
     public_address: redemption.public_address,
   };
 }
