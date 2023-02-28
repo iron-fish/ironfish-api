@@ -27,11 +27,12 @@ export class KycService {
     // Jumio API ties together account creation with transactionc reation
     // TODO: call ACCOUNT CREATION api
     const response = await this.jumioApiService.createAccountAndTransaction(
+      user.id,
       redemption.jumio_account_id,
     );
     await this.prisma.$transaction(async (prisma) => {
       await this.redemptionService.addJumioAccountId(
-        user,
+        redemption,
         response.jumio_account_id,
         prisma,
       );
