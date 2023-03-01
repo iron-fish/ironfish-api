@@ -4,6 +4,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import {
   DecisionLabel,
   DecisionStatus,
@@ -46,8 +47,11 @@ export class JumioTransactionService {
     user: User,
     workflowExecutionId: string,
     webHref: string,
+    prisma?: BasePrismaClient,
   ): Promise<JumioTransaction> {
-    return this.prisma.jumioTransaction.create({
+    const client = prisma ?? this.prisma;
+
+    return client.jumioTransaction.create({
       data: {
         user: { connect: { id: user.id } },
         workflow_execution_id: workflowExecutionId,

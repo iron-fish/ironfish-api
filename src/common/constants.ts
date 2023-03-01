@@ -59,6 +59,3 @@ export const POOL_4_CATEGORIES: Array<EventType> = [
 
 // 2023 Feb 26 12 AM UTC
 export const PHASE_3_END = new Date(Date.UTC(2023, 1, 26, 0, 0, 0));
-
-// KYC
-export const KYC_MAX_ATTEMPTS = 3;

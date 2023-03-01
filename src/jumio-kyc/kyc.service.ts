@@ -49,7 +49,11 @@ export class KycService {
       }
 
       if (!redemption) {
-        redemption = await this.redemptionService.create(user, publicAddress);
+        redemption = await this.redemptionService.create(
+          user,
+          publicAddress,
+          prisma,
+        );
       }
 
       const response = await this.jumioApiService.createAccountAndTransaction(
@@ -57,15 +61,22 @@ export class KycService {
         redemption.jumio_account_id,
       );
 
-      await this.redemptionService.update(redemption, {
-        kyc_status: KycStatus.IN_PROGRESS,
-        jumio_account_id: response.account.id,
-      });
+      await this.redemptionService.update(
+        redemption,
+        {
+          kyc_status: KycStatus.IN_PROGRESS,
+          jumio_account_id: response.account.id,
+        },
+        prisma,
+      );
+
+      await this.redemptionService.incrementAttempts(redemption, prisma);
 
       const transaction = await this.jumioTransactionService.create(
         user,
         response.workflowExecution.id,
         response.web.href,
+        prisma,
       );
 
       return { redemption, transaction };

@@ -3,7 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { KycStatus, Redemption, User } from '@prisma/client';
-import { KYC_MAX_ATTEMPTS } from '../common/constants';
+import { ApiConfigService } from '../api-config/api-config.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { UserPointsService } from '../user-points/user-points.service';
@@ -13,6 +13,7 @@ export class RedemptionService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly userPointsService: UserPointsService,
+    private readonly config: ApiConfigService,
   ) {}
 
   async findOrThrow(user: User): Promise<Redemption> {
@@ -24,7 +25,7 @@ export class RedemptionService {
   }
 
   async find(user: User): Promise<Redemption | null> {
-    return await this.prisma.redemption.findFirst({
+    return this.prisma.redemption.findFirst({
       where: { user: { id: user.id } },
     });
   }
@@ -32,10 +33,26 @@ export class RedemptionService {
   async update(
     redemption: Redemption,
     data: { kyc_status: KycStatus; jumio_account_id?: string },
+    prisma?: BasePrismaClient,
   ): Promise<Redemption> {
-    return this.prisma.redemption.update({
+    const client = prisma ?? this.prisma;
+
+    return client.redemption.update({
+      data: data,
+      where: {
+        id: redemption.id,
+      },
+    });
+  }
+
+  async incrementAttempts(
+    redemption: Redemption,
+    prisma?: BasePrismaClient,
+  ): Promise<Redemption> {
+    const client = prisma ?? this.prisma;
+
+    return client.redemption.update({
       data: {
-        ...data,
         kyc_attempts: {
           increment: 1,
         },
@@ -46,8 +63,14 @@ export class RedemptionService {
     });
   }
 
-  async create(user: User, public_address: string): Promise<Redemption> {
-    return await this.prisma.redemption.create({
+  async create(
+    user: User,
+    public_address: string,
+    prisma?: BasePrismaClient,
+  ): Promise<Redemption> {
+    const client = prisma ?? this.prisma;
+
+    return client.redemption.create({
       data: {
         user: { connect: { id: user.id } },
         public_address,
@@ -71,7 +94,9 @@ export class RedemptionService {
       return true;
     }
 
-    if (redemption.kyc_attempts >= KYC_MAX_ATTEMPTS) {
+    const kycMaxAttempts = this.config.get<number>('KYC_MAX_ATTEMPTS');
+
+    if (redemption.kyc_attempts >= kycMaxAttempts) {
       return false;
     }
 
