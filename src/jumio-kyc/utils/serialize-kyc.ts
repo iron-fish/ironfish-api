@@ -1,21 +1,24 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { Redemption } from '@prisma/client';
-import { SerializedRedemption } from '../interfaces/serializedRedemption';
+import { JumioTransaction, Redemption } from '@prisma/client';
+import assert from 'assert';
+import { SerializedKyc } from '../interfaces/serialized-kyc';
 
-export function serializeRedemption(
+export function serializeKyc(
   redemption: Redemption,
-): SerializedRedemption {
+  transaction: JumioTransaction,
+): SerializedKyc {
+  assert.ok(redemption.jumio_account_id);
+
   return {
-    object: 'redemption',
-    id: redemption.id,
-    created_at: redemption.created_at.toString(),
-    updated_at: redemption.updated_at.toString(),
+    redemption_id: redemption.id,
     user_id: redemption.user_id,
     kyc_attempts: redemption.kyc_attempts,
     kyc_status: redemption.kyc_status,
     jumio_account_id: redemption.jumio_account_id,
     public_address: redemption.public_address,
+    jumio_workflow_execution_id: transaction.workflow_execution_id,
+    jumio_web_href: transaction.web_href,
   };
 }

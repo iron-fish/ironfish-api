@@ -11,8 +11,13 @@ import { EventType, Prisma, UserPoints } from '.prisma/client';
 export class UserPointsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findOrThrow(userId: number): Promise<UserPoints> {
-    const record = await this.prisma.readClient.userPoints.findUnique({
+  async findOrThrow(
+    userId: number,
+    client?: BasePrismaClient,
+  ): Promise<UserPoints> {
+    const prisma = client ?? this.prisma.readClient;
+
+    const record = await prisma.userPoints.findUnique({
       where: {
         user_id: userId,
       },

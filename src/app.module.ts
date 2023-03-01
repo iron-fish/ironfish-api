@@ -26,10 +26,10 @@ import { EventsJobsModule } from './events/events.jobs.module';
 import { EventsRestModule } from './events/events.rest.module';
 import { FaucetTransactionsRestModule } from './faucet-transactions/faucet-transactions.rest.module';
 import { HealthRestModule } from './health/health.rest.module';
+import { KycRestModule } from './jumio-kyc/kyc.rest.module';
 import { LoggerModule } from './logger/logger.module';
 import { MetricsRestModule } from './metrics/metrics.rest.module';
 import { NodeUptimesJobsModule } from './node-uptimes/node-uptimes.jobs.module';
-import { RedemptionRestModule } from './redemptions/redemption.rest.module';
 import { TelemetryRestModule } from './telemetry/telemetry.rest.module';
 import { TransactionsRestModule } from './transactions/transactions.rest.module';
 import { UserPointsJobsModule } from './user-points/user-points.jobs.module';
@@ -56,7 +56,7 @@ export const REST_MODULES = [
   FaucetTransactionsRestModule,
   HealthRestModule,
   MetricsRestModule,
-  RedemptionRestModule,
+  KycRestModule,
   TelemetryRestModule,
   TransactionsRestModule,
   UserPointsRestModule,
@@ -92,6 +92,11 @@ export const REST_MODULES = [
         INFLUXDB_ORG: joi.string().required(),
         INFLUXDB_URL: joi.string().required(),
         IRONFISH_API_KEY: joi.string().required(),
+        JUMIO_API_TOKEN: joi.string().required(),
+        JUMIO_API_SECRET: joi.string().required(),
+        JUMIO_URL: joi.string().required(),
+        JUMIO_WORKFLOW_DEFINITION: joi.number().required(),
+        KYC_MAX_ATTEMPTS: joi.number().required(),
         MAGIC_SECRET_KEY: joi.string().required(),
         NETWORK_VERSION: joi.number().required(),
         NODE_ENV: joi.string().required(),

@@ -6,24 +6,50 @@ import { User } from '@prisma/client';
 import faker from 'faker';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
+import { JumioApiService } from '../jumio-api/jumio-api.service';
+import { JumioTransactionService } from '../jumio-transactions/jumio-transaction.service';
 import { MagicLinkService } from '../magic-link/magic-link.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { RedemptionService } from '../redemptions/redemption.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
-import { RedemptionService } from './redemption.service';
-import { serializeRedemption } from './utils/serialize-redemption';
+import { KycService } from './kyc.service';
+import { serializeKyc } from './utils/serialize-kyc';
 
-describe('RedemptionsController', () => {
+describe('KycController', () => {
   let app: INestApplication;
   let usersService: UsersService;
+  let prisma: PrismaService;
   let magicLinkService: MagicLinkService;
+  let kycService: KycService;
   let redemptionService: RedemptionService;
+  let jumioApiService: JumioApiService;
+  let jumioTransactionService: JumioTransactionService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
+    prisma = app.get(PrismaService);
     magicLinkService = app.get(MagicLinkService);
     usersService = app.get(UsersService);
+    kycService = app.get(KycService);
     redemptionService = app.get(RedemptionService);
-
+    jumioApiService = app.get(JumioApiService);
+    jumioTransactionService = app.get(JumioTransactionService);
+    jest
+      .spyOn(jumioApiService, 'createAccountAndTransaction')
+      .mockImplementation(() =>
+        Promise.resolve({
+          account: {
+            id: uuid(),
+          },
+          web: {
+            href: 'http://kyc/test',
+          },
+          workflowExecution: {
+            id: uuid(),
+          },
+        }),
+      );
     await app.init();
   });
 
@@ -37,65 +63,57 @@ describe('RedemptionsController', () => {
       graffiti: uuid(),
       countryCode: faker.address.countryCode('alpha-3'),
     });
+
+    await prisma.userPoints.update({
+      data: {
+        total_points: 1,
+      },
+      where: {
+        user_id: user.id,
+      },
+    });
+
     jest
       .spyOn(magicLinkService, 'getEmailFromHeader')
       .mockImplementation(() => Promise.resolve(user.email));
+
     return user;
   };
 
-  describe('POST /redemption', () => {
-    it('creates new redemption when not created', async () => {
+  describe('POST /kyc', () => {
+    it('starts kyc, creates new redemption/jumio account/jumio transaction', async () => {
       const user = await mockUser();
+
       const { body } = await request(app.getHttpServer())
-        .post(`/redemption`)
+        .post(`/kyc`)
         .set('Authorization', 'did-token')
         .send({
           public_address: 'foo',
         })
         .expect(HttpStatus.CREATED);
+
       const redemption = await redemptionService.find(user);
-      if (!redemption) {
+      const jumioTransaction = await jumioTransactionService.findLatestOrThrow(
+        user,
+      );
+      if (!redemption || !redemption.jumio_account_id) {
         throw Error('Should have been created by api');
       }
-      expect(body).toMatchObject(serializeRedemption(redemption));
-    });
-    it('fails if user already has redemption', async () => {
-      const user = await mockUser();
-      // create redemption
-      await redemptionService.create(user, 'bar');
-      await request(app.getHttpServer())
-        .post(`/redemption`)
-        .set('Authorization', 'did-token')
-        .send({
-          public_address: 'foo',
-        })
-        .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+      expect(body).toMatchObject(serializeKyc(redemption, jumioTransaction));
     });
   });
 
-  describe('GET /redemption', () => {
-    it('retrieves redemption when it exists', async () => {
+  describe('GET /kyc', () => {
+    it('retrieves kyc info when it exists', async () => {
       const user = await mockUser();
-      const redemption = await redemptionService.create(
-        user,
-        'fakePublicAddress',
-      );
+      const { redemption, transaction } = await kycService.attempt(user, 'foo');
+
       const { body } = await request(app.getHttpServer())
-        .get(`/redemption`)
+        .get(`/kyc`)
         .set('Authorization', 'did-token')
         .expect(HttpStatus.OK);
-      expect(body).toMatchObject(serializeRedemption(redemption));
-    });
-    it('retrieves when redemption if already present', async () => {
-      await mockUser();
-      // no redemption created for user
-      await request(app.getHttpServer())
-        .get(`/redemption`)
-        .set('Authorization', 'did-token')
-        .send({
-          public_address: 'foo',
-        })
-        .expect(HttpStatus.NOT_FOUND);
+
+      expect(body).toMatchObject(serializeKyc(redemption, transaction));
     });
   });
 });

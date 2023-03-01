@@ -1,20 +1,18 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { KycStatus, Redemption, User } from '@prisma/client';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
+import { UserPointsService } from '../user-points/user-points.service';
 
 @Injectable()
 export class RedemptionService {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly userPointsService: UserPointsService,
     private readonly config: ApiConfigService,
   ) {}
 
@@ -27,53 +25,34 @@ export class RedemptionService {
   }
 
   async find(user: User): Promise<Redemption | null> {
-    return await this.prisma.redemption.findFirst({
+    return this.prisma.redemption.findFirst({
       where: { user: { id: user.id } },
     });
   }
 
-  async addJumioAccountId(
-    user: User,
-    jumioAccountId: string,
-    prisma: BasePrismaClient,
-  ): Promise<Redemption> {
-    return prisma.redemption.update({
-      data: {
-        jumio_account_id: jumioAccountId,
-      },
-      where: {
-        user_id: user.id,
-      },
-    });
-  }
-
-  async create(user: User, public_address: string): Promise<Redemption> {
-    return await this.prisma.redemption.create({
-      data: {
-        user: { connect: { id: user.id } },
-        public_address,
-        kyc_status: KycStatus.NOT_STARTED,
-      },
-    });
-  }
-
-  async attemptKyc(
+  async update(
     redemption: Redemption,
-    prisma: BasePrismaClient,
+    data: { kyc_status: KycStatus; jumio_account_id?: string },
+    prisma?: BasePrismaClient,
   ): Promise<Redemption> {
-    const maxKyc = this.config.get<number>('MAX_KYC_ATTEMPTS');
-    if (
-      redemption.kyc_attempts >= maxKyc ||
-      redemption.kyc_status === KycStatus.FAIL_MAX_ATTEMPTS
-    ) {
-      throw new BadRequestException('KYC terminal failure');
-    }
-    if (redemption.kyc_status === KycStatus.PASS) {
-      throw new BadRequestException('KYC has already passed');
-    }
-    return prisma.redemption.update({
+    const client = prisma ?? this.prisma;
+
+    return client.redemption.update({
+      data: data,
+      where: {
+        id: redemption.id,
+      },
+    });
+  }
+
+  async incrementAttempts(
+    redemption: Redemption,
+    prisma?: BasePrismaClient,
+  ): Promise<Redemption> {
+    const client = prisma ?? this.prisma;
+
+    return client.redemption.update({
       data: {
-        kyc_status: KycStatus.PENDING,
         kyc_attempts: {
           increment: 1,
         },
@@ -82,5 +61,49 @@ export class RedemptionService {
         id: redemption.id,
       },
     });
+  }
+
+  async create(
+    user: User,
+    public_address: string,
+    prisma?: BasePrismaClient,
+  ): Promise<Redemption> {
+    const client = prisma ?? this.prisma;
+
+    return client.redemption.create({
+      data: {
+        user: { connect: { id: user.id } },
+        public_address,
+        kyc_status: KycStatus.IN_PROGRESS,
+      },
+    });
+  }
+
+  async canAttempt(
+    redemption: Redemption | null,
+    user: User,
+    prisma?: BasePrismaClient,
+  ): Promise<string | null> {
+    const points = await this.userPointsService.findOrThrow(user.id, prisma);
+
+    if (points.total_points === 0) {
+      return 'User has no points';
+    }
+
+    if (!redemption) {
+      return null;
+    }
+
+    const kycMaxAttempts = this.config.get<number>('KYC_MAX_ATTEMPTS');
+
+    if (redemption.kyc_attempts >= kycMaxAttempts) {
+      return `Max attempts reached ${redemption.kyc_attempts} / ${kycMaxAttempts}`;
+    }
+
+    if (redemption.kyc_status !== KycStatus.TRY_AGAIN) {
+      return `Redemption status is not TRY_AGAIN: ${redemption.kyc_status}`;
+    }
+
+    return null;
   }
 }
