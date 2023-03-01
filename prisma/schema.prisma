@@ -51,6 +51,7 @@ model User {
   telegram            String?           @db.VarChar
   github              String?           @db.VarChar
   hashed_ip_address   String?           @db.VarChar
+  ineligible_reason   String?           @db.VarChar
   events              Event[]
   redemption          Redemption?
   jumio_transactions  JumioTransaction[]
