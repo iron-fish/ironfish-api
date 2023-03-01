@@ -359,7 +359,6 @@ export class UsersController {
     return this.usersUpdater.update(user, {
       discord: dto.discord,
       github: dto.github,
-      graffiti: dto.graffiti,
       telegram: dto.telegram,
     });
   }
