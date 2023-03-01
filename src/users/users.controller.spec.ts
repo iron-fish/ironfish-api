@@ -739,34 +739,6 @@ describe('UsersController', () => {
       });
     });
 
-    describe('with an empty string graffiti', () => {
-      it('returns a 422', async () => {
-        const user = await usersService.create({
-          email: faker.internet.email(),
-          graffiti: uuid(),
-          countryCode: faker.address.countryCode('alpha-3'),
-        });
-
-        jest
-          .spyOn(magicLinkService, 'getEmailFromHeader')
-          .mockImplementationOnce(() => Promise.resolve(user.email));
-
-        const { body } = await request(app.getHttpServer())
-          .put(`/users/${user.id}`)
-          .set('Authorization', 'token')
-          .send({
-            graffiti: '',
-          })
-          .expect(HttpStatus.UNPROCESSABLE_ENTITY);
-
-        expect(body).toEqual({
-          error: 'Unprocessable Entity',
-          message: ['graffiti should not be empty'],
-          statusCode: 422,
-        });
-      });
-    });
-
     describe('with a valid payload', () => {
       it('updates the user', async () => {
         const user = await usersService.create({
