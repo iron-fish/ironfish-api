@@ -36,15 +36,15 @@ export class KycService {
 
       let redemption = await this.redemptionService.find(user);
 
-      const canAttempt = await this.redemptionService.canAttempt(
+      const canAttemptError = await this.redemptionService.canAttempt(
         redemption,
         user,
         prisma,
       );
 
-      if (!canAttempt) {
+      if (canAttemptError) {
         throw new Error(
-          `Not eligible to create transaction for user ${user.id}`,
+          `Not eligible to create transaction for user ${user.id}: ${canAttemptError}`,
         );
       }
 
@@ -61,7 +61,7 @@ export class KycService {
         redemption.jumio_account_id,
       );
 
-      await this.redemptionService.update(
+      redemption = await this.redemptionService.update(
         redemption,
         {
           kyc_status: KycStatus.IN_PROGRESS,
@@ -70,7 +70,10 @@ export class KycService {
         prisma,
       );
 
-      await this.redemptionService.incrementAttempts(redemption, prisma);
+      redemption = await this.redemptionService.incrementAttempts(
+        redemption,
+        prisma,
+      );
 
       const transaction = await this.jumioTransactionService.create(
         user,

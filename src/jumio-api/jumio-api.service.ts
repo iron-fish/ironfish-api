@@ -47,7 +47,7 @@ export class JumioApiService {
       customerInternalReference: userId,
       userReference: userId,
       workflowDefinition: {
-        key: Number(this.config.get<string>('JUMIO_WORKFLOW_DEFINITION')),
+        key: this.config.get<number>('JUMIO_WORKFLOW_DEFINITION'),
       },
     };
 

@@ -55,13 +55,7 @@ export class KycController {
       );
     }
 
-    return serializeKyc(
-      redemption,
-      redemption.jumio_account_id,
-      redemption.kyc_status,
-      transaction.web_href,
-      transaction.workflow_execution_id,
-    );
+    return serializeKyc(redemption, transaction);
   }
 
   @ApiExcludeEndpoint()
@@ -84,12 +78,6 @@ export class KycController {
     const jumioTransaction =
       await this.jumioTransactionService.findLatestOrThrow(user);
 
-    return serializeKyc(
-      redemption,
-      redemption.jumio_account_id,
-      redemption.kyc_status,
-      jumioTransaction.web_href,
-      jumioTransaction.workflow_execution_id,
-    );
+    return serializeKyc(redemption, jumioTransaction);
   }
 }

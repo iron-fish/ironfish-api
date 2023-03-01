@@ -70,11 +70,12 @@ describe('JumioTransactionService', () => {
 
     describe('with no records', () => {
       it('throws a NotFoundException', async () => {
-        user = await usersService.create({
+        const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: uuid(),
           countryCode: faker.address.countryCode('alpha-3'),
         });
+
         await expect(
           jumioTransactionService.findLatestOrThrow(user),
         ).rejects.toThrow(NotFoundException);

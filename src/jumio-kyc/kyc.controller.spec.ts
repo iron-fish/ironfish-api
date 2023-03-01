@@ -9,6 +9,7 @@ import { v4 as uuid } from 'uuid';
 import { JumioApiService } from '../jumio-api/jumio-api.service';
 import { JumioTransactionService } from '../jumio-transactions/jumio-transaction.service';
 import { MagicLinkService } from '../magic-link/magic-link.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { RedemptionService } from '../redemptions/redemption.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
@@ -18,6 +19,7 @@ import { serializeKyc } from './utils/serialize-kyc';
 describe('KycController', () => {
   let app: INestApplication;
   let usersService: UsersService;
+  let prisma: PrismaService;
   let magicLinkService: MagicLinkService;
   let kycService: KycService;
   let redemptionService: RedemptionService;
@@ -26,6 +28,7 @@ describe('KycController', () => {
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
+    prisma = app.get(PrismaService);
     magicLinkService = app.get(MagicLinkService);
     usersService = app.get(UsersService);
     kycService = app.get(KycService);
@@ -60,15 +63,27 @@ describe('KycController', () => {
       graffiti: uuid(),
       countryCode: faker.address.countryCode('alpha-3'),
     });
+
+    await prisma.userPoints.update({
+      data: {
+        total_points: 1,
+      },
+      where: {
+        user_id: user.id,
+      },
+    });
+
     jest
       .spyOn(magicLinkService, 'getEmailFromHeader')
       .mockImplementation(() => Promise.resolve(user.email));
+
     return user;
   };
 
   describe('POST /kyc', () => {
     it('starts kyc, creates new redemption/jumio account/jumio transaction', async () => {
       const user = await mockUser();
+
       const { body } = await request(app.getHttpServer())
         .post(`/kyc`)
         .set('Authorization', 'did-token')
@@ -76,6 +91,7 @@ describe('KycController', () => {
           public_address: 'foo',
         })
         .expect(HttpStatus.CREATED);
+
       const redemption = await redemptionService.find(user);
       const jumioTransaction = await jumioTransactionService.findLatestOrThrow(
         user,
@@ -83,15 +99,7 @@ describe('KycController', () => {
       if (!redemption || !redemption.jumio_account_id) {
         throw Error('Should have been created by api');
       }
-      expect(body).toMatchObject(
-        serializeKyc(
-          redemption,
-          redemption.jumio_account_id,
-          redemption.kyc_status,
-          jumioTransaction.workflow_execution_id,
-          jumioTransaction.web_href,
-        ),
-      );
+      expect(body).toMatchObject(serializeKyc(redemption, jumioTransaction));
     });
   });
 
@@ -99,21 +107,13 @@ describe('KycController', () => {
     it('retrieves kyc info when it exists', async () => {
       const user = await mockUser();
       const { redemption, transaction } = await kycService.attempt(user, 'foo');
+
       const { body } = await request(app.getHttpServer())
         .get(`/kyc`)
         .set('Authorization', 'did-token')
         .expect(HttpStatus.OK);
-      if (!redemption.jumio_account_id) {
-        throw new Error('jumio account id should be set');
-      }
-      serializeKyc(
-        redemption,
-        redemption.jumio_account_id,
-        redemption.kyc_status,
-        transaction.workflow_execution_id,
-        transaction.web_href,
-      );
-      expect(body).not.toBeNull();
+
+      expect(body).toMatchObject(serializeKyc(redemption, transaction));
     });
   });
 });

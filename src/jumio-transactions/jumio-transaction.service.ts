@@ -16,7 +16,7 @@ import {
 export class JumioTransactionService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async find(user: User): Promise<JumioTransaction[]> {
+  async getList(user: User): Promise<JumioTransaction[]> {
     return this.prisma.jumioTransaction.findMany({
       where: {
         user_id: user.id,
@@ -28,16 +28,16 @@ export class JumioTransactionService {
   }
 
   async findLatestOrThrow(user: User): Promise<JumioTransaction> {
-    const jumioTransactions = await this.find(user);
-    if (!jumioTransactions) {
+    const jumioTransactions = await this.getList(user);
+    if (!jumioTransactions.length) {
       throw new NotFoundException('No Jumio Transactions found');
     }
     return jumioTransactions[0];
   }
 
   async findLatest(user: User): Promise<JumioTransaction | null> {
-    const jumioTransactions = await this.find(user);
-    if (!jumioTransactions) {
+    const jumioTransactions = await this.getList(user);
+    if (!jumioTransactions.length) {
       return null;
     }
     return jumioTransactions[0];

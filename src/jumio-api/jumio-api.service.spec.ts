@@ -41,21 +41,22 @@ describe('JumioApiService', () => {
         },
       },
       {
-        method: 'POST',
-        headers: {
+        headers: expect.objectContaining({
           Accept: 'application/json',
           'Content-Type': 'application/json',
           Authorization: expect.stringContaining('Basic '),
           'User-Agent': 'IronFish Website/v1.0',
-        },
+        }),
       },
     ];
   };
+
   describe('createAccountAndTransaction', () => {
     describe('when calling jumio', () => {
       it('creates account when jumioAccountId is not present', async () => {
         const postMock = axiosMock();
         await jumioApiService.createAccountAndTransaction(123, null);
+
         expect(postMock).toHaveBeenCalledWith(
           ...expectedPostArgs(
             'https://account.amer-1.jumio.ai/api/v1/accounts',

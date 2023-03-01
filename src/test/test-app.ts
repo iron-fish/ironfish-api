@@ -39,7 +39,7 @@ export async function bootstrapTestApp(): Promise<INestApplication> {
           JUMIO_API_TOKEN: joi.string().required(),
           JUMIO_API_SECRET: joi.string().required(),
           JUMIO_URL: joi.string().required(),
-          JUMIO_WORKFLOW_DEFINITION: joi.string().required(),
+          JUMIO_WORKFLOW_DEFINITION: joi.number().required(),
           KYC_MAX_ATTEMPTS: joi.number().required(),
           MAGIC_SECRET_KEY: joi.string().required(),
           NETWORK_VERSION: joi.number().required(),

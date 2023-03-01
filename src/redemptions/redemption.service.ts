@@ -83,23 +83,27 @@ export class RedemptionService {
     redemption: Redemption | null,
     user: User,
     prisma?: BasePrismaClient,
-  ): Promise<boolean> {
+  ): Promise<string | null> {
     const points = await this.userPointsService.findOrThrow(user.id, prisma);
 
     if (points.total_points === 0) {
-      return false;
+      return 'User has no points';
     }
 
     if (!redemption) {
-      return true;
+      return null;
     }
 
     const kycMaxAttempts = this.config.get<number>('KYC_MAX_ATTEMPTS');
 
     if (redemption.kyc_attempts >= kycMaxAttempts) {
-      return false;
+      return `Max attempts reached ${redemption.kyc_attempts} / ${kycMaxAttempts}`;
     }
 
-    return redemption.kyc_status === KycStatus.TRY_AGAIN;
+    if (redemption.kyc_status !== KycStatus.TRY_AGAIN) {
+      return `Redemption status is not TRY_AGAIN: ${redemption.kyc_status}`;
+    }
+
+    return null;
   }
 }
