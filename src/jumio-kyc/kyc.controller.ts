@@ -57,7 +57,7 @@ export class KycController {
     return serializeKyc(
       redemption,
       redemption.jumio_account_id,
-      redemption.decision_status,
+      redemption.kyc_status,
       transaction.web_href,
       transaction.workflow_execution_id,
     );
@@ -78,7 +78,7 @@ export class KycController {
     return serializeKyc(
       redemption,
       redemption.jumio_account_id,
-      redemption.decision_status,
+      redemption.kyc_status,
       jumioTransaction.web_href,
       jumioTransaction.workflow_execution_id,
     );

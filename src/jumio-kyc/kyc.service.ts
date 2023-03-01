@@ -1,13 +1,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import {
-  DecisionStatus,
-  JumioTransaction,
-  Redemption,
-  User,
-} from '@prisma/client';
+import { Injectable } from '@nestjs/common';
+import { JumioTransaction, KycStatus, Redemption, User } from '@prisma/client';
 import { JumioApiService } from '../jumio-api/jumio-api.service';
 import { JumioTransactionService } from '../jumio-transactions/jumio-transaction.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -17,7 +12,7 @@ export type KycDetails = {
   jumio_account_id: string;
   jumio_workflow_execution_id: string;
   jumio_web_href: string;
-  status: DecisionStatus;
+  status: KycStatus;
 };
 
 @Injectable()
@@ -28,31 +23,6 @@ export class KycService {
     private readonly jumioTransactionService: JumioTransactionService,
     private readonly jumioApiService: JumioApiService,
   ) {}
-
-  async status(
-    user: User,
-    jumioTransaction: JumioTransaction,
-  ): Promise<KycDetails> {
-    const redemption = await this.redemptionService.find(user);
-    if (!redemption || !redemption.jumio_account_id) {
-      throw new InternalServerErrorException(
-        'Redemption and jumio account should exist for users with transactions',
-      );
-    }
-    const jumioStatus = await this.jumioApiService.transactionStatus(
-      redemption.jumio_account_id,
-      jumioTransaction.workflow_execution_id,
-    );
-    await this.redemptionService.update(redemption, {
-      decision_status: jumioStatus.capabilities.usability.decision.type,
-    });
-    return {
-      jumio_account_id: 'foo',
-      jumio_workflow_execution_id: 'bar',
-      jumio_web_href: 'baz',
-      status: jumioStatus.capabilities.usability.decision.type,
-    };
-  }
 
   async attempt(
     user: User,
@@ -82,7 +52,7 @@ export class KycService {
         );
 
         await this.redemptionService.update(redemption, {
-          decision_status: DecisionStatus.NOT_EXECUTED,
+          kyc_status: KycStatus.TRY_AGAIN,
           jumio_account_id: response.account.id,
         });
 

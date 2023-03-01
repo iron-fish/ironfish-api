@@ -69,7 +69,7 @@ model Redemption {
   user             User      @relation(fields: [user_id], references: [id])
   user_id          Int       @unique
   kyc_attempts     Int       @default(0)
-  kyc_status       DecisionStatus?
+  kyc_status  KycStatus
   jumio_account_id String?   @db.VarChar
   public_address   String    @db.VarChar
 
@@ -390,4 +390,11 @@ enum DecisionLabel {
   LIVENESS_UNDETERMINED
   UNSUPPORTED_COUNTRY
   UNSUPPORTED_DOCUMENT_TYPE
+}
+
+enum KycStatus {
+  TRY_AGAIN
+  FAILED
+  SUBMITTED
+  SUCCESS
 }

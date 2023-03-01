@@ -87,7 +87,7 @@ describe('KycController', () => {
         serializeKyc(
           redemption,
           redemption.jumio_account_id,
-          redemption.decision_status,
+          redemption.kyc_status,
           jumioTransaction.workflow_execution_id,
           jumioTransaction.web_href,
         ),
@@ -109,7 +109,7 @@ describe('KycController', () => {
       serializeKyc(
         redemption,
         redemption.jumio_account_id,
-        redemption.decision_status,
+        redemption.kyc_status,
         transaction.workflow_execution_id,
         transaction.web_href,
       );

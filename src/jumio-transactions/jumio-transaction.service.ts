@@ -6,10 +6,11 @@ import { User } from '@prisma/client';
 import { KYC_MAX_ATTEMPTS } from '../common/constants';
 import { PrismaService } from '../prisma/prisma.service';
 import {
+  DecisionLabel,
+  DecisionStatus,
   JumioTransaction,
   Prisma,
   Redemption,
-  WorkflowStatus,
 } from '.prisma/client';
 
 @Injectable()
@@ -53,7 +54,8 @@ export class JumioTransactionService {
         user: { connect: { id: user.id } },
         workflow_execution_id: workflowExecutionId,
         web_href: webHref,
-        status: WorkflowStatus.INITIATED,
+        decision_status: DecisionStatus.NOT_EXECUTED,
+        decision_label: DecisionLabel.NOT_UPLOADED,
       },
     });
   }

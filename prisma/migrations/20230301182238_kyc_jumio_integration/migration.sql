@@ -1,7 +1,7 @@
 /*
   Warnings:
 
-  - The `kyc_status` column on the `redemptions` table would be dropped and recreated. This will lead to data loss if there is data in the column.
+  - The values [NOT_STARTED,PASS,PENDING,FAIL_TRANSACTION,FAIL_MAX_ATTEMPTS] on the enum `KycStatus` will be removed. If these variants are still used in the database, this will fail.
 
 */
 -- CreateEnum
@@ -10,15 +10,17 @@ CREATE TYPE "DecisionStatus" AS ENUM ('NOT_EXECUTED', 'PASSED', 'REJECTED', 'WAR
 -- CreateEnum
 CREATE TYPE "DecisionLabel" AS ENUM ('TECHNICAL_ERROR', 'NOT_UPLOADED', 'OK', 'BAD_QUALITY', 'BLURRED1', 'BAD_QUALITY_IMAGE1', 'PART_OF_DOCUMENT_MISSING1', 'PART_OF_DOCUMENT_HIDDEN1', 'DAMAGED_DOCUMENT1', 'GLARE1', 'MISSING_MANDATORY_DATAPOINTS1', 'BLACK_WHITE', 'MISSING_PAGE', 'MISSING_SIGNATURE', 'NOT_A_DOCUMENT', 'PHOTOCOPY', 'LIVENESS_UNDETERMINED', 'UNSUPPORTED_COUNTRY', 'UNSUPPORTED_DOCUMENT_TYPE');
 
+-- AlterEnum
+BEGIN;
+CREATE TYPE "KycStatus_new" AS ENUM ('TRY_AGAIN', 'FAILED', 'SUBMITTED', 'SUCCESS');
+ALTER TABLE "redemptions" ALTER COLUMN "kyc_status" TYPE "KycStatus_new" USING ("kyc_status"::text::"KycStatus_new");
+ALTER TYPE "KycStatus" RENAME TO "KycStatus_old";
+ALTER TYPE "KycStatus_new" RENAME TO "KycStatus";
+DROP TYPE "KycStatus_old";
+COMMIT;
+
 -- DropIndex
 DROP INDEX "index_users_on_graffiti";
-
--- AlterTable
-ALTER TABLE "redemptions" DROP COLUMN "kyc_status",
-ADD COLUMN     "kyc_status" "DecisionStatus";
-
--- DropEnum
-DROP TYPE "KycStatus";
 
 -- CreateTable
 CREATE TABLE "jumio_transactions" (
