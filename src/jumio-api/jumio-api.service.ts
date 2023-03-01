@@ -15,7 +15,8 @@ export class JumioApiService {
     jumio_account_id: string,
     jumio_workflow_execution_id: string,
   ): Promise<JumioTransactionRetrieveResponse> {
-    const url = `https://retrieval.amer-1.jumio.ai/api/v1/accounts/${jumio_account_id}/workflow-executions/${jumio_workflow_execution_id}`;
+    const baseUrl = this.config.get<string>('JUMIO_URL');
+    const url = `https://retrieval.${baseUrl}/accounts/${jumio_account_id}/workflow-executions/${jumio_workflow_execution_id}`;
 
     const response = await axios
       .get<JumioTransactionRetrieveResponse>(url, this.requestConfig())
@@ -34,7 +35,8 @@ export class JumioApiService {
     userId: number,
     jumioAccountId: string | null,
   ): Promise<JumioAccountCreateResponse> {
-    let url = this.config.get<string>('JUMIO_URL') + '/accounts';
+    let url =
+      'https://account.' + this.config.get<string>('JUMIO_URL') + '/accounts';
 
     if (jumioAccountId) {
       // Adding the suffix of /<accountId> makes request update, rather than create
@@ -64,7 +66,7 @@ export class JumioApiService {
     return response.data;
   }
 
-  requestConfig = (): AxiosRequestConfig => {
+  requestConfig(): AxiosRequestConfig {
     const jumioToken = this.config.get<string>('JUMIO_API_TOKEN');
     const jumioSecret = this.config.get<string>('JUMIO_API_SECRET');
     const authString = `${jumioToken}:${jumioSecret}`;

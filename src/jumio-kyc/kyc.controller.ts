@@ -34,7 +34,7 @@ export class KycController {
   @ApiExcludeEndpoint()
   @Post()
   @UseGuards(MagicLinkGuard)
-  async attempt(
+  async create(
     @Context() { user }: MagicLinkContext,
     @Body(
       new ValidationPipe({
@@ -43,14 +43,9 @@ export class KycController {
     )
     dto: CreateKycDto,
   ): Promise<SerializedKyc> {
-    const jumioTransaction = await this.jumioTransactionService.find(user);
-    let kycDetails;
-    if (jumioTransaction) {
-      kycDetails = await this.kycService.status(user, jumioTransaction);
-    } else {
-      kycDetails = await this.kycService.attempt(user, dto.public_address);
-    }
-    const redemption = await this.redemptionService.findOrThrow(user);
+    const { jumioTransaction, redemption, kycDetails } =
+      await this.kycService.attempt(user, dto.public_address);
+
     return serializeKyc(
       redemption,
       kycDetails.jumio_account_id,

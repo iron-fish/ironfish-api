@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { JumioTransaction, KycStatus, User } from '@prisma/client';
+import { JumioTransaction, KycStatus, Redemption, User } from '@prisma/client';
 import { JumioApiService } from '../jumio-api/jumio-api.service';
 import { JumioTransactionService } from '../jumio-transactions/jumio-transaction.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -49,37 +49,46 @@ export class KycService {
     };
   }
 
-  async attempt(user: User, public_address: string): Promise<KycDetails> {
-    const pendingStatus = KycStatus.NOT_EXECUTED;
-    // Jumio API ties together account creation with transaction creation
+  async attempt(
+    user: User,
+    publicAddress: string,
+  ): Promise<{ redemption: Redemption; transaction: JumioTransaction }> {
     return this.prisma.$transaction(async (prisma) => {
       await prisma.$executeRawUnsafe(
         'SELECT pg_advisory_xact_lock(HASHTEXT($1));',
         `kyc_${user.id}`,
       );
-      const redemption = await this.redemptionService.getOrCreate(
-        user,
-        public_address,
-      );
-      const response = await this.jumioApiService.createAccountAndTransaction(
-        user.id,
-        redemption.jumio_account_id,
-      );
-      await this.redemptionService.update(redemption, {
-        kyc_status: pendingStatus,
-        jumio_account_id: response.account.id,
-      });
-      await this.jumioTransactionService.upsert(
-        user,
-        response.workflowExecution.id,
-        response.web.href,
-      );
-      return {
-        jumio_account_id: response.account.id,
-        jumio_workflow_execution_id: response.workflowExecution.id,
-        jumio_web_href: response.web.href,
-        status: pendingStatus,
-      };
+
+      let redemption = await this.redemptionService.find(user);
+
+      if (!redemption) {
+        redemption = await this.redemptionService.create(user, publicAddress);
+      }
+
+      let transaction = await this.jumioTransactionService.find(user);
+
+      if (
+        !transaction ||
+        this.jumioTransactionService.canRetry(transaction, redemption)
+      ) {
+        const response = await this.jumioApiService.createAccountAndTransaction(
+          user.id,
+          redemption.jumio_account_id,
+        );
+
+        await this.redemptionService.update(redemption, {
+          status: KycStatus.NOT_EXECUTED,
+          jumio_account_id: response.account.id,
+        });
+
+        transaction = await this.jumioTransactionService.create(
+          user,
+          response.workflowExecution.id,
+          response.web.href,
+        );
+      }
+
+      return { redemption, transaction };
     });
   }
 }

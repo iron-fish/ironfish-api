@@ -35,15 +35,13 @@ export class RedemptionService {
     });
   }
 
-  async getOrCreate(user: User, public_address: string): Promise<Redemption> {
-    return await this.prisma.redemption.upsert({
-      create: {
+  async create(user: User, public_address: string): Promise<Redemption> {
+    return await this.prisma.redemption.create({
+      data: {
         user: { connect: { id: user.id } },
         public_address,
         kyc_status: KycStatus.NOT_EXECUTED,
       },
-      update: {},
-      where: { user_id: user.id },
     });
   }
 }
