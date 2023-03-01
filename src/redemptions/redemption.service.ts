@@ -94,6 +94,10 @@ export class RedemptionService {
       return null;
     }
 
+    if (['USA', 'PRK', 'IRN'].includes(user.country_code)) {
+      return `User is from a banned country: ${user.country_code}`;
+    }
+
     const kycMaxAttempts = this.config.get<number>('KYC_MAX_ATTEMPTS');
 
     if (redemption.kyc_attempts >= kycMaxAttempts) {

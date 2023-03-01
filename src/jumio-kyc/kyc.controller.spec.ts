@@ -57,11 +57,11 @@ describe('KycController', () => {
     await app.close();
   });
 
-  const mockUser = async (): Promise<User> => {
+  const mockUser = async (country: string | null = null): Promise<User> => {
     const user = await usersService.create({
       email: faker.internet.email(),
       graffiti: uuid(),
-      countryCode: faker.address.countryCode('alpha-3'),
+      countryCode: country ?? 'IDN',
     });
 
     await prisma.userPoints.update({
@@ -100,6 +100,18 @@ describe('KycController', () => {
         throw Error('Should have been created by api');
       }
       expect(body).toMatchObject(serializeKyc(redemption, jumioTransaction));
+    });
+    it('banned user country gets error', async () => {
+      const user = await mockUser('PRK');
+      await kycService.attempt(user, 'foo');
+
+      await request(app.getHttpServer())
+        .post(`/kyc`)
+        .set('Authorization', 'did-token')
+        .send({
+          public_address: 'foo',
+        })
+        .expect(HttpStatus.FORBIDDEN);
     });
   });
 
