@@ -2,7 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { JumioTransaction, KycStatus, Redemption, User } from '@prisma/client';
+import {
+  DecisionStatus,
+  JumioTransaction,
+  Redemption,
+  User,
+} from '@prisma/client';
 import { JumioApiService } from '../jumio-api/jumio-api.service';
 import { JumioTransactionService } from '../jumio-transactions/jumio-transaction.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -12,7 +17,7 @@ export type KycDetails = {
   jumio_account_id: string;
   jumio_workflow_execution_id: string;
   jumio_web_href: string;
-  status: KycStatus;
+  status: DecisionStatus;
 };
 
 @Injectable()
@@ -39,13 +44,13 @@ export class KycService {
       jumioTransaction.workflow_execution_id,
     );
     await this.redemptionService.update(redemption, {
-      kyc_status: jumioStatus.decision.details.label,
+      decision_status: jumioStatus.capabilities.usability.decision.type,
     });
     return {
       jumio_account_id: 'foo',
       jumio_workflow_execution_id: 'bar',
       jumio_web_href: 'baz',
-      status: jumioStatus.decision.details.label,
+      status: jumioStatus.capabilities.usability.decision.type,
     };
   }
 
@@ -65,7 +70,7 @@ export class KycService {
         redemption = await this.redemptionService.create(user, publicAddress);
       }
 
-      let transaction = await this.jumioTransactionService.find(user);
+      let transaction = await this.jumioTransactionService.findLatest(user);
 
       if (
         !transaction ||
@@ -77,7 +82,7 @@ export class KycService {
         );
 
         await this.redemptionService.update(redemption, {
-          status: KycStatus.NOT_EXECUTED,
+          decision_status: DecisionStatus.NOT_EXECUTED,
           jumio_account_id: response.account.id,
         });
 

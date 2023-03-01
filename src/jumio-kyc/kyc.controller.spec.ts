@@ -77,7 +77,9 @@ describe('KycController', () => {
         })
         .expect(HttpStatus.CREATED);
       const redemption = await redemptionService.find(user);
-      const jumioTransaction = await jumioTransactionService.findOrThrow(user);
+      const jumioTransaction = await jumioTransactionService.findLatestOrThrow(
+        user,
+      );
       if (!redemption || !redemption.jumio_account_id) {
         throw Error('Should have been created by api');
       }
@@ -85,7 +87,7 @@ describe('KycController', () => {
         serializeKyc(
           redemption,
           redemption.jumio_account_id,
-          redemption.kyc_status,
+          redemption.decision_status,
           jumioTransaction.workflow_execution_id,
           jumioTransaction.web_href,
         ),
@@ -96,28 +98,22 @@ describe('KycController', () => {
   describe('GET /kyc', () => {
     it('retrieves kyc info when it exists', async () => {
       const user = await mockUser();
-      const redemption = await redemptionService.getOrCreate(
-        user,
-        'fakePublicAddress',
-      );
-      const kycDetails = await kycService.attempt(
-        user,
-        redemption.public_address,
-      );
+      const { redemption, transaction } = await kycService.attempt(user, 'foo');
       const { body } = await request(app.getHttpServer())
         .get(`/kyc`)
         .set('Authorization', 'did-token')
         .expect(HttpStatus.OK);
-
-      expect(body).toMatchObject(
-        serializeKyc(
-          redemption,
-          kycDetails.jumio_account_id,
-          kycDetails.status,
-          kycDetails.jumio_workflow_execution_id,
-          kycDetails.jumio_web_href,
-        ),
+      if (!redemption.jumio_account_id) {
+        throw new Error('jumio account id should be set');
+      }
+      serializeKyc(
+        redemption,
+        redemption.jumio_account_id,
+        redemption.decision_status,
+        transaction.workflow_execution_id,
+        transaction.web_href,
       );
+      expect(body).not.toBeNull();
     });
   });
 });

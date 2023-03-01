@@ -7,6 +7,7 @@ import {
   Controller,
   Get,
   HttpStatus,
+  InternalServerErrorException,
   Post,
   UseGuards,
   ValidationPipe,
@@ -43,15 +44,22 @@ export class KycController {
     )
     dto: CreateKycDto,
   ): Promise<SerializedKyc> {
-    const { jumioTransaction, redemption, kycDetails } =
-      await this.kycService.attempt(user, dto.public_address);
+    const { redemption, transaction } = await this.kycService.attempt(
+      user,
+      dto.public_address,
+    );
+    if (!redemption.jumio_account_id) {
+      throw new InternalServerErrorException(
+        'should have account id after attempt',
+      );
+    }
 
     return serializeKyc(
       redemption,
-      kycDetails.jumio_account_id,
-      kycDetails.status,
-      kycDetails.jumio_workflow_execution_id,
-      kycDetails.jumio_web_href,
+      redemption.jumio_account_id,
+      redemption.decision_status,
+      transaction.web_href,
+      transaction.workflow_execution_id,
     );
   }
 
@@ -65,16 +73,14 @@ export class KycController {
     if (!redemption || !redemption.jumio_account_id) {
       return null;
     }
-    const jumioTransaction = await this.jumioTransactionService.find(user);
-    if (!jumioTransaction) {
-      return null;
-    }
+    const jumioTransaction =
+      await this.jumioTransactionService.findLatestOrThrow(user);
     return serializeKyc(
       redemption,
       redemption.jumio_account_id,
-      redemption.kyc_status,
-      jumioTransaction.workflow_execution_id,
+      redemption.decision_status,
       jumioTransaction.web_href,
+      jumioTransaction.workflow_execution_id,
     );
   }
 }

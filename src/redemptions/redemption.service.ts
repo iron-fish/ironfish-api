@@ -2,7 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { KycStatus, Redemption, User } from '@prisma/client';
+import {
+  DecisionLabel,
+  DecisionStatus,
+  Redemption,
+  User,
+} from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -25,7 +30,7 @@ export class RedemptionService {
 
   async update(
     redemption: Redemption,
-    data: { kyc_status?: KycStatus; jumio_account_id?: string },
+    data: { decision_status: DecisionStatus; jumio_account_id?: string },
   ): Promise<Redemption> {
     return this.prisma.redemption.update({
       data,
@@ -40,7 +45,8 @@ export class RedemptionService {
       data: {
         user: { connect: { id: user.id } },
         public_address,
-        kyc_status: KycStatus.NOT_EXECUTED,
+        decision_status: DecisionStatus.NOT_EXECUTED,
+        decision_label: DecisionLabel.NOT_UPLOADED,
       },
     });
   }
