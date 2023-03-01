@@ -20,6 +20,7 @@ import { JumioTransactionService } from '../jumio-transactions/jumio-transaction
 import { RedemptionService } from '../redemptions/redemption.service';
 import { CreateKycDto } from './dto/create-kyc.dto';
 import { SerializedKyc } from './interfaces/serialized-kyc';
+import { SerializedKycConfig } from './interfaces/serialized-kyc-config';
 import { KycService } from './kyc.service';
 import { serializeKyc } from './utils/serialize-kyc';
 
@@ -79,5 +80,42 @@ export class KycController {
       await this.jumioTransactionService.findLatestOrThrow(user);
 
     return serializeKyc(redemption, jumioTransaction);
+  }
+
+  @ApiExcludeEndpoint()
+  @Get('config')
+  config(): SerializedKycConfig {
+    return {
+      data: [
+        {
+          airdrop_completed_by: new Date(Date.UTC(2023, 2, 13, 0, 0, 0)),
+          coins: 105000,
+          kyc_completed_by: new Date(Date.UTC(2023, 2, 16, 0, 0, 0)),
+          name: 'Pull Requests',
+          pool_name: 'Code Contributions Pool',
+        },
+        {
+          airdrop_completed_by: new Date(Date.UTC(2023, 2, 19, 0, 0, 0)),
+          coins: 420000,
+          kyc_completed_by: new Date(Date.UTC(2023, 2, 23, 0, 0, 0)),
+          name: 'Phase 1',
+          pool_name: 'Phase 1 Pool',
+        },
+        {
+          airdrop_completed_by: new Date(Date.UTC(2023, 2, 26, 0, 0, 0)),
+          coins: 210000,
+          kyc_completed_by: new Date(Date.UTC(2023, 2, 30, 0, 0, 0)),
+          name: 'Phase 2',
+          pool_name: 'Phase 2 Pool',
+        },
+        {
+          airdrop_completed_by: new Date(Date.UTC(2023, 2, 26, 0, 0, 0)),
+          coins: 210000,
+          kyc_completed_by: new Date(Date.UTC(2023, 3, 6, 0, 0, 0)),
+          name: 'Phase 3',
+          pool_name: 'Phase 3 Pool',
+        },
+      ],
+    };
   }
 }
