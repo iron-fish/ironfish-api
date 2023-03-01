@@ -4,6 +4,5 @@
 export interface UpdateUserOptions {
   discord?: string;
   github?: string;
-  graffiti?: string;
   telegram?: string;
 }

@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export class UpdateUserDto {
   @IsOptional()
@@ -11,11 +11,6 @@ export class UpdateUserDto {
   @IsOptional()
   @IsString()
   readonly github?: string;
-
-  @IsOptional()
-  @IsNotEmpty()
-  @IsString()
-  readonly graffiti?: string;
 
   @IsOptional()
   @IsString()
