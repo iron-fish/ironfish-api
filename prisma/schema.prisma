@@ -72,6 +72,9 @@ model Redemption {
   kyc_status  KycStatus
   jumio_account_id String?   @db.VarChar
   public_address   String    @db.VarChar
+  id_issuing_country  String?    @db.VarChar
+  id_type          String?   @db.VarChar
+  id_subtype       String?   @db.VarChar
 
   @@index([user_id], name: "index_redemption_on_user_id")
   @@map("redemptions")
