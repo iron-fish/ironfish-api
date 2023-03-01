@@ -36,32 +36,37 @@ export class KycService {
 
       let redemption = await this.redemptionService.find(user);
 
+      const canAttempt = await this.redemptionService.canAttempt(
+        redemption,
+        user,
+        prisma,
+      );
+
+      if (!canAttempt) {
+        throw new Error(
+          `Not eligible to create transaction for user ${user.id}`,
+        );
+      }
+
       if (!redemption) {
         redemption = await this.redemptionService.create(user, publicAddress);
       }
 
-      let transaction = await this.jumioTransactionService.findLatest(user);
+      const response = await this.jumioApiService.createAccountAndTransaction(
+        user.id,
+        redemption.jumio_account_id,
+      );
 
-      if (
-        !transaction ||
-        this.jumioTransactionService.canRetry(transaction, redemption)
-      ) {
-        const response = await this.jumioApiService.createAccountAndTransaction(
-          user.id,
-          redemption.jumio_account_id,
-        );
+      await this.redemptionService.update(redemption, {
+        kyc_status: KycStatus.IN_PROGRESS,
+        jumio_account_id: response.account.id,
+      });
 
-        await this.redemptionService.update(redemption, {
-          kyc_status: KycStatus.TRY_AGAIN,
-          jumio_account_id: response.account.id,
-        });
-
-        transaction = await this.jumioTransactionService.create(
-          user,
-          response.workflowExecution.id,
-          response.web.href,
-        );
-      }
+      const transaction = await this.jumioTransactionService.create(
+        user,
+        response.workflowExecution.id,
+        response.web.href,
+      );
 
       return { redemption, transaction };
     });

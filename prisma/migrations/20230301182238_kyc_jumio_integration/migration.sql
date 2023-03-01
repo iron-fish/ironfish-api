@@ -12,7 +12,7 @@ CREATE TYPE "DecisionLabel" AS ENUM ('TECHNICAL_ERROR', 'NOT_UPLOADED', 'OK', 'B
 
 -- AlterEnum
 BEGIN;
-CREATE TYPE "KycStatus_new" AS ENUM ('TRY_AGAIN', 'FAILED', 'SUBMITTED', 'SUCCESS');
+CREATE TYPE "KycStatus_new" AS ENUM ('IN_PROGRESS', 'TRY_AGAIN', 'FAILED', 'SUBMITTED', 'SUCCESS');
 ALTER TABLE "redemptions" ALTER COLUMN "kyc_status" TYPE "KycStatus_new" USING ("kyc_status"::text::"KycStatus_new");
 ALTER TYPE "KycStatus" RENAME TO "KycStatus_old";
 ALTER TYPE "KycStatus_new" RENAME TO "KycStatus";

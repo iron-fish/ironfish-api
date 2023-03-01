@@ -393,6 +393,7 @@ enum DecisionLabel {
 }
 
 enum KycStatus {
+  IN_PROGRESS
   TRY_AGAIN
   FAILED
   SUBMITTED

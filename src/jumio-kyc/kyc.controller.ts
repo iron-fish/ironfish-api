@@ -48,6 +48,7 @@ export class KycController {
       user,
       dto.public_address,
     );
+
     if (!redemption.jumio_account_id) {
       throw new InternalServerErrorException(
         'should have account id after attempt',
@@ -70,11 +71,19 @@ export class KycController {
     @Context() { user }: MagicLinkContext,
   ): Promise<SerializedKyc | null> {
     const redemption = await this.redemptionService.find(user);
-    if (!redemption || !redemption.jumio_account_id) {
+    if (!redemption) {
       return null;
     }
+
+    if (!redemption.jumio_account_id) {
+      throw new InternalServerErrorException(
+        'should have account id after attempt',
+      );
+    }
+
     const jumioTransaction =
       await this.jumioTransactionService.findLatestOrThrow(user);
+
     return serializeKyc(
       redemption,
       redemption.jumio_account_id,

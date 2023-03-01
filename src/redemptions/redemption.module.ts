@@ -4,11 +4,12 @@
 import { Module } from '@nestjs/common';
 import { ApiConfigModule } from '../api-config/api-config.module';
 import { PrismaModule } from '../prisma/prisma.module';
+import { UserPointsModule } from '../user-points/user-points.module';
 import { RedemptionService } from './redemption.service';
 
 @Module({
   exports: [RedemptionService],
-  imports: [PrismaModule, ApiConfigModule],
+  imports: [PrismaModule, UserPointsModule, ApiConfigModule],
   providers: [RedemptionService],
 })
 export class RedemptionModule {}

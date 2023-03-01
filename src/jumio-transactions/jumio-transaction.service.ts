@@ -3,14 +3,12 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { User } from '@prisma/client';
-import { KYC_MAX_ATTEMPTS } from '../common/constants';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   DecisionLabel,
   DecisionStatus,
   JumioTransaction,
   Prisma,
-  Redemption,
 } from '.prisma/client';
 
 @Injectable()
@@ -29,19 +27,19 @@ export class JumioTransactionService {
   }
 
   async findLatestOrThrow(user: User): Promise<JumioTransaction> {
-    const jumioTransaction = await this.find(user);
-    if (!jumioTransaction) {
+    const jumioTransactions = await this.find(user);
+    if (!jumioTransactions) {
       throw new NotFoundException('No Jumio Transactions found');
     }
-    return jumioTransaction[0];
+    return jumioTransactions[0];
   }
 
   async findLatest(user: User): Promise<JumioTransaction | null> {
-    const jumioTransaction = await this.find(user);
-    if (!jumioTransaction) {
+    const jumioTransactions = await this.find(user);
+    if (!jumioTransactions) {
       return null;
     }
-    return jumioTransaction[0];
+    return jumioTransactions[0];
   }
 
   async create(
@@ -58,12 +56,5 @@ export class JumioTransactionService {
         decision_label: DecisionLabel.NOT_UPLOADED,
       },
     });
-  }
-
-  canRetry(transaction: JumioTransaction, redemption: Redemption): boolean {
-    if (redemption.kyc_attempts >= KYC_MAX_ATTEMPTS) {
-      return false;
-    }
-    return true;
   }
 }
