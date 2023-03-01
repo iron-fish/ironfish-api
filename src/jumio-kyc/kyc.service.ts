@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { JumioTransaction, KycStatus, Redemption, User } from '@prisma/client';
 import { JumioApiService } from '../jumio-api/jumio-api.service';
 import { JumioTransactionService } from '../jumio-transactions/jumio-transaction.service';
@@ -41,9 +41,8 @@ export class KycService {
         user,
         prisma,
       );
-
       if (canAttemptError) {
-        throw new Error(
+        throw new ForbiddenException(
           `Not eligible to create transaction for user ${user.id}: ${canAttemptError}`,
         );
       }

@@ -13,6 +13,21 @@ export interface JumioTransactionRetrieveResponse {
     status: 'INITIATED' | 'PROCESSED' | 'SESSION_EXPIRED' | 'TOKEN_EXPIRED';
   };
   capabilities: {
+    extraction: [
+      {
+        decision: {
+          type: string;
+          details: {
+            label: string;
+          };
+        };
+        data: {
+          type: string;
+          subType: string;
+          issuingCountry: string;
+        };
+      },
+    ];
     usability: {
       decision: {
         type: 'NOT_EXECUTED' | 'PASSED' | 'REJECTED' | 'WARNING';

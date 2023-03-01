@@ -8,6 +8,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { UserPointsService } from '../user-points/user-points.service';
 
+export const REDEMPTION_BAN_LIST = ['PRK', 'IRN'];
 @Injectable()
 export class RedemptionService {
   constructor(
@@ -92,6 +93,10 @@ export class RedemptionService {
 
     if (!redemption) {
       return null;
+    }
+
+    if (REDEMPTION_BAN_LIST.includes(user.country_code)) {
+      return `User is from a banned country: ${user.country_code}`;
     }
 
     const kycMaxAttempts = this.config.get<number>('KYC_MAX_ATTEMPTS');
