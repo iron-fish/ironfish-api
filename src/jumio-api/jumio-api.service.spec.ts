@@ -39,7 +39,7 @@ describe('JumioApiService', () => {
         expect(postMock).toHaveBeenCalledWith(
           'https://account.amer-1.jumio.ai/api/v1/accounts',
           expect.objectContaining({
-            calledUrl: expect.any(String),
+            callbackUrl: expect.any(String),
             customerInternalReference: expect.any(Number),
             userReference: expect.any(Number),
             workflowDefinition: {
@@ -63,7 +63,7 @@ describe('JumioApiService', () => {
         expect(postMock).toHaveBeenCalledWith(
           'https://account.amer-1.jumio.ai/api/v1/accounts',
           expect.objectContaining({
-            calledUrl: expect.any(String),
+            callbackUrl: expect.any(String),
             customerInternalReference: expect.any(Number),
             userReference: expect.any(Number),
             workflowDefinition: {
