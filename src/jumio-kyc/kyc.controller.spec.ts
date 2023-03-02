@@ -2,7 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import { User } from '@prisma/client';
+import { KycStatus, User } from '@prisma/client';
+import assert from 'assert';
+import axios from 'axios';
 import faker from 'faker';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
@@ -13,6 +15,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { RedemptionService } from '../redemptions/redemption.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
+import { CALLBACK_FIXTURE } from './fixtures/callback';
+import { WORKFLOW_RETRIEVE_FIXTURE } from './fixtures/workflow';
 import { KycService } from './kyc.service';
 import { serializeKyc } from './utils/serialize-kyc';
 
@@ -112,6 +116,46 @@ describe('KycController', () => {
           public_address: 'foo',
         })
         .expect(HttpStatus.FORBIDDEN);
+    });
+  });
+
+  describe('POST /callback', () => {
+    it('resolves 200 when transaction found/updated', async () => {
+      const user = await mockUser();
+
+      // create user
+      await request(app.getHttpServer())
+        .post(`/kyc`)
+        .set('Authorization', 'did-token')
+        .send({
+          public_address: 'foo',
+        })
+        .expect(HttpStatus.CREATED);
+
+      let redemption = await redemptionService.findOrThrow(user);
+      assert.ok(redemption.jumio_account_id);
+      expect(redemption.kyc_status).toBe(KycStatus.IN_PROGRESS);
+
+      const transaction = await jumioTransactionService.findLatestOrThrow(user);
+
+      const callbackData = CALLBACK_FIXTURE(
+        redemption.jumio_account_id,
+        transaction.workflow_execution_id,
+        'PROCESSED',
+      );
+
+      jest.spyOn(axios, 'get').mockResolvedValueOnce({
+        data: WORKFLOW_RETRIEVE_FIXTURE,
+      });
+
+      await request(app.getHttpServer())
+        .post('/kyc/callback')
+        .set('Authorization', 'did-token')
+        .send(callbackData)
+        .expect(HttpStatus.OK);
+
+      redemption = await redemptionService.findOrThrow(user);
+      expect(redemption.kyc_status).toBe(KycStatus.SUBMITTED);
     });
   });
 

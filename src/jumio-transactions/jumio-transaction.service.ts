@@ -3,14 +3,11 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { User } from '@prisma/client';
+import { instanceToPlain } from 'class-transformer';
+import { JumioTransactionRetrieveResponse } from '../jumio-api/interfaces/jumio-transaction-retrieve';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
-import {
-  DecisionLabel,
-  DecisionStatus,
-  JumioTransaction,
-  Prisma,
-} from '.prisma/client';
+import { DecisionStatus, JumioTransaction, Prisma } from '.prisma/client';
 
 @Injectable()
 export class JumioTransactionService {
@@ -43,6 +40,32 @@ export class JumioTransactionService {
     return jumioTransactions[0];
   }
 
+  async findByWorkflowExecutionId(
+    workflowExecutionId: string,
+  ): Promise<JumioTransaction | null> {
+    return await this.prisma.jumioTransaction.findFirst({
+      where: { workflow_execution_id: workflowExecutionId },
+    });
+  }
+
+  async update(
+    transaction: JumioTransaction,
+    data: {
+      decisionStatus: DecisionStatus;
+      transactionStatus: JumioTransactionRetrieveResponse;
+      latestCallbackAt?: Date;
+    },
+  ): Promise<JumioTransaction> {
+    return this.prisma.jumioTransaction.update({
+      data: {
+        decision_status: data.decisionStatus,
+        last_workflow_fetch: instanceToPlain(data.transactionStatus),
+        latest_callback_at: data.latestCallbackAt,
+      },
+      where: { id: transaction.id },
+    });
+  }
+
   async create(
     user: User,
     workflowExecutionId: string,
@@ -57,7 +80,6 @@ export class JumioTransactionService {
         workflow_execution_id: workflowExecutionId,
         web_href: webHref,
         decision_status: DecisionStatus.NOT_EXECUTED,
-        decision_label: DecisionLabel.NOT_UPLOADED,
       },
     });
   }

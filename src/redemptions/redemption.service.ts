@@ -2,8 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { KycStatus, Redemption, User } from '@prisma/client';
+import { DecisionStatus, KycStatus, Redemption, User } from '@prisma/client';
 import { ApiConfigService } from '../api-config/api-config.service';
+import { JumioTransactionRetrieveResponse } from '../jumio-api/interfaces/jumio-transaction-retrieve';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { UserPointsService } from '../user-points/user-points.service';
@@ -31,9 +32,95 @@ export class RedemptionService {
     });
   }
 
+  calculateStatus(
+    transactionStatus: JumioTransactionRetrieveResponse,
+  ): KycStatus {
+    if (
+      ['SESSION_EXPIRED', 'TOKEN_EXPIRED'].includes(
+        transactionStatus.workflow.status,
+      )
+    ) {
+      return KycStatus.TRY_AGAIN;
+    }
+    if (transactionStatus.decision.type === DecisionStatus.NOT_EXECUTED) {
+      return KycStatus.TRY_AGAIN;
+    }
+    if (transactionStatus.decision.type === DecisionStatus.PASSED) {
+      return KycStatus.SUBMITTED;
+    }
+    // TODO: HANDLE WARN, use decision.risk.score?
+    const failure =
+      this.livenessStatus(transactionStatus) ||
+      this.similarityStatus(transactionStatus) ||
+      this.dataChecksStatus(transactionStatus) ||
+      this.extractionStatus(transactionStatus) ||
+      this.usabilityStatus(transactionStatus);
+    if (failure) {
+      return failure;
+    }
+
+    return KycStatus.TRY_AGAIN;
+  }
+
+  similarityStatus(
+    _response: JumioTransactionRetrieveResponse,
+  ): KycStatus | null {
+    return null;
+  }
+
+  livenessStatus(response: JumioTransactionRetrieveResponse): KycStatus | null {
+    for (const check of response.capabilities.liveness) {
+      // hard fail
+      if (
+        ['PHOTOCOPY', 'DIGITAL_COPY', 'MANIPULATED', 'BLACK_WHITE'].includes(
+          check.decision.details.label,
+        )
+      ) {
+        return KycStatus.FAILED;
+      }
+    }
+
+    return null;
+  }
+
+  dataChecksStatus(
+    _response: JumioTransactionRetrieveResponse,
+  ): KycStatus | null {
+    return null;
+  }
+
+  extractionStatus(
+    _response: JumioTransactionRetrieveResponse,
+  ): KycStatus | null {
+    return null;
+  }
+
+  usabilityStatus(
+    response: JumioTransactionRetrieveResponse,
+  ): KycStatus | null {
+    for (const check of response.capabilities.usability) {
+      if (
+        check.decision.details.label === 'PHOTOCOPY' ||
+        check.decision.details.label === 'BLACK_WHITE'
+      ) {
+        return KycStatus.FAILED;
+      }
+    }
+    return null;
+  }
+
+  async findByJumioAccountId(jumioAccountId: string): Promise<Redemption> {
+    return this.prisma.redemption.findFirstOrThrow({
+      where: { jumio_account_id: jumioAccountId },
+    });
+  }
+
   async update(
     redemption: Redemption,
-    data: { kyc_status: KycStatus; jumio_account_id?: string },
+    data: {
+      kyc_status: KycStatus;
+      jumio_account_id?: string;
+    },
     prisma?: BasePrismaClient,
   ): Promise<Redemption> {
     const client = prisma ?? this.prisma;

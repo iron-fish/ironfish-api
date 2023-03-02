@@ -3,10 +3,19 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { JumioTransaction, KycStatus, Redemption, User } from '@prisma/client';
+import assert from 'assert';
 import { JumioApiService } from '../jumio-api/jumio-api.service';
 import { JumioTransactionService } from '../jumio-transactions/jumio-transaction.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedemptionService } from '../redemptions/redemption.service';
+import { UsersService } from '../users/users.service';
+import { JumioCallbackData } from './interfaces/jumio-callback-data';
+
+export type IdDetails = {
+  id_issuing_country: string;
+  id_type: string;
+  id_subtype: string;
+};
 
 export type KycDetails = {
   jumio_account_id: string;
@@ -14,7 +23,6 @@ export type KycDetails = {
   jumio_web_href: string;
   status: KycStatus;
 };
-
 @Injectable()
 export class KycService {
   constructor(
@@ -22,6 +30,7 @@ export class KycService {
     private readonly redemptionService: RedemptionService,
     private readonly jumioTransactionService: JumioTransactionService,
     private readonly jumioApiService: JumioApiService,
+    private readonly usersService: UsersService,
   ) {}
 
   async attempt(
@@ -83,5 +92,64 @@ export class KycService {
 
       return { redemption, transaction };
     });
+  }
+
+  async handleCallback(data: JumioCallbackData): Promise<void> {
+    let transaction =
+      await this.jumioTransactionService.findByWorkflowExecutionId(
+        data.workflowExecution.id,
+      );
+
+    if (!transaction) {
+      return;
+    }
+
+    const user = await this.usersService.findOrThrow(transaction.user_id);
+
+    // Check were not processing a stale callback
+    const latest = await this.jumioTransactionService.findLatest(user);
+    if (!latest || latest.id !== transaction.id) {
+      return;
+    }
+
+    if (
+      transaction.latest_callback_at &&
+      transaction.latest_callback_at >= new Date(data.callbackSentAt)
+    ) {
+      return;
+    }
+
+    let redemption = await this.redemptionService.findOrThrow(user);
+
+    // Don't process callbacks anymore for a user that has already passed KYC
+    if (
+      redemption.kyc_status === KycStatus.SUCCESS ||
+      redemption.kyc_status === KycStatus.SUBMITTED
+    ) {
+      return;
+    }
+
+    assert.ok(redemption.jumio_account_id);
+    const status = await this.jumioApiService.transactionStatus(
+      redemption.jumio_account_id,
+      data.workflowExecution.id,
+    );
+
+    const kycStatus = this.redemptionService.calculateStatus(status);
+
+    // Has our user's KYC status changed
+    if (redemption.kyc_status !== kycStatus) {
+      redemption = await this.redemptionService.update(redemption, {
+        kyc_status: kycStatus,
+      });
+    }
+
+    transaction = await this.jumioTransactionService.update(transaction, {
+      decisionStatus: status.decision.type,
+      transactionStatus: status,
+      latestCallbackAt: new Date(),
+    });
+
+    return;
   }
 }

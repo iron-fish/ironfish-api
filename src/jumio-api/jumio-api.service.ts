@@ -17,6 +17,7 @@ export class JumioApiService {
   ): Promise<JumioTransactionRetrieveResponse> {
     const baseUrl = this.config.get<string>('JUMIO_URL');
     const url = `https://retrieval.${baseUrl}/accounts/${jumio_account_id}/workflow-executions/${jumio_workflow_execution_id}`;
+
     const response = await axios
       .get<JumioTransactionRetrieveResponse>(url, this.requestConfig())
       .catch((error) => {
@@ -27,6 +28,7 @@ export class JumioApiService {
         }
         throw error;
       });
+
     return response.data;
   }
 
@@ -46,6 +48,7 @@ export class JumioApiService {
     const body = {
       customerInternalReference: userId,
       userReference: userId,
+      callbackUrl: this.getCallbackUrl(),
       workflowDefinition: {
         key: this.config.get<number>('JUMIO_WORKFLOW_DEFINITION'),
       },
@@ -63,6 +66,10 @@ export class JumioApiService {
       });
 
     return response.data;
+  }
+
+  getCallbackUrl(): string {
+    return this.config.get<string>('API_URL') + '/jumio/callback';
   }
 
   requestConfig(): AxiosRequestConfig {
