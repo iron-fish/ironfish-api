@@ -121,7 +121,7 @@ export class UsersController {
     let eventMetrics: Record<EventType, SerializedEventMetrics>;
     let points: number;
     let pools: Record<MetricsPool, SerializedEventMetrics> | undefined;
-    let poolPoints: Record<string, number> | undefined;
+    let poolPoints;
     let nodeUptime: SerializedUserMetrics['node_uptime'];
 
     if (query.granularity === MetricsGranularity.LIFETIME) {
