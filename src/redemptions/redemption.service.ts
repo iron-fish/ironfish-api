@@ -46,7 +46,7 @@ export class RedemptionService {
       return KycStatus.TRY_AGAIN;
     }
     if (transactionStatus.decision.type === DecisionStatus.PASSED) {
-      return KycStatus.SUCCESS;
+      return KycStatus.SUBMITTED;
     }
     // TODO: HANDLE WARN, use decision.risk.score?
     const failure =

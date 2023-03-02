@@ -16,7 +16,7 @@ import { KycService } from './kyc.service';
     JumioApiModule,
     RedemptionModule,
     JumioTransactionModule,
-    UsersModule
+    UsersModule,
   ],
   providers: [KycService],
 })

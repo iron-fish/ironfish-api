@@ -59,6 +59,7 @@ export class JumioTransactionService {
       data: {
         decision_status: data.decisionStatus,
         last_workflow_fetch: instanceToPlain(data.transactionStatus),
+        latest_callback_at: new Date(),
       },
       where: { id: transaction.id },
     });

@@ -112,6 +112,13 @@ export class KycService {
       return;
     }
 
+    if (
+      transaction.latest_callback_at &&
+      transaction.latest_callback_at >= new Date(data.callbackSentAt)
+    ) {
+      return;
+    }
+
     let redemption = await this.redemptionService.findOrThrow(user);
 
     // Don't process callbacks anymore for a user that has already passed KYC
@@ -142,6 +149,6 @@ export class KycService {
       transactionStatus: status,
     });
 
-    return { redemption, transaction };
+    return;
   }
 }

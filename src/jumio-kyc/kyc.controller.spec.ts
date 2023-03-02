@@ -13,6 +13,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { RedemptionService } from '../redemptions/redemption.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
+import { CALLBACK_FIXTURE } from './fixtures/callback';
 import { KycService } from './kyc.service';
 import { serializeKyc } from './utils/serialize-kyc';
 
@@ -112,6 +113,36 @@ describe('KycController', () => {
           public_address: 'foo',
         })
         .expect(HttpStatus.FORBIDDEN);
+    });
+  });
+
+  describe('POST /callback', () => {
+    it('resolves 200 when transaction found/updated', async () => {
+      const user = await mockUser();
+
+      // create user
+      await request(app.getHttpServer())
+        .post(`/kyc`)
+        .set('Authorization', 'did-token')
+        .send({
+          public_address: 'foo',
+        })
+        .expect(HttpStatus.CREATED);
+
+      const { body } = await request(app.getHttpServer())
+        .post(`/callback`)
+        .set('Authorization', 'did-token')
+        .send(CALLBACK_FIXTURE)
+        .expect(HttpStatus.CREATED);
+
+      const redemption = await redemptionService.find(user);
+      const jumioTransaction = await jumioTransactionService.findLatestOrThrow(
+        user,
+      );
+      if (!redemption || !redemption.jumio_account_id) {
+        throw Error('Should have been created by api');
+      }
+      expect(body).toMatchObject(serializeKyc(redemption, jumioTransaction));
     });
   });
 
