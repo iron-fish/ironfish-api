@@ -29,6 +29,7 @@ describe('UsersController', () => {
   let eventsJobsController: EventsJobsController;
   let userPointsJobsController: UserPointsJobsController;
   let userRankService: UserRanksService;
+  let userPointsService: UserPointsService;
   let recaptchaVerificationService: RecaptchaVerificationService;
 
   beforeAll(async () => {
@@ -38,6 +39,7 @@ describe('UsersController', () => {
     eventsService = app.get(EventsService);
     eventsJobsController = app.get(EventsJobsController);
     userPointsJobsController = app.get(UserPointsJobsController);
+    userPointsService = app.get(UserPointsService);
     userRankService = app.get(UserRanksService);
     recaptchaVerificationService = app.get(RecaptchaVerificationService);
 
@@ -338,6 +340,13 @@ describe('UsersController', () => {
         });
         await userRankService.updateRanks();
 
+        const userPoints = await userPointsService.findOrThrow(user.id);
+        await userPointsService.upsertPreviousPools(userPoints, {
+          pool1: 10,
+          pool2: 20,
+          pool3: 30,
+        });
+
         const { body } = await request(app.getHttpServer())
           .get(`/users/${user.id}/metrics`)
           .query({
@@ -363,6 +372,12 @@ describe('UsersController', () => {
               count: expect.any(Number),
               points: 500,
             },
+          },
+          pool_points: {
+            pool_one: 10,
+            pool_two: 20,
+            pool_three: 30,
+            pool_four: 100,
           },
           metrics: {
             blocks_mined: {
