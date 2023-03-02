@@ -262,6 +262,9 @@ model UserPoints {
   multi_asset_transfer_points             Int       @default(0)
   multi_asset_transfer_count              Int       @default(0)
   multi_asset_transfer_last_occurred_at   DateTime? @db.Timestamp(6)
+  pool1_points                            Int?      
+  pool2_points                            Int?      
+  pool3_points                            Int?      
   pool4_points                            Int       @default(0)
   pool4_count                             Int       @default(0)
   pool4_last_occurred_at                  DateTime? @db.Timestamp(6)
