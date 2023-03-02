@@ -194,9 +194,7 @@ describe('UserPointsJobsController', () => {
       jest
         .spyOn(eventsService, 'getUpsertPointsOptions')
         .mockImplementationOnce(() => Promise.resolve(options));
-      const upsert = jest
-        .spyOn(userPointsService, 'upsert')
-        .mockImplementationOnce(jest.fn());
+      const upsert = jest.spyOn(userPointsService, 'upsert');
 
       await userPointsJobsController.refreshUserPoints({ userId: user.id });
       expect(upsert).toHaveBeenCalledWith(options);
@@ -283,7 +281,6 @@ describe('UserPointsJobsController', () => {
       jest
         .spyOn(eventsService, 'getUpsertPointsOptions')
         .mockImplementationOnce(() => Promise.resolve(options));
-      jest.spyOn(userPointsService, 'upsert').mockImplementationOnce(jest.fn());
 
       const { requeue } = await userPointsJobsController.refreshUserPoints({
         userId: user.id,
