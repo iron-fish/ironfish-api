@@ -3,10 +3,12 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { JumioTransaction, KycStatus, Redemption, User } from '@prisma/client';
+import assert from 'assert';
 import { JumioApiService } from '../jumio-api/jumio-api.service';
 import { JumioTransactionService } from '../jumio-transactions/jumio-transaction.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedemptionService } from '../redemptions/redemption.service';
+import { UsersService } from '../users/users.service';
 import { JumioCallbackData } from './interfaces/jumio-callback-data';
 
 export type IdDetails = {
@@ -28,6 +30,7 @@ export class KycService {
     private readonly redemptionService: RedemptionService,
     private readonly jumioTransactionService: JumioTransactionService,
     private readonly jumioApiService: JumioApiService,
+    private readonly usersService: UsersService,
   ) {}
 
   async attempt(
@@ -91,33 +94,42 @@ export class KycService {
     });
   }
 
-  async update(
-    callbackData: JumioCallbackData,
-  ): Promise<{ redemption: Redemption; transaction: JumioTransaction }> {
-    // GATHER
-    const transactionStatus = await this.jumioApiService.transactionStatusUrl(
-      callbackData.workflowExecution.href,
-    );
-    // TODO if this findOrThrow fails, we are in a stuck state
+  async handleCallback(data: JumioCallbackData): Promise<void> {
     let transaction =
       await this.jumioTransactionService.findByWorkflowExecutionId(
-        callbackData.workflowExecution.id,
+        data.workflowExecution.id,
       );
-    // TODO if this findOrThrow fails, we are in a stuck state
-    let redemption = await this.redemptionService.findByJumioAccountId(
-      callbackData.account.id,
+
+    if (!transaction) {
+      return;
+    }
+
+    const user = await this.usersService.findOrThrow(transaction.user_id);
+    const latest = await this.jumioTransactionService.findLatest(user);
+
+    if (!latest || latest.id !== transaction.id) {
+      return;
+    }
+
+    let redemption = await this.redemptionService.findOrThrow(user);
+    assert.ok(redemption.jumio_account_id);
+
+    const status = await this.jumioApiService.transactionStatus(
+      redemption.jumio_account_id,
+      data.workflowExecution.id,
     );
 
-    // CALCULATE STATUS
-    const kycStatus = this.redemptionService.calculateStatus(transactionStatus);
+    const kycStatus = this.redemptionService.calculateStatus(status);
 
-    // UDPATE
-    redemption = await this.redemptionService.update(redemption, {
-      kyc_status: kycStatus,
-    });
+    if (redemption.kyc_status !== kycStatus) {
+      redemption = await this.redemptionService.update(redemption, {
+        kyc_status: kycStatus,
+      });
+    }
+
     transaction = await this.jumioTransactionService.update(transaction, {
-      decisionStatus: transactionStatus.decision.type,
-      transactionStatus: transactionStatus,
+      decisionStatus: status.decision.type,
+      transactionStatus: status,
     });
 
     return { redemption, transaction };

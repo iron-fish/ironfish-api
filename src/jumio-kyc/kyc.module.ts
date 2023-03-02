@@ -6,6 +6,7 @@ import { JumioApiModule } from '../jumio-api/jumio-api.module';
 import { JumioTransactionModule } from '../jumio-transactions/jumio-transaction.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { RedemptionModule } from '../redemptions/redemption.module';
+import { UsersModule } from '../users/users.module';
 import { KycService } from './kyc.service';
 
 @Module({
@@ -15,6 +16,7 @@ import { KycService } from './kyc.service';
     JumioApiModule,
     RedemptionModule,
     JumioTransactionModule,
+    UsersModule
   ],
   providers: [KycService],
 })

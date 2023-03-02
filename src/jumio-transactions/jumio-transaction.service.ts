@@ -42,8 +42,8 @@ export class JumioTransactionService {
 
   async findByWorkflowExecutionId(
     workflowExecutionId: string,
-  ): Promise<JumioTransaction> {
-    return await this.prisma.jumioTransaction.findFirstOrThrow({
+  ): Promise<JumioTransaction | null> {
+    return await this.prisma.jumioTransaction.findFirst({
       where: { workflow_execution_id: workflowExecutionId },
     });
   }
