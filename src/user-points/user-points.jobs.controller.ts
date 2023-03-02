@@ -92,9 +92,8 @@ export class UserPointsJobsController {
         refreshPreviousPoolOptions.pool1 =
           (phaseOneMetrics.metrics.blocks_mined.points ?? 0) +
           (phaseOneMetrics.metrics.bugs_caught.points ?? 0) +
+          (phaseOneMetrics.metrics.social_media_contributions.points ?? 0) +
           (phaseOneMetrics.metrics.community_contributions.points ?? 0);
-        refreshPreviousPoolOptions.pool3 +=
-          phaseOneMetrics.metrics.pull_requests_merged.points ?? 0;
       }
 
       const phaseTwoMetrics = await this.getPhaseTwoPoints(user);
@@ -103,11 +102,10 @@ export class UserPointsJobsController {
           (phaseTwoMetrics.metrics.node_uptime.points ?? 0) +
           (phaseTwoMetrics.metrics.bugs_caught.points ?? 0) +
           (phaseTwoMetrics.metrics.send_transaction.points ?? 0);
-        refreshPreviousPoolOptions.pool3 +=
-          phaseTwoMetrics.metrics.pull_requests_merged.points ?? 0;
       }
 
       await this.userPointsService.upsertPreviousPools(
+        userPoints,
         refreshPreviousPoolOptions,
       );
     }
@@ -115,7 +113,7 @@ export class UserPointsJobsController {
     return { requeue: false };
   }
 
-  private async getPhaseOnePoints(
+  async getPhaseOnePoints(
     user: User,
   ): Promise<PhaseOneSerializedUserMetrics | undefined> {
     const url = `${this.config.get<string>(
@@ -127,7 +125,7 @@ export class UserPointsJobsController {
       .catch(() => undefined);
   }
 
-  private async getPhaseTwoPoints(
+  async getPhaseTwoPoints(
     user: User,
   ): Promise<PhaseTwoSerializedUserMetrics | undefined> {
     const url = `${this.config.get<string>(
