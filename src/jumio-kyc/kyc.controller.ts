@@ -14,13 +14,14 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiExcludeEndpoint, ApiTags } from '@nestjs/swagger';
+import { Response } from 'express';
 import { MagicLinkGuard } from '../auth/guards/magic-link.guard';
 import { Context } from '../common/decorators/context';
 import { MagicLinkContext } from '../common/interfaces/magic-link-context';
 import { JumioTransactionService } from '../jumio-transactions/jumio-transaction.service';
 import { RedemptionService } from '../redemptions/redemption.service';
 import { CreateKycDto } from './dto/create-kyc.dto';
-import { JumioCallbackDto } from './dto/jumio-callback.dto';
+import { JumioCallbackData } from './interfaces/jumio-callback-data';
 import { SerializedKyc } from './interfaces/serialized-kyc';
 import { SerializedKycConfig } from './interfaces/serialized-kyc-config';
 import { KycService } from './kyc.service';
@@ -133,23 +134,11 @@ export class KycController {
   ): Promise<void> {
     // eslint-disable-next-line no-console
     console.log(dto);
+    await this.kycService.update(dto);
     await Promise.resolve(dto);
 
+    // TODO, created is not 200, do we mean 201 or 200
     // Jumio requires a 200 explicitly
     res.status(HttpStatus.CREATED).send();
   }
-}
-
-interface JumioCallbackData {
-  callbackSentAt: string;
-  userReference: string;
-  workflowExecution: {
-    id: string;
-    href: string;
-    status: 'PROCESSED' | 'SESSION_EXPIRED' | 'TOKEN_EXPIRED';
-  };
-  account: {
-    id: string;
-    href: string;
-  };
 }

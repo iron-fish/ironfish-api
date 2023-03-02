@@ -7,6 +7,13 @@ import { JumioApiService } from '../jumio-api/jumio-api.service';
 import { JumioTransactionService } from '../jumio-transactions/jumio-transaction.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedemptionService } from '../redemptions/redemption.service';
+import { JumioCallbackData } from './interfaces/jumio-callback-data';
+
+export type IdDetails = {
+  id_issuing_country: string;
+  id_type: string;
+  id_subtype: string;
+};
 
 export type KycDetails = {
   jumio_account_id: string;
@@ -14,7 +21,6 @@ export type KycDetails = {
   jumio_web_href: string;
   status: KycStatus;
 };
-
 @Injectable()
 export class KycService {
   constructor(
@@ -83,5 +89,37 @@ export class KycService {
 
       return { redemption, transaction };
     });
+  }
+
+  async update(
+    callbackData: JumioCallbackData,
+  ): Promise<{ redemption: Redemption; transaction: JumioTransaction }> {
+    // GATHER
+    const transactionStatus = await this.jumioApiService.transactionStatusUrl(
+      callbackData.workflowExecution.href,
+    );
+    // TODO if this findOrThrow fails, we are in a stuck state
+    let transaction =
+      await this.jumioTransactionService.findByWorkflowExecutionId(
+        callbackData.workflowExecution.id,
+      );
+    // TODO if this findOrThrow fails, we are in a stuck state
+    let redemption = await this.redemptionService.findByJumioAccountId(
+      callbackData.account.id,
+    );
+
+    // CALCULATE STATUS
+    const kycStatus = this.redemptionService.calculateStatus(transactionStatus);
+
+    // UDPATE
+    redemption = await this.redemptionService.update(redemption, {
+      kyc_status: kycStatus,
+    });
+    transaction = await this.jumioTransactionService.update(transaction, {
+      decisionStatus: transactionStatus.decision.type,
+      transactionStatus: transactionStatus,
+    });
+
+    return { redemption, transaction };
   }
 }

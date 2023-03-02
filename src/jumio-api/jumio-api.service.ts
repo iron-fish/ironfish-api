@@ -17,6 +17,12 @@ export class JumioApiService {
   ): Promise<JumioTransactionRetrieveResponse> {
     const baseUrl = this.config.get<string>('JUMIO_URL');
     const url = `https://retrieval.${baseUrl}/accounts/${jumio_account_id}/workflow-executions/${jumio_workflow_execution_id}`;
+    return this.transactionStatusUrl(url);
+  }
+
+  async transactionStatusUrl(
+    url: string,
+  ): Promise<JumioTransactionRetrieveResponse> {
     const response = await axios
       .get<JumioTransactionRetrieveResponse>(url, this.requestConfig())
       .catch((error) => {

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { INestApplication, NotFoundException } from '@nestjs/common';
-import { DecisionLabel, DecisionStatus, User } from '@prisma/client';
+import { DecisionStatus, User } from '@prisma/client';
 import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { PrismaService } from '../prisma/prisma.service';
@@ -43,8 +43,8 @@ describe('JumioTransactionService', () => {
             workflow_execution_id: 'foo',
             web_href:
               'https://ironfish.web.amer-1.jumio.ai/web/v4/app?authorizationToken=eyJi0g&locale=en',
-            decision_label: DecisionLabel.NOT_UPLOADED,
             decision_status: DecisionStatus.NOT_EXECUTED,
+            last_workflow_fetch: {},
           },
         });
         const jumioTransaction2 = await prisma.jumioTransaction.create({
@@ -53,8 +53,8 @@ describe('JumioTransactionService', () => {
             workflow_execution_id: 'bar',
             web_href:
               'https://ironfish.web.amer-1.jumio.ai/web/v4/app?authorizationToken=eyJi0222222222222g&locale=en',
-            decision_label: DecisionLabel.NOT_UPLOADED,
             decision_status: DecisionStatus.NOT_EXECUTED,
+            last_workflow_fetch: {},
           },
         });
         const foundJumioTransaction =

@@ -77,6 +77,7 @@ model Redemption {
   id_type          String?   @db.VarChar
   id_subtype       String?   @db.VarChar
 
+  @@index([jumio_account_id], name: "index_redemption_jumio_account_id")
   @@index([user_id], name: "index_redemption_on_user_id")
   @@map("redemptions")
 }
@@ -88,10 +89,11 @@ model JumioTransaction {
   user                  User     @relation(fields: [user_id], references: [id])
   user_id               Int
   decision_status       DecisionStatus
-  decision_label        DecisionLabel
+  last_workflow_fetch   Json?
   workflow_execution_id String   @db.VarChar
   web_href              String   @db.VarChar
 
+  @@index([workflow_execution_id], name: "index_jumio_transactions_on_jumio_workflow_execution_id")
   @@index([user_id], name: "index_jumio_transactions_on_user_id")
   @@map("jumio_transactions")
 }
