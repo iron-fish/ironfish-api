@@ -53,13 +53,14 @@ export class JumioTransactionService {
     data: {
       decisionStatus: DecisionStatus;
       transactionStatus: JumioTransactionRetrieveResponse;
+      latestCallbackAt?: Date;
     },
   ): Promise<JumioTransaction> {
     return this.prisma.jumioTransaction.update({
       data: {
         decision_status: data.decisionStatus,
         last_workflow_fetch: instanceToPlain(data.transactionStatus),
-        latest_callback_at: new Date(),
+        latest_callback_at: data.latestCallbackAt,
       },
       where: { id: transaction.id },
     });

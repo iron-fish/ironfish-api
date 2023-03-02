@@ -147,6 +147,7 @@ export class KycService {
     transaction = await this.jumioTransactionService.update(transaction, {
       decisionStatus: status.decision.type,
       transactionStatus: status,
+      latestCallbackAt: new Date(),
     });
 
     return;
