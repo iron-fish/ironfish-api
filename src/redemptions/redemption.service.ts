@@ -175,12 +175,12 @@ export class RedemptionService {
     const points = await this.userPointsService.findOrThrow(user.id, prisma);
 
     const hasPoints =
-      !points.pool1_points &&
-      !points.pool2_points &&
-      !points.pool3_points &&
-      !points.pool4_points;
+      points.pool1_points ||
+      points.pool2_points ||
+      points.pool3_points ||
+      points.pool4_points;
 
-    if (hasPoints) {
+    if (!hasPoints) {
       return 'User has no points';
     }
 
