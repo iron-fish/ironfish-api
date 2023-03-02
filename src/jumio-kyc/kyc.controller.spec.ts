@@ -70,7 +70,7 @@ describe('KycController', () => {
 
     await prisma.userPoints.update({
       data: {
-        pool1_points: 1,
+        pool1_points: 2,
       },
       where: {
         user_id: user.id,
