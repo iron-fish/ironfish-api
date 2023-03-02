@@ -13,4 +13,5 @@ export interface SerializedKyc {
   jumio_workflow_execution_id: string;
   jumio_web_href: string;
   public_address: string;
+  can_attempt: boolean;
 }
