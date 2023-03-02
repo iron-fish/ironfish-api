@@ -121,6 +121,7 @@ export class UsersController {
     let eventMetrics: Record<EventType, SerializedEventMetrics>;
     let points: number;
     let pools: Record<MetricsPool, SerializedEventMetrics> | undefined;
+    let poolPoints;
     let nodeUptime: SerializedUserMetrics['node_uptime'];
 
     if (query.granularity === MetricsGranularity.LIFETIME) {
@@ -139,6 +140,13 @@ export class UsersController {
           user,
           EventType.PULL_REQUEST_MERGED,
         ),
+      };
+
+      poolPoints = {
+        pool_one: userPoints.pool1_points ?? 0,
+        pool_two: userPoints.pool2_points ?? 0,
+        pool_three: userPoints.pool3_points ?? 0,
+        pool_four: userPoints.pool4_points,
       };
 
       const uptime = await this.nodeUptimeService.get(user);
@@ -167,6 +175,7 @@ export class UsersController {
       points,
       pools,
       node_uptime: nodeUptime,
+      pool_points: poolPoints,
       metrics: {
         blocks_mined: eventMetrics[EventType.BLOCK_MINED],
         bugs_caught: eventMetrics[EventType.BUG_CAUGHT],
