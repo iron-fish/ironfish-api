@@ -3,6 +3,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Controller, UseFilters } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
+import axios from 'axios';
+import { ApiConfigService } from '../api-config/api-config.service';
 import { POOL_4_CATEGORIES } from '../common/constants';
 import { EventsService } from '../events/events.service';
 import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
@@ -11,15 +13,19 @@ import { GraphileWorkerException } from '../graphile-worker/graphile-worker-exce
 import { GraphileWorkerHandlerResponse } from '../graphile-worker/interfaces/graphile-worker-handler-response';
 import { LoggerService } from '../logger/logger.service';
 import { UsersService } from '../users/users.service';
+import { PhaseOneSerializedUserMetrics } from './interfaces/phase-one-serialized-user-metrics';
+import { PhaseTwoSerializedUserMetrics } from './interfaces/phase-two-serialized-user-metrics ';
 import { RefreshPool4Options } from './interfaces/refresh-pool-4-options';
+import { RefreshPreviousPoolOptions } from './interfaces/refresh-previous-pool-options';
 import { RefreshUserPointsOptions } from './interfaces/refresh-user-points-options';
 import { UserPointsOptions } from './interfaces/upsert-user-points-options';
 import { UserPointsService } from './user-points.service';
-import { User } from '.prisma/client';
+import { EventType, User } from '.prisma/client';
 
 @Controller()
 export class UserPointsJobsController {
   constructor(
+    private readonly config: ApiConfigService,
     private readonly eventsService: EventsService,
     private readonly graphileWorkerService: GraphileWorkerService,
     private readonly loggerService: LoggerService,
@@ -68,8 +74,69 @@ export class UserPointsJobsController {
     }
 
     const options = await this.eventsService.getUpsertPointsOptions(user);
-    await this.userPointsService.upsert(options);
+    const userPoints = await this.userPointsService.upsert(options);
+
+    if (
+      userPoints.pool1_points === null ||
+      userPoints.pool2_points === null ||
+      userPoints.pool3_points === null
+    ) {
+      const refreshPreviousPoolOptions: RefreshPreviousPoolOptions = {
+        pool1: 0,
+        pool2: 0,
+        pool3: options.points[EventType.PULL_REQUEST_MERGED].points,
+      };
+
+      const phaseOneMetrics = await this.getPhaseOnePoints(user);
+      if (phaseOneMetrics) {
+        refreshPreviousPoolOptions.pool1 =
+          (phaseOneMetrics.metrics.blocks_mined.points ?? 0) +
+          (phaseOneMetrics.metrics.bugs_caught.points ?? 0) +
+          (phaseOneMetrics.metrics.community_contributions.points ?? 0);
+        refreshPreviousPoolOptions.pool3 +=
+          phaseOneMetrics.metrics.pull_requests_merged.points ?? 0;
+      }
+
+      const phaseTwoMetrics = await this.getPhaseTwoPoints(user);
+      if (phaseTwoMetrics) {
+        refreshPreviousPoolOptions.pool2 =
+          (phaseTwoMetrics.metrics.node_uptime.points ?? 0) +
+          (phaseTwoMetrics.metrics.bugs_caught.points ?? 0) +
+          (phaseTwoMetrics.metrics.send_transaction.points ?? 0);
+        refreshPreviousPoolOptions.pool3 +=
+          phaseTwoMetrics.metrics.pull_requests_merged.points ?? 0;
+      }
+
+      await this.userPointsService.upsertPreviousPools(
+        refreshPreviousPoolOptions,
+      );
+    }
+
     return { requeue: false };
+  }
+
+  private async getPhaseOnePoints(
+    user: User,
+  ): Promise<PhaseOneSerializedUserMetrics | undefined> {
+    const url = `${this.config.get<string>(
+      'IRONFISH_PHASE_ONE_API_URL',
+    )}/users/${user.id}/metrics?granularity=lifetime`;
+    return axios
+      .get<PhaseOneSerializedUserMetrics>(url)
+      .then((response) => response.data)
+      .catch(() => undefined);
+  }
+
+  private async getPhaseTwoPoints(
+    user: User,
+  ): Promise<PhaseTwoSerializedUserMetrics | undefined> {
+    const url = `${this.config.get<string>(
+      'IRONFISH_PHASE_TWO_API_URL',
+    )}/users/${user.id}/metrics?granularity=lifetime`;
+    return axios
+      .get<PhaseTwoSerializedUserMetrics>(url)
+      .then((response) => response.data)
+      .catch(() => undefined);
   }
 
   @MessagePattern(GraphileWorkerPattern.REFRESH_POOL_4_POINTS)

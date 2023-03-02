@@ -4,6 +4,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
+import { RefreshPreviousPoolOptions } from './interfaces/refresh-previous-pool-options';
 import { UpsertUserPointsOptions } from './interfaces/upsert-user-points-options';
 import { EventType, Prisma, UserPoints } from '.prisma/client';
 
@@ -144,6 +145,22 @@ export class UserPointsService {
       data: options,
       where: {
         id: record.id,
+      },
+    });
+  }
+
+  async upsertPreviousPools(
+    userPoints: UserPoints,
+    refreshPreviousPoolOptions: RefreshPreviousPoolOptions,
+  ): Promise<UserPoints> {
+    return this.prisma.userPoints.update({
+      data: {
+        pool1_points: refreshPreviousPoolOptions.pool1,
+        pool2_points: refreshPreviousPoolOptions.pool2,
+        pool3_points: refreshPreviousPoolOptions.pool3,
+      },
+      where: {
+        id: userPoints.id,
       },
     });
   }
