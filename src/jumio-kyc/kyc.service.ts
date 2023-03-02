@@ -105,15 +105,24 @@ export class KycService {
     }
 
     const user = await this.usersService.findOrThrow(transaction.user_id);
-    const latest = await this.jumioTransactionService.findLatest(user);
 
+    // Check were not processing a stale callback
+    const latest = await this.jumioTransactionService.findLatest(user);
     if (!latest || latest.id !== transaction.id) {
       return;
     }
 
     let redemption = await this.redemptionService.findOrThrow(user);
-    assert.ok(redemption.jumio_account_id);
 
+    // Don't process callbacks anymore for a user that has already passed KYC
+    if (
+      redemption.kyc_status === KycStatus.SUCCESS ||
+      redemption.kyc_status === KycStatus.SUBMITTED
+    ) {
+      return;
+    }
+
+    assert.ok(redemption.jumio_account_id);
     const status = await this.jumioApiService.transactionStatus(
       redemption.jumio_account_id,
       data.workflowExecution.id,
@@ -121,6 +130,7 @@ export class KycService {
 
     const kycStatus = this.redemptionService.calculateStatus(status);
 
+    // Has our user's KYC status changed
     if (redemption.kyc_status !== kycStatus) {
       redemption = await this.redemptionService.update(redemption, {
         kyc_status: kycStatus,
