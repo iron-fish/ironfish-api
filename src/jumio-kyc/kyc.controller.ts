@@ -53,12 +53,6 @@ export class KycController {
       dto.public_address,
     );
 
-    if (!redemption.jumio_account_id) {
-      throw new InternalServerErrorException(
-        'should have account id after attempt',
-      );
-    }
-
     return serializeKyc(redemption, transaction);
   }
 
@@ -71,12 +65,6 @@ export class KycController {
     const redemption = await this.redemptionService.find(user);
     if (!redemption) {
       return null;
-    }
-
-    if (!redemption.jumio_account_id) {
-      throw new InternalServerErrorException(
-        'should have account id after attempt',
-      );
     }
 
     const jumioTransaction =
