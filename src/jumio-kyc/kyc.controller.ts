@@ -20,7 +20,6 @@ import { Context } from '../common/decorators/context';
 import { MagicLinkContext } from '../common/interfaces/magic-link-context';
 import { JumioTransactionService } from '../jumio-transactions/jumio-transaction.service';
 import { RedemptionService } from '../redemptions/redemption.service';
-import { UsersService } from '../users/users.service';
 import { CreateKycDto } from './dto/create-kyc.dto';
 import { JumioCallbackData } from './interfaces/jumio-callback-data';
 import { SerializedKyc } from './interfaces/serialized-kyc';
@@ -35,7 +34,6 @@ export class KycController {
     private readonly redemptionService: RedemptionService,
     private readonly jumioTransactionService: JumioTransactionService,
     private readonly kycService: KycService,
-    private readonly usersService: UsersService,
   ) {}
 
   @ApiExcludeEndpoint()
