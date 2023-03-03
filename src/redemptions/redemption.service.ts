@@ -209,7 +209,9 @@ export class RedemptionService {
     }
 
     if (redemption) {
-      const kycMaxAttempts = this.config.get<number>('KYC_MAX_ATTEMPTS');
+      const kycMaxAttempts =
+        redemption.kyc_max_attempts ??
+        this.config.get<number>('KYC_MAX_ATTEMPTS');
 
       if (redemption.kyc_attempts >= kycMaxAttempts) {
         return {
