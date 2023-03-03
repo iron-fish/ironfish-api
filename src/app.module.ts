@@ -95,6 +95,7 @@ export const REST_MODULES = [
         IRONFISH_API_KEY: joi.string().required(),
         IRONFISH_PHASE_ONE_API_URL: joi.string().required(),
         IRONFISH_PHASE_TWO_API_URL: joi.string().required(),
+        JUMIO_API_CALLBACK_SECRET: joi.string().required(),
         JUMIO_API_SECRET: joi.string().required(),
         JUMIO_API_TOKEN: joi.string().required(),
         JUMIO_URL: joi.string().required(),
