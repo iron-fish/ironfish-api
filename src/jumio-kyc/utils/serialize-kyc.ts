@@ -9,6 +9,7 @@ export function serializeKyc(
   redemption: Redemption,
   transaction: JumioTransaction,
   canAttempt: boolean,
+  canAttemptReason: string,
 ): SerializedKyc {
   assert.ok(redemption.jumio_account_id);
 
@@ -22,5 +23,6 @@ export function serializeKyc(
     jumio_workflow_execution_id: transaction.workflow_execution_id,
     jumio_web_href: transaction.web_href,
     can_attempt: canAttempt,
+    can_attempt_reason: canAttemptReason,
   };
 }
