@@ -91,13 +91,23 @@ model JumioTransaction {
   user_id               Int
   decision_status       DecisionStatus
   last_workflow_fetch   Json?
-  latest_callback_at       DateTime? @db.Timestamp(6)
+  latest_callback_at    DateTime? @db.Timestamp(6)
+  callback              JumioCallback?
   workflow_execution_id String   @db.VarChar
   web_href              String   @db.VarChar
 
   @@index([workflow_execution_id], name: "index_jumio_transactions_on_jumio_workflow_execution_id")
   @@index([user_id], name: "index_jumio_transactions_on_user_id")
   @@map("jumio_transactions")
+}
+
+model JumioCallback {
+  id                    Int      @id @default(autoincrement())
+  created_at            DateTime @default(now()) @db.Timestamp(6)
+  updated_at            DateTime @default(now()) @updatedAt @db.Timestamp(6)
+  jumio_transaction     JumioTransaction?     @relation(fields: [jumio_transaction_id], references: [id])
+  jumio_transaction_id  Int?     @unique
+  request               Json
 }
 
 model NodeUptime {

@@ -19,6 +19,7 @@ import { Context } from '../common/decorators/context';
 import { MagicLinkContext } from '../common/interfaces/magic-link-context';
 import { JumioTransactionService } from '../jumio-transactions/jumio-transaction.service';
 import { RedemptionService } from '../redemptions/redemption.service';
+import { CallbackService } from './callback.service';
 import { CreateKycDto } from './dto/create-kyc.dto';
 import { JumioCallbackData } from './interfaces/jumio-callback-data';
 import { SerializedKyc } from './interfaces/serialized-kyc';
@@ -33,6 +34,7 @@ export class KycController {
     private readonly redemptionService: RedemptionService,
     private readonly jumioTransactionService: JumioTransactionService,
     private readonly kycService: KycService,
+    private readonly callbackService: CallbackService,
   ) {}
 
   @ApiExcludeEndpoint()
@@ -127,8 +129,11 @@ export class KycController {
     @Body()
     dto: JumioCallbackData,
   ): Promise<void> {
-    await this.kycService.handleCallback(dto);
-
+    const callback = await this.callbackService.create(dto);
+    const transaction = await this.kycService.handleCallback(dto);
+    if (transaction) {
+      await this.callbackService.udpate(callback, transaction);
+    }
     // Jumio requires a 200 explicitly
     res.status(HttpStatus.OK).send();
   }

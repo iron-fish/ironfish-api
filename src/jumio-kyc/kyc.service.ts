@@ -95,14 +95,16 @@ export class KycService {
     });
   }
 
-  async handleCallback(data: JumioCallbackData): Promise<void> {
+  async handleCallback(
+    data: JumioCallbackData,
+  ): Promise<JumioTransaction | null> {
     let transaction =
       await this.jumioTransactionService.findByWorkflowExecutionId(
         data.workflowExecution.id,
       );
 
     if (!transaction) {
-      return;
+      return null;
     }
 
     const user = await this.usersService.findOrThrow(transaction.user_id);
@@ -110,14 +112,14 @@ export class KycService {
     // Check were not processing a stale callback
     const latest = await this.jumioTransactionService.findLatest(user);
     if (!latest || latest.id !== transaction.id) {
-      return;
+      return null;
     }
 
     if (
       transaction.latest_callback_at &&
       transaction.latest_callback_at >= new Date(data.callbackSentAt)
     ) {
-      return;
+      return null;
     }
 
     let redemption = await this.redemptionService.findOrThrow(user);
@@ -127,7 +129,7 @@ export class KycService {
       redemption.kyc_status === KycStatus.SUCCESS ||
       redemption.kyc_status === KycStatus.SUBMITTED
     ) {
-      return;
+      return null;
     }
 
     assert.ok(redemption.jumio_account_id);
@@ -151,6 +153,6 @@ export class KycService {
       latestCallbackAt: new Date(),
     });
 
-    return;
+    return transaction;
   }
 }
