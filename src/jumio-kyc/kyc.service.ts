@@ -53,7 +53,7 @@ export class KycService {
 
       if (canAttemptError) {
         throw new ForbiddenException(
-          `Not eligible to create transaction for user ${user.id}: ${canAttemptError}`,
+          `Not eligible to create transaction for user ${user.id}: ${canAttemptError.reason}`,
         );
       }
 
