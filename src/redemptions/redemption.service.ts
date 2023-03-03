@@ -170,9 +170,9 @@ export class RedemptionService {
   async isEligible(
     user: User,
     prisma?: BasePrismaClient,
-  ): Promise<string | null> {
+  ): Promise<{ eligible: boolean; reason: string }> {
     if (!user.enable_kyc) {
-      return 'KYC not enabled on user';
+      return { eligible: false, reason: 'KYC not enabled on user' };
     }
 
     const points = await this.userPointsService.findOrThrow(user.id, prisma);
@@ -184,39 +184,48 @@ export class RedemptionService {
       points.pool4_points;
 
     if (!hasPoints) {
-      return 'User has no points';
+      return { eligible: false, reason: 'User has no points' };
     }
 
     if (REDEMPTION_BAN_LIST.includes(user.country_code)) {
-      return `User is from a banned country: ${user.country_code}`;
+      return {
+        eligible: false,
+        reason: `User is from a banned country: ${user.country_code}`,
+      };
     }
 
-    return null;
+    return { eligible: true, reason: '' };
   }
 
   async canAttempt(
     redemption: Redemption | null,
     user: User,
     prisma?: BasePrismaClient,
-  ): Promise<string | null> {
-    const eligibleError = await this.isEligible(user, prisma);
+  ): Promise<{ attemptable: boolean; reason: string }> {
+    const { eligible, reason } = await this.isEligible(user, prisma);
 
-    if (eligibleError) {
-      return eligibleError;
+    if (!eligible) {
+      return { attemptable: false, reason };
     }
 
     if (redemption) {
       const kycMaxAttempts = this.config.get<number>('KYC_MAX_ATTEMPTS');
 
       if (redemption.kyc_attempts >= kycMaxAttempts) {
-        return `Max attempts reached ${redemption.kyc_attempts} / ${kycMaxAttempts}`;
+        return {
+          attemptable: false,
+          reason: `Max attempts reached ${redemption.kyc_attempts} / ${kycMaxAttempts}`,
+        };
       }
 
       if (redemption.kyc_status !== KycStatus.TRY_AGAIN) {
-        return `Redemption status is not TRY_AGAIN: ${redemption.kyc_status}`;
+        return {
+          attemptable: false,
+          reason: `Redemption status is not TRY_AGAIN: ${redemption.kyc_status}`,
+        };
       }
     }
 
-    return null;
+    return { attemptable: true, reason: '' };
   }
 }
