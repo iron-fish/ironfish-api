@@ -8,4 +8,5 @@ export interface CreateUserOptions {
   discord?: string;
   github?: string;
   telegram?: string;
+  enable_kyc?: boolean;
 }

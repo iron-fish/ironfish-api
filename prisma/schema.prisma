@@ -57,6 +57,7 @@ model User {
   jumio_transactions  JumioTransaction[]
   node_uptime         NodeUptime?
   points              UserPoints?
+  enable_kyc          Boolean           @default(false)
 
   @@index([email], name: "index_users_on_email")
   @@index([graffiti], name: "index_users_on_graffiti")
