@@ -100,7 +100,9 @@ describe('KycController', () => {
       );
 
       assert.ok(redemption);
-      expect(body).toMatchObject(serializeKyc(redemption, jumioTransaction));
+      expect(body).toMatchObject(
+        serializeKyc(redemption, jumioTransaction, false),
+      );
     });
     it('banned user country gets error', async () => {
       const user = await mockUser('PRK');
@@ -166,7 +168,7 @@ describe('KycController', () => {
         .set('Authorization', 'did-token')
         .expect(HttpStatus.OK);
 
-      expect(body).toMatchObject(serializeKyc(redemption, transaction));
+      expect(body).toMatchObject(serializeKyc(redemption, transaction, true));
     });
   });
 

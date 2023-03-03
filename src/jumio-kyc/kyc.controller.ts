@@ -69,12 +69,12 @@ export class KycController {
     const jumioTransaction =
       await this.jumioTransactionService.findLatestOrThrow(user);
 
-    const canAttempt = await this.redemptionService.canAttempt(
+    const canAttemptError = await this.redemptionService.canAttempt(
       redemption,
       user,
     );
 
-    return serializeKyc(redemption, jumioTransaction, !!canAttempt);
+    return serializeKyc(redemption, jumioTransaction, !canAttemptError);
   }
 
   @ApiExcludeEndpoint()
