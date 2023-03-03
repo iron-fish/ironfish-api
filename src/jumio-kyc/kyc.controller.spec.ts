@@ -102,7 +102,12 @@ describe('KycController', () => {
 
       assert.ok(redemption);
       expect(body).toMatchObject(
-        serializeKyc(redemption, jumioTransaction, false),
+        serializeKyc(
+          redemption,
+          jumioTransaction,
+          false,
+          `Redemption status is not TRY_AGAIN: ${redemption.kyc_status}`,
+        ),
       );
     });
 

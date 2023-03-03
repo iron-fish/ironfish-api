@@ -51,7 +51,7 @@ export class KycService {
         prisma,
       );
 
-      if (canAttemptError) {
+      if (!canAttemptError.attemptable) {
         throw new ForbiddenException(
           `Not eligible to create transaction for user ${user.id}: ${canAttemptError.reason}`,
         );
