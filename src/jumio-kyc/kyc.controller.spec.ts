@@ -180,7 +180,7 @@ describe('KycController', () => {
         .set('Authorization', 'did-token')
         .expect(HttpStatus.OK);
 
-      expect(body).toMatchObject(serializeKyc(redemption, transaction, false));
+      expect(body).toMatchObject(serializeKyc(redemption, transaction, true));
     });
   });
 
