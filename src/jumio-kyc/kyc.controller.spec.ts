@@ -238,6 +238,20 @@ describe('KycController', () => {
           .expect(HttpStatus.FORBIDDEN);
       });
     });
+
+    it('fails on invalid source ip', async () => {
+      const user = await mockUser();
+      const { redemption, transaction } = await kycService.attempt(user, 'foo');
+
+      const { body } = await request(app.getHttpServer())
+        .get(`/kyc`)
+        .set('Authorization', 'did-token')
+        .expect(HttpStatus.OK);
+
+      expect(body).toMatchObject(
+        serializeKyc(redemption, transaction, false, 'because'),
+      );
+    });
   });
 
   describe('GET /kyc', () => {

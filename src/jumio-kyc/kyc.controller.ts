@@ -30,6 +30,7 @@ import { JumioCallbackData } from './interfaces/jumio-callback-data';
 import { RefreshUserRedemptionOptions } from './interfaces/refresh-user-redemption-options';
 import { SerializedKyc } from './interfaces/serialized-kyc';
 import { SerializedKycConfig } from './interfaces/serialized-kyc-config';
+import { JumioIpGuard } from './jumio-ip.guard';
 import { KycService } from './kyc.service';
 import { serializeKyc } from './utils/serialize-kyc';
 
@@ -165,6 +166,7 @@ export class KycController {
    * https://github.com/Jumio/implementation-guides/blob/master/api-guide/api_guide.md#callback-parameters
    */
   @ApiExcludeEndpoint()
+  @UseGuards(JumioIpGuard)
   @Post('/callback')
   async callback(
     @Res() res: Response,
@@ -172,7 +174,6 @@ export class KycController {
     dto: JumioCallbackData,
   ): Promise<void> {
     await this.kycService.handleCallback(dto);
-
     // Jumio requires a 200 explicitly
     res.status(HttpStatus.OK).send();
   }
