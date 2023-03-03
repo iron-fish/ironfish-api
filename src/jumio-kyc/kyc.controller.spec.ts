@@ -70,7 +70,7 @@ describe('KycController', () => {
 
     await prisma.userPoints.update({
       data: {
-        total_points: 1,
+        pool1_points: 3,
       },
       where: {
         user_id: user.id,
@@ -91,18 +91,15 @@ describe('KycController', () => {
       const { body } = await request(app.getHttpServer())
         .post(`/kyc`)
         .set('Authorization', 'did-token')
-        .send({
-          public_address: 'foo',
-        })
+        .send({ public_address: 'foo' })
         .expect(HttpStatus.CREATED);
 
       const redemption = await redemptionService.find(user);
       const jumioTransaction = await jumioTransactionService.findLatestOrThrow(
         user,
       );
-      if (!redemption || !redemption.jumio_account_id) {
-        throw Error('Should have been created by api');
-      }
+
+      assert.ok(redemption);
       expect(body).toMatchObject(serializeKyc(redemption, jumioTransaction));
     });
     it('banned user country gets error', async () => {
