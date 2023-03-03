@@ -60,21 +60,24 @@ export class KycController {
   @UseGuards(MagicLinkGuard)
   async status(
     @Context() { user }: MagicLinkContext,
-  ): Promise<SerializedKyc | null> {
+  ): Promise<SerializedKyc | { can_attempt: boolean }> {
     const redemption = await this.redemptionService.find(user);
-    if (!redemption) {
-      return null;
-    }
-
-    const jumioTransaction =
-      await this.jumioTransactionService.findLatestOrThrow(user);
 
     const canAttemptError = await this.redemptionService.canAttempt(
       redemption,
       user,
     );
 
-    return serializeKyc(redemption, jumioTransaction, !canAttemptError);
+    const canAttempt = !canAttemptError;
+
+    if (!redemption) {
+      return { can_attempt: canAttempt };
+    }
+
+    const jumioTransaction =
+      await this.jumioTransactionService.findLatestOrThrow(user);
+
+    return serializeKyc(redemption, jumioTransaction, canAttempt);
   }
 
   @ApiExcludeEndpoint()

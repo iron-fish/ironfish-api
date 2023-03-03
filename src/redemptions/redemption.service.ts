@@ -188,22 +188,20 @@ export class RedemptionService {
       return 'User has no points';
     }
 
-    if (!redemption) {
-      return null;
-    }
-
     if (REDEMPTION_BAN_LIST.includes(user.country_code)) {
       return `User is from a banned country: ${user.country_code}`;
     }
 
-    const kycMaxAttempts = this.config.get<number>('KYC_MAX_ATTEMPTS');
+    if (redemption) {
+      const kycMaxAttempts = this.config.get<number>('KYC_MAX_ATTEMPTS');
 
-    if (redemption.kyc_attempts >= kycMaxAttempts) {
-      return `Max attempts reached ${redemption.kyc_attempts} / ${kycMaxAttempts}`;
-    }
+      if (redemption.kyc_attempts >= kycMaxAttempts) {
+        return `Max attempts reached ${redemption.kyc_attempts} / ${kycMaxAttempts}`;
+      }
 
-    if (redemption.kyc_status !== KycStatus.TRY_AGAIN) {
-      return `Redemption status is not TRY_AGAIN: ${redemption.kyc_status}`;
+      if (redemption.kyc_status !== KycStatus.TRY_AGAIN) {
+        return `Redemption status is not TRY_AGAIN: ${redemption.kyc_status}`;
+      }
     }
 
     return null;
