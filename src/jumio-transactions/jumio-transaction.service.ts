@@ -70,6 +70,7 @@ export class JumioTransactionService {
     user: User,
     workflowExecutionId: string,
     webHref: string,
+    token: string,
     prisma?: BasePrismaClient,
   ): Promise<JumioTransaction> {
     const client = prisma ?? this.prisma;
@@ -80,6 +81,7 @@ export class JumioTransactionService {
         workflow_execution_id: workflowExecutionId,
         web_href: webHref,
         decision_status: DecisionStatus.NOT_EXECUTED,
+        token,
       },
     });
   }

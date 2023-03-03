@@ -7,11 +7,12 @@ import { JumioCallbackData } from '../interfaces/jumio-callback-data';
 export const CALLBACK_FIXTURE = (
   accountId: string,
   workflowId: string,
+  userReference: string,
   workflowStatus: 'PROCESSED' | 'SESSION_EXPIRED' | 'TOKEN_EXPIRED',
 ): JumioCallbackData => {
   return {
     callbackSentAt: '2023-03-02T21:30:32.722Z',
-    userReference: '1',
+    userReference: userReference,
     workflowExecution: {
       id: workflowId,
       href: '',

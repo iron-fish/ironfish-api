@@ -4,8 +4,10 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { JumioTransaction, KycStatus, Redemption, User } from '@prisma/client';
 import assert from 'assert';
+import { v4 as uuid } from 'uuid';
 import { JumioApiService } from '../jumio-api/jumio-api.service';
 import { JumioTransactionService } from '../jumio-transactions/jumio-transaction.service';
+import { LoggerService } from '../logger/logger.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedemptionService } from '../redemptions/redemption.service';
 import { UsersService } from '../users/users.service';
@@ -31,6 +33,7 @@ export class KycService {
     private readonly jumioTransactionService: JumioTransactionService,
     private readonly jumioApiService: JumioApiService,
     private readonly usersService: UsersService,
+    private readonly loggerService: LoggerService,
   ) {}
 
   async attempt(
@@ -43,6 +46,7 @@ export class KycService {
         `kyc_${user.id}`,
       );
 
+      const token = uuid();
       let redemption = await this.redemptionService.find(user);
 
       const canAttemptError = await this.redemptionService.canAttempt(
@@ -66,7 +70,7 @@ export class KycService {
       }
 
       const response = await this.jumioApiService.createAccountAndTransaction(
-        user.id,
+        token,
         redemption.jumio_account_id,
       );
 
@@ -88,6 +92,7 @@ export class KycService {
         user,
         response.workflowExecution.id,
         response.web.href,
+        token,
         prisma,
       );
 
@@ -102,6 +107,18 @@ export class KycService {
       );
 
     if (!transaction) {
+      this.loggerService.error(
+        `Transaction not found with workflow id: ${data.workflowExecution.id}`,
+        '',
+      );
+      return;
+    }
+
+    if (data.userReference !== transaction?.token) {
+      this.loggerService.error(
+        `Invalid token provided for workflow id: ${data.workflowExecution.id}`,
+        '',
+      );
       return;
     }
 

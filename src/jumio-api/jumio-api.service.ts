@@ -33,7 +33,7 @@ export class JumioApiService {
   }
 
   async createAccountAndTransaction(
-    userId: number,
+    token: string,
     jumioAccountId: string | null,
   ): Promise<JumioAccountCreateResponse> {
     let url =
@@ -46,8 +46,8 @@ export class JumioApiService {
     }
 
     const body = {
-      customerInternalReference: userId,
-      userReference: userId,
+      customerInternalReference: token,
+      userReference: token,
       callbackUrl: this.getCallbackUrl(),
       workflowDefinition: {
         key: this.config.get<number>('JUMIO_WORKFLOW_DEFINITION'),

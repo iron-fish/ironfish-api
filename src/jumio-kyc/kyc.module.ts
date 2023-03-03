@@ -4,6 +4,7 @@
 import { Module } from '@nestjs/common';
 import { JumioApiModule } from '../jumio-api/jumio-api.module';
 import { JumioTransactionModule } from '../jumio-transactions/jumio-transaction.module';
+import { LoggerModule } from '../logger/logger.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { RedemptionModule } from '../redemptions/redemption.module';
 import { UsersModule } from '../users/users.module';
@@ -16,6 +17,7 @@ import { KycService } from './kyc.service';
     JumioApiModule,
     RedemptionModule,
     JumioTransactionModule,
+    LoggerModule,
     UsersModule,
   ],
   providers: [KycService],

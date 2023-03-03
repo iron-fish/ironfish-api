@@ -152,6 +152,7 @@ describe('KycController', () => {
       const callbackData = CALLBACK_FIXTURE(
         redemption.jumio_account_id,
         transaction.workflow_execution_id,
+        'userReference',
         'PROCESSED',
       );
 
