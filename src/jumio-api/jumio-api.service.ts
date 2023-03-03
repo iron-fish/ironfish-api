@@ -4,12 +4,16 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import axios, { AxiosRequestConfig } from 'axios';
 import { ApiConfigService } from '../api-config/api-config.service';
+import { LoggerService } from '../logger/logger.service';
 import { JumioAccountCreateResponse } from './interfaces/jumio-account-create';
 import { JumioTransactionRetrieveResponse } from './interfaces/jumio-transaction-retrieve';
 
 @Injectable()
 export class JumioApiService {
-  constructor(private readonly config: ApiConfigService) {}
+  constructor(
+    private readonly config: ApiConfigService,
+    private readonly logger: LoggerService,
+  ) {}
 
   async transactionStatus(
     jumio_account_id: string,
@@ -22,9 +26,13 @@ export class JumioApiService {
       .get<JumioTransactionRetrieveResponse>(url, this.requestConfig())
       .catch((error) => {
         if (axios.isAxiosError(error)) {
-          throw new BadRequestException(
-            `Error creating jumio account: ${error.message}`,
+          const message = `Error retrieving workflow ${jumio_workflow_execution_id}: ${error.message}`;
+
+          this.logger.warn(
+            `${message} - ${JSON.stringify(error.response?.data)}`,
           );
+
+          throw new BadRequestException(message);
         }
         throw error;
       });
@@ -58,9 +66,15 @@ export class JumioApiService {
       .post<JumioAccountCreateResponse>(url, body, this.requestConfig())
       .catch((error) => {
         if (axios.isAxiosError(error)) {
-          throw new BadRequestException(
-            `Error creating jumio account: ${error.message}`,
+          const message = `Error ${
+            jumioAccountId ? 'updating' : 'creating'
+          } jumio account: ${error.message}`;
+
+          this.logger.warn(
+            `${message} - ${JSON.stringify(error.response?.data)}`,
           );
+
+          throw new BadRequestException(message);
         }
         throw error;
       });
