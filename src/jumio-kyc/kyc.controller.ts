@@ -63,17 +63,16 @@ export class KycController {
   ): Promise<SerializedKyc | { can_attempt: boolean }> {
     const redemption = await this.redemptionService.find(user);
 
-    const canAttemptError = await this.redemptionService.isEligible(user);
-    const canAttempt = !canAttemptError;
+    const eligibleError = await this.redemptionService.isEligible(user);
 
     if (!redemption) {
-      return { can_attempt: canAttempt };
+      return { can_attempt: !eligibleError };
     }
 
     const jumioTransaction =
       await this.jumioTransactionService.findLatestOrThrow(user);
 
-    return serializeKyc(redemption, jumioTransaction, canAttempt);
+    return serializeKyc(redemption, jumioTransaction, !eligibleError);
   }
 
   @ApiExcludeEndpoint()
