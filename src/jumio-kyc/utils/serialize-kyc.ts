@@ -8,6 +8,7 @@ import { SerializedKyc } from '../interfaces/serialized-kyc';
 export function serializeKyc(
   redemption: Redemption,
   transaction: JumioTransaction,
+  can_attempt: boolean,
 ): SerializedKyc {
   assert.ok(redemption.jumio_account_id);
 
@@ -20,5 +21,6 @@ export function serializeKyc(
     public_address: redemption.public_address,
     jumio_workflow_execution_id: transaction.workflow_execution_id,
     jumio_web_href: transaction.web_href,
+    can_attempt: can_attempt,
   };
 }

@@ -52,7 +52,7 @@ export class KycController {
       dto.public_address,
     );
 
-    return serializeKyc(redemption, transaction);
+    return serializeKyc(redemption, transaction, false);
   }
 
   @ApiExcludeEndpoint()
@@ -69,7 +69,12 @@ export class KycController {
     const jumioTransaction =
       await this.jumioTransactionService.findLatestOrThrow(user);
 
-    return serializeKyc(redemption, jumioTransaction);
+    const canAttemptError = await this.redemptionService.canAttempt(
+      redemption,
+      user,
+    );
+
+    return serializeKyc(redemption, jumioTransaction, !canAttemptError);
   }
 
   @ApiExcludeEndpoint()
