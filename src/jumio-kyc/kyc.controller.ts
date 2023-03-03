@@ -63,11 +63,7 @@ export class KycController {
   ): Promise<SerializedKyc | { can_attempt: boolean }> {
     const redemption = await this.redemptionService.find(user);
 
-    const canAttemptError = await this.redemptionService.canAttempt(
-      redemption,
-      user,
-    );
-
+    const canAttemptError = await this.redemptionService.isEligible(user);
     const canAttempt = !canAttemptError;
 
     if (!redemption) {

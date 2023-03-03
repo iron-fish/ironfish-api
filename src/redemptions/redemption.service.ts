@@ -167,8 +167,7 @@ export class RedemptionService {
     });
   }
 
-  async canAttempt(
-    redemption: Redemption | null,
+  async isEligible(
     user: User,
     prisma?: BasePrismaClient,
   ): Promise<string | null> {
@@ -190,6 +189,20 @@ export class RedemptionService {
 
     if (REDEMPTION_BAN_LIST.includes(user.country_code)) {
       return `User is from a banned country: ${user.country_code}`;
+    }
+
+    return null;
+  }
+
+  async canAttempt(
+    redemption: Redemption | null,
+    user: User,
+    prisma?: BasePrismaClient,
+  ): Promise<string | null> {
+    const eligibleError = await this.isEligible(user, prisma);
+
+    if (eligibleError) {
+      return eligibleError;
     }
 
     if (redemption) {
