@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { BadRequestException, Injectable } from '@nestjs/common';
 import axios, { AxiosRequestConfig } from 'axios';
+import forge from 'node-forge';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { LoggerService } from '../logger/logger.service';
 import { JumioAccountCreateResponse } from './interfaces/jumio-account-create';
@@ -55,7 +56,7 @@ export class JumioApiService {
 
     const body = {
       customerInternalReference: userId,
-      userReference: userId,
+      userReference: this.generateSignature(userId),
       callbackUrl: this.getCallbackUrl(),
       workflowDefinition: {
         key: this.config.get<number>('JUMIO_WORKFLOW_DEFINITION'),
@@ -80,6 +81,16 @@ export class JumioApiService {
       });
 
     return response.data;
+  }
+
+  private generateSignature(userId: number): string {
+    const ts = new Date().getTime();
+
+    const hmac = forge.hmac.create();
+    hmac.start('sha256', this.config.get<string>('JUMIO_API_CALLBACK_SECRET'));
+    hmac.update(forge.util.encodeUtf8(`${ts}.${userId}`));
+
+    return hmac.digest().toHex();
   }
 
   getCallbackUrl(): string {

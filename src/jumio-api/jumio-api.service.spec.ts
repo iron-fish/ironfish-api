@@ -41,7 +41,7 @@ describe('JumioApiService', () => {
           expect.objectContaining({
             callbackUrl: expect.any(String),
             customerInternalReference: expect.any(Number),
-            userReference: expect.any(Number),
+            userReference: expect.any(String),
             workflowDefinition: {
               key: expect.any(Number),
             },
@@ -65,7 +65,7 @@ describe('JumioApiService', () => {
           expect.objectContaining({
             callbackUrl: expect.any(String),
             customerInternalReference: expect.any(Number),
-            userReference: expect.any(Number),
+            userReference: expect.any(String),
             workflowDefinition: {
               key: expect.any(Number),
             },
