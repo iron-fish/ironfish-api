@@ -105,9 +105,13 @@ describe('KycController', () => {
         serializeKyc(redemption, jumioTransaction, false),
       );
     });
+
     it('banned user country gets error', async () => {
       const user = await mockUser('PRK');
-      await kycService.attempt(user, 'foo');
+
+      await expect(kycService.attempt(user, 'foo')).rejects.toThrow(
+        'User is from a banned country: PRK',
+      );
 
       await request(app.getHttpServer())
         .post(`/kyc`)
@@ -116,6 +120,13 @@ describe('KycController', () => {
           public_address: 'foo',
         })
         .expect(HttpStatus.FORBIDDEN);
+
+      const { body } = await request(app.getHttpServer())
+        .get(`/kyc`)
+        .set('Authorization', 'did-token')
+        .expect(HttpStatus.OK);
+
+      expect(body).toMatchObject({ can_attempt: false });
     });
   });
 
