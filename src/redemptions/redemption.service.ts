@@ -172,6 +172,10 @@ export class RedemptionService {
     user: User,
     prisma?: BasePrismaClient,
   ): Promise<string | null> {
+    if (!user.enable_kyc) {
+      return 'KYC not enabled on user';
+    }
+
     const points = await this.userPointsService.findOrThrow(user.id, prisma);
 
     const hasPoints =

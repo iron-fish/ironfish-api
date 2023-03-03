@@ -10,4 +10,5 @@ export interface SerializedUser {
   node_uptime_threshold: number;
   country_code: string;
   created_at: string;
+  enable_kyc: boolean;
 }

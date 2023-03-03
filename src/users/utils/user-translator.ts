@@ -18,6 +18,7 @@ export function serializedUserFromRecord(
     node_uptime_threshold: 0,
     total_points: userPoints.total_points,
     created_at: user.created_at.toISOString(),
+    enable_kyc: user.enable_kyc,
   };
 }
 
@@ -35,6 +36,7 @@ export function serializedUserFromRecordWithRank(
     node_uptime_threshold: 0,
     total_points: userPoints.total_points,
     created_at: user.created_at.toISOString(),
+    enable_kyc: user.enable_kyc,
     rank,
   };
 }

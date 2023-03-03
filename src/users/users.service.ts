@@ -113,6 +113,7 @@ export class UsersService {
     discord,
     telegram,
     github,
+    enable_kyc,
   }: CreateUserOptions): Promise<User> {
     email = standardizeEmail(email);
     const existingRecord = await this.prisma.user.findFirst({
@@ -145,6 +146,7 @@ export class UsersService {
           telegram,
           github,
           country_code: countryCode,
+          enable_kyc,
         },
       });
 

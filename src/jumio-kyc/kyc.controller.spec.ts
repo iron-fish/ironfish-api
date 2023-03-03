@@ -66,6 +66,7 @@ describe('KycController', () => {
       email: faker.internet.email(),
       graffiti: uuid(),
       countryCode: country ?? 'IDN',
+      enable_kyc: true,
     });
 
     await prisma.userPoints.update({
@@ -168,7 +169,7 @@ describe('KycController', () => {
         .set('Authorization', 'did-token')
         .expect(HttpStatus.OK);
 
-      expect(body).toMatchObject(serializeKyc(redemption, transaction, true));
+      expect(body).toMatchObject(serializeKyc(redemption, transaction, false));
     });
   });
 
