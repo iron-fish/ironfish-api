@@ -62,22 +62,24 @@ export class JumioApiService {
       },
     };
 
-    const response = await axios
-      .post<JumioAccountCreateResponse>(url, body, this.requestConfig())
-      .catch((error) => {
-        if (axios.isAxiosError(error)) {
-          const message = `Error ${
-            jumioAccountId ? 'updating' : 'creating'
-          } jumio account: ${error.message}`;
+    const promise = jumioAccountId
+      ? axios.put<JumioAccountCreateResponse>(url, body, this.requestConfig())
+      : axios.post<JumioAccountCreateResponse>(url, body, this.requestConfig());
 
-          this.logger.warn(
-            `${message} - ${JSON.stringify(error.response?.data)}`,
-          );
+    const response = await promise.catch((error) => {
+      if (axios.isAxiosError(error)) {
+        const message = `Error ${
+          jumioAccountId ? 'updating' : 'creating'
+        } jumio account: ${error.message}`;
 
-          throw new BadRequestException(message);
-        }
-        throw error;
-      });
+        this.logger.warn(
+          `${message} - ${JSON.stringify(error.response?.data)}`,
+        );
+
+        throw new BadRequestException(message);
+      }
+      throw error;
+    });
 
     return response.data;
   }
