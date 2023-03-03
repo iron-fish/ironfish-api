@@ -71,6 +71,7 @@ model Redemption {
   user             User      @relation(fields: [user_id], references: [id])
   user_id          Int       @unique
   kyc_attempts     Int       @default(0)
+  kyc_max_attempts Int?
   kyc_status  KycStatus
   jumio_account_id String?   @db.VarChar
   public_address   String    @db.VarChar
