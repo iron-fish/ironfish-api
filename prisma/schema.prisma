@@ -91,7 +91,8 @@ model JumioTransaction {
   user_id               Int
   decision_status       DecisionStatus
   last_workflow_fetch   Json?
-  latest_callback_at       DateTime? @db.Timestamp(6)
+  last_callback         Json?
+  last_callback_at      DateTime? @db.Timestamp(6)
   workflow_execution_id String   @db.VarChar
   web_href              String   @db.VarChar
 

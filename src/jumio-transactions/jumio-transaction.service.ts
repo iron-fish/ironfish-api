@@ -5,6 +5,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { instanceToPlain } from 'class-transformer';
 import { JumioTransactionRetrieveResponse } from '../jumio-api/interfaces/jumio-transaction-retrieve';
+import { JumioCallbackData } from '../jumio-kyc/interfaces/jumio-callback-data';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { DecisionStatus, JumioTransaction, Prisma } from '.prisma/client';
@@ -52,15 +53,17 @@ export class JumioTransactionService {
     transaction: JumioTransaction,
     data: {
       decisionStatus: DecisionStatus;
-      transactionStatus: JumioTransactionRetrieveResponse;
-      latestCallbackAt?: Date;
+      lastWorkflowFetch?: JumioTransactionRetrieveResponse;
+      lastCallbackAt?: Date;
+      lastCallback?: JumioCallbackData;
     },
   ): Promise<JumioTransaction> {
     return this.prisma.jumioTransaction.update({
       data: {
         decision_status: data.decisionStatus,
-        last_workflow_fetch: instanceToPlain(data.transactionStatus),
-        latest_callback_at: data.latestCallbackAt,
+        last_workflow_fetch: instanceToPlain(data.lastWorkflowFetch),
+        last_callback: instanceToPlain(data.lastCallback),
+        last_callback_at: data.lastCallbackAt,
       },
       where: { id: transaction.id },
     });

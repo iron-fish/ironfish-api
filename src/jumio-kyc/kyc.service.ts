@@ -114,8 +114,8 @@ export class KycService {
     }
 
     if (
-      transaction.latest_callback_at &&
-      transaction.latest_callback_at >= new Date(data.callbackSentAt)
+      transaction.last_callback_at &&
+      transaction.last_callback_at >= new Date(data.callbackSentAt)
     ) {
       return;
     }
@@ -147,8 +147,9 @@ export class KycService {
 
     transaction = await this.jumioTransactionService.update(transaction, {
       decisionStatus: status.decision.type,
-      transactionStatus: status,
-      latestCallbackAt: new Date(),
+      lastWorkflowFetch: status,
+      lastCallback: data,
+      lastCallbackAt: new Date(),
     });
 
     return;
