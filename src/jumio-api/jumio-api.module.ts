@@ -4,11 +4,12 @@
 
 import { Module } from '@nestjs/common';
 import { ApiConfigModule } from '../api-config/api-config.module';
+import { LoggerModule } from '../logger/logger.module';
 import { JumioApiService } from './jumio-api.service';
 
 @Module({
   exports: [JumioApiService],
-  imports: [ApiConfigModule],
+  imports: [ApiConfigModule, LoggerModule],
   providers: [JumioApiService],
 })
 export class JumioApiModule {}
