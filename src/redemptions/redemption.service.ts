@@ -11,8 +11,6 @@ import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { UserPointsService } from '../user-points/user-points.service';
 
-export const REDEMPTION_BAN_LIST = ['PRK', 'IRN'];
-
 export type CalculatedStatus = {
   status: KycStatus;
   failureMessage: string | null;
@@ -52,7 +50,12 @@ export class RedemptionService {
           id_type: extraction.data.type,
         };
       });
-    if (this.failBannedCountry(idDetails)) {
+    const banned = idDetails
+      .map((detail) => detail.id_issuing_country)
+      .map(this.hasBannedCountry)
+      .filter((i) => i);
+
+    if (banned.length) {
       return {
         status: KycStatus.FAILED,
         failureMessage: 'Failure: Banned Country',
@@ -97,15 +100,6 @@ export class RedemptionService {
       failureMessage: null,
       idDetails,
     };
-  }
-
-  failBannedCountry(idDetails: IdDetails[]): boolean {
-    for (const detail of idDetails) {
-      if (REDEMPTION_BAN_LIST.includes(detail.id_issuing_country)) {
-        return true;
-      }
-    }
-    return false;
   }
 
   similarityStatus(_response: JumioTransactionRetrieveResponse): string | null {
@@ -231,13 +225,7 @@ export class RedemptionService {
       return { eligible: false, reason: 'User has no points' };
     }
 
-    const hasBannedCountry = this.config
-      .get<string>('REDEMPTION_BAN_LIST')
-      .split(',')
-      .map((c) => c.trim())
-      .includes(user.country_code);
-
-    if (hasBannedCountry) {
+    if (this.hasBannedCountry(user.country_code)) {
       return {
         eligible: false,
         reason: `User is from a banned country: ${user.country_code}`,
@@ -246,6 +234,13 @@ export class RedemptionService {
 
     return { eligible: true, reason: '' };
   }
+
+  hasBannedCountry = (country_code: string): boolean =>
+    this.config
+      .get<string>('REDEMPTION_BAN_LIST')
+      .split(',')
+      .map((c) => c.trim())
+      .includes(country_code);
 
   async canAttempt(
     redemption: Redemption | null,
