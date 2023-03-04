@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { DecisionStatus, KycStatus, User } from '@prisma/client';
 import assert from 'assert';
 import axios from 'axios';
@@ -41,7 +40,7 @@ describe('KycController', () => {
   beforeAll(async () => {
     app = await bootstrapTestApp();
     prisma = app.get(PrismaService);
-    config = app.get(ConfigService);
+    config = app.get(ApiConfigService);
     magicLinkService = app.get(MagicLinkService);
     usersService = app.get(UsersService);
     kycService = app.get(KycService);
