@@ -20,6 +20,7 @@ import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
 import { CALLBACK_FIXTURE } from './fixtures/callback';
 import { WORKFLOW_RETRIEVE_FIXTURE } from './fixtures/workflow';
+import { JumioIpGuard } from './jumio-ip.guard';
 import { KycService } from './kyc.service';
 import { serializeKyc } from './utils/serialize-kyc';
 
@@ -151,7 +152,7 @@ describe('KycController', () => {
     });
   });
 
-  describe('POST /callback', () => {
+  describe('POST /kyc/callback', () => {
     it('resolves 200 when transaction found/updated', async () => {
       const user = await mockUser();
 
@@ -240,17 +241,70 @@ describe('KycController', () => {
     });
 
     it('fails on invalid source ip', async () => {
-      const user = await mockUser();
-      const { redemption, transaction } = await kycService.attempt(user, 'foo');
+      process.env.NODE_ENV = 'production';
+      const invalidIp = '::ffff:127.0.0.1';
+      JumioIpGuard.prototype.getIp = () => invalidIp;
 
-      const { body } = await request(app.getHttpServer())
-        .get(`/kyc`)
+      const user = await mockUser();
+      await kycService.attempt(user, 'foo');
+      await request(app.getHttpServer())
+        .post(`/kyc/callback`)
+        .set('Authorization', 'did-token')
+        .expect(HttpStatus.FORBIDDEN);
+    });
+    it('succeeds with valid source ip production', async () => {
+      process.env.NODE_ENV = 'production';
+
+      const user = await mockUser();
+      const validIp = '::ffff:34.202.241.227';
+      JumioIpGuard.prototype.getIp = () => validIp;
+
+      const { redemption, transaction } = await kycService.attempt(user, 'foo');
+      assert.ok(redemption.jumio_account_id);
+      const callbackData = CALLBACK_FIXTURE(
+        redemption.jumio_account_id,
+        transaction.workflow_execution_id,
+        'PROCESSED',
+      );
+      const mock = jest
+        .spyOn(kycService, 'handleCallback')
+        .mockImplementationOnce(() => Promise.resolve())
+        .mockClear();
+      await request(app.getHttpServer())
+        .post(`/kyc/callback`)
+        .send(callbackData)
         .set('Authorization', 'did-token')
         .expect(HttpStatus.OK);
 
-      expect(body).toMatchObject(
-        serializeKyc(redemption, transaction, false, 'because'),
+      expect(mock).toHaveBeenCalled();
+    });
+
+    it('succeeds with invalid source ip staging', async () => {
+      process.env.NODE_ENV = 'staging';
+
+      const user = await mockUser();
+      const invalidIp = '::ffff:127.0.0.1';
+      JumioIpGuard.prototype.getIp = () => invalidIp;
+
+      const { redemption, transaction } = await kycService.attempt(user, 'foo');
+      assert.ok(redemption.jumio_account_id);
+      const callbackData = CALLBACK_FIXTURE(
+        redemption.jumio_account_id,
+        transaction.workflow_execution_id,
+        'PROCESSED',
       );
+      const mock = jest
+        .spyOn(kycService, 'handleCallback')
+        .mockImplementationOnce(() => Promise.resolve())
+        .mockClear();
+
+      await request(app.getHttpServer())
+        .post(`/kyc/callback`)
+        .send(callbackData)
+        .set('Authorization', 'did-token')
+        .expect(HttpStatus.OK);
+
+      expect(mock).toHaveBeenCalled();
     });
   });
 
