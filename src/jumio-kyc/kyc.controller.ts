@@ -194,4 +194,11 @@ export class KycController {
       { userId: user_id },
     );
   }
+
+  @ApiExcludeEndpoint()
+  @Post('/complete')
+  @UseGuards(MagicLinkGuard)
+  async markComplete(@Context() { user }: MagicLinkContext): Promise<void> {
+    await this.kycService.markComplete(user);
+  }
 }
