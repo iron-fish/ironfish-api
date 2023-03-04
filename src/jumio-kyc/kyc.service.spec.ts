@@ -96,6 +96,30 @@ describe('KycService', () => {
     });
   });
 
+  describe('markComplete', () => {
+    it('should set the redemption as waiting', async () => {
+      const user = await usersService.create({
+        email: faker.internet.email(),
+        graffiti: uuid(),
+        countryCode: 'USA',
+        enable_kyc: true,
+      });
+
+      await prisma.userPoints.update({
+        data: { pool1_points: 3 },
+        where: { user_id: user.id },
+      });
+
+      let { redemption } = await kycService.attempt(user, '');
+      expect(redemption.kyc_status).toBe(KycStatus.IN_PROGRESS);
+
+      await kycService.markComplete(user);
+
+      redemption = await redemptionService.findOrThrow(user);
+      expect(redemption.kyc_status).toBe(KycStatus.WAITING_FOR_CALLBACK);
+    });
+  });
+
   describe('isSignatureValid', () => {
     describe('for a valid hash', () => {
       it('returns true', async () => {
