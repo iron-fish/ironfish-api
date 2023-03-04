@@ -100,7 +100,7 @@ export class JumioApiService {
   }
 
   getCallbackUrl(): string {
-    return this.config.get<string>('API_URL') + '/jumio/callback';
+    return this.config.get<string>('API_URL') + '/kyc/callback';
   }
 
   requestConfig(): AxiosRequestConfig {
