@@ -140,6 +140,28 @@ export class KycService {
     });
   }
 
+  async markComplete(user: User): Promise<void> {
+    return this.prisma.$transaction(async (prisma) => {
+      await prisma.$executeRawUnsafe(
+        'SELECT pg_advisory_xact_lock(HASHTEXT($1));',
+        `kyc_${user.id}`,
+      );
+
+      const redemption = await this.redemptionService.find(user);
+      if (!redemption) {
+        return;
+      }
+
+      if (redemption.kyc_status !== 'IN_PROGRESS') {
+        return;
+      }
+
+      await this.redemptionService.update(redemption, {
+        kycStatus: KycStatus.WAITING_FOR_CALLBACK,
+      });
+    });
+  }
+
   async refreshUser(user: User): Promise<void> {
     const redemption = await this.redemptionService.find(user);
     if (!redemption) {
