@@ -20,8 +20,8 @@ describe('JumioApiService', () => {
     await app.close();
   });
 
-  const axiosMock = () => {
-    return jest.spyOn(axios, 'post').mockResolvedValueOnce({
+  const axiosMock = (method: 'post' | 'put' = 'post') => {
+    return jest.spyOn(axios, method).mockResolvedValueOnce({
       data: {
         account: { id: 1 },
         workflowExecution: { id: 1 },
@@ -58,10 +58,12 @@ describe('JumioApiService', () => {
       });
 
       it('updates existing account when jumioAccountId is present', async () => {
-        const postMock = axiosMock();
+        const postMock = axiosMock('put');
+
         await jumioApiService.createAccountAndTransaction(123, 'fooaccount');
+
         expect(postMock).toHaveBeenCalledWith(
-          'https://account.amer-1.jumio.ai/api/v1/accounts',
+          'https://account.amer-1.jumio.ai/api/v1/accounts/fooaccount',
           expect.objectContaining({
             callbackUrl: expect.any(String),
             customerInternalReference: expect.any(Number),
