@@ -3,8 +3,10 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { DecisionStatus, KycStatus, Redemption, User } from '@prisma/client';
+import { instanceToPlain } from 'class-transformer';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { JumioTransactionRetrieveResponse } from '../jumio-api/interfaces/jumio-transaction-retrieve';
+import { IdDetails } from '../jumio-kyc/kyc.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { UserPointsService } from '../user-points/user-points.service';
@@ -31,21 +33,49 @@ export class RedemptionService {
     });
   }
 
-  calculateStatus(
-    transactionStatus: JumioTransactionRetrieveResponse,
-  ): KycStatus {
-    if (
-      ['SESSION_EXPIRED', 'TOKEN_EXPIRED'].includes(
-        transactionStatus.workflow.status,
-      )
-    ) {
-      return KycStatus.TRY_AGAIN;
+  calculateStatus(transactionStatus: JumioTransactionRetrieveResponse): {
+    status: KycStatus;
+    failureMessage: string | null;
+    idDetails: IdDetails[];
+  } {
+    // deal with banned countries
+    const idDetails: IdDetails[] =
+      transactionStatus.capabilities.extraction.map((extraction) => {
+        return {
+          id_issuing_country: extraction.data.issuingCountry,
+          id_subtype: extraction.data.subType,
+          id_type: extraction.data.type,
+        };
+      });
+    const banned = idDetails
+      .map((detail) => detail.id_issuing_country)
+      .map(this.hasBannedCountry)
+      .filter((i) => i);
+
+    if (banned.length) {
+      return {
+        status: KycStatus.FAILED,
+        failureMessage: 'Failure: Banned Country',
+        idDetails,
+      };
     }
-    if (transactionStatus.decision.type === DecisionStatus.NOT_EXECUTED) {
-      return KycStatus.TRY_AGAIN;
+    if (
+      transactionStatus.workflow.status === 'SESSION_EXPIRED' ||
+      transactionStatus.workflow.status === 'TOKEN_EXPIRED' ||
+      transactionStatus.decision.type === DecisionStatus.NOT_EXECUTED
+    ) {
+      return {
+        status: KycStatus.TRY_AGAIN,
+        failureMessage: null,
+        idDetails,
+      };
     }
     if (transactionStatus.decision.type === DecisionStatus.PASSED) {
-      return KycStatus.SUBMITTED;
+      return {
+        status: KycStatus.SUBMITTED,
+        failureMessage: null,
+        idDetails,
+      };
     }
     // TODO: HANDLE WARN, use decision.risk.score?
     const failure =
@@ -55,54 +85,53 @@ export class RedemptionService {
       this.extractionStatus(transactionStatus) ||
       this.usabilityStatus(transactionStatus);
     if (failure) {
-      return failure;
+      return {
+        status: KycStatus.FAILED,
+        failureMessage: failure,
+        idDetails,
+      };
     }
 
-    return KycStatus.TRY_AGAIN;
+    return {
+      status: KycStatus.TRY_AGAIN,
+      failureMessage: null,
+      idDetails,
+    };
   }
 
-  similarityStatus(
-    _response: JumioTransactionRetrieveResponse,
-  ): KycStatus | null {
+  similarityStatus(_response: JumioTransactionRetrieveResponse): string | null {
     return null;
   }
 
-  livenessStatus(response: JumioTransactionRetrieveResponse): KycStatus | null {
+  livenessStatus(response: JumioTransactionRetrieveResponse): string | null {
     for (const check of response.capabilities.liveness) {
-      // hard fail
       if (
         ['PHOTOCOPY', 'DIGITAL_COPY', 'MANIPULATED', 'BLACK_WHITE'].includes(
           check.decision.details.label,
         )
       ) {
-        return KycStatus.FAILED;
+        return `Liveness check failed: ${check.decision.details.label}`;
       }
     }
 
     return null;
   }
 
-  dataChecksStatus(
-    _response: JumioTransactionRetrieveResponse,
-  ): KycStatus | null {
+  dataChecksStatus(_response: JumioTransactionRetrieveResponse): string | null {
     return null;
   }
 
-  extractionStatus(
-    _response: JumioTransactionRetrieveResponse,
-  ): KycStatus | null {
+  extractionStatus(_response: JumioTransactionRetrieveResponse): string | null {
     return null;
   }
 
-  usabilityStatus(
-    response: JumioTransactionRetrieveResponse,
-  ): KycStatus | null {
+  usabilityStatus(response: JumioTransactionRetrieveResponse): string | null {
     for (const check of response.capabilities.usability) {
       if (
         check.decision.details.label === 'PHOTOCOPY' ||
         check.decision.details.label === 'BLACK_WHITE'
       ) {
-        return KycStatus.FAILED;
+        return `Usability check failed: ${check.decision.details.label}`;
       }
     }
     return null;
@@ -117,15 +146,22 @@ export class RedemptionService {
   async update(
     redemption: Redemption,
     data: {
-      kyc_status: KycStatus;
-      jumio_account_id?: string;
+      kycStatus: KycStatus;
+      jumioAccountId?: string;
+      idDetails?: IdDetails[];
+      failureMessage?: string;
     },
     prisma?: BasePrismaClient,
   ): Promise<Redemption> {
     const client = prisma ?? this.prisma;
 
     return client.redemption.update({
-      data: data,
+      data: {
+        kyc_status: data.kycStatus,
+        jumio_account_id: data.jumioAccountId,
+        id_details: instanceToPlain(data.idDetails),
+        failure_message: data.failureMessage,
+      },
       where: {
         id: redemption.id,
       },
@@ -186,13 +222,7 @@ export class RedemptionService {
       return { eligible: false, reason: 'User has no points' };
     }
 
-    const hasBannedCountry = this.config
-      .get<string>('REDEMPTION_BAN_LIST')
-      .split(',')
-      .map((c) => c.trim())
-      .includes(user.country_code);
-
-    if (hasBannedCountry) {
+    if (this.hasBannedCountry(user.country_code)) {
       return {
         eligible: false,
         reason: `User is from a banned country: ${user.country_code}`,
@@ -201,6 +231,13 @@ export class RedemptionService {
 
     return { eligible: true, reason: '' };
   }
+
+  hasBannedCountry = (country_code: string): boolean =>
+    this.config
+      .get<string>('REDEMPTION_BAN_LIST')
+      .split(',')
+      .map((c) => c.trim())
+      .includes(country_code);
 
   async canAttempt(
     redemption: Redemption | null,

@@ -58,78 +58,197 @@ export type UsabilityLabel =
   | 'LIVENESS_UNDETERMINED'
   | 'UNSUPPORTED_COUNTRY'
   | 'UNSUPPORTED_DOCUMENT_TYPE';
+
+export type ImageChecksLabel =
+  | 'DIGITAL_COPY'
+  | 'WATERMARK'
+  | 'MANIPULATED_DOCUMENT'
+  | 'MANIPULATED_DOCUMENT_PHOTO1'
+  | 'MANIPULATED_DOCUMENT_EXPIRY1'
+  | 'MANIPULATED_DOCUMENT_NAME1'
+  | 'MANIPULATED_DOCUMENT_ADDRESS1'
+  | 'MANIPULATED_DOCUMENT_SECURITY_CHECKS1'
+  | 'MANIPULATED_DOCUMENT_SIGNATURE1'
+  | 'MANIPULATED_DOCUMENT_PERSONAL_NUMBER1'
+  | 'MANIPULATED_DOCUMENT_PLACE_OF_BIRTH1'
+  | 'MANIPULATED_DOCUMENT_GENDER1'
+  | 'MANIPULATED_DOCUMENT_ISSUING_DATE1'
+  | 'OTHER_REJECTION'
+  | 'GHOST_IMAGE_DIFFERENT'
+  | 'PUNCHED'
+  | 'SAMPLE'
+  | 'FAKE'
+  | 'CHIP_MISSING'
+  | 'DIGITAL_MANIPULATION'
+  | 'MISMATCH_FRONT_BACK'
+  | 'DIFFERENT_PERSON'
+  | 'REPEATED_FACE'
+  | 'OK'
+  | 'PRECONDITION_NOT_FULFILLED'
+  | 'TECHNICAL_ERROR';
 export interface JumioTransactionRetrieveResponse {
   account: {
     id: string;
   };
-  web: {
+  createdAt: string;
+  startedAt: string;
+  completedAt: string;
+  credentials: {
+    id: string;
+    category: string;
+    parts: {
+      classifier: string;
+      href?: string;
+    }[];
+  }[];
+  steps: {
     href: string;
   };
   workflow: {
     id: string;
+    definitionKey: string;
     status: 'INITIATED' | 'PROCESSED' | 'SESSION_EXPIRED' | 'TOKEN_EXPIRED';
+    customerInternalReference: string;
   };
   decision: {
     type: 'NOT_EXECUTED' | 'PASSED' | 'REJECTED' | 'WARNING';
+    details: {
+      label: string;
+    };
     risk: {
       score: number;
     };
   };
   capabilities: {
-    liveness: [
-      {
-        decision: {
-          type: 'NOT_EXECUTED' | 'PASSED' | 'REJECTED' | 'WARNING';
-          details: {
-            label: LivenessLabel;
-          };
+    liveness: {
+      id: string;
+      validFaceMapForAuthentication: string;
+      credentials: [
+        {
+          id: string;
+          category: string;
+        },
+        {
+          id: string;
+          category: string;
+        },
+      ];
+      decision: {
+        type: 'NOT_EXECUTED' | 'PASSED' | 'REJECTED' | 'WARNING';
+        details: {
+          label: LivenessLabel;
         };
-      },
-    ];
-    similarity: [
-      {
-        decision: {
-          type: 'NOT_EXECUTED' | 'PASSED' | 'REJECTED' | 'WARNING';
-          details: {
-            label: SimilarityLabel;
-          };
+      };
+      data: {
+        type: string;
+        predictedAge: number;
+        ageConfidenceRange: string;
+      };
+    }[];
+    similarity: {
+      id: string;
+      credentials: [
+        {
+          id: string;
+          category: string;
+        },
+        {
+          id: string;
+          category: string;
+        },
+      ];
+      decision: {
+        type: string;
+        details: {
+          label: SimilarityLabel;
         };
-      },
-    ];
-    dataChecks: [
-      {
-        decision: {
-          type: 'NOT_EXECUTED' | 'PASSED' | 'REJECTED';
-          details: {
-            label: DataChecksLabel;
-          };
+      };
+      data: {
+        similarity: string;
+      };
+    }[];
+    dataChecks: {
+      id: string;
+      credentials: [
+        {
+          id: 'fakecredentialsid';
+          category: 'ID';
+        },
+      ];
+      decision: {
+        type: 'NOT_EXECUTED' | 'PASSED' | 'REJECTED';
+        details: {
+          label: DataChecksLabel;
         };
-      },
-    ];
-    extraction: [
-      {
-        decision: {
-          type: 'NOT_EXECUTED' | 'PASSED';
-          details: {
-            label: ExtractionLabel;
-          };
+      };
+    }[];
+    extraction: {
+      id: string;
+      decision: {
+        type: 'NOT_EXECUTED' | 'PASSED';
+        details: {
+          label: ExtractionLabel;
         };
-        data: {
-          type: string;
-          subType: string;
-          issuingCountry: string;
+      };
+      credentials: [
+        {
+          id: string;
+          category: string;
+        },
+      ];
+      data: {
+        type: string;
+        subType: string;
+        issuingCountry: string;
+        firstName: string;
+        lastName: string;
+        dateOfBirth: string;
+        expiryDate: string;
+        documentNumber: string;
+        optionalMrzField1: string;
+        optionalMrzField2: string;
+        currentAge: string;
+      };
+    }[];
+    usability: {
+      id: string;
+      credentials: [
+        {
+          id: string;
+          category: string;
+        },
+      ];
+      decision: {
+        type: 'NOT_EXECUTED' | 'PASSED' | 'REJECTED' | 'WARNING';
+        details: {
+          label: UsabilityLabel;
         };
-      },
-    ];
-    usability: [
-      {
-        decision: {
-          type: 'NOT_EXECUTED' | 'PASSED' | 'REJECTED' | 'WARNING';
-          details: {
-            label: UsabilityLabel;
-          };
+      };
+    }[];
+    imageChecks: {
+      id: string;
+      credentials: [
+        {
+          id: string;
+          category: string;
+        },
+        {
+          id: string;
+          category: string;
+        },
+      ];
+      decision: {
+        type: string;
+        details: {
+          label: ImageChecksLabel;
         };
-      },
-    ];
+      };
+      data: {
+        faceSearchFindings: {
+          status: string;
+          findings: string[];
+        };
+      };
+    }[];
   };
 }
