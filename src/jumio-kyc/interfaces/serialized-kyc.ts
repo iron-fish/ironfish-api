@@ -15,4 +15,6 @@ export interface SerializedKyc {
   public_address: string;
   can_attempt: boolean;
   can_attempt_reason: string;
+  can_create: boolean;
+  can_create_reason: string;
 }
