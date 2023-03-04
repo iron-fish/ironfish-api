@@ -3,7 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { BadRequestException, Injectable } from '@nestjs/common';
 import axios, { AxiosRequestConfig } from 'axios';
-import forge from 'node-forge';
+import crypto from 'crypto';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { LoggerService } from '../logger/logger.service';
 import { JumioAccountCreateResponse } from './interfaces/jumio-account-create';
@@ -54,9 +54,10 @@ export class JumioApiService {
       url += `/${jumioAccountId}`;
     }
 
+    const { ts, hmac } = this.generateSignature(userId);
     const body = {
       customerInternalReference: userId,
-      userReference: this.generateSignature(userId),
+      userReference: `t=${ts},v1=${hmac}`,
       callbackUrl: this.getCallbackUrl(),
       workflowDefinition: {
         key: this.config.get<number>('JUMIO_WORKFLOW_DEFINITION'),
@@ -85,14 +86,17 @@ export class JumioApiService {
     return response.data;
   }
 
-  private generateSignature(userId: number): string {
+  private generateSignature(userId: number): { ts: number; hmac: string } {
     const ts = new Date().getTime();
-
-    const hmac = forge.hmac.create();
-    hmac.start('sha256', this.config.get<string>('JUMIO_API_CALLBACK_SECRET'));
-    hmac.update(forge.util.encodeUtf8(`${ts}.${userId}`));
-
-    return hmac.digest().toHex();
+    const hmac = crypto
+      .createHmac(
+        'sha256',
+        this.config.get<string>('JUMIO_API_CALLBACK_SECRET'),
+      )
+      .update(`${ts}.${userId}`)
+      .digest()
+      .toString('hex');
+    return { ts, hmac };
   }
 
   getCallbackUrl(): string {

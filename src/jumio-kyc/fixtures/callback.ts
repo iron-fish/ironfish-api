@@ -11,7 +11,7 @@ export const CALLBACK_FIXTURE = (
 ): JumioCallbackData => {
   return {
     callbackSentAt: '2023-03-02T21:30:32.722Z',
-    userReference: '1',
+    userReference: 't=123,v1=asdf',
     workflowExecution: {
       id: workflowId,
       href: '',
