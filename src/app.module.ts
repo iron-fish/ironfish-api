@@ -26,6 +26,7 @@ import { EventsJobsModule } from './events/events.jobs.module';
 import { EventsRestModule } from './events/events.rest.module';
 import { FaucetTransactionsRestModule } from './faucet-transactions/faucet-transactions.rest.module';
 import { HealthRestModule } from './health/health.rest.module';
+import { KycJobsModule } from './jumio-kyc/kyc.jobs.module';
 import { KycRestModule } from './jumio-kyc/kyc.rest.module';
 import { LoggerModule } from './logger/logger.module';
 import { MetricsRestModule } from './metrics/metrics.rest.module';
@@ -41,6 +42,7 @@ export const JOBS_MODULES = [
   AssetsLoaderJobsModule,
   BlocksDailyJobsModule,
   DepositsJobsModule,
+  KycJobsModule,
   EventsJobsModule,
   NodeUptimesJobsModule,
   UserPointsJobsModule,
