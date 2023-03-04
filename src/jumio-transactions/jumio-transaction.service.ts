@@ -25,6 +25,12 @@ export class JumioTransactionService {
     });
   }
 
+  async findOrThrow(id: number): Promise<JumioTransaction> {
+    return await this.prisma.jumioTransaction.findFirstOrThrow({
+      where: { id },
+    });
+  }
+
   async findLatestOrThrow(user: User): Promise<JumioTransaction> {
     const jumioTransactions = await this.getList(user);
     if (!jumioTransactions.length) {
