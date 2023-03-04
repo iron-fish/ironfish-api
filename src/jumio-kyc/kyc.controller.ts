@@ -52,12 +52,9 @@ export class KycController {
       dto.public_address,
     );
 
-    const { attemptable, reason } = await this.redemptionService.canAttempt(
-      redemption,
-      user,
-    );
+    const { eligible, reason } = await this.redemptionService.isEligible(user);
 
-    return serializeKyc(redemption, transaction, attemptable, reason);
+    return serializeKyc(redemption, transaction, eligible, reason);
   }
 
   @ApiExcludeEndpoint()
