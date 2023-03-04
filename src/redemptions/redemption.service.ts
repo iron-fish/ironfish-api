@@ -11,11 +11,6 @@ import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { UserPointsService } from '../user-points/user-points.service';
 
-export type CalculatedStatus = {
-  status: KycStatus;
-  failureMessage: string | null;
-  idDetails: IdDetails[];
-};
 @Injectable()
 export class RedemptionService {
   constructor(
@@ -38,9 +33,11 @@ export class RedemptionService {
     });
   }
 
-  calculateStatus(
-    transactionStatus: JumioTransactionRetrieveResponse,
-  ): CalculatedStatus {
+  calculateStatus(transactionStatus: JumioTransactionRetrieveResponse): {
+    status: KycStatus;
+    failureMessage: string | null;
+    idDetails: IdDetails[];
+  } {
     // deal with banned countries
     const idDetails: IdDetails[] =
       transactionStatus.capabilities.extraction.map((extraction) => {

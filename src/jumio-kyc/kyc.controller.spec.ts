@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import { KycStatus, User } from '@prisma/client';
+import { DecisionStatus, KycStatus, User } from '@prisma/client';
 import assert from 'assert';
 import axios from 'axios';
 import faker from 'faker';
@@ -161,7 +161,11 @@ describe('KycController', () => {
       );
 
       jest.spyOn(axios, 'get').mockResolvedValueOnce({
-        data: WORKFLOW_RETRIEVE_FIXTURE,
+        data: WORKFLOW_RETRIEVE_FIXTURE(
+          'PROCESSED',
+          'CHL',
+          DecisionStatus.PASSED,
+        ),
       });
       jest
         .spyOn(kycService, 'isSignatureValid')
@@ -204,7 +208,11 @@ describe('KycController', () => {
         );
 
         jest.spyOn(axios, 'get').mockResolvedValueOnce({
-          data: WORKFLOW_RETRIEVE_FIXTURE,
+          data: WORKFLOW_RETRIEVE_FIXTURE(
+            'PROCESSED',
+            'CHL',
+            DecisionStatus.PASSED,
+          ),
         });
 
         await request(app.getHttpServer())
