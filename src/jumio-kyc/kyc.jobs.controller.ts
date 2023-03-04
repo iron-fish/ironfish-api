@@ -4,12 +4,8 @@
 import { Controller, UseFilters } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
-import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { GraphileWorkerException } from '../graphile-worker/graphile-worker-exception';
 import { GraphileWorkerHandlerResponse } from '../graphile-worker/interfaces/graphile-worker-handler-response';
-import { JumioTransactionService } from '../jumio-transactions/jumio-transaction.service';
-import { LoggerService } from '../logger/logger.service';
-import { RedemptionService } from '../redemptions/redemption.service';
 import { UsersService } from '../users/users.service';
 import { RefreshUserRedemptionOptions } from './interfaces/refresh-user-redemption-options';
 import { KycService } from './kyc.service';
@@ -18,12 +14,8 @@ import { User } from '.prisma/client';
 @Controller()
 export class KycJobsController {
   constructor(
-    private readonly graphileWorkerService: GraphileWorkerService,
-    private readonly loggerService: LoggerService,
     private readonly usersService: UsersService,
     private readonly kycService: KycService,
-    private readonly jumioTransactionService: JumioTransactionService,
-    private readonly redemptionService: RedemptionService,
   ) {}
 
   @MessagePattern(GraphileWorkerPattern.REFRESH_USERS_REDEMPTION)

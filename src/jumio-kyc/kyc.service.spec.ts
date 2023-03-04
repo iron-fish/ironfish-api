@@ -80,7 +80,7 @@ describe('KycService', () => {
       assert.ok(redemption.jumio_account_id);
 
       jest.spyOn(axios, 'get').mockResolvedValueOnce({
-        data: WORKFLOW_RETRIEVE_FIXTURE,
+        data: WORKFLOW_RETRIEVE_FIXTURE('PROCESSED', 'USA', 'PASSED'),
       });
 
       await kycService.refresh(redemption, transaction);
