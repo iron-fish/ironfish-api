@@ -38,7 +38,7 @@ export class KycController {
   @ApiExcludeEndpoint()
   @Post()
   @UseGuards(MagicLinkGuard)
-  async create(
+  async attempt(
     @Context() { user }: MagicLinkContext,
     @Body(
       new ValidationPipe({
@@ -52,6 +52,7 @@ export class KycController {
       dto.public_address,
     );
 
+    // recalculate attemptable after attempt has been made
     const { attemptable, reason } = await this.redemptionService.canAttempt(
       redemption,
       user,
@@ -70,16 +71,19 @@ export class KycController {
   > {
     const redemption = await this.redemptionService.find(user);
 
-    const { eligible, reason } = await this.redemptionService.isEligible(user);
+    const { attemptable, reason } = await this.redemptionService.canAttempt(
+      redemption,
+      user,
+    );
 
     if (!redemption) {
-      return { can_attempt: eligible, can_attempt_reason: reason };
+      return { can_attempt: attemptable, can_attempt_reason: reason };
     }
 
     const jumioTransaction =
       await this.jumioTransactionService.findLatestOrThrow(user);
 
-    return serializeKyc(redemption, jumioTransaction, eligible, reason);
+    return serializeKyc(redemption, jumioTransaction, attemptable, reason);
   }
 
   @ApiExcludeEndpoint()

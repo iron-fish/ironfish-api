@@ -217,7 +217,7 @@ describe('KycController', () => {
   });
 
   describe('GET /kyc', () => {
-    it('retrieves kyc info when it exists', async () => {
+    it('retrieves kyc info when it exists and shows user is not eligible to start new kyc', async () => {
       const user = await mockUser();
       const { redemption, transaction } = await kycService.attempt(user, 'foo');
 
@@ -227,7 +227,12 @@ describe('KycController', () => {
         .expect(HttpStatus.OK);
 
       expect(body).toMatchObject(
-        serializeKyc(redemption, transaction, true, ''),
+        serializeKyc(
+          redemption,
+          transaction,
+          false,
+          'Redemption status is not TRY_AGAIN: IN_PROGRESS',
+        ),
       );
     });
   });
