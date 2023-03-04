@@ -36,12 +36,21 @@ export class UserPointsJobsController {
   @MessagePattern(GraphileWorkerPattern.REFRESH_USERS_POINTS)
   @UseFilters(new GraphileWorkerException())
   async refreshUsersPoints(): Promise<GraphileWorkerHandlerResponse> {
+    const totalRefreshUserQueues = 8;
+    let queue = 0;
+
     for await (const user of this.usersGenerator()) {
       await this.graphileWorkerService.addJob<RefreshUserPointsOptions>(
         GraphileWorkerPattern.REFRESH_USER_POINTS,
         { userId: user.id },
+        {
+          queueName: `refresh_user_queue_${queue}`,
+        },
       );
+
+      queue = (queue + 1) % totalRefreshUserQueues;
     }
+
     return { requeue: false };
   }
 
