@@ -9,6 +9,7 @@ export interface SerializedKyc {
   user_id: number;
   kyc_attempts: number;
   kyc_status: KycStatus;
+  kyc_max_attempts: number;
   jumio_account_id: string;
   jumio_workflow_execution_id: string;
   jumio_web_href: string;

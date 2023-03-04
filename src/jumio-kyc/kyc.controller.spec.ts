@@ -27,6 +27,7 @@ describe('KycController', () => {
   let app: INestApplication;
   let usersService: UsersService;
   let prisma: PrismaService;
+  let config: ApiConfigService;
   let magicLinkService: MagicLinkService;
   let kycService: KycService;
   let redemptionService: RedemptionService;
@@ -39,6 +40,7 @@ describe('KycController', () => {
   beforeAll(async () => {
     app = await bootstrapTestApp();
     prisma = app.get(PrismaService);
+    config = app.get(ApiConfigService);
     magicLinkService = app.get(MagicLinkService);
     usersService = app.get(UsersService);
     kycService = app.get(KycService);
@@ -120,6 +122,7 @@ describe('KycController', () => {
           '',
           false,
           expect.any(String),
+          config,
         ),
       );
     });
@@ -255,6 +258,7 @@ describe('KycController', () => {
           '',
           false,
           expect.any(String),
+          config,
         ),
       );
     });
