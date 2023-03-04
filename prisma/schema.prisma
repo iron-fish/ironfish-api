@@ -70,15 +70,12 @@ model Redemption {
   updated_at       DateTime  @default(now()) @updatedAt @db.Timestamp(6)
   user             User      @relation(fields: [user_id], references: [id])
   user_id          Int       @unique
-  kyc_attempts     Int       @default(0)
   kyc_max_attempts Int?
   kyc_status  KycStatus
   jumio_account_id String?   @db.VarChar
   public_address   String    @db.VarChar
-  id_issuing_country  String?    @db.VarChar
-  id_type          String?   @db.VarChar
-  id_subtype       String?   @db.VarChar
-
+  id_details       Json?
+  failure_message  String?   @db.VarChar
   @@index([jumio_account_id], name: "index_redemption_jumio_account_id")
   @@index([user_id], name: "index_redemption_on_user_id")
   @@map("redemptions")
@@ -96,6 +93,7 @@ model JumioTransaction {
   last_callback_at      DateTime? @db.Timestamp(6)
   workflow_execution_id String   @db.VarChar
   web_href              String   @db.VarChar
+  failure_message       String?  @db.VarChar
 
   @@index([workflow_execution_id], name: "index_jumio_transactions_on_jumio_workflow_execution_id")
   @@index([user_id], name: "index_jumio_transactions_on_user_id")

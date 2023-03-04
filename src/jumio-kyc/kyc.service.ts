@@ -77,8 +77,8 @@ export class KycService {
       redemption = await this.redemptionService.update(
         redemption,
         {
-          kyc_status: KycStatus.IN_PROGRESS,
-          jumio_account_id: response.account.id,
+          kycStatus: KycStatus.IN_PROGRESS,
+          jumioAccountId: response.account.id,
         },
         prisma,
       );
@@ -146,12 +146,14 @@ export class KycService {
       data.workflowExecution.id,
     );
 
-    const kycStatus = this.redemptionService.calculateStatus(status);
+    const calculatedStatus = this.redemptionService.calculateStatus(status);
 
     // Has our user's KYC status changed
-    if (redemption.kyc_status !== kycStatus) {
+    if (redemption.kyc_status !== calculatedStatus.status) {
       redemption = await this.redemptionService.update(redemption, {
-        kyc_status: kycStatus,
+        kycStatus: calculatedStatus.status,
+        idDetails: calculatedStatus.idDetails,
+        failureMessage: calculatedStatus.failureMessage ?? undefined,
       });
     }
 

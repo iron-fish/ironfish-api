@@ -56,6 +56,7 @@ export class JumioTransactionService {
       lastWorkflowFetch?: JumioTransactionRetrieveResponse;
       lastCallbackAt?: Date;
       lastCallback?: JumioCallbackData;
+      failureMessage?: string;
     },
   ): Promise<JumioTransaction> {
     return this.prisma.jumioTransaction.update({
@@ -64,6 +65,7 @@ export class JumioTransactionService {
         last_workflow_fetch: instanceToPlain(data.lastWorkflowFetch),
         last_callback: instanceToPlain(data.lastCallback),
         last_callback_at: data.lastCallbackAt,
+        failure_message: data.failureMessage,
       },
       where: { id: transaction.id },
     });
