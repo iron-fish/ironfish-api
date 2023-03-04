@@ -158,7 +158,7 @@ export class KycService {
     redemption: Redemption,
     transaction: JumioTransaction,
   ): Promise<void> {
-    // Don't process callbacks anymore for a user that has already passed KYC
+    // Don't update redemption anymore for a user that has already passed KYC
     if (
       redemption.kyc_status === KycStatus.SUCCESS ||
       redemption.kyc_status === KycStatus.SUBMITTED

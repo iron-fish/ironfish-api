@@ -1,13 +1,12 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import { KycStatus } from '@prisma/client';
 import assert from 'assert';
 import axios from 'axios';
 import crypto from 'crypto';
 import faker from 'faker';
-import request from 'supertest';
 import { v4 as uuid } from 'uuid';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { JumioApiService } from '../jumio-api/jumio-api.service';
@@ -16,7 +15,6 @@ import { PrismaService } from '../prisma/prisma.service';
 import { RedemptionService } from '../redemptions/redemption.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
-import { CALLBACK_FIXTURE } from './fixtures/callback';
 import { WORKFLOW_RETRIEVE_FIXTURE } from './fixtures/workflow';
 import { KycService } from './kyc.service';
 
@@ -64,7 +62,7 @@ describe('KycService', () => {
   });
 
   describe('refresh', () => {
-    it.only('should refresh the redemption', async () => {
+    it('should refresh the redemption', async () => {
       const user = await usersService.create({
         email: faker.internet.email(),
         graffiti: uuid(),
