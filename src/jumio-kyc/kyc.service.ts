@@ -100,7 +100,7 @@ export class KycService {
   }
 
   async handleCallback(data: JumioCallbackData): Promise<void> {
-    let transaction =
+    const transaction =
       await this.jumioTransactionService.findByWorkflowExecutionId(
         data.workflowExecution.id,
       );
@@ -130,8 +130,20 @@ export class KycService {
       return;
     }
 
-    let redemption = await this.redemptionService.findOrThrow(user);
+    const redemption = await this.redemptionService.findOrThrow(user);
 
+    await this.refresh(redemption, transaction);
+
+    await this.jumioTransactionService.update(transaction, {
+      lastCallback: data,
+      lastCallbackAt: new Date(),
+    });
+  }
+
+  async refresh(
+    redemption: Redemption,
+    transaction: JumioTransaction,
+  ): Promise<void> {
     // Don't process callbacks anymore for a user that has already passed KYC
     if (
       redemption.kyc_status === KycStatus.SUCCESS ||
@@ -143,7 +155,7 @@ export class KycService {
     assert.ok(redemption.jumio_account_id);
     const status = await this.jumioApiService.transactionStatus(
       redemption.jumio_account_id,
-      data.workflowExecution.id,
+      transaction.workflow_execution_id,
     );
 
     const kycStatus = this.redemptionService.calculateStatus(status);
@@ -155,14 +167,10 @@ export class KycService {
       });
     }
 
-    transaction = await this.jumioTransactionService.update(transaction, {
+    await this.jumioTransactionService.update(transaction, {
       decisionStatus: status.decision.type,
       lastWorkflowFetch: status,
-      lastCallback: data,
-      lastCallbackAt: new Date(),
     });
-
-    return;
   }
 
   isSignatureValid(userReference: string, user: User): boolean {

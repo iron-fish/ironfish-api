@@ -7,6 +7,7 @@ import {
   Controller,
   Get,
   HttpStatus,
+  Param,
   Post,
   Res,
   UseGuards,
@@ -14,13 +15,18 @@ import {
 } from '@nestjs/common';
 import { ApiExcludeEndpoint, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
+import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { MagicLinkGuard } from '../auth/guards/magic-link.guard';
 import { Context } from '../common/decorators/context';
 import { MagicLinkContext } from '../common/interfaces/magic-link-context';
+import { IntIsSafeForPrismaPipe } from '../common/pipes/int-is-safe-for-prisma.pipe';
+import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
+import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { JumioTransactionService } from '../jumio-transactions/jumio-transaction.service';
 import { RedemptionService } from '../redemptions/redemption.service';
 import { CreateKycDto } from './dto/create-kyc.dto';
 import { JumioCallbackData } from './interfaces/jumio-callback-data';
+import { RefreshUserRedemptionOptions } from './interfaces/refresh-user-redemption-options';
 import { SerializedKyc } from './interfaces/serialized-kyc';
 import { SerializedKycConfig } from './interfaces/serialized-kyc-config';
 import { KycService } from './kyc.service';
@@ -33,6 +39,7 @@ export class KycController {
     private readonly redemptionService: RedemptionService,
     private readonly jumioTransactionService: JumioTransactionService,
     private readonly kycService: KycService,
+    private readonly graphileWorkerService: GraphileWorkerService,
   ) {}
 
   @ApiExcludeEndpoint()
@@ -133,5 +140,27 @@ export class KycController {
 
     // Jumio requires a 200 explicitly
     res.status(HttpStatus.OK).send();
+  }
+
+  @ApiExcludeEndpoint()
+  @UseGuards(ApiKeyGuard)
+  @Post('refresh')
+  async refresh(): Promise<void> {
+    await this.graphileWorkerService.addJob(
+      GraphileWorkerPattern.REFRESH_USERS_REDEMPTION,
+    );
+  }
+
+  @ApiExcludeEndpoint()
+  @UseGuards(ApiKeyGuard)
+  @Post('refresh/:user_id')
+  async refreshUser(
+    @Param('user_id', new IntIsSafeForPrismaPipe())
+    user_id: number,
+  ): Promise<void> {
+    await this.graphileWorkerService.addJob<RefreshUserRedemptionOptions>(
+      GraphileWorkerPattern.REFRESH_USER_REDEMPTION,
+      { userId: user_id },
+    );
   }
 }

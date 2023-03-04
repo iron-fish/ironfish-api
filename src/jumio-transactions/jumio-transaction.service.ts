@@ -52,7 +52,7 @@ export class JumioTransactionService {
   async update(
     transaction: JumioTransaction,
     data: {
-      decisionStatus: DecisionStatus;
+      decisionStatus?: DecisionStatus;
       lastWorkflowFetch?: JumioTransactionRetrieveResponse;
       lastCallbackAt?: Date;
       lastCallback?: JumioCallbackData;

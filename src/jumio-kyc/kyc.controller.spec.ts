@@ -8,6 +8,9 @@ import axios from 'axios';
 import faker from 'faker';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
+import { ApiConfigService } from '../api-config/api-config.service';
+import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
+import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { JumioApiService } from '../jumio-api/jumio-api.service';
 import { JumioTransactionService } from '../jumio-transactions/jumio-transaction.service';
 import { MagicLinkService } from '../magic-link/magic-link.service';
@@ -29,6 +32,9 @@ describe('KycController', () => {
   let redemptionService: RedemptionService;
   let jumioApiService: JumioApiService;
   let jumioTransactionService: JumioTransactionService;
+  let graphileWorkerService: GraphileWorkerService;
+
+  let API_KEY: string;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
@@ -39,6 +45,10 @@ describe('KycController', () => {
     redemptionService = app.get(RedemptionService);
     jumioApiService = app.get(JumioApiService);
     jumioTransactionService = app.get(JumioTransactionService);
+    graphileWorkerService = app.get(GraphileWorkerService);
+
+    API_KEY = app.get(ApiConfigService).get<string>('IRONFISH_API_KEY');
+
     jest
       .spyOn(jumioApiService, 'createAccountAndTransaction')
       .mockImplementation(() =>
@@ -54,6 +64,7 @@ describe('KycController', () => {
           },
         }),
       );
+
     await app.init();
   });
 
@@ -269,6 +280,31 @@ describe('KycController', () => {
             pool_name: 'Phase 3 Pool',
           },
         ],
+      });
+    });
+
+    describe('POST /kyc/refresh', () => {
+      describe('with a missing api key', () => {
+        it('returns a 401 status code', async () => {
+          await request(app.getHttpServer())
+            .post('/user_points/refresh')
+            .expect(HttpStatus.UNAUTHORIZED);
+        });
+      });
+
+      it('enqueues a job to refresh users points', async () => {
+        const addJob = jest
+          .spyOn(graphileWorkerService, 'addJob')
+          .mockImplementationOnce(jest.fn());
+
+        await request(app.getHttpServer())
+          .post('/user_points/refresh')
+          .set('Authorization', `Bearer ${API_KEY}`)
+          .expect(HttpStatus.CREATED);
+
+        expect(addJob).toHaveBeenCalledWith(
+          GraphileWorkerPattern.REFRESH_USERS_POINTS,
+        );
       });
     });
   });
