@@ -15,6 +15,7 @@ import {
 } from '@nestjs/common';
 import { ApiExcludeEndpoint, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
+import { ApiConfigService } from '../api-config/api-config.service';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { MagicLinkGuard } from '../auth/guards/magic-link.guard';
 import { Context } from '../common/decorators/context';
@@ -40,6 +41,7 @@ export class KycController {
     private readonly jumioTransactionService: JumioTransactionService,
     private readonly kycService: KycService,
     private readonly graphileWorkerService: GraphileWorkerService,
+    private readonly config: ApiConfigService,
   ) {}
 
   @ApiExcludeEndpoint()
@@ -72,6 +74,7 @@ export class KycController {
       eligibleReason,
       attemptable,
       attemptableReason,
+      this.config,
     );
   }
 
@@ -117,12 +120,13 @@ export class KycController {
       eligibleReason,
       attemptable,
       attemptableReason,
+      this.config,
     );
   }
 
   @ApiExcludeEndpoint()
   @Get('config')
-  config(): SerializedKycConfig {
+  getConfig(): SerializedKycConfig {
     return {
       data: [
         {
