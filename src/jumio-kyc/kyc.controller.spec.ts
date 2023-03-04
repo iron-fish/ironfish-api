@@ -113,7 +113,7 @@ describe('KycController', () => {
 
       assert.ok(redemption);
       expect(body).toMatchObject(
-        serializeKyc(redemption, jumioTransaction, true, ''),
+        serializeKyc(redemption, jumioTransaction, true, '', true, ''),
       );
     });
 
@@ -241,7 +241,7 @@ describe('KycController', () => {
         .expect(HttpStatus.OK);
 
       expect(body).toMatchObject(
-        serializeKyc(redemption, transaction, true, ''),
+        serializeKyc(redemption, transaction, true, '', true, ''),
       );
     });
   });

@@ -10,6 +10,8 @@ export function serializeKyc(
   transaction: JumioTransaction,
   canAttempt: boolean,
   canAttemptReason: string,
+  canCreate: boolean,
+  canCreateReason: string,
 ): SerializedKyc {
   assert.ok(redemption.jumio_account_id);
 
@@ -24,5 +26,7 @@ export function serializeKyc(
     jumio_web_href: transaction.web_href,
     can_attempt: canAttempt,
     can_attempt_reason: canAttemptReason,
+    can_create: canCreate,
+    can_create_reason: canCreateReason,
   };
 }

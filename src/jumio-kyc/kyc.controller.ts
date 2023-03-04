@@ -59,9 +59,20 @@ export class KycController {
       dto.public_address,
     );
 
-    const { eligible, reason } = await this.redemptionService.isEligible(user);
+    const { eligible, reason: eligibleReason } =
+      await this.redemptionService.isEligible(user);
 
-    return serializeKyc(redemption, transaction, eligible, reason);
+    const { attemptable, reason: attemptableReason } =
+      await this.redemptionService.canAttempt(redemption, user);
+
+    return serializeKyc(
+      redemption,
+      transaction,
+      eligible,
+      eligibleReason,
+      attemptable,
+      attemptableReason,
+    );
   }
 
   @ApiExcludeEndpoint()
@@ -70,20 +81,43 @@ export class KycController {
   async status(
     @Context() { user }: MagicLinkContext,
   ): Promise<
-    SerializedKyc | { can_attempt: boolean; can_attempt_reason: string }
+    | SerializedKyc
+    | Pick<
+        SerializedKyc,
+        | 'can_attempt'
+        | 'can_attempt_reason'
+        | 'can_create'
+        | 'can_create_reason'
+      >
   > {
     const redemption = await this.redemptionService.find(user);
 
-    const { eligible, reason } = await this.redemptionService.isEligible(user);
+    const { eligible, reason: eligibleReason } =
+      await this.redemptionService.isEligible(user);
+
+    const { attemptable, reason: attemptableReason } =
+      await this.redemptionService.canAttempt(redemption, user);
 
     if (!redemption) {
-      return { can_attempt: eligible, can_attempt_reason: reason };
+      return {
+        can_attempt: eligible,
+        can_attempt_reason: eligibleReason,
+        can_create: attemptable,
+        can_create_reason: attemptableReason,
+      };
     }
 
     const jumioTransaction =
       await this.jumioTransactionService.findLatestOrThrow(user);
 
-    return serializeKyc(redemption, jumioTransaction, eligible, reason);
+    return serializeKyc(
+      redemption,
+      jumioTransaction,
+      eligible,
+      eligibleReason,
+      attemptable,
+      attemptableReason,
+    );
   }
 
   @ApiExcludeEndpoint()
