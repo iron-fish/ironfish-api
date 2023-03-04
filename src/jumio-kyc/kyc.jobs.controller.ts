@@ -28,7 +28,7 @@ export class KycJobsController {
 
   @MessagePattern(GraphileWorkerPattern.REFRESH_USERS_REDEMPTION)
   @UseFilters(new GraphileWorkerException())
-  async refreshUsersPoints(): Promise<GraphileWorkerHandlerResponse> {
+  async refreshUsersRedemption(): Promise<GraphileWorkerHandlerResponse> {
     for await (const user of this.usersGenerator()) {
       await this.kycService.refreshUser(user);
     }
@@ -38,7 +38,7 @@ export class KycJobsController {
 
   @MessagePattern(GraphileWorkerPattern.REFRESH_USER_REDEMPTION)
   @UseFilters(new GraphileWorkerException())
-  async refreshUserPoints({
+  async refreshUserRedemption({
     userId,
   }: RefreshUserRedemptionOptions): Promise<GraphileWorkerHandlerResponse> {
     const user = await this.usersService.find(userId);
