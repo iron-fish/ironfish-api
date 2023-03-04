@@ -109,7 +109,11 @@ export class KycService {
       return;
     }
 
-    const user = await this.usersService.findOrThrow(transaction.user_id);
+    const user = await this.usersService.find(transaction.user_id);
+
+    if (!user) {
+      return;
+    }
 
     if (!this.isSignatureValid(data.userReference, user)) {
       throw new ForbiddenException(
@@ -117,41 +121,55 @@ export class KycService {
       );
     }
 
-    // Check were not processing a stale callback
-    const latest = await this.jumioTransactionService.findLatest(user);
-    if (!latest || latest.id !== transaction.id) {
-      return;
-    }
+    return this.prisma.$transaction(async (prisma) => {
+      await prisma.$executeRawUnsafe(
+        'SELECT pg_advisory_xact_lock(HASHTEXT($1));',
+        `kyc_${user.id}`,
+      );
 
-    if (
-      transaction.last_callback_at &&
-      transaction.last_callback_at >= new Date(data.callbackSentAt)
-    ) {
-      return;
-    }
+      // Check were not processing a stale callback
+      const latest = await this.jumioTransactionService.findLatest(user);
+      if (!latest || latest.id !== transaction.id) {
+        return;
+      }
 
-    const redemption = await this.redemptionService.findOrThrow(user);
+      if (
+        latest.last_callback_at &&
+        latest.last_callback_at >= new Date(data.callbackSentAt)
+      ) {
+        return;
+      }
 
-    await this.refresh(redemption, transaction);
+      const redemption = await this.redemptionService.findOrThrow(user);
 
-    await this.jumioTransactionService.update(transaction, {
-      lastCallback: data,
-      lastCallbackAt: new Date(),
+      await this.refresh(redemption, latest);
+
+      await this.jumioTransactionService.update(latest, {
+        lastCallback: data,
+        lastCallbackAt: new Date(),
+      });
     });
   }
 
   async refreshUser(user: User): Promise<void> {
-    const redemption = await this.redemptionService.find(user);
-    if (!redemption) {
-      return;
-    }
+    return this.prisma.$transaction(async (prisma) => {
+      await prisma.$executeRawUnsafe(
+        'SELECT pg_advisory_xact_lock(HASHTEXT($1));',
+        `kyc_${user.id}`,
+      );
 
-    const transaction = await this.jumioTransactionService.findLatest(user);
-    if (!transaction) {
-      return;
-    }
+      const redemption = await this.redemptionService.find(user);
+      if (!redemption) {
+        return;
+      }
 
-    await this.refresh(redemption, transaction);
+      const transaction = await this.jumioTransactionService.findLatest(user);
+      if (!transaction) {
+        return;
+      }
+
+      await this.refresh(redemption, transaction);
+    });
   }
 
   async refresh(
