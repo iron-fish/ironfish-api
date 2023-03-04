@@ -140,6 +140,20 @@ export class KycService {
     });
   }
 
+  async refreshUser(user: User): Promise<void> {
+    const redemption = await this.redemptionService.find(user);
+    if (!redemption) {
+      return;
+    }
+
+    const transaction = await this.jumioTransactionService.findLatest(user);
+    if (!transaction) {
+      return;
+    }
+
+    await this.refresh(redemption, transaction);
+  }
+
   async refresh(
     redemption: Redemption,
     transaction: JumioTransaction,

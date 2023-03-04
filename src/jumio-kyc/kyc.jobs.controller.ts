@@ -30,11 +30,9 @@ export class KycJobsController {
   @UseFilters(new GraphileWorkerException())
   async refreshUsersPoints(): Promise<GraphileWorkerHandlerResponse> {
     for await (const user of this.usersGenerator()) {
-      await this.graphileWorkerService.addJob<RefreshUserRedemptionOptions>(
-        GraphileWorkerPattern.REFRESH_USER_POINTS,
-        { userId: user.id },
-      );
+      await this.kycService.refreshUser(user);
     }
+
     return { requeue: false };
   }
 
@@ -44,22 +42,11 @@ export class KycJobsController {
     userId,
   }: RefreshUserRedemptionOptions): Promise<GraphileWorkerHandlerResponse> {
     const user = await this.usersService.find(userId);
-    if (!user) {
-      this.loggerService.error(`No user found for '${userId}'`, '');
-      return { requeue: false };
+
+    if (user) {
+      await this.kycService.refreshUser(user);
     }
 
-    const redemption = await this.redemptionService.find(user);
-    if (!redemption) {
-      return { requeue: false };
-    }
-
-    const transaction = await this.jumioTransactionService.findLatest(user);
-    if (!transaction) {
-      return { requeue: false };
-    }
-
-    await this.kycService.refresh(redemption, transaction);
     return { requeue: false };
   }
 
