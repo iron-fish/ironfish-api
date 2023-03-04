@@ -163,6 +163,9 @@ describe('KycController', () => {
       jest.spyOn(axios, 'get').mockResolvedValueOnce({
         data: WORKFLOW_RETRIEVE_FIXTURE,
       });
+      jest
+        .spyOn(kycService, 'isSignatureValid')
+        .mockImplementationOnce(() => true);
 
       await request(app.getHttpServer())
         .post('/kyc/callback')
@@ -172,6 +175,44 @@ describe('KycController', () => {
 
       redemption = await redemptionService.findOrThrow(user);
       expect(redemption.kyc_status).toBe(KycStatus.SUBMITTED);
+    });
+
+    describe('with an invalid signature', () => {
+      it('returns a 403', async () => {
+        const user = await mockUser();
+
+        await request(app.getHttpServer())
+          .post(`/kyc`)
+          .set('Authorization', 'did-token')
+          .send({
+            public_address: 'foo',
+          })
+          .expect(HttpStatus.CREATED);
+
+        const redemption = await redemptionService.findOrThrow(user);
+        assert.ok(redemption.jumio_account_id);
+        expect(redemption.kyc_status).toBe(KycStatus.IN_PROGRESS);
+
+        const transaction = await jumioTransactionService.findLatestOrThrow(
+          user,
+        );
+
+        const callbackData = CALLBACK_FIXTURE(
+          redemption.jumio_account_id,
+          transaction.workflow_execution_id,
+          'PROCESSED',
+        );
+
+        jest.spyOn(axios, 'get').mockResolvedValueOnce({
+          data: WORKFLOW_RETRIEVE_FIXTURE,
+        });
+
+        await request(app.getHttpServer())
+          .post('/kyc/callback')
+          .set('Authorization', 'did-token')
+          .send(callbackData)
+          .expect(HttpStatus.FORBIDDEN);
+      });
     });
   });
 

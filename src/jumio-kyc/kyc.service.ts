@@ -4,6 +4,8 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { JumioTransaction, KycStatus, Redemption, User } from '@prisma/client';
 import assert from 'assert';
+import crypto from 'crypto';
+import { ApiConfigService } from '../api-config/api-config.service';
 import { JumioApiService } from '../jumio-api/jumio-api.service';
 import { JumioTransactionService } from '../jumio-transactions/jumio-transaction.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -23,13 +25,15 @@ export type KycDetails = {
   jumio_web_href: string;
   status: KycStatus;
 };
+
 @Injectable()
 export class KycService {
   constructor(
+    private readonly config: ApiConfigService,
+    private readonly jumioApiService: JumioApiService,
+    private readonly jumioTransactionService: JumioTransactionService,
     private readonly prisma: PrismaService,
     private readonly redemptionService: RedemptionService,
-    private readonly jumioTransactionService: JumioTransactionService,
-    private readonly jumioApiService: JumioApiService,
     private readonly usersService: UsersService,
   ) {}
 
@@ -107,6 +111,12 @@ export class KycService {
 
     const user = await this.usersService.findOrThrow(transaction.user_id);
 
+    if (!this.isSignatureValid(data.userReference, user)) {
+      throw new ForbiddenException(
+        `Invalid signature from Jumio callback for user '${user.id}'`,
+      );
+    }
+
     // Check were not processing a stale callback
     const latest = await this.jumioTransactionService.findLatest(user);
     if (!latest || latest.id !== transaction.id) {
@@ -153,5 +163,23 @@ export class KycService {
     });
 
     return;
+  }
+
+  isSignatureValid(userReference: string, user: User): boolean {
+    const [t, v1] = userReference.split(',');
+    const { 1: timestamp } = t.split('=');
+    const { 1: signature } = v1.split('=');
+
+    const payload = `${timestamp}.${user.id}`;
+    const expectedSignature = crypto
+      .createHmac(
+        'sha256',
+        this.config.get<string>('JUMIO_API_CALLBACK_SECRET'),
+      )
+      .update(payload)
+      .digest()
+      .toString('hex');
+
+    return signature === expectedSignature;
   }
 }
