@@ -483,9 +483,7 @@ export class EventsService {
     });
   }
 
-  async getRanksForEventTypes(
-    user: User,
-  ): Promise<Record<EventType, number>> {
+  async getRanksForEventTypes(user: User): Promise<Record<EventType, number>> {
     const userRanks = await this.prisma.$queryRawUnsafe<
       {
         type: EventType;
