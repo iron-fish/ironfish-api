@@ -204,10 +204,24 @@ export class RedemptionService {
 
   async isEligible(
     user: User,
+    redemption?: Redemption | null,
     prisma?: BasePrismaClient,
   ): Promise<{ eligible: boolean; reason: string }> {
     if (!user.enable_kyc) {
       return { eligible: false, reason: 'KYC not enabled on user' };
+    }
+
+    if (redemption) {
+      const kycMaxAttempts =
+        redemption.kyc_max_attempts ??
+        this.config.get<number>('KYC_MAX_ATTEMPTS');
+
+      if (redemption.kyc_attempts >= kycMaxAttempts) {
+        return {
+          eligible: false,
+          reason: `Max attempts reached ${redemption.kyc_attempts} / ${kycMaxAttempts}`,
+        };
+      }
     }
 
     const points = await this.userPointsService.findOrThrow(user.id, prisma);
@@ -244,24 +258,17 @@ export class RedemptionService {
     user: User,
     prisma?: BasePrismaClient,
   ): Promise<{ attemptable: boolean; reason: string }> {
-    const { eligible, reason } = await this.isEligible(user, prisma);
+    const { eligible, reason } = await this.isEligible(
+      user,
+      redemption,
+      prisma,
+    );
 
     if (!eligible) {
       return { attemptable: false, reason };
     }
 
     if (redemption) {
-      const kycMaxAttempts =
-        redemption.kyc_max_attempts ??
-        this.config.get<number>('KYC_MAX_ATTEMPTS');
-
-      if (redemption.kyc_attempts >= kycMaxAttempts) {
-        return {
-          attemptable: false,
-          reason: `Max attempts reached ${redemption.kyc_attempts} / ${kycMaxAttempts}`,
-        };
-      }
-
       if (redemption.kyc_status !== KycStatus.TRY_AGAIN) {
         return {
           attemptable: false,
