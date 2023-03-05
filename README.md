@@ -40,3 +40,4 @@ You can copy `.env.template` to your own `.env` file
 
 * Run `yarn db:client:generate` to generate the Prisma client
 * Run `yarn db:migrate` to create a migration
+
