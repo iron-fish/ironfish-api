@@ -119,10 +119,16 @@ export class UserPointsJobsController {
     const url = `${this.config.get<string>(
       'IRONFISH_PHASE_ONE_API_URL',
     )}/users/${user.id}/metrics?granularity=lifetime`;
-    return axios
-      .get<PhaseOneSerializedUserMetrics>(url)
-      .then((response) => response.data)
-      .catch(() => undefined);
+
+    try {
+      const { data } = await axios.get<PhaseOneSerializedUserMetrics>(url);
+      return data;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        return undefined;
+      }
+      throw error;
+    }
   }
 
   async getPhaseTwoPoints(
@@ -131,10 +137,16 @@ export class UserPointsJobsController {
     const url = `${this.config.get<string>(
       'IRONFISH_PHASE_TWO_API_URL',
     )}/users/${user.id}/metrics?granularity=lifetime`;
-    return axios
-      .get<PhaseTwoSerializedUserMetrics>(url)
-      .then((response) => response.data)
-      .catch(() => undefined);
+
+    try {
+      const { data } = await axios.get<PhaseTwoSerializedUserMetrics>(url);
+      return data;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        return undefined;
+      }
+      throw error;
+    }
   }
 
   @MessagePattern(GraphileWorkerPattern.REFRESH_POOL_4_POINTS)

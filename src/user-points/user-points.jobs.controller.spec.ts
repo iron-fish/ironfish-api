@@ -289,126 +289,148 @@ describe('UserPointsJobsController', () => {
     });
 
     describe('if previous pool points are null', () => {
-      it('fetches data from phase one and phase two', async () => {
-        const phaseOneMetrics = {
-          blocks_mined: { count: 5, points: 500, rank: 4843 },
-          bugs_caught: { count: 0, points: 0, rank: 71 },
-          community_contributions: { count: 0, points: 0, rank: 697 },
-          pull_requests_merged: { count: 0, points: 0, rank: 39 },
-          social_media_contributions: { count: 0, points: 0, rank: 298 },
-        };
-        jest
-          .spyOn(userPointsJobsController, 'getPhaseOnePoints')
-          .mockImplementationOnce(() => {
-            return Promise.resolve<PhaseOneSerializedUserMetrics>({
-              user_id: user.id,
-              granularity: MetricsGranularity.LIFETIME,
-              points: 500,
-              metrics: phaseOneMetrics,
+      describe('when the previous APIs send valid responses', () => {
+        it('fetches data from phase one and phase two', async () => {
+          const phaseOneMetrics = {
+            blocks_mined: { count: 5, points: 500, rank: 4843 },
+            bugs_caught: { count: 0, points: 0, rank: 71 },
+            community_contributions: { count: 0, points: 0, rank: 697 },
+            pull_requests_merged: { count: 0, points: 0, rank: 39 },
+            social_media_contributions: { count: 0, points: 0, rank: 298 },
+          };
+          jest
+            .spyOn(userPointsJobsController, 'getPhaseOnePoints')
+            .mockImplementationOnce(() => {
+              return Promise.resolve<PhaseOneSerializedUserMetrics>({
+                user_id: user.id,
+                granularity: MetricsGranularity.LIFETIME,
+                points: 500,
+                metrics: phaseOneMetrics,
+              });
             });
-          });
 
-        const phaseTwoMetrics = {
-          bugs_caught: { count: 0, points: 0 },
-          pull_requests_merged: { count: 0, points: 0 },
-          node_uptime: { count: 11, points: 110 },
-          send_transaction: { count: 1, points: 1 },
-        };
-        jest
-          .spyOn(userPointsJobsController, 'getPhaseTwoPoints')
-          .mockImplementationOnce(() => {
-            return Promise.resolve<PhaseTwoSerializedUserMetrics>({
-              user_id: user.id,
-              granularity: MetricsGranularity.LIFETIME,
-              points: 111,
-              metrics: phaseTwoMetrics,
+          const phaseTwoMetrics = {
+            bugs_caught: { count: 0, points: 0 },
+            pull_requests_merged: { count: 0, points: 0 },
+            node_uptime: { count: 11, points: 110 },
+            send_transaction: { count: 1, points: 1 },
+          };
+          jest
+            .spyOn(userPointsJobsController, 'getPhaseTwoPoints')
+            .mockImplementationOnce(() => {
+              return Promise.resolve<PhaseTwoSerializedUserMetrics>({
+                user_id: user.id,
+                granularity: MetricsGranularity.LIFETIME,
+                points: 111,
+                metrics: phaseTwoMetrics,
+              });
             });
-          });
 
-        const user = await usersService.create({
-          email: faker.internet.email(),
-          graffiti: uuid(),
-          countryCode: faker.address.countryCode('alpha-3'),
+          const user = await usersService.create({
+            email: faker.internet.email(),
+            graffiti: uuid(),
+            countryCode: faker.address.countryCode('alpha-3'),
+          });
+          const options = {
+            userId: user.id,
+            totalPoints: 100,
+            points: {
+              BLOCK_MINED: {
+                points: 50,
+                count: 1,
+                latestOccurredAt: new Date(),
+              },
+              BUG_CAUGHT: {
+                points: 50,
+                count: 1,
+                latestOccurredAt: new Date(),
+              },
+              COMMUNITY_CONTRIBUTION: {
+                points: 0,
+                count: 0,
+                latestOccurredAt: new Date(),
+              },
+              PULL_REQUEST_MERGED: {
+                points: 250,
+                count: 0,
+                latestOccurredAt: new Date(),
+              },
+              SOCIAL_MEDIA_PROMOTION: {
+                points: 0,
+                count: 0,
+                latestOccurredAt: new Date(),
+              },
+              NODE_UPTIME: {
+                points: 0,
+                count: 0,
+                latestOccurredAt: new Date(),
+              },
+              SEND_TRANSACTION: {
+                points: 0,
+                count: 0,
+                latestOccurredAt: new Date(),
+              },
+              MULTI_ASSET_MINT: {
+                points: 0,
+                count: 0,
+                latestOccurredAt: new Date(),
+              },
+              MULTI_ASSET_BURN: {
+                points: 0,
+                count: 0,
+                latestOccurredAt: new Date(),
+              },
+              MULTI_ASSET_TRANSFER: {
+                points: 0,
+                count: 0,
+                latestOccurredAt: new Date(),
+              },
+              POOL4: {
+                points: 0,
+                count: 0,
+                latestOccurredAt: new Date(),
+              },
+            },
+          };
+          jest
+            .spyOn(eventsService, 'getUpsertPointsOptions')
+            .mockImplementationOnce(() => Promise.resolve(options));
+
+          await userPointsJobsController.refreshUserPoints({ userId: user.id });
+
+          const userPoints = await userPointsService.findOrThrow(user.id);
+          expect(userPoints).toMatchObject({
+            pool1_points:
+              phaseOneMetrics.blocks_mined.points +
+              phaseOneMetrics.community_contributions.points +
+              phaseOneMetrics.social_media_contributions.points +
+              phaseOneMetrics.bugs_caught.points,
+            pool2_points:
+              phaseTwoMetrics.bugs_caught.points +
+              phaseTwoMetrics.node_uptime.points +
+              phaseTwoMetrics.send_transaction.points,
+            pool3_points: options.points.PULL_REQUEST_MERGED.points,
+          });
         });
-        const options = {
-          userId: user.id,
-          totalPoints: 100,
-          points: {
-            BLOCK_MINED: {
-              points: 50,
-              count: 1,
-              latestOccurredAt: new Date(),
-            },
-            BUG_CAUGHT: {
-              points: 50,
-              count: 1,
-              latestOccurredAt: new Date(),
-            },
-            COMMUNITY_CONTRIBUTION: {
-              points: 0,
-              count: 0,
-              latestOccurredAt: new Date(),
-            },
-            PULL_REQUEST_MERGED: {
-              points: 250,
-              count: 0,
-              latestOccurredAt: new Date(),
-            },
-            SOCIAL_MEDIA_PROMOTION: {
-              points: 0,
-              count: 0,
-              latestOccurredAt: new Date(),
-            },
-            NODE_UPTIME: {
-              points: 0,
-              count: 0,
-              latestOccurredAt: new Date(),
-            },
-            SEND_TRANSACTION: {
-              points: 0,
-              count: 0,
-              latestOccurredAt: new Date(),
-            },
-            MULTI_ASSET_MINT: {
-              points: 0,
-              count: 0,
-              latestOccurredAt: new Date(),
-            },
-            MULTI_ASSET_BURN: {
-              points: 0,
-              count: 0,
-              latestOccurredAt: new Date(),
-            },
-            MULTI_ASSET_TRANSFER: {
-              points: 0,
-              count: 0,
-              latestOccurredAt: new Date(),
-            },
-            POOL4: {
-              points: 0,
-              count: 0,
-              latestOccurredAt: new Date(),
-            },
-          },
-        };
-        jest
-          .spyOn(eventsService, 'getUpsertPointsOptions')
-          .mockImplementationOnce(() => Promise.resolve(options));
+      });
 
-        await userPointsJobsController.refreshUserPoints({ userId: user.id });
+      describe('when the API returns an exception', () => {
+        it('retries the job', async () => {
+          const user = await usersService.create({
+            email: faker.internet.email(),
+            graffiti: uuid(),
+            countryCode: faker.address.countryCode('alpha-3'),
+          });
 
-        const userPoints = await userPointsService.findOrThrow(user.id);
-        expect(userPoints).toMatchObject({
-          pool1_points:
-            phaseOneMetrics.blocks_mined.points +
-            phaseOneMetrics.community_contributions.points +
-            phaseOneMetrics.social_media_contributions.points +
-            phaseOneMetrics.bugs_caught.points,
-          pool2_points:
-            phaseTwoMetrics.bugs_caught.points +
-            phaseTwoMetrics.node_uptime.points +
-            phaseTwoMetrics.send_transaction.points,
-          pool3_points: options.points.PULL_REQUEST_MERGED.points,
+          jest
+            .spyOn(userPointsJobsController, 'getPhaseOnePoints')
+            .mockImplementationOnce(() => {
+              throw new Error();
+            });
+
+          await expect(
+            userPointsJobsController.refreshUserPoints({ userId: user.id }),
+          ).rejects.toBeDefined();
         });
       });
     });
