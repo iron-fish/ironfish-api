@@ -62,7 +62,7 @@ export class KycController {
     );
 
     const { eligible, reason: eligibleReason } =
-      await this.redemptionService.isEligible(user);
+      await this.redemptionService.isEligible(user, redemption);
 
     const { attemptable, reason: attemptableReason } =
       await this.redemptionService.canAttempt(redemption, user);
@@ -96,7 +96,7 @@ export class KycController {
     const redemption = await this.redemptionService.find(user);
 
     const { eligible, reason: eligibleReason } =
-      await this.redemptionService.isEligible(user);
+      await this.redemptionService.isEligible(user, redemption);
 
     const { attemptable, reason: attemptableReason } =
       await this.redemptionService.canAttempt(redemption, user);
