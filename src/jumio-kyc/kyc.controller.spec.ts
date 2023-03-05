@@ -273,30 +273,30 @@ describe('KycController', () => {
       expect(body).toMatchObject({
         data: [
           {
-            airdrop_completed_by: '2023-03-13T00:00:00.000Z',
+            airdrop_completed_by: '2023-03-16T00:00:00.000Z',
             coins: 105000,
-            kyc_completed_by: '2023-03-16T00:00:00.000Z',
+            kyc_completed_by: '2023-03-13T00:00:00.000Z',
             name: 'Pull Requests',
             pool_name: 'Code Contributions Pool',
           },
           {
-            airdrop_completed_by: '2023-03-19T00:00:00.000Z',
+            airdrop_completed_by: '2023-03-23T00:00:00.000Z',
             coins: 420000,
-            kyc_completed_by: '2023-03-23T00:00:00.000Z',
+            kyc_completed_by: '2023-03-19T00:00:00.000Z',
             name: 'Phase 1',
             pool_name: 'Phase 1 Pool',
           },
           {
-            airdrop_completed_by: '2023-03-26T00:00:00.000Z',
+            airdrop_completed_by: '2023-03-30T00:00:00.000Z',
             coins: 210000,
-            kyc_completed_by: '2023-03-30T00:00:00.000Z',
+            kyc_completed_by: '2023-03-26T00:00:00.000Z',
             name: 'Phase 2',
             pool_name: 'Phase 2 Pool',
           },
           {
-            airdrop_completed_by: '2023-03-26T00:00:00.000Z',
+            airdrop_completed_by: '2023-04-06T00:00:00.000Z',
             coins: 210000,
-            kyc_completed_by: '2023-04-06T00:00:00.000Z',
+            kyc_completed_by: '2023-03-26T00:00:00.000Z',
             name: 'Phase 3',
             pool_name: 'Phase 3 Pool',
           },
