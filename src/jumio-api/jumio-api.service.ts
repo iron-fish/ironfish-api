@@ -38,6 +38,15 @@ export class JumioApiService {
         throw error;
       });
 
+    // Sanitize extracted values
+    for (const extraction of response.data.capabilities.extraction) {
+      const sanitized = {
+        issuingCountry: extraction.data.issuingCountry,
+      };
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
+      extraction.data = sanitized as any;
+    }
+
     return response.data;
   }
 
