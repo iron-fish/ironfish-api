@@ -116,7 +116,7 @@ export interface JumioTransactionRetrieveResponse {
     details: {
       label: string;
     };
-    risk: {
+    risk?: {
       score: number;
     };
   };
@@ -199,7 +199,7 @@ export interface JumioTransactionRetrieveResponse {
       ];
       data: {
         type: string;
-        subType: string;
+        subType?: string;
         issuingCountry: string; // http://en.wikipedia.org/wiki/ISO_3166-1_alpha-3
         firstName: string;
         lastName: string;

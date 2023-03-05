@@ -39,26 +39,26 @@ export class RedemptionService {
     idDetails: IdDetails[];
   } {
     // deal with banned countries
-    const idDetails: IdDetails[] =
-      transactionStatus.capabilities.extraction.map((extraction) => {
-        return {
-          id_issuing_country: extraction.data.issuingCountry,
-          id_subtype: extraction.data.subType,
-          id_type: extraction.data.type,
-        };
-      });
-    const banned = idDetails
-      .map((detail) => detail.id_issuing_country)
-      .map(this.hasBannedCountry)
-      .filter((i) => i);
+    const ids = transactionStatus.capabilities.extraction.map<IdDetails>(
+      (extraction) => ({
+        id_issuing_country: extraction.data.issuingCountry,
+        id_subtype: extraction.data.subType,
+        id_type: extraction.data.type,
+      }),
+    );
 
-    if (banned.length) {
+    const banned = ids.find((id) =>
+      this.hasBannedCountry(id.id_issuing_country),
+    );
+
+    if (banned) {
       return {
         status: KycStatus.FAILED,
         failureMessage: 'Failure: Banned Country',
-        idDetails,
+        idDetails: ids,
       };
     }
+
     if (
       transactionStatus.workflow.status === 'SESSION_EXPIRED' ||
       transactionStatus.workflow.status === 'TOKEN_EXPIRED' ||
@@ -67,35 +67,38 @@ export class RedemptionService {
       return {
         status: KycStatus.TRY_AGAIN,
         failureMessage: null,
-        idDetails,
+        idDetails: ids,
       };
     }
+
     if (transactionStatus.decision.type === DecisionStatus.PASSED) {
       return {
         status: KycStatus.SUBMITTED,
         failureMessage: null,
-        idDetails,
+        idDetails: ids,
       };
     }
+
     // TODO: HANDLE WARN, use decision.risk.score?
-    const failure =
+    const error =
       this.livenessStatus(transactionStatus) ||
       this.similarityStatus(transactionStatus) ||
       this.dataChecksStatus(transactionStatus) ||
       this.extractionStatus(transactionStatus) ||
       this.usabilityStatus(transactionStatus);
-    if (failure) {
+
+    if (error) {
       return {
         status: KycStatus.FAILED,
-        failureMessage: failure,
-        idDetails,
+        failureMessage: error,
+        idDetails: ids,
       };
     }
 
     return {
       status: KycStatus.TRY_AGAIN,
       failureMessage: null,
-      idDetails,
+      idDetails: ids,
     };
   }
 
@@ -104,12 +107,10 @@ export class RedemptionService {
   }
 
   livenessStatus(response: JumioTransactionRetrieveResponse): string | null {
+    const errors = ['PHOTOCOPY', 'DIGITAL_COPY', 'MANIPULATED', 'BLACK_WHITE'];
+
     for (const check of response.capabilities.liveness) {
-      if (
-        ['PHOTOCOPY', 'DIGITAL_COPY', 'MANIPULATED', 'BLACK_WHITE'].includes(
-          check.decision.details.label,
-        )
-      ) {
+      if (errors.includes(check.decision.details.label)) {
         return `Liveness check failed: ${check.decision.details.label}`;
       }
     }
