@@ -61,6 +61,11 @@ export class JumioApiService {
       callbackUrl: this.getCallbackUrl(),
       workflowDefinition: {
         key: this.config.get<number>('JUMIO_WORKFLOW_DEFINITION'),
+        capabilities: {
+          watchlistScreening: {
+            additionalProperties: '',
+          },
+        },
       },
     };
 

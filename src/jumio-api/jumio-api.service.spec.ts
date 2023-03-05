@@ -42,9 +42,14 @@ describe('JumioApiService', () => {
             callbackUrl: expect.any(String),
             customerInternalReference: expect.any(Number),
             userReference: expect.any(String),
-            workflowDefinition: {
+            workflowDefinition: expect.objectContaining({
               key: expect.any(Number),
-            },
+              capabilities: {
+                watchlistScreening: expect.objectContaining({
+                  additionalProperties: '',
+                }),
+              },
+            }),
           }),
           {
             headers: expect.objectContaining({
@@ -70,6 +75,11 @@ describe('JumioApiService', () => {
             userReference: expect.any(String),
             workflowDefinition: {
               key: expect.any(Number),
+              capabilities: {
+                watchlistScreening: expect.objectContaining({
+                  additionalProperties: '',
+                }),
+              },
             },
           }),
           {
