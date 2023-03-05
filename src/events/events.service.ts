@@ -131,38 +131,32 @@ export class EventsService {
   async getLifetimeEventMetricsForUser(
     user: User,
   ): Promise<Record<EventType, SerializedEventMetrics>> {
-    const prisma = this.prisma;
-    const ranks = await this.getRanksForEventTypes(user, prisma);
+    const ranks = await this.getRanksForEventTypes(user);
     return {
       BLOCK_MINED: await this.getLifetimeEventTypeMetricsForUser(
         user,
         EventType.BLOCK_MINED,
         ranks,
-        prisma,
       ),
       BUG_CAUGHT: await this.getLifetimeEventTypeMetricsForUser(
         user,
         EventType.BUG_CAUGHT,
         ranks,
-        prisma,
       ),
       COMMUNITY_CONTRIBUTION: await this.getLifetimeEventTypeMetricsForUser(
         user,
         EventType.COMMUNITY_CONTRIBUTION,
         ranks,
-        prisma,
       ),
       PULL_REQUEST_MERGED: await this.getLifetimeEventTypeMetricsForUser(
         user,
         EventType.PULL_REQUEST_MERGED,
         ranks,
-        prisma,
       ),
       SOCIAL_MEDIA_PROMOTION: await this.getLifetimeEventTypeMetricsForUser(
         user,
         EventType.SOCIAL_MEDIA_PROMOTION,
         ranks,
-        prisma,
       ),
     };
   }
@@ -171,9 +165,8 @@ export class EventsService {
     { id }: User,
     type: EventType,
     ranks: Record<EventType, number>,
-    client: BasePrismaClient,
   ): Promise<SerializedEventMetrics> {
-    const aggregate = await client.event.aggregate({
+    const aggregate = await this.prisma.event.aggregate({
       _sum: {
         points: true,
       },
@@ -184,7 +177,7 @@ export class EventsService {
       },
     });
     return {
-      count: await client.event.count({
+      count: await this.prisma.event.count({
         where: {
           type,
           user_id: id,
@@ -492,8 +485,9 @@ export class EventsService {
 
   async getRanksForEventTypes(
     user: User,
-    client: BasePrismaClient,
+    prisma?: BasePrismaClient,
   ): Promise<Record<EventType, number>> {
+    const client = prisma ?? this.prisma;
     const userRanks = await client.$queryRawUnsafe<
       {
         type: EventType;
