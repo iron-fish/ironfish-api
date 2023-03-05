@@ -86,6 +86,7 @@ export type ImageChecksLabel =
   | 'OK'
   | 'PRECONDITION_NOT_FULFILLED'
   | 'TECHNICAL_ERROR';
+
 export interface JumioTransactionRetrieveResponse {
   account: {
     id: string;
@@ -199,7 +200,7 @@ export interface JumioTransactionRetrieveResponse {
       data: {
         type: string;
         subType: string;
-        issuingCountry: string;
+        issuingCountry: string; // http://en.wikipedia.org/wiki/ISO_3166-1_alpha-3
         firstName: string;
         lastName: string;
         dateOfBirth: string;
