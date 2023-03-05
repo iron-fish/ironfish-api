@@ -131,41 +131,40 @@ export class EventsService {
   async getLifetimeEventMetricsForUser(
     user: User,
   ): Promise<Record<EventType, SerializedEventMetrics>> {
-    return this.prisma.$transaction(async (prisma) => {
-      const ranks = await this.getRanksForEventTypes(user, prisma);
-      return {
-        BLOCK_MINED: await this.getLifetimeEventTypeMetricsForUser(
-          user,
-          EventType.BLOCK_MINED,
-          ranks,
-          prisma,
-        ),
-        BUG_CAUGHT: await this.getLifetimeEventTypeMetricsForUser(
-          user,
-          EventType.BUG_CAUGHT,
-          ranks,
-          prisma,
-        ),
-        COMMUNITY_CONTRIBUTION: await this.getLifetimeEventTypeMetricsForUser(
-          user,
-          EventType.COMMUNITY_CONTRIBUTION,
-          ranks,
-          prisma,
-        ),
-        PULL_REQUEST_MERGED: await this.getLifetimeEventTypeMetricsForUser(
-          user,
-          EventType.PULL_REQUEST_MERGED,
-          ranks,
-          prisma,
-        ),
-        SOCIAL_MEDIA_PROMOTION: await this.getLifetimeEventTypeMetricsForUser(
-          user,
-          EventType.SOCIAL_MEDIA_PROMOTION,
-          ranks,
-          prisma,
-        ),
-      };
-    });
+    const prisma = this.prisma;
+    const ranks = await this.getRanksForEventTypes(user, prisma);
+    return {
+      BLOCK_MINED: await this.getLifetimeEventTypeMetricsForUser(
+        user,
+        EventType.BLOCK_MINED,
+        ranks,
+        prisma,
+      ),
+      BUG_CAUGHT: await this.getLifetimeEventTypeMetricsForUser(
+        user,
+        EventType.BUG_CAUGHT,
+        ranks,
+        prisma,
+      ),
+      COMMUNITY_CONTRIBUTION: await this.getLifetimeEventTypeMetricsForUser(
+        user,
+        EventType.COMMUNITY_CONTRIBUTION,
+        ranks,
+        prisma,
+      ),
+      PULL_REQUEST_MERGED: await this.getLifetimeEventTypeMetricsForUser(
+        user,
+        EventType.PULL_REQUEST_MERGED,
+        ranks,
+        prisma,
+      ),
+      SOCIAL_MEDIA_PROMOTION: await this.getLifetimeEventTypeMetricsForUser(
+        user,
+        EventType.SOCIAL_MEDIA_PROMOTION,
+        ranks,
+        prisma,
+      ),
+    };
   }
 
   private async getLifetimeEventTypeMetricsForUser(
