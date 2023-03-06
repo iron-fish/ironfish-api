@@ -255,9 +255,9 @@ export class RedemptionService {
     return { eligible: true, reason: '' };
   }
 
-  currentDate = (): Date => {
+  currentDate(): Date {
     return new Date();
-  };
+  }
 
   async userDeadline(userId: number): Promise<Date> {
     const userPoints = await this.userPointsService.findOrThrow(userId);
