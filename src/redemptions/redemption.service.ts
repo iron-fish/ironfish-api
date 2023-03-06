@@ -93,7 +93,7 @@ export class RedemptionService {
     }
 
     return {
-      status: KycStatus.TRY_AGAIN,
+      status: KycStatus.SUBMITTED,
       failureMessage: null,
       idDetails,
     };
