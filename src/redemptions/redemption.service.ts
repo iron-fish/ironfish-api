@@ -211,6 +211,10 @@ export class RedemptionService {
       return { eligible: false, reason: 'KYC not enabled on user' };
     }
 
+    if (user.ineligible_reason) {
+      return { eligible: false, reason: user.ineligible_reason };
+    }
+
     if (redemption) {
       const kycMaxAttempts =
         redemption.kyc_max_attempts ??
