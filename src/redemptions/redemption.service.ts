@@ -5,6 +5,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { DecisionStatus, KycStatus, Redemption, User } from '@prisma/client';
 import { instanceToPlain } from 'class-transformer';
 import { ApiConfigService } from '../api-config/api-config.service';
+import { AIRDROP_CONFIG } from '../common/constants';
 import { JumioTransactionRetrieveResponse } from '../jumio-api/interfaces/jumio-transaction-retrieve';
 import { IdDetails } from '../jumio-kyc/kyc.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -228,6 +229,14 @@ export class RedemptionService {
       }
     }
 
+    const userDeadline = await this.userDeadline(user.id);
+    if (this.currentDate() > userDeadline) {
+      return {
+        eligible: false,
+        reason: `User has passed their deadline for kyc: ${userDeadline.toISOString()}`,
+      };
+    }
+
     const points = await this.userPointsService.findOrThrow(user.id, prisma);
 
     const hasPoints =
@@ -248,6 +257,35 @@ export class RedemptionService {
     }
 
     return { eligible: true, reason: '' };
+  }
+
+  currentDate(): Date {
+    return new Date();
+  }
+
+  async userDeadline(userId: number): Promise<Date> {
+    const userPoints = await this.userPointsService.findOrThrow(userId);
+    const eligiblePools = [];
+    const pool1 = AIRDROP_CONFIG.data.find((c) => c.name === 'pool_one');
+    if (pool1 && userPoints.pool1_points !== 0) {
+      eligiblePools.push(pool1);
+    }
+    const pool2 = AIRDROP_CONFIG.data.find((c) => c.name === 'pool_two');
+    if (pool2 && userPoints.pool2_points !== 0) {
+      eligiblePools.push(pool2);
+    }
+    const pool3 = AIRDROP_CONFIG.data.find((c) => c.name === 'pool_three');
+    if (pool3 && userPoints.pool3_points !== 0) {
+      eligiblePools.push(pool3);
+    }
+    const pool4 = AIRDROP_CONFIG.data.find((c) => c.name === 'pool_four');
+    if (pool4 && userPoints.pool4_points !== 0) {
+      eligiblePools.push(pool4);
+    }
+    const maxTs = eligiblePools.length
+      ? Math.max(...eligiblePools.map((e) => e.kyc_completed_by.getTime()))
+      : 0;
+    return new Date(maxTs);
   }
 
   hasBannedCountry = (country_code: string): boolean =>
