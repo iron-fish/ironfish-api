@@ -59,3 +59,36 @@ export const POOL_4_CATEGORIES: Array<EventType> = [
 
 // 2023 Feb 26 12 AM UTC
 export const PHASE_3_END = new Date(Date.UTC(2023, 1, 26, 0, 0, 0));
+
+export const AIRDROP_CONFIG = {
+  data: [
+    {
+      airdrop_completed_by: new Date(Date.UTC(2023, 2, 16, 0, 0, 0)),
+      coins: 105000,
+      kyc_completed_by: new Date(Date.UTC(2023, 2, 13, 0, 0, 0)),
+      name: 'pool_three',
+      pool_name: 'Code Contributions Pool',
+    },
+    {
+      airdrop_completed_by: new Date(Date.UTC(2023, 2, 23, 0, 0, 0)),
+      coins: 420000,
+      kyc_completed_by: new Date(Date.UTC(2023, 2, 19, 0, 0, 0)),
+      name: 'pool_one',
+      pool_name: 'Phase 1 Pool',
+    },
+    {
+      airdrop_completed_by: new Date(Date.UTC(2023, 2, 30, 0, 0, 0)),
+      coins: 210000,
+      kyc_completed_by: new Date(Date.UTC(2023, 2, 26, 0, 0, 0)),
+      name: 'pool_two',
+      pool_name: 'Phase 2 Pool',
+    },
+    {
+      airdrop_completed_by: new Date(Date.UTC(2023, 3, 6, 0, 0, 0)),
+      coins: 210000,
+      kyc_completed_by: new Date(Date.UTC(2023, 2, 26, 0, 0, 0)),
+      name: 'pool_four',
+      pool_name: 'Phase 3 Pool',
+    },
+  ],
+};

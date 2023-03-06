@@ -18,6 +18,7 @@ import { Response } from 'express';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { MagicLinkGuard } from '../auth/guards/magic-link.guard';
+import { AIRDROP_CONFIG } from '../common/constants';
 import { Context } from '../common/decorators/context';
 import { MagicLinkContext } from '../common/interfaces/magic-link-context';
 import { IntIsSafeForPrismaPipe } from '../common/pipes/int-is-safe-for-prisma.pipe';
@@ -127,38 +128,7 @@ export class KycController {
   @ApiExcludeEndpoint()
   @Get('config')
   getConfig(): SerializedKycConfig {
-    return {
-      data: [
-        {
-          airdrop_completed_by: new Date(Date.UTC(2023, 2, 16, 0, 0, 0)),
-          coins: 105000,
-          kyc_completed_by: new Date(Date.UTC(2023, 2, 13, 0, 0, 0)),
-          name: 'pool_three',
-          pool_name: 'Code Contributions Pool',
-        },
-        {
-          airdrop_completed_by: new Date(Date.UTC(2023, 2, 23, 0, 0, 0)),
-          coins: 420000,
-          kyc_completed_by: new Date(Date.UTC(2023, 2, 19, 0, 0, 0)),
-          name: 'pool_one',
-          pool_name: 'Phase 1 Pool',
-        },
-        {
-          airdrop_completed_by: new Date(Date.UTC(2023, 2, 30, 0, 0, 0)),
-          coins: 210000,
-          kyc_completed_by: new Date(Date.UTC(2023, 2, 26, 0, 0, 0)),
-          name: 'pool_two',
-          pool_name: 'Phase 2 Pool',
-        },
-        {
-          airdrop_completed_by: new Date(Date.UTC(2023, 3, 6, 0, 0, 0)),
-          coins: 210000,
-          kyc_completed_by: new Date(Date.UTC(2023, 2, 26, 0, 0, 0)),
-          name: 'pool_four',
-          pool_name: 'Phase 3 Pool',
-        },
-      ],
-    };
+    return AIRDROP_CONFIG;
   }
   /**
    * For more information about the jumio callback, see this
