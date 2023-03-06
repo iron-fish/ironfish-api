@@ -121,7 +121,7 @@ describe('KycController', () => {
           true,
           '',
           false,
-          expect.any(String),
+          'Redemption status is not TRY_AGAIN: IN_PROGRESS',
           config,
         ),
       );
@@ -257,7 +257,7 @@ describe('KycController', () => {
           true,
           '',
           false,
-          expect.any(String),
+          'Redemption status is not TRY_AGAIN: IN_PROGRESS',
           config,
         ),
       );

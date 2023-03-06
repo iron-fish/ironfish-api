@@ -262,11 +262,11 @@ export class BlocksService {
       {
         average_block_time_ms: number;
         average_difficulty_millis: Decimal;
-        blocks_count: BigInt;
-        blocks_with_graffiti_count: BigInt;
+        blocks_count: bigint;
+        blocks_with_graffiti_count: bigint;
         chain_sequence: number;
-        transactions_count: BigInt;
-        unique_graffiti_count: BigInt;
+        transactions_count: bigint;
+        unique_graffiti_count: bigint;
       }[]
     >(
       `
@@ -297,7 +297,7 @@ export class BlocksService {
     }
 
     const cumulativeMetricsResponse = await this.prisma.$queryRawUnsafe<
-      { cumulative_unique_graffiti: BigInt }[]
+      { cumulative_unique_graffiti: bigint }[]
     >(
       `
       SELECT
@@ -364,7 +364,7 @@ export class BlocksService {
     // in count despite it being included in the documentation.
     // See more: https://github.com/prisma/prisma/issues/4228
     const uniqueGraffiti = (
-      await this.prisma.$queryRawUnsafe<{ count: BigInt }[]>(
+      await this.prisma.$queryRawUnsafe<{ count: bigint }[]>(
         'SELECT COUNT(*) FROM (SELECT DISTINCT graffiti FROM blocks WHERE main = true AND network_version = $1) AS main_blocks;',
         networkVersion,
       )

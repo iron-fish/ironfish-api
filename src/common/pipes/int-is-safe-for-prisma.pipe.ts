@@ -14,7 +14,7 @@ export class IntIsSafeForPrismaPipe implements PipeTransform<string> {
     const isNumeric =
       ['string', 'number'].includes(typeof value) &&
       /^-?\d+$/.test(value) &&
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
       isFinite(value as any);
     if (!isNumeric) {
       throw new UnprocessableEntityException(
