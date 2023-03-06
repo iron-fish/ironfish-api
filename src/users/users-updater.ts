@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable, UnprocessableEntityException } from '@nestjs/common';
-import { BlocksService } from '../blocks/blocks.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateUserOptions } from './interfaces/update-user-options';
 import { UsersService } from './users.service';
@@ -11,29 +10,13 @@ import { User } from '.prisma/client';
 @Injectable()
 export class UsersUpdater {
   constructor(
-    private readonly blocksService: BlocksService,
     private readonly prisma: PrismaService,
     private readonly usersService: UsersService,
   ) {}
 
   async update(user: User, options: UpdateUserOptions): Promise<User> {
     return this.prisma.$transaction(async (prisma) => {
-      const { discord, github, graffiti, telegram } = options;
-
-      if (graffiti && user.graffiti !== graffiti) {
-        await prisma.$executeRawUnsafe(
-          'SELECT pg_advisory_xact_lock(HASHTEXT($1));',
-          graffiti,
-        );
-        const minedBlocksForCurrentGraffiti =
-          await this.blocksService.countByGraffiti(user.graffiti, prisma);
-        if (minedBlocksForCurrentGraffiti > 0) {
-          throw new UnprocessableEntityException({
-            code: 'user_graffiti_already_used',
-            message: `Current graffiti '${user.graffiti}' has already mined blocks`,
-          });
-        }
-      }
+      const { discord, github, telegram } = options;
 
       const users = await this.usersService.findDuplicateUser(
         user,
@@ -53,11 +36,6 @@ export class UsersUpdater {
           error = {
             code: 'duplicate_user_github',
             message: `User with github '${github}' already exists`,
-          };
-        } else if (graffiti && graffiti === duplicateUser.graffiti) {
-          error = {
-            code: 'duplicate_user_graffiti',
-            message: `User with graffiti '${graffiti}' already exists`,
           };
         } else if (telegram && telegram === duplicateUser.telegram) {
           error = {

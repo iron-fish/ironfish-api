@@ -13,6 +13,8 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiExcludeEndpoint, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { AssetDescriptionsService } from '../asset-descriptions/asset-descriptions.service';
+import { AssetsService } from '../assets/assets.service';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { List } from '../common/interfaces/list';
 import { TransactionQueryDto } from './dto/transaction-query.dto';
@@ -25,11 +27,16 @@ import {
   serializedTransactionFromRecord,
   serializedTransactionFromRecordWithBlocks,
 } from './utils/transaction-translator';
+import { Asset, AssetDescription, Transaction } from '.prisma/client';
 
 @ApiTags('Transactions')
 @Controller('transactions')
 export class TransactionsController {
-  constructor(private readonly transactionsService: TransactionsService) {}
+  constructor(
+    private readonly assetDescriptionsService: AssetDescriptionsService,
+    private readonly assetsService: AssetsService,
+    private readonly transactionsService: TransactionsService,
+  ) {}
 
   @ApiOperation({ summary: `Gets a specific transaction by 'hash'` })
   @Get('find')
@@ -46,12 +53,23 @@ export class TransactionsController {
       hash,
       withBlocks: with_blocks,
     });
-    if (transaction !== null && 'blocks' in transaction) {
-      return serializedTransactionFromRecordWithBlocks(transaction);
-    } else if (transaction !== null) {
-      return serializedTransactionFromRecord(transaction);
-    } else {
+
+    if (!transaction) {
       throw new NotFoundException();
+    }
+
+    const assetDescriptionsWithAssets =
+      await this.getAssetDescriptionsWithAssets(transaction);
+    if ('blocks' in transaction) {
+      return serializedTransactionFromRecordWithBlocks(
+        transaction,
+        assetDescriptionsWithAssets,
+      );
+    } else {
+      return serializedTransactionFromRecord(
+        transaction,
+        assetDescriptionsWithAssets,
+      );
     }
   }
 
@@ -70,11 +88,22 @@ export class TransactionsController {
     const transactions = await this.transactionsService.createMany(
       upsertTransactionsDto.transactions,
     );
+
+    const data = [];
+    for (const transaction of transactions) {
+      const assetDescriptionsWithAssets =
+        await this.getAssetDescriptionsWithAssets(transaction);
+      data.push(
+        serializedTransactionFromRecord(
+          transaction,
+          assetDescriptionsWithAssets,
+        ),
+      );
+    }
+
     return {
       object: 'list',
-      data: transactions.map((transaction) =>
-        serializedTransactionFromRecord(transaction),
-      ),
+      data,
     };
   }
 
@@ -96,15 +125,49 @@ export class TransactionsController {
       search,
       withBlocks: with_blocks,
     });
+
+    const data = [];
+    for (const transaction of transactions) {
+      const assetDescriptionsWithAssets =
+        await this.getAssetDescriptionsWithAssets(transaction);
+
+      if ('blocks' in transaction) {
+        data.push(
+          serializedTransactionFromRecordWithBlocks(
+            transaction,
+            assetDescriptionsWithAssets,
+          ),
+        );
+      } else {
+        data.push(
+          serializedTransactionFromRecord(
+            transaction,
+            assetDescriptionsWithAssets,
+          ),
+        );
+      }
+    }
+
     return {
-      data: transactions.map((transaction) => {
-        if ('blocks' in transaction) {
-          return serializedTransactionFromRecordWithBlocks(transaction);
-        } else {
-          return serializedTransactionFromRecord(transaction);
-        }
-      }),
+      data,
       object: 'list',
     };
+  }
+
+  private async getAssetDescriptionsWithAssets(
+    transaction: Transaction,
+  ): Promise<{ asset: Asset; assetDescription: AssetDescription }[]> {
+    const assetDescriptions =
+      await this.assetDescriptionsService.findByTransaction(transaction);
+
+    const assetDescriptionsWithAssets = [];
+    for (const assetDescription of assetDescriptions) {
+      assetDescriptionsWithAssets.push({
+        asset: await this.assetsService.findOrThrow(assetDescription.asset_id),
+        assetDescription,
+      });
+    }
+
+    return assetDescriptionsWithAssets;
   }
 }

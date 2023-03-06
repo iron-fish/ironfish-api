@@ -6,7 +6,7 @@ import { EventType, MultiAsset, User } from '@prisma/client';
 import assert from 'assert';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { BlockOperation } from '../blocks/enums/block-operation';
-import { POINTS_PER_CATEGORY } from '../common/constants';
+import { PHASE_3_END, POINTS_PER_CATEGORY } from '../common/constants';
 import { standardizeHash } from '../common/utils/hash';
 import { LoggerService } from '../logger/logger.service';
 import { MultiAssetHeadService } from '../multi-asset-head/multi-asset-head.service';
@@ -42,6 +42,14 @@ export class MultiAssetUpsertService {
   }
 
   async upsert(operation: UpsertMultiAssetOperationDto): Promise<MultiAsset[]> {
+    const skip =
+      this.config.get<boolean>('ENABLE_PHASE_3_END_CHECK') &&
+      operation.block.timestamp >= PHASE_3_END;
+
+    if (skip) {
+      return [];
+    }
+
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
     const blockHash = standardizeHash(operation.block.hash);
 

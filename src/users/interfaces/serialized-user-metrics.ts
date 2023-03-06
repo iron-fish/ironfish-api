@@ -28,4 +28,10 @@ export interface SerializedUserMetrics {
     total_hours: number;
     last_checked_in: string | null;
   };
+  pool_points?: {
+    pool_one: number;
+    pool_two: number;
+    pool_three: number;
+    pool_four: number;
+  };
 }

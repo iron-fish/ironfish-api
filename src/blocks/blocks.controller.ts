@@ -16,6 +16,8 @@ import {
 } from '@nestjs/common';
 import { ApiExcludeEndpoint, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
+import { AssetDescriptionsService } from '../asset-descriptions/asset-descriptions.service';
+import { AssetsService } from '../assets/assets.service';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { BlocksDailyService } from '../blocks-daily/blocks-daily.service';
 import { BlocksTransactionsLoader } from '../blocks-transactions-loader/blocks-transactions-loader';
@@ -23,6 +25,7 @@ import { MS_PER_DAY } from '../common/constants';
 import { MetricsGranularity } from '../common/enums/metrics-granularity';
 import { List } from '../common/interfaces/list';
 import { PaginatedList } from '../common/interfaces/paginated-list';
+import { serializedTransactionFromRecord } from '../transactions/utils/transaction-translator';
 import { BlocksService } from './blocks.service';
 import { BlockQueryDto } from './dto/block-query.dto';
 import { BlocksMetricsQueryDto } from './dto/blocks-metrics-query.dto';
@@ -39,6 +42,7 @@ import {
 } from './utils/block-translator';
 import { serializedBlockMetricsFromRecord } from './utils/blocks-metrics-translator';
 import { serializedBlocksStatusFromRecord } from './utils/blocks-status-translator';
+import { Asset, AssetDescription, Transaction } from '.prisma/client';
 
 const MAX_SUPPORTED_TIME_RANGE_IN_DAYS = 90;
 
@@ -46,6 +50,8 @@ const MAX_SUPPORTED_TIME_RANGE_IN_DAYS = 90;
 @Controller('blocks')
 export class BlocksController {
   constructor(
+    private readonly assetDescriptionsService: AssetDescriptionsService,
+    private readonly assetsService: AssetsService,
     private readonly blocksDailyService: BlocksDailyService,
     private readonly blocksService: BlocksService,
     private readonly blocksTransactionsLoader: BlocksTransactionsLoader,
@@ -66,11 +72,32 @@ export class BlocksController {
     const blocks = await this.blocksTransactionsLoader.createMany(
       upsertBlocksDto,
     );
+
+    const data = [];
+    for (const block of blocks) {
+      const serializedTransactions = [];
+      for (const transaction of block.transactions) {
+        const assetDescriptionsWithAssets =
+          await this.getAssetDescriptionsWithAssets(transaction);
+        serializedTransactions.push(
+          serializedTransactionFromRecord(
+            transaction,
+            assetDescriptionsWithAssets,
+          ),
+        );
+      }
+
+      data.push(
+        serializedBlockFromRecordWithTransactions(
+          block,
+          serializedTransactions,
+        ),
+      );
+    }
+
     return {
       object: 'list',
-      data: blocks.map((block) =>
-        serializedBlockFromRecordWithTransactions(block),
-      ),
+      data,
     };
   }
 
@@ -117,7 +144,11 @@ export class BlocksController {
       }
     }
 
-    const { data, hasNext, hasPrevious } = await this.blocksService.list({
+    const {
+      data: blocks,
+      hasNext,
+      hasPrevious,
+    } = await this.blocksService.list({
       after,
       before,
       limit,
@@ -128,15 +159,36 @@ export class BlocksController {
       transactionId,
       withTransactions,
     });
+
+    const data = [];
+    for (const block of blocks) {
+      if ('transactions' in block) {
+        const serializedTransactions = [];
+        for (const transaction of block.transactions) {
+          const assetDescriptionsWithAssets =
+            await this.getAssetDescriptionsWithAssets(transaction);
+          serializedTransactions.push(
+            serializedTransactionFromRecord(
+              transaction,
+              assetDescriptionsWithAssets,
+            ),
+          );
+        }
+
+        data.push(
+          serializedBlockFromRecordWithTransactions(
+            block,
+            serializedTransactions,
+          ),
+        );
+      } else {
+        data.push(serializedBlockFromRecord(block));
+      }
+    }
+
     return {
       object: 'list',
-      data: data.map((block) => {
-        if ('transactions' in block) {
-          return serializedBlockFromRecordWithTransactions(block);
-        } else {
-          return serializedBlockFromRecord(block);
-        }
-      }),
+      data,
       metadata: {
         has_next: hasNext,
         has_previous: hasPrevious,
@@ -167,8 +219,25 @@ export class BlocksController {
       sequence,
       withTransactions: with_transactions,
     });
+
     if (block !== null && 'transactions' in block) {
-      return serializedBlockFromRecordWithTransactions(block);
+      const serializedTransactions = [];
+
+      for (const transaction of block.transactions) {
+        const assetDescriptionsWithAssets =
+          await this.getAssetDescriptionsWithAssets(transaction);
+        serializedTransactions.push(
+          serializedTransactionFromRecord(
+            transaction,
+            assetDescriptionsWithAssets,
+          ),
+        );
+      }
+
+      return serializedBlockFromRecordWithTransactions(
+        block,
+        serializedTransactions,
+      );
     } else if (block !== null) {
       return serializedBlockFromRecord(block);
     } else {
@@ -246,5 +315,22 @@ export class BlocksController {
       };
     }
     return { isValid: true };
+  }
+
+  private async getAssetDescriptionsWithAssets(
+    transaction: Transaction,
+  ): Promise<{ asset: Asset; assetDescription: AssetDescription }[]> {
+    const assetDescriptions =
+      await this.assetDescriptionsService.findByTransaction(transaction);
+
+    const assetDescriptionsWithAssets = [];
+    for (const assetDescription of assetDescriptions) {
+      assetDescriptionsWithAssets.push({
+        asset: await this.assetsService.findOrThrow(assetDescription.asset_id),
+        assetDescription,
+      });
+    }
+
+    return assetDescriptionsWithAssets;
   }
 }

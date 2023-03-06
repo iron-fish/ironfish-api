@@ -1,10 +1,10 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { serializedTransactionFromRecord } from '../../transactions/utils/transaction-translator';
+import { SerializedTransaction } from '../../transactions/interfaces/serialized-transaction';
 import { SerializedBlock } from '../interfaces/serialized-block';
 import { SerializedBlockWithTransactions } from '../interfaces/serialized-block-with-transactions';
-import { Block, Transaction } from '.prisma/client';
+import { Block } from '.prisma/client';
 
 export function serializedBlockFromRecord(block: Block): SerializedBlock {
   return {
@@ -24,11 +24,9 @@ export function serializedBlockFromRecord(block: Block): SerializedBlock {
 }
 
 export function serializedBlockFromRecordWithTransactions(
-  block: Block & { transactions: Transaction[] },
+  block: Block,
+  transactions: SerializedTransaction[],
 ): SerializedBlockWithTransactions {
-  const transactions = block.transactions.map((transaction) =>
-    serializedTransactionFromRecord(transaction),
-  );
   return {
     id: block.id,
     hash: block.hash,

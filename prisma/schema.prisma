@@ -39,25 +39,66 @@ model Event {
 }
 
 model User {
-  id                  Int         @id @default(autoincrement())
-  created_at          DateTime    @default(now()) @db.Timestamp(6)
-  updated_at          DateTime    @default(now()) @updatedAt @db.Timestamp(6)
-  email               String      @unique(map: "uq_users_on_email") @db.VarChar
-  graffiti            String      @unique(map: "uq_users_on_graffiti") @db.VarChar
-  country_code        String      @db.VarChar
-  email_notifications Boolean     @default(false)
-  last_login_at       DateTime?   @db.Timestamp(6)
-  discord             String?     @db.VarChar
-  telegram            String?     @db.VarChar
-  github              String?     @db.VarChar
-  hashed_ip_address   String?     @db.VarChar
+  id                  Int               @id @default(autoincrement())
+  created_at          DateTime          @default(now()) @db.Timestamp(6)
+  updated_at          DateTime          @default(now()) @updatedAt @db.Timestamp(6)
+  email               String            @unique(map: "uq_users_on_email") @db.VarChar
+  graffiti            String            @unique(map: "uq_users_on_graffiti") @db.VarChar
+  country_code        String            @db.VarChar
+  email_notifications Boolean           @default(false)
+  last_login_at       DateTime?         @db.Timestamp(6)
+  discord             String?           @db.VarChar
+  telegram            String?           @db.VarChar
+  github              String?           @db.VarChar
+  hashed_ip_address   String?           @db.VarChar
+  ineligible_reason   String?           @db.VarChar
   events              Event[]
+  redemption          Redemption?
+  jumio_transactions  JumioTransaction[]
   node_uptime         NodeUptime?
   points              UserPoints?
+  enable_kyc          Boolean           @default(false)
 
   @@index([email], name: "index_users_on_email")
   @@index([graffiti], name: "index_users_on_graffiti")
   @@map("users")
+}
+
+model Redemption {
+  id               Int       @id @default(autoincrement())
+  created_at       DateTime  @default(now()) @db.Timestamp(6)
+  updated_at       DateTime  @default(now()) @updatedAt @db.Timestamp(6)
+  user             User      @relation(fields: [user_id], references: [id])
+  user_id          Int       @unique
+  kyc_attempts     Int       @default(0)
+  kyc_max_attempts Int?
+  kyc_status  KycStatus
+  jumio_account_id String?   @db.VarChar
+  public_address   String    @db.VarChar
+  id_details       Json?
+  failure_message  String?   @db.VarChar
+  @@index([jumio_account_id], name: "index_redemption_jumio_account_id")
+  @@index([user_id], name: "index_redemption_on_user_id")
+  @@map("redemptions")
+}
+
+model JumioTransaction {
+  id                    Int      @id @default(autoincrement())
+  created_at            DateTime @default(now()) @db.Timestamp(6)
+  updated_at            DateTime @default(now()) @updatedAt @db.Timestamp(6)
+  user                  User     @relation(fields: [user_id], references: [id])
+  user_id               Int
+  decision_status       DecisionStatus
+  last_workflow_fetch   Json?
+  last_callback         Json?
+  last_callback_at      DateTime? @db.Timestamp(6)
+  workflow_execution_id String   @db.VarChar
+  web_href              String   @db.VarChar
+  failure_message       String?  @db.VarChar
+
+  @@index([workflow_execution_id], name: "index_jumio_transactions_on_jumio_workflow_execution_id")
+  @@index([user_id], name: "index_jumio_transactions_on_user_id")
+  @@map("jumio_transactions")
 }
 
 model NodeUptime {
@@ -88,6 +129,7 @@ model Block {
   difficulty               BigInt
   blocks_transactions      BlockTransaction[]
   event                    Event?
+
   @@unique([hash, network_version], name: "uq_blocks_on_hash_and_network_version", map: "uq_blocks_on_hash_and_network_version")
   @@index([hash], name: "index_blocks_on_hash")
   @@index([hash, network_version], name: "index_blocks_on_hash_and_network_version")
@@ -142,6 +184,8 @@ model FaucetTransaction {
   @@index([email], map: "index_faucet_transactions_on_email")
   @@index([public_key], map: "index_faucet_transactions_on_public_key")
   @@index([hash], map: "index_faucet_transactions_on_hash")
+  @@index([completed_at], map: "index_faucet_transactions_on_completed_at")
+  @@index([started_at, completed_at], map: "index_faucet_transactions_on_completed_at_and_started_at")
   @@map("faucet_transactions")
 }
 
@@ -223,6 +267,9 @@ model UserPoints {
   multi_asset_transfer_points             Int       @default(0)
   multi_asset_transfer_count              Int       @default(0)
   multi_asset_transfer_last_occurred_at   DateTime? @db.Timestamp(6)
+  pool1_points                            Int?      
+  pool2_points                            Int?      
+  pool3_points                            Int?      
   pool4_points                            Int       @default(0)
   pool4_count                             Int       @default(0)
   pool4_last_occurred_at                  DateTime? @db.Timestamp(6)
@@ -293,7 +340,7 @@ model Asset {
   created_at             DateTime           @default(now()) @db.Timestamp(6)
   updated_at             DateTime           @default(now()) @updatedAt @db.Timestamp(6)
   created_transaction_id Int
-  identifier             String
+  identifier             String             @unique(map: "uq_assets_on_identifier")
   metadata               String
   name                   String
   owner                  String
@@ -326,4 +373,42 @@ enum AssetDescriptionType {
   MINT
 
   @@map("asset_description_type")
+}
+
+enum DecisionStatus {
+  NOT_EXECUTED
+  PASSED
+  REJECTED
+  WARNING
+}
+
+enum DecisionLabel {
+  TECHNICAL_ERROR
+  NOT_UPLOADED
+  OK
+  BAD_QUALITY
+  BLURRED1
+  BAD_QUALITY_IMAGE1
+  PART_OF_DOCUMENT_MISSING1
+  PART_OF_DOCUMENT_HIDDEN1
+  DAMAGED_DOCUMENT1
+  GLARE1
+  MISSING_MANDATORY_DATAPOINTS1
+  BLACK_WHITE
+  MISSING_PAGE
+  MISSING_SIGNATURE
+  NOT_A_DOCUMENT
+  PHOTOCOPY
+  LIVENESS_UNDETERMINED
+  UNSUPPORTED_COUNTRY
+  UNSUPPORTED_DOCUMENT_TYPE
+}
+
+enum KycStatus {
+  IN_PROGRESS
+  WAITING_FOR_CALLBACK
+  TRY_AGAIN
+  FAILED
+  SUBMITTED
+  SUCCESS
 }

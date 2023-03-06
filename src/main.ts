@@ -107,8 +107,11 @@ function clusterize(callback: () => Promise<void>): void {
 
     const cpuCount = os.cpus().length;
     const workers = process.env.WORKER_COUNT
-      ? Math.min(Number(process.env.WORKER_COUNT), cpuCount)
+      ? Number(process.env.WORKER_COUNT)
       : cpuCount;
+
+    console.log(`Starting ${workers} using ${cpuCount} cores`);
+
     for (let i = 0; i < workers; i++) {
       cluster.fork();
     }

@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Block, Prisma } from '@prisma/client';
 import { classToPlain } from 'class-transformer';
 import { ApiConfigService } from '../api-config/api-config.service';
@@ -61,6 +61,17 @@ export class TransactionsService {
     });
   }
 
+  async findByHashOrThrow(
+    hash: string,
+    prisma: BasePrismaClient,
+  ): Promise<Transaction> {
+    const record = await prisma.transaction.findFirst({ where: { hash } });
+    if (!record) {
+      throw new NotFoundException();
+    }
+    return record;
+  }
+
   async createMany(
     transactions: UpsertTransactionOptions[],
   ): Promise<Transaction[]> {
@@ -93,6 +104,14 @@ export class TransactionsService {
     }
 
     return transaction;
+  }
+
+  async findOrThrow(id: number): Promise<Transaction> {
+    const record = await this.prisma.transaction.findFirst({ where: { id } });
+    if (!record) {
+      throw new NotFoundException();
+    }
+    return record;
   }
 
   async list(

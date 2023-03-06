@@ -4,6 +4,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
+import { RefreshPreviousPoolOptions } from './interfaces/refresh-previous-pool-options';
 import { UpsertUserPointsOptions } from './interfaces/upsert-user-points-options';
 import { EventType, Prisma, UserPoints } from '.prisma/client';
 
@@ -11,8 +12,13 @@ import { EventType, Prisma, UserPoints } from '.prisma/client';
 export class UserPointsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findOrThrow(userId: number): Promise<UserPoints> {
-    const record = await this.prisma.readClient.userPoints.findUnique({
+  async findOrThrow(
+    userId: number,
+    client?: BasePrismaClient,
+  ): Promise<UserPoints> {
+    const prisma = client ?? this.prisma.readClient;
+
+    const record = await prisma.userPoints.findUnique({
       where: {
         user_id: userId,
       },
@@ -139,6 +145,22 @@ export class UserPointsService {
       data: options,
       where: {
         id: record.id,
+      },
+    });
+  }
+
+  async upsertPreviousPools(
+    userPoints: UserPoints,
+    refreshPreviousPoolOptions: RefreshPreviousPoolOptions,
+  ): Promise<UserPoints> {
+    return this.prisma.userPoints.update({
+      data: {
+        pool1_points: refreshPreviousPoolOptions.pool1,
+        pool2_points: refreshPreviousPoolOptions.pool2,
+        pool3_points: refreshPreviousPoolOptions.pool3,
+      },
+      where: {
+        id: userPoints.id,
       },
     });
   }

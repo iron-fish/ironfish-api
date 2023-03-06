@@ -23,6 +23,7 @@ env:
   IRONFISH_POSTGRES_CONTAINER: ironfish_postgres
   MAGIC_SECRET_KEY: test
   NETWORK_VERSION: 0
+  ENABLE_SIGNUP: true
 
 jobs:
   lint:

@@ -6,7 +6,6 @@ import assert from 'assert';
 import faker from 'faker';
 import { ulid } from 'ulid';
 import { v4 as uuid } from 'uuid';
-import { BlocksService } from '../blocks/blocks.service';
 import { POINTS_PER_CATEGORY } from '../common/constants';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
@@ -16,7 +15,6 @@ import { UsersUpdater } from './users-updater';
 
 describe('UsersUpdater', () => {
   let app: INestApplication;
-  let blocksService: BlocksService;
   let prisma: PrismaService;
   let userPointsService: UserPointsService;
   let usersService: UsersService;
@@ -24,7 +22,6 @@ describe('UsersUpdater', () => {
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
-    blocksService = app.get(BlocksService);
     prisma = app.get(PrismaService);
     userPointsService = app.get(UserPointsService);
     usersService = app.get(UsersService);
@@ -59,7 +56,7 @@ describe('UsersUpdater', () => {
       discord: faker.internet.userName(),
       email: faker.internet.email(),
       graffiti,
-      country_code: faker.address.countryCode('alpha-3'),
+      countryCode: faker.address.countryCode('alpha-3'),
       telegram: faker.internet.userName(),
     });
     await userPointsService.upsert({
@@ -70,87 +67,18 @@ describe('UsersUpdater', () => {
   };
 
   describe('update', () => {
-    describe("when the user's current graffiti has already mined blocks on the main chain", () => {
-      it('throws an UnprocessableEntityException', async () => {
-        const { user } = await setupBlockMined();
-        await expect(
-          usersUpdater.update(user, { graffiti: 'foo' }),
-        ).rejects.toThrow(UnprocessableEntityException);
-      });
-    });
-
     describe('when a user exists for the new discord', () => {
       it('throws an UnprocessableEntityException', async () => {
         const { user: existingUser } = await setupBlockMined();
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: ulid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
 
         assert.ok(existingUser.discord);
         await expect(
           usersUpdater.update(user, { discord: existingUser.discord }),
-        ).rejects.toThrow(UnprocessableEntityException);
-      });
-    });
-
-    describe('when two users attempt to claim the same graffiti', () => {
-      it('throws an UnprocessableEntityException', async () => {
-        // Manually sleep the first update so the second update begins before
-        // the first transaction completes
-        jest
-          .spyOn(blocksService, 'countByGraffiti')
-          .mockImplementationOnce(async (graffiti, client) => {
-            const sleep = (ms: number) =>
-              new Promise((resolve) => setTimeout(resolve, ms));
-            await sleep(10);
-            return blocksService.countByGraffiti(graffiti, client);
-          });
-
-        const firstUser = await usersService.create({
-          email: faker.internet.email(),
-          graffiti: ulid(),
-          country_code: faker.address.countryCode('alpha-3'),
-        });
-        const secondUser = await usersService.create({
-          email: faker.internet.email(),
-          graffiti: ulid(),
-          country_code: faker.address.countryCode('alpha-3'),
-        });
-        const graffiti = ulid();
-
-        // Expect one update to fail given a duplicate graffiti
-        await expect(
-          Promise.all([
-            usersUpdater.update(firstUser, { graffiti }),
-            usersUpdater.update(secondUser, { graffiti }),
-          ]),
-        ).rejects.toThrow(UnprocessableEntityException);
-
-        // Expect one update to succeed
-        const user = await usersService.findByGraffiti(graffiti);
-        expect(user).not.toBeNull();
-      });
-    });
-
-    describe('when a user exists for the new graffiti without blocks mined', () => {
-      it('throws an UnprocessableEntityException', async () => {
-        const existingUser = await usersService.create({
-          discord: faker.internet.userName(),
-          email: faker.internet.email(),
-          graffiti: ulid(),
-          country_code: faker.address.countryCode('alpha-3'),
-          telegram: faker.internet.userName(),
-        });
-        const user = await usersService.create({
-          email: faker.internet.email(),
-          graffiti: ulid(),
-          country_code: faker.address.countryCode('alpha-3'),
-        });
-
-        await expect(
-          usersUpdater.update(user, { graffiti: existingUser.graffiti }),
         ).rejects.toThrow(UnprocessableEntityException);
       });
     });
@@ -161,7 +89,7 @@ describe('UsersUpdater', () => {
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: ulid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
 
         assert.ok(existingUser.telegram);
@@ -175,20 +103,18 @@ describe('UsersUpdater', () => {
       it('updates the user', async () => {
         const options = {
           discord: ulid(),
-          graffiti: ulid(),
           telegram: ulid(),
         };
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: ulid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
 
         const updatedUser = await usersUpdater.update(user, options);
         expect(updatedUser).toMatchObject({
           id: user.id,
           discord: options.discord,
-          graffiti: options.graffiti,
           telegram: options.telegram,
         });
       });

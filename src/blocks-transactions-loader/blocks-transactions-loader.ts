@@ -3,8 +3,12 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable } from '@nestjs/common';
 import { Block, Transaction } from '@prisma/client';
+import { ApiConfigService } from '../api-config/api-config.service';
+import { AssetsLoader } from '../assets-loader/assets-loader';
+import { LoadDescriptionsOptions } from '../assets-loader/interfaces/load-descriptions-options';
 import { BlocksService } from '../blocks/blocks.service';
 import { BlockDto, UpsertBlocksDto } from '../blocks/dto/upsert-blocks.dto';
+import { BlockOperation } from '../blocks/enums/block-operation';
 import { BlocksDailyService } from '../blocks-daily/blocks-daily.service';
 import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
 import { standardizeHash } from '../common/utils/hash';
@@ -19,9 +23,11 @@ import { TransactionsService } from '../transactions/transactions.service';
 @Injectable()
 export class BlocksTransactionsLoader {
   constructor(
+    private readonly assetsLoader: AssetsLoader,
     private readonly blocksDailyService: BlocksDailyService,
     private readonly blocksService: BlocksService,
     private readonly blocksTransactionsService: BlocksTransactionsService,
+    private readonly config: ApiConfigService,
     private readonly graphileWorkerService: GraphileWorkerService,
     private readonly prisma: PrismaService,
     private readonly transactionsService: TransactionsService,
@@ -123,9 +129,16 @@ export class BlocksTransactionsLoader {
         {
           // We increased this from the default of 5000 because the transactions were
           // timing out and failing to upsert blocks
-          timeout: 30000,
+          timeout: this.config.get<number>('BLOCK_LOADER_TRANSACTION_TIMEOUT'),
         },
       );
+
+      for (const transaction of block.transactions) {
+        await this.graphileWorkerService.addJob<LoadDescriptionsOptions>(
+          GraphileWorkerPattern.LOAD_ASSET_DESCRIPTIONS,
+          { main: block.type === BlockOperation.CONNECTED, transaction },
+        );
+      }
     }
 
     if (updateMinedBlockEvents) {

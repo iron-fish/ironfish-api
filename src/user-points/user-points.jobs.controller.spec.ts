@@ -6,12 +6,15 @@ import assert from 'assert';
 import faker from 'faker';
 import { Job } from 'graphile-worker';
 import { v4 as uuid } from 'uuid';
+import { MetricsGranularity } from '../common/enums/metrics-granularity';
 import { EventsService } from '../events/events.service';
 import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
 import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { GraphileWorkerJobOptions } from '../graphile-worker/interfaces/graphile-worker-job-options';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
+import { PhaseOneSerializedUserMetrics } from './interfaces/phase-one-serialized-user-metrics';
+import { PhaseTwoSerializedUserMetrics } from './interfaces/phase-two-serialized-user-metrics ';
 import { UserPointsJobsController } from './user-points.jobs.controller';
 import { UserPointsService } from './user-points.service';
 import { EventType } from '.prisma/client';
@@ -54,12 +57,12 @@ describe('UserPointsJobsController', () => {
       const userA = await usersService.create({
         email: faker.internet.email(),
         graffiti: uuid(),
-        country_code: faker.address.countryCode('alpha-3'),
+        countryCode: faker.address.countryCode('alpha-3'),
       });
       const userB = await usersService.create({
         email: faker.internet.email(),
         graffiti: uuid(),
-        country_code: faker.address.countryCode('alpha-3'),
+        countryCode: faker.address.countryCode('alpha-3'),
       });
       jest
         .spyOn(usersService, 'list')
@@ -87,7 +90,7 @@ describe('UserPointsJobsController', () => {
       const user = await usersService.create({
         email: faker.internet.email(),
         graffiti: uuid(),
-        country_code: faker.address.countryCode('alpha-3'),
+        countryCode: faker.address.countryCode('alpha-3'),
       });
       jest
         .spyOn(usersService, 'list')
@@ -111,10 +114,21 @@ describe('UserPointsJobsController', () => {
     });
 
     it('upserts user points', async () => {
+      jest
+        .spyOn(userPointsJobsController, 'getPhaseOnePoints')
+        .mockImplementationOnce(async () => {
+          return Promise.resolve(undefined);
+        });
+      jest
+        .spyOn(userPointsJobsController, 'getPhaseTwoPoints')
+        .mockImplementationOnce(async () => {
+          return Promise.resolve(undefined);
+        });
+
       const user = await usersService.create({
         email: faker.internet.email(),
         graffiti: uuid(),
-        country_code: faker.address.countryCode('alpha-3'),
+        countryCode: faker.address.countryCode('alpha-3'),
       });
       const options = {
         userId: user.id,
@@ -180,19 +194,28 @@ describe('UserPointsJobsController', () => {
       jest
         .spyOn(eventsService, 'getUpsertPointsOptions')
         .mockImplementationOnce(() => Promise.resolve(options));
-      const upsert = jest
-        .spyOn(userPointsService, 'upsert')
-        .mockImplementationOnce(jest.fn());
+      const upsert = jest.spyOn(userPointsService, 'upsert');
 
       await userPointsJobsController.refreshUserPoints({ userId: user.id });
       expect(upsert).toHaveBeenCalledWith(options);
     });
 
     it('does not requeue', async () => {
+      jest
+        .spyOn(userPointsJobsController, 'getPhaseOnePoints')
+        .mockImplementationOnce(() => {
+          return Promise.resolve(undefined);
+        });
+      jest
+        .spyOn(userPointsJobsController, 'getPhaseTwoPoints')
+        .mockImplementationOnce(async () => {
+          return Promise.resolve(undefined);
+        });
+
       const user = await usersService.create({
         email: faker.internet.email(),
         graffiti: uuid(),
-        country_code: faker.address.countryCode('alpha-3'),
+        countryCode: faker.address.countryCode('alpha-3'),
       });
       const options = {
         userId: user.id,
@@ -258,12 +281,158 @@ describe('UserPointsJobsController', () => {
       jest
         .spyOn(eventsService, 'getUpsertPointsOptions')
         .mockImplementationOnce(() => Promise.resolve(options));
-      jest.spyOn(userPointsService, 'upsert').mockImplementationOnce(jest.fn());
 
       const { requeue } = await userPointsJobsController.refreshUserPoints({
         userId: user.id,
       });
       expect(requeue).toBe(false);
+    });
+
+    describe('if previous pool points are null', () => {
+      describe('when the previous APIs send valid responses', () => {
+        it('fetches data from phase one and phase two', async () => {
+          const phaseOneMetrics = {
+            blocks_mined: { count: 5, points: 500, rank: 4843 },
+            bugs_caught: { count: 0, points: 0, rank: 71 },
+            community_contributions: { count: 0, points: 0, rank: 697 },
+            pull_requests_merged: { count: 0, points: 0, rank: 39 },
+            social_media_contributions: { count: 0, points: 0, rank: 298 },
+          };
+          jest
+            .spyOn(userPointsJobsController, 'getPhaseOnePoints')
+            .mockImplementationOnce(() => {
+              return Promise.resolve<PhaseOneSerializedUserMetrics>({
+                user_id: user.id,
+                granularity: MetricsGranularity.LIFETIME,
+                points: 500,
+                metrics: phaseOneMetrics,
+              });
+            });
+
+          const phaseTwoMetrics = {
+            bugs_caught: { count: 0, points: 0 },
+            pull_requests_merged: { count: 0, points: 0 },
+            node_uptime: { count: 11, points: 110 },
+            send_transaction: { count: 1, points: 1 },
+          };
+          jest
+            .spyOn(userPointsJobsController, 'getPhaseTwoPoints')
+            .mockImplementationOnce(() => {
+              return Promise.resolve<PhaseTwoSerializedUserMetrics>({
+                user_id: user.id,
+                granularity: MetricsGranularity.LIFETIME,
+                points: 111,
+                metrics: phaseTwoMetrics,
+              });
+            });
+
+          const user = await usersService.create({
+            email: faker.internet.email(),
+            graffiti: uuid(),
+            countryCode: faker.address.countryCode('alpha-3'),
+          });
+          const options = {
+            userId: user.id,
+            totalPoints: 100,
+            points: {
+              BLOCK_MINED: {
+                points: 50,
+                count: 1,
+                latestOccurredAt: new Date(),
+              },
+              BUG_CAUGHT: {
+                points: 50,
+                count: 1,
+                latestOccurredAt: new Date(),
+              },
+              COMMUNITY_CONTRIBUTION: {
+                points: 0,
+                count: 0,
+                latestOccurredAt: new Date(),
+              },
+              PULL_REQUEST_MERGED: {
+                points: 250,
+                count: 0,
+                latestOccurredAt: new Date(),
+              },
+              SOCIAL_MEDIA_PROMOTION: {
+                points: 0,
+                count: 0,
+                latestOccurredAt: new Date(),
+              },
+              NODE_UPTIME: {
+                points: 0,
+                count: 0,
+                latestOccurredAt: new Date(),
+              },
+              SEND_TRANSACTION: {
+                points: 0,
+                count: 0,
+                latestOccurredAt: new Date(),
+              },
+              MULTI_ASSET_MINT: {
+                points: 0,
+                count: 0,
+                latestOccurredAt: new Date(),
+              },
+              MULTI_ASSET_BURN: {
+                points: 0,
+                count: 0,
+                latestOccurredAt: new Date(),
+              },
+              MULTI_ASSET_TRANSFER: {
+                points: 0,
+                count: 0,
+                latestOccurredAt: new Date(),
+              },
+              POOL4: {
+                points: 0,
+                count: 0,
+                latestOccurredAt: new Date(),
+              },
+            },
+          };
+          jest
+            .spyOn(eventsService, 'getUpsertPointsOptions')
+            .mockImplementationOnce(() => Promise.resolve(options));
+
+          await userPointsJobsController.refreshUserPoints({ userId: user.id });
+
+          const userPoints = await userPointsService.findOrThrow(user.id);
+          expect(userPoints).toMatchObject({
+            pool1_points:
+              phaseOneMetrics.blocks_mined.points +
+              phaseOneMetrics.community_contributions.points +
+              phaseOneMetrics.social_media_contributions.points +
+              phaseOneMetrics.bugs_caught.points,
+            pool2_points:
+              phaseTwoMetrics.bugs_caught.points +
+              phaseTwoMetrics.node_uptime.points +
+              phaseTwoMetrics.send_transaction.points,
+            pool3_points: options.points.PULL_REQUEST_MERGED.points,
+          });
+        });
+      });
+
+      describe('when the API returns an exception', () => {
+        it('retries the job', async () => {
+          const user = await usersService.create({
+            email: faker.internet.email(),
+            graffiti: uuid(),
+            countryCode: faker.address.countryCode('alpha-3'),
+          });
+
+          jest
+            .spyOn(userPointsJobsController, 'getPhaseOnePoints')
+            .mockImplementationOnce(() => {
+              throw new Error();
+            });
+
+          await expect(
+            userPointsJobsController.refreshUserPoints({ userId: user.id }),
+          ).rejects.toBeDefined();
+        });
+      });
     });
   });
 
@@ -272,7 +441,7 @@ describe('UserPointsJobsController', () => {
       const userA = await usersService.create({
         email: faker.internet.email(),
         graffiti: uuid(),
-        country_code: faker.address.countryCode('alpha-3'),
+        countryCode: faker.address.countryCode('alpha-3'),
       });
       const startingPoints = await userPointsService.findOrThrow(userA.id);
       expect(startingPoints.pool4_count).toBe(0);
@@ -312,7 +481,7 @@ describe('UserPointsJobsController', () => {
       const user = await usersService.create({
         email: faker.internet.email(),
         graffiti: uuid(),
-        country_code: faker.address.countryCode('alpha-3'),
+        countryCode: faker.address.countryCode('alpha-3'),
       });
       jest
         .spyOn(usersService, 'list')

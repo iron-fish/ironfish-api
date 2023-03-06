@@ -6,11 +6,13 @@ import {
   Controller,
   ForbiddenException,
   Get,
+  HttpException,
   HttpStatus,
   Param,
   Post,
   Put,
   Query,
+  Req,
   UnprocessableEntityException,
   UseGuards,
   ValidationPipe,
@@ -21,6 +23,8 @@ import {
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
+import { Request } from 'express';
+import { ApiConfigService } from '../api-config/api-config.service';
 import { MagicLinkGuard } from '../auth/guards/magic-link.guard';
 import { DEFAULT_LIMIT, MAX_LIMIT, MS_PER_DAY } from '../common/constants';
 import { Context } from '../common/decorators/context';
@@ -29,9 +33,11 @@ import { MetricsPool } from '../common/enums/metrics-pool';
 import { MagicLinkContext } from '../common/interfaces/magic-link-context';
 import { PaginatedList } from '../common/interfaces/paginated-list';
 import { IntIsSafeForPrismaPipe } from '../common/pipes/int-is-safe-for-prisma.pipe';
+import { fetchIpAddressFromRequest } from '../common/utils/request';
 import { EventsService } from '../events/events.service';
 import { SerializedEventMetrics } from '../events/interfaces/serialized-event-metrics';
 import { NodeUptimesService } from '../node-uptimes/node-uptimes.service';
+import { RecaptchaVerificationService } from '../recaptcha-verification/recaptcha-verification.service';
 import { UserPointsService } from '../user-points/user-points.service';
 import { UserRanksService } from '../user-rank/user-ranks.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -53,12 +59,14 @@ const MAX_SUPPORTED_TIME_RANGE_IN_DAYS = 30;
 @Controller('users')
 export class UsersController {
   constructor(
+    private readonly config: ApiConfigService,
     private readonly eventsService: EventsService,
     private readonly nodeUptimeService: NodeUptimesService,
     private readonly userPointsService: UserPointsService,
     private readonly userRankService: UserRanksService,
     private readonly usersService: UsersService,
     private readonly usersUpdater: UsersUpdater,
+    private readonly recaptchaVerificationService: RecaptchaVerificationService,
   ) {}
 
   @ApiOperation({ summary: `Gets a specific User by 'graffiti'` })
@@ -113,6 +121,7 @@ export class UsersController {
     let eventMetrics: Record<EventType, SerializedEventMetrics>;
     let points: number;
     let pools: Record<MetricsPool, SerializedEventMetrics> | undefined;
+    let poolPoints;
     let nodeUptime: SerializedUserMetrics['node_uptime'];
 
     if (query.granularity === MetricsGranularity.LIFETIME) {
@@ -131,6 +140,13 @@ export class UsersController {
           user,
           EventType.PULL_REQUEST_MERGED,
         ),
+      };
+
+      poolPoints = {
+        pool_one: userPoints.pool1_points ?? 0,
+        pool_two: userPoints.pool2_points ?? 0,
+        pool_three: userPoints.pool3_points ?? 0,
+        pool_four: userPoints.pool4_points,
       };
 
       const uptime = await this.nodeUptimeService.get(user);
@@ -159,6 +175,7 @@ export class UsersController {
       points,
       pools,
       node_uptime: nodeUptime,
+      pool_points: poolPoints,
       metrics: {
         blocks_mined: eventMetrics[EventType.BLOCK_MINED],
         bugs_caught: eventMetrics[EventType.BUG_CAUGHT],
@@ -297,8 +314,37 @@ export class UsersController {
       }),
     )
     dto: CreateUserDto,
+    @Req() request: Request,
   ): Promise<User> {
-    return this.usersService.create(dto);
+    if (!this.config.get<string>('ENABLE_SIGNUP')) {
+      throw new HttpException(
+        'Signup has been disabled',
+        HttpStatus.UNPROCESSABLE_ENTITY,
+      );
+    }
+
+    const remoteIp = fetchIpAddressFromRequest(request);
+    const isRecaptchaValid = await this.recaptchaVerificationService.verify(
+      dto.recaptcha,
+      remoteIp,
+      'signup',
+    );
+
+    if (!isRecaptchaValid) {
+      throw new HttpException(
+        'Failed to sign up',
+        HttpStatus.UNPROCESSABLE_ENTITY,
+      );
+    }
+
+    return this.usersService.create({
+      email: dto.email,
+      graffiti: dto.graffiti,
+      countryCode: dto.country_code,
+      discord: dto.discord,
+      telegram: dto.telegram,
+      github: dto.github,
+    });
   }
 
   @ApiExcludeEndpoint()
@@ -320,10 +366,8 @@ export class UsersController {
       throw new ForbiddenException();
     }
     return this.usersUpdater.update(user, {
-      countryCode: dto.country_code,
       discord: dto.discord,
       github: dto.github,
-      graffiti: dto.graffiti,
       telegram: dto.telegram,
     });
   }

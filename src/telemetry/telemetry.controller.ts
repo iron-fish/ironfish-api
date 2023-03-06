@@ -13,9 +13,12 @@ import { ApiExcludeEndpoint } from '@nestjs/swagger';
 import { Request } from 'express';
 import semver from 'semver';
 import { ApiConfigService } from '../api-config/api-config.service';
+import { PHASE_3_END } from '../common/constants';
+import { fetchIpAddressFromRequest } from '../common/utils/request';
 import { InfluxDbService } from '../influxdb/influxdb.service';
 import { CreatePointOptions } from '../influxdb/interfaces/create-point-options';
 import { NodeUptimesService } from '../node-uptimes/node-uptimes.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
 import { VersionsService } from '../versions/versions.service';
 import {
@@ -90,6 +93,7 @@ export class TelemetryController {
     private readonly nodeUptimes: NodeUptimesService,
     private readonly usersService: UsersService,
     private readonly versionsService: VersionsService,
+    private readonly prismaService: PrismaService,
   ) {}
 
   @ApiExcludeEndpoint()
@@ -105,9 +109,14 @@ export class TelemetryController {
     { points, graffiti }: WriteTelemetryPointsDto,
   ): Promise<void> {
     const { options, nodeVersion } = this.processPoints(points);
-    const ipAddress = this.fetchIpAddressFromRequest(request);
+    const ipAddress = fetchIpAddressFromRequest(request);
 
-    if (graffiti && nodeVersion) {
+    // Only process points before the end of phase 3
+    const skipUptime =
+      this.config.get<boolean>('ENABLE_PHASE_3_END_CHECK') &&
+      new Date() >= PHASE_3_END;
+
+    if (graffiti && nodeVersion && !skipUptime) {
       await this.addUptime(graffiti, nodeVersion, ipAddress);
     }
 
@@ -121,7 +130,7 @@ export class TelemetryController {
   async addUptime(
     graffiti: string,
     nodeVersion: string,
-    ipAddress?: string,
+    ipAddress: string,
   ): Promise<void> {
     const nodeUptimeEnabled = this.config.get<boolean>(
       'ALLOW_NODE_UPTIME_POINTS',
@@ -134,22 +143,27 @@ export class TelemetryController {
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
-    const minVersion = await this.versionsService.getLatestAtDate(oneWeekAgo);
+    const minVersion = await this.versionsService.getLatestAtDate(
+      oneWeekAgo,
+      this.prismaService.readClient,
+    );
 
     // If the API fails to fetch a version, we don't want to punish the user
     if (minVersion && semver.lt(nodeVersion, minVersion.version)) {
       return;
     }
 
-    const user = await this.usersService.findByGraffiti(graffiti);
+    const user = await this.usersService.findByGraffiti(
+      graffiti,
+      this.prismaService.readClient,
+    );
     if (!user) {
       return;
     }
 
     await this.nodeUptimes.addUptime(user);
-    if (ipAddress) {
-      await this.usersService.updateHashedIpAddress(user, ipAddress);
-    }
+
+    await this.usersService.updateHashedIpAddress(user, ipAddress);
   }
 
   private processPoints(points: WriteTelemetryPointDto[]): {
@@ -211,21 +225,11 @@ export class TelemetryController {
     return semver.gte(parsed, this.MINIMUM_TELEMETRY_VERSION);
   }
 
-  private fetchIpAddressFromRequest(request: Request): string | undefined {
-    const xForwardedFor = request.header('X-Forwarded-For');
-    if (xForwardedFor) {
-      const addresses = xForwardedFor.split(',');
-      if (addresses.length) {
-        return addresses[0].trim();
-      }
-    }
-  }
-
   private submitIpWithoutNodeFieldsToTelemetry(
     nodeVersion: string | null,
-    ipAddress?: string,
+    ipAddress: string,
   ): void {
-    if (nodeVersion && ipAddress) {
+    if (nodeVersion) {
       this.influxDbService.writePoints([
         {
           measurement: 'node_addresses',

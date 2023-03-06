@@ -13,8 +13,12 @@ export function serializedUserFromRecord(
     id: user.id,
     country_code: user.country_code,
     graffiti: user.graffiti,
+    verified: user.last_login_at != null,
+    node_uptime_count: userPoints.node_uptime_count,
+    node_uptime_threshold: 0,
     total_points: userPoints.total_points,
     created_at: user.created_at.toISOString(),
+    enable_kyc: user.enable_kyc,
   };
 }
 
@@ -27,8 +31,12 @@ export function serializedUserFromRecordWithRank(
     id: user.id,
     country_code: user.country_code,
     graffiti: user.graffiti,
+    verified: user.last_login_at != null,
+    node_uptime_count: userPoints.node_uptime_count,
+    node_uptime_threshold: 0,
     total_points: userPoints.total_points,
     created_at: user.created_at.toISOString(),
+    enable_kyc: user.enable_kyc,
     rank,
   };
 }

@@ -89,13 +89,13 @@ describe('MultiAssetController', () => {
     await usersService.create({
       email: faker.internet.email(),
       graffiti: user1Graffiti,
-      country_code: faker.address.countryCode(),
+      countryCode: faker.address.countryCode(),
     });
 
     await usersService.create({
       email: faker.internet.email(),
       graffiti: user2Graffiti,
-      country_code: faker.address.countryCode(),
+      countryCode: faker.address.countryCode(),
     });
   });
 

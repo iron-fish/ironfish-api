@@ -10,6 +10,9 @@ import {
 import { ConfigModule } from '@nestjs/config';
 import joi from 'joi';
 import { ApiConfigModule } from './api-config/api-config.module';
+import { AssetDescriptionsRestModule } from './asset-descriptions/asset-descriptions.rest.module';
+import { AssetsRestModule } from './assets/assets.rest.module';
+import { AssetsLoaderJobsModule } from './assets-loader/assets-loader.jobs.module';
 import { AuthModule } from './auth/auth.module';
 import { AuthRestModule } from './auth/auth.rest.module';
 import { BlocksRestModule } from './blocks/blocks.rest.module';
@@ -23,6 +26,8 @@ import { EventsJobsModule } from './events/events.jobs.module';
 import { EventsRestModule } from './events/events.rest.module';
 import { FaucetTransactionsRestModule } from './faucet-transactions/faucet-transactions.rest.module';
 import { HealthRestModule } from './health/health.rest.module';
+import { KycJobsModule } from './jumio-kyc/kyc.jobs.module';
+import { KycRestModule } from './jumio-kyc/kyc.rest.module';
 import { LoggerModule } from './logger/logger.module';
 import { MetricsRestModule } from './metrics/metrics.rest.module';
 import { NodeUptimesJobsModule } from './node-uptimes/node-uptimes.jobs.module';
@@ -34,14 +39,18 @@ import { UsersRestModule } from './users/users.rest.module';
 import { VersionsRestModule } from './versions/versions.rest.module';
 
 export const JOBS_MODULES = [
+  AssetsLoaderJobsModule,
   BlocksDailyJobsModule,
   DepositsJobsModule,
+  KycJobsModule,
   EventsJobsModule,
   NodeUptimesJobsModule,
   UserPointsJobsModule,
 ];
 
 export const REST_MODULES = [
+  AssetDescriptionsRestModule,
+  AssetsRestModule,
   AuthRestModule,
   BlocksDailyRestModule,
   BlocksRestModule,
@@ -49,6 +58,7 @@ export const REST_MODULES = [
   FaucetTransactionsRestModule,
   HealthRestModule,
   MetricsRestModule,
+  KycRestModule,
   TelemetryRestModule,
   TransactionsRestModule,
   UserPointsRestModule,
@@ -67,6 +77,7 @@ export const REST_MODULES = [
         ALLOW_NODE_UPTIME_POINTS: joi.boolean().default(false),
         API_URL: joi.string().required(),
         BLOCK_EXPLORER_URL: joi.string().required(),
+        BLOCK_LOADER_TRANSACTION_TIMEOUT: joi.number().optional(),
         CHECK_EVENT_OCCURRED_AT: joi.boolean().default(true),
         CHECK_USER_CREATED_AT: joi.boolean().default(true),
         DATABASE_CONNECTION_POOL_URL: joi.string().required(),
@@ -74,6 +85,9 @@ export const REST_MODULES = [
         DATADOG_URL: joi.string().required(),
         DISABLE_FAUCET: joi.boolean().default(false),
         DISABLE_LOGIN: joi.boolean().default(false),
+        DYNO: joi.string().allow('').default(''),
+        ENABLE_PHASE_3_END_CHECK: joi.boolean().default(true),
+        ENABLE_SIGNUP: joi.boolean().default(true),
         GRAPHILE_CONCURRENCY: joi.number().required(),
         INCENTIVIZED_TESTNET_URL: joi.string().required(),
         INFLUXDB_API_TOKEN: joi.string().required(),
@@ -81,10 +95,18 @@ export const REST_MODULES = [
         INFLUXDB_ORG: joi.string().required(),
         INFLUXDB_URL: joi.string().required(),
         IRONFISH_API_KEY: joi.string().required(),
+        IRONFISH_PHASE_ONE_API_URL: joi.string().required(),
+        IRONFISH_PHASE_TWO_API_URL: joi.string().required(),
+        JUMIO_API_CALLBACK_SECRET: joi.string().required(),
+        JUMIO_API_SECRET: joi.string().required(),
+        JUMIO_API_TOKEN: joi.string().required(),
+        JUMIO_URL: joi.string().required(),
+        JUMIO_WORKFLOW_DEFINITION: joi.number().required(),
+        KYC_MAX_ATTEMPTS: joi.number().required(),
         MAGIC_SECRET_KEY: joi.string().required(),
         NETWORK_VERSION: joi.number().required(),
         NODE_ENV: joi.string().required(),
-        DYNO: joi.string().allow('').default(''),
+        REDEMPTION_BAN_LIST: joi.string().required(),
         PORT: joi.number().default(8003),
       }),
     }),

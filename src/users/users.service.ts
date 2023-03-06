@@ -13,7 +13,7 @@ import { standardizeEmail } from '../common/utils/email';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { UserPointsService } from '../user-points/user-points.service';
-import { CreateUserDto } from './dto/create-user.dto';
+import { CreateUserOptions } from './interfaces/create-user-options';
 import { ListUsersOptions } from './interfaces/list-users-options';
 import { UpdateUserOptions } from './interfaces/update-user-options';
 import { Prisma, User } from '.prisma/client';
@@ -109,11 +109,12 @@ export class UsersService {
   async create({
     email,
     graffiti,
-    country_code: countryCode,
+    countryCode,
     discord,
     telegram,
     github,
-  }: CreateUserDto): Promise<User> {
+    enable_kyc,
+  }: CreateUserOptions): Promise<User> {
     email = standardizeEmail(email);
     const existingRecord = await this.prisma.user.findFirst({
       where: {
@@ -145,6 +146,7 @@ export class UsersService {
           telegram,
           github,
           country_code: countryCode,
+          enable_kyc,
         },
       });
 
@@ -239,7 +241,7 @@ export class UsersService {
     options: UpdateUserOptions,
     client: BasePrismaClient,
   ): Promise<User[]> {
-    const { discord, github, graffiti, telegram } = options;
+    const { discord, github, telegram } = options;
 
     const filters = [];
     if (discord) {
@@ -247,9 +249,6 @@ export class UsersService {
     }
     if (github) {
       filters.push({ github });
-    }
-    if (graffiti) {
-      filters.push({ graffiti });
     }
     if (telegram) {
       filters.push({ telegram });
@@ -270,13 +269,11 @@ export class UsersService {
     options: UpdateUserOptions,
     client: BasePrismaClient,
   ): Promise<User> {
-    const { countryCode, discord, github, graffiti, telegram } = options;
+    const { discord, github, telegram } = options;
     return client.user.update({
       data: {
-        country_code: countryCode,
         discord,
         github,
-        graffiti,
         telegram,
       },
       where: {

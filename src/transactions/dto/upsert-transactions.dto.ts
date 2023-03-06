@@ -12,6 +12,8 @@ import {
   Max,
   ValidateNested,
 } from 'class-validator';
+import { BurnDto } from './burn.dto';
+import { MintDto } from './mint.dto';
 import { NoteDto } from './note.dto';
 import { SpendDto } from './spend.dto';
 
@@ -36,6 +38,14 @@ export class TransactionDto {
   @IsArray()
   @ValidateNested({ each: true })
   readonly spends!: SpendDto[];
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  readonly mints!: MintDto[];
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  readonly burns!: BurnDto[];
 }
 
 export class UpsertTransactionsDto {

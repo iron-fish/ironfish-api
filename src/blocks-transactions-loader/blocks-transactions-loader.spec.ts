@@ -57,6 +57,8 @@ describe('BlocksTransactionsLoader', () => {
         size: faker.datatype.number(),
         notes: [{ commitment: uuid() }],
         spends: [{ nullifier: uuid() }],
+        mints: [],
+        burns: [],
       };
       const blocks = await blocksTransactionsLoader.createMany({
         blocks: [
@@ -137,7 +139,7 @@ describe('BlocksTransactionsLoader', () => {
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti,
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
         const blocks = await blocksTransactionsLoader.createMany({
           blocks: [
@@ -170,7 +172,7 @@ describe('BlocksTransactionsLoader', () => {
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti,
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
         const blocks = await blocksTransactionsLoader.createMany({
           blocks: [

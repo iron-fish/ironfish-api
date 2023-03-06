@@ -11,8 +11,11 @@ import { standardizeEmail } from '../common/utils/email';
 import { EventsJobsController } from '../events/events.jobs.controller';
 import { EventsService } from '../events/events.service';
 import { MagicLinkService } from '../magic-link/magic-link.service';
+import { RecaptchaVerificationService } from '../recaptcha-verification/recaptcha-verification.service';
 import { bootstrapTestApp } from '../test/test-app';
+import { UpsertUserPointsOptions } from '../user-points/interfaces/upsert-user-points-options';
 import { UserPointsJobsController } from '../user-points/user-points.jobs.controller';
+import { UserPointsService } from '../user-points/user-points.service';
 import { UserRanksService } from '../user-rank/user-ranks.service';
 import { UsersService } from './users.service';
 
@@ -26,6 +29,8 @@ describe('UsersController', () => {
   let eventsJobsController: EventsJobsController;
   let userPointsJobsController: UserPointsJobsController;
   let userRankService: UserRanksService;
+  let userPointsService: UserPointsService;
+  let recaptchaVerificationService: RecaptchaVerificationService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
@@ -34,7 +39,9 @@ describe('UsersController', () => {
     eventsService = app.get(EventsService);
     eventsJobsController = app.get(EventsJobsController);
     userPointsJobsController = app.get(UserPointsJobsController);
+    userPointsService = app.get(UserPointsService);
     userRankService = app.get(UserRanksService);
+    recaptchaVerificationService = app.get(RecaptchaVerificationService);
 
     await app.init();
   });
@@ -48,7 +55,7 @@ describe('UsersController', () => {
       const user = await usersService.create({
         email: faker.internet.email(),
         graffiti: uuid(),
-        country_code: faker.address.countryCode(),
+        countryCode: faker.address.countryCode(),
       });
 
       const { body } = await request(app.getHttpServer())
@@ -75,7 +82,7 @@ describe('UsersController', () => {
       const user = await usersService.create({
         email: faker.internet.email(),
         graffiti: uuid(),
-        country_code: faker.address.countryCode(),
+        countryCode: faker.address.countryCode(),
       });
 
       const { body } = await request(app.getHttpServer())
@@ -87,6 +94,72 @@ describe('UsersController', () => {
       expect(body).toMatchObject({
         id: user.id,
         graffiti: user.graffiti,
+        verified: false,
+        node_uptime_count: expect.any(Number),
+        node_uptime_threshold: expect.any(Number),
+        total_points: expect.any(Number),
+        created_at: user.created_at.toISOString(),
+      });
+    });
+
+    it('gives proper answer for verified', async () => {
+      const user = await usersService.create({
+        email: faker.internet.email(),
+        graffiti: uuid(),
+        countryCode: faker.address.countryCode(),
+      });
+      await usersService.updateLastLoginAt(user);
+
+      const { body } = await request(app.getHttpServer())
+        .get(`/users/find`)
+        .query({ graffiti: user.graffiti })
+        .expect(HttpStatus.OK);
+
+      expect(body).not.toHaveProperty('rank');
+      expect(body).toMatchObject({
+        id: user.id,
+        graffiti: user.graffiti,
+        verified: true,
+        total_points: expect.any(Number),
+        created_at: user.created_at.toISOString(),
+      });
+    });
+
+    it('gives proper answer for node_uptime_count', async () => {
+      const userPointsService = app.get(UserPointsService);
+      const expectedPoints = 5;
+
+      const user = await usersService.create({
+        email: faker.internet.email(),
+        graffiti: uuid(),
+        countryCode: faker.address.countryCode(),
+      });
+
+      const points = {
+        [EventType.NODE_UPTIME]: {
+          points: 150,
+          count: expectedPoints,
+          latestOccurredAt: new Date(),
+        },
+      };
+
+      const options: UpsertUserPointsOptions = {
+        userId: user.id,
+        points: points,
+      };
+
+      await userPointsService.upsert(options);
+
+      const { body } = await request(app.getHttpServer())
+        .get(`/users/find`)
+        .query({ graffiti: user.graffiti })
+        .expect(HttpStatus.OK);
+
+      expect(body).not.toHaveProperty('rank');
+      expect(body).toMatchObject({
+        id: user.id,
+        graffiti: user.graffiti,
+        node_uptime_count: expectedPoints,
         total_points: expect.any(Number),
         created_at: user.created_at.toISOString(),
       });
@@ -203,7 +276,7 @@ describe('UsersController', () => {
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: uuid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
 
         const { body } = await request(app.getHttpServer())
@@ -237,7 +310,7 @@ describe('UsersController', () => {
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: uuid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
 
         await eventsService.create({
@@ -267,6 +340,13 @@ describe('UsersController', () => {
         });
         await userRankService.updateRanks();
 
+        const userPoints = await userPointsService.findOrThrow(user.id);
+        await userPointsService.upsertPreviousPools(userPoints, {
+          pool1: 10,
+          pool2: 20,
+          pool3: 30,
+        });
+
         const { body } = await request(app.getHttpServer())
           .get(`/users/${user.id}/metrics`)
           .query({
@@ -292,6 +372,12 @@ describe('UsersController', () => {
               count: expect.any(Number),
               points: 500,
             },
+          },
+          pool_points: {
+            pool_one: 10,
+            pool_two: 20,
+            pool_three: 30,
+            pool_four: 100,
           },
           metrics: {
             blocks_mined: {
@@ -329,7 +415,7 @@ describe('UsersController', () => {
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: uuid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
         const { body } = await request(app.getHttpServer())
           .get(`/users/${user.id}/metrics`)
@@ -362,7 +448,7 @@ describe('UsersController', () => {
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: uuid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
 
         const start = new Date(Date.now() - 1).toISOString();
@@ -540,7 +626,7 @@ describe('UsersController', () => {
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: uuid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
         await request(app.getHttpServer())
           .post(`/users`)
@@ -553,6 +639,10 @@ describe('UsersController', () => {
     describe('with valid arguments', () => {
       it('creates a user', async () => {
         const email = faker.internet.email().toUpperCase();
+        const recaptchaVerification = jest
+          .spyOn(recaptchaVerificationService, 'verify')
+          .mockImplementation(() => Promise.resolve(true));
+
         const graffiti = uuid();
         const discord = faker.internet.userName();
         const { body } = await request(app.getHttpServer())
@@ -563,15 +653,69 @@ describe('UsersController', () => {
             graffiti,
             discord,
             country_code: faker.address.countryCode('alpha-3'),
+            recaptcha: 'token',
           })
           .expect(HttpStatus.CREATED);
 
+        expect(recaptchaVerification).toHaveBeenCalledTimes(1);
         expect(body).toMatchObject({
           id: expect.any(Number),
           email: standardizeEmail(email),
           created_at: expect.any(String),
           graffiti,
           discord,
+        });
+      });
+
+      describe('recaptcha verification failure', () => {
+        afterEach(() => {
+          jest.clearAllMocks();
+        });
+
+        it('returns 422 on missing recaptcha token', async () => {
+          const email = faker.internet.email().toUpperCase();
+          const recaptchaVerification = jest.spyOn(
+            recaptchaVerificationService,
+            'verify',
+          );
+
+          const graffiti = uuid();
+          const discord = faker.internet.userName();
+          await request(app.getHttpServer())
+            .post(`/users`)
+            .set('Authorization', `Bearer ${API_KEY}`)
+            .send({
+              email,
+              graffiti,
+              discord,
+              country_code: faker.address.countryCode('alpha-3'),
+            })
+            .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+
+          expect(recaptchaVerification).toHaveBeenCalledTimes(1);
+        });
+
+        it('returns 422 on failed verification', async () => {
+          const email = faker.internet.email().toUpperCase();
+          const recaptchaVerification = jest
+            .spyOn(recaptchaVerificationService, 'verify')
+            .mockImplementation(() => Promise.resolve(false));
+
+          const graffiti = uuid();
+          const discord = faker.internet.userName();
+          await request(app.getHttpServer())
+            .post(`/users`)
+            .set('Authorization', `Bearer ${API_KEY}`)
+            .send({
+              email,
+              graffiti,
+              discord,
+              country_code: faker.address.countryCode('alpha-3'),
+              recaptcha: 'token',
+            })
+            .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+
+          expect(recaptchaVerification).toHaveBeenCalledTimes(1);
         });
       });
     });
@@ -593,7 +737,7 @@ describe('UsersController', () => {
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: uuid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
 
         jest
@@ -610,40 +754,12 @@ describe('UsersController', () => {
       });
     });
 
-    describe('with an empty string graffiti', () => {
-      it('returns a 422', async () => {
-        const user = await usersService.create({
-          email: faker.internet.email(),
-          graffiti: uuid(),
-          country_code: faker.address.countryCode('alpha-3'),
-        });
-
-        jest
-          .spyOn(magicLinkService, 'getEmailFromHeader')
-          .mockImplementationOnce(() => Promise.resolve(user.email));
-
-        const { body } = await request(app.getHttpServer())
-          .put(`/users/${user.id}`)
-          .set('Authorization', 'token')
-          .send({
-            graffiti: '',
-          })
-          .expect(HttpStatus.UNPROCESSABLE_ENTITY);
-
-        expect(body).toEqual({
-          error: 'Unprocessable Entity',
-          message: ['graffiti should not be empty'],
-          statusCode: 422,
-        });
-      });
-    });
-
     describe('with a valid payload', () => {
       it('updates the user', async () => {
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: uuid(),
-          country_code: faker.address.countryCode('alpha-3'),
+          countryCode: faker.address.countryCode('alpha-3'),
         });
 
         jest
