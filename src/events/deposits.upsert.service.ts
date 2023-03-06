@@ -94,7 +94,7 @@ export class DepositsUpsertService {
   async mismatchedDepositCount(beforeSequence = 0): Promise<number> {
     const blocksHead = await this.blocksService.head();
 
-    const result = await this.prisma.$queryRawUnsafe<{ count: BigInt }[]>(
+    const result = await this.prisma.$queryRawUnsafe<{ count: bigint }[]>(
       `
       SELECT
         COUNT(*)

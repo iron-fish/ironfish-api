@@ -646,9 +646,9 @@ export class EventsService {
   async updateLatestPoints(userId: number, type: EventType): Promise<void> {
     const [counts] = await this.prisma.readClient.$queryRawUnsafe<
       {
-        count: BigInt;
-        points: BigInt;
-        total_points: BigInt;
+        count: bigint;
+        points: bigint;
+        total_points: bigint;
         last_occurred_at: Date;
       }[]
     >(
