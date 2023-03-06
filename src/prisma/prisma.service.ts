@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import { PrismaClient, PrismaPromise } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 import { ApiConfigService } from '../api-config/api-config.service';
 
 @Injectable()
@@ -32,7 +32,7 @@ export class PrismaService
   $queryRawUnsafe<T = unknown>(
     query: string,
     ...values: unknown[]
-  ): PrismaPromise<T> {
+  ): Prisma.PrismaPromise<T> {
     if (this.config.isProduction()) {
       return this.readClient.$queryRawUnsafe<T>(query, ...values);
     }
