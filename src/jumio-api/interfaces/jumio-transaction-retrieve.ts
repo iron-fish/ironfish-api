@@ -87,6 +87,26 @@ export type ImageChecksLabel =
   | 'PRECONDITION_NOT_FULFILLED'
   | 'TECHNICAL_ERROR';
 
+export type ImageCheck = {
+  id: string;
+  credentials: {
+    id: string;
+    category: string;
+  }[];
+  decision: {
+    type: string;
+    details: {
+      label: ImageChecksLabel;
+    };
+  };
+  data: {
+    faceSearchFindings: {
+      status: string;
+      findings: string[];
+    };
+  };
+};
+
 export interface JumioTransactionRetrieveResponse {
   account: {
     id: string;
@@ -226,30 +246,6 @@ export interface JumioTransactionRetrieveResponse {
         };
       };
     }[];
-    imageChecks: {
-      id: string;
-      credentials: [
-        {
-          id: string;
-          category: string;
-        },
-        {
-          id: string;
-          category: string;
-        },
-      ];
-      decision: {
-        type: string;
-        details: {
-          label: ImageChecksLabel;
-        };
-      };
-      data: {
-        faceSearchFindings: {
-          status: string;
-          findings: string[];
-        };
-      };
-    }[];
+    imageChecks: ImageCheck[];
   };
 }

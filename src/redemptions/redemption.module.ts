@@ -3,13 +3,19 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Module } from '@nestjs/common';
 import { ApiConfigModule } from '../api-config/api-config.module';
+import { JumioTransactionModule } from '../jumio-transactions/jumio-transaction.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { UserPointsModule } from '../user-points/user-points.module';
 import { RedemptionService } from './redemption.service';
 
 @Module({
   exports: [RedemptionService],
-  imports: [PrismaModule, UserPointsModule, ApiConfigModule],
+  imports: [
+    PrismaModule,
+    UserPointsModule,
+    JumioTransactionModule,
+    ApiConfigModule,
+  ],
   providers: [RedemptionService],
 })
 export class RedemptionModule {}

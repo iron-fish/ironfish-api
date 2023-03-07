@@ -2,22 +2,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { DecisionStatus } from '@prisma/client';
-import { JumioTransactionRetrieveResponse } from '../../jumio-api/interfaces/jumio-transaction-retrieve';
+import {
+  ImageCheck,
+  JumioTransactionRetrieveResponse,
+} from '../../jumio-api/interfaces/jumio-transaction-retrieve';
+import { IMAGE_CHECK_FIXTURE } from './image-check';
 
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 export const WORKFLOW_RETRIEVE_FIXTURE = (
   workflowStatus: 'TOKEN_EXPIRED' | 'SESSION_EXPIRED' | 'PROCESSED',
   idCountryCode: string,
   decisionStatus: DecisionStatus,
+  userId = '1',
+  imageCheck: ImageCheck = IMAGE_CHECK_FIXTURE,
 ): JumioTransactionRetrieveResponse => {
   return {
     workflow: {
       id: 'fakeworkflowid',
       status: workflowStatus,
       definitionKey: '10013',
-      customerInternalReference: 'FOO',
+      customerInternalReference: userId,
     },
     account: {
       id: 'fakeaccountid',
@@ -196,36 +199,7 @@ export const WORKFLOW_RETRIEVE_FIXTURE = (
           },
         },
       ],
-      imageChecks: [
-        {
-          id: '1568893e-5edc-453c-9c50-e47fa10578f8',
-          credentials: [
-            {
-              id: 'fakecredentialsid',
-              category: 'ID',
-            },
-            {
-              id: 'fakecredentialsid',
-              category: 'SELFIE',
-            },
-          ],
-          decision: {
-            type: 'WARNING',
-            details: {
-              label: 'REPEATED_FACE',
-            },
-          },
-          data: {
-            faceSearchFindings: {
-              status: 'DONE',
-              findings: [
-                'f7fe3c49-6221-4d87-b8b9-0cd243b65088',
-                '85b26f35-cf4e-4a68-8bce-88c20f06d3ff',
-              ],
-            },
-          },
-        },
-      ],
+      imageChecks: [imageCheck],
       usability: [
         {
           id: 'ab66e806-87a7-4132-a677-8ae594d21fbd',
