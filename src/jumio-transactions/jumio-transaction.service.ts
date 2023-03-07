@@ -68,13 +68,49 @@ export class JumioTransactionService {
     return this.prisma.jumioTransaction.update({
       data: {
         decision_status: data.decisionStatus,
-        last_workflow_fetch: instanceToPlain(data.lastWorkflowFetch),
+        last_workflow_fetch: instanceToPlain(
+          this.scrubExtractionData(data.lastWorkflowFetch),
+        ),
         last_callback: instanceToPlain(data.lastCallback),
         last_callback_at: data.lastCallbackAt,
         failure_message: data.failureMessage,
       },
       where: { id: transaction.id },
     });
+  }
+
+  scrubExtractionData(
+    lastWorkflowFetch: JumioTransactionRetrieveResponse | undefined,
+  ): JumioTransactionRetrieveResponse | undefined {
+    if (lastWorkflowFetch === undefined) {
+      return undefined;
+    }
+    const cleanExtractions = [];
+    for (const extraction of lastWorkflowFetch.capabilities.extraction) {
+      cleanExtractions.push({
+        ...extraction,
+        data: {
+          type: extraction.data.type,
+          subType: extraction.data.subType,
+          issuingCountry: extraction.data.issuingCountry,
+          firstName: extraction.data.firstName,
+          lastName: extraction.data.lastName,
+          expiryDate: extraction.data.expiryDate,
+          dateOfBirth: '1600-01-01',
+          documentNumber: '-1',
+          optionalMrzField1: '-1',
+          optionalMrzField2: '-1',
+          currentAge: '80',
+        },
+      });
+    }
+    return {
+      ...lastWorkflowFetch,
+      capabilities: {
+        ...lastWorkflowFetch.capabilities,
+        extraction: cleanExtractions,
+      },
+    };
   }
 
   async create(
