@@ -9,12 +9,13 @@ import {
   HttpStatus,
   Param,
   Post,
+  Req,
   Res,
   UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiExcludeEndpoint, ApiTags } from '@nestjs/swagger';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { MagicLinkGuard } from '../auth/guards/magic-link.guard';
@@ -22,6 +23,7 @@ import { AIRDROP_CONFIG } from '../common/constants';
 import { Context } from '../common/decorators/context';
 import { MagicLinkContext } from '../common/interfaces/magic-link-context';
 import { IntIsSafeForPrismaPipe } from '../common/pipes/int-is-safe-for-prisma.pipe';
+import { fetchIpAddressFromRequest } from '../common/utils/request';
 import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
 import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { JumioTransactionService } from '../jumio-transactions/jumio-transaction.service';
@@ -56,10 +58,13 @@ export class KycController {
       }),
     )
     dto: CreateKycDto,
+    @Req()
+    req: Request,
   ): Promise<SerializedKyc> {
     const { redemption, transaction } = await this.kycService.attempt(
       user,
       dto.public_address,
+      fetchIpAddressFromRequest(req),
     );
 
     const { eligible, reason: eligibleReason } =

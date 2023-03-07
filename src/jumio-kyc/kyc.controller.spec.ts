@@ -130,7 +130,9 @@ describe('KycController', () => {
     it('banned user country gets error', async () => {
       const user = await mockUser('PRK');
 
-      await expect(kycService.attempt(user, 'foo')).rejects.toThrow(
+      await expect(
+        kycService.attempt(user, 'foo', '127.0.0.1'),
+      ).rejects.toThrow(
         'The country associated with your account is banned: PRK',
       );
 
@@ -148,6 +150,21 @@ describe('KycController', () => {
         .expect(HttpStatus.OK);
 
       expect(body).toMatchObject({ can_attempt: false });
+    });
+
+    it('ip address is saved', async () => {
+      const user = await mockUser();
+      await request(app.getHttpServer())
+        .post(`/kyc`)
+        .set('Authorization', 'did-token')
+        .send({
+          public_address: 'foo',
+        })
+        .expect(HttpStatus.CREATED);
+      const redemption = await redemptionService.find(user);
+      expect(redemption?.hashed_ip_address).toBe(
+        '3e48ef9d22e096da6838540fb846999890462c8a32730a4f7a5eaee6945315f7',
+      );
     });
   });
 
@@ -243,7 +260,11 @@ describe('KycController', () => {
   describe('GET /kyc', () => {
     it('retrieves kyc info when it exists', async () => {
       const user = await mockUser();
-      const { redemption, transaction } = await kycService.attempt(user, 'foo');
+      const { redemption, transaction } = await kycService.attempt(
+        user,
+        'foo',
+        '127.0.0.1',
+      );
 
       const { body } = await request(app.getHttpServer())
         .get(`/kyc`)

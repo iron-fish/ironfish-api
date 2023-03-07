@@ -4,6 +4,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { DecisionStatus, KycStatus, Redemption, User } from '@prisma/client';
 import { instanceToPlain } from 'class-transformer';
+import { createHash } from 'crypto';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { AIRDROP_CONFIG } from '../common/constants';
 import {
@@ -236,8 +237,12 @@ export class RedemptionService {
   async create(
     user: User,
     public_address: string,
+    ipAddress: string,
     prisma?: BasePrismaClient,
   ): Promise<Redemption> {
+    const hash = createHash('sha256');
+    hash.update(ipAddress);
+    hash.end();
     const client = prisma ?? this.prisma;
 
     return client.redemption.create({
@@ -245,6 +250,7 @@ export class RedemptionService {
         user: { connect: { id: user.id } },
         public_address,
         kyc_status: KycStatus.IN_PROGRESS,
+        hashed_ip_address: hash.digest().toString('hex'),
       },
     });
   }

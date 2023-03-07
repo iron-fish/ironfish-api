@@ -40,6 +40,7 @@ export class KycService {
   async attempt(
     user: User,
     publicAddress: string,
+    ipAddress: string,
   ): Promise<{ redemption: Redemption; transaction: JumioTransaction }> {
     return this.prisma.$transaction(async (prisma) => {
       await prisma.$executeRawUnsafe(
@@ -63,6 +64,7 @@ export class KycService {
         redemption = await this.redemptionService.create(
           user,
           publicAddress,
+          ipAddress,
           prisma,
         );
       }
