@@ -47,7 +47,6 @@ export async function bootstrapTestApp(): Promise<INestApplication> {
           MAGIC_SECRET_KEY: joi.string().required(),
           NETWORK_VERSION: joi.number().required(),
           NODE_ENV: joi.string().required(),
-          REDEMPTION_BAN_LIST: joi.string().required(),
           PORT: joi.number().default(8003),
         }),
       }),

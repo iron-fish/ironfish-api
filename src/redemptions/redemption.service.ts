@@ -12,6 +12,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { UserPointsService } from '../user-points/user-points.service';
 
+export const AIRDROP_BANNED_COUNTRIES = ['IRN', 'PRK', 'AFG', 'CUB'];
 @Injectable()
 export class RedemptionService {
   constructor(
@@ -289,11 +290,7 @@ export class RedemptionService {
   }
 
   hasBannedCountry = (country_code: string): boolean =>
-    this.config
-      .get<string>('REDEMPTION_BAN_LIST')
-      .split(',')
-      .map((c) => c.trim())
-      .includes(country_code);
+    AIRDROP_BANNED_COUNTRIES.includes(country_code);
 
   async canAttempt(
     redemption: Redemption | null,
