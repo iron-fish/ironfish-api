@@ -6,9 +6,11 @@ import { MessagePattern } from '@nestjs/microservices';
 import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
 import { GraphileWorkerException } from '../graphile-worker/graphile-worker-exception';
 import { GraphileWorkerHandlerResponse } from '../graphile-worker/interfaces/graphile-worker-handler-response';
+import { RedemptionService } from '../redemptions/redemption.service';
 import { UsersService } from '../users/users.service';
 import { RefreshUserRedemptionOptions } from './interfaces/refresh-user-redemption-options';
 import { KycService } from './kyc.service';
+import { POOLS } from './types/pools';
 import { User } from '.prisma/client';
 
 @Controller()
@@ -16,6 +18,7 @@ export class KycJobsController {
   constructor(
     private readonly usersService: UsersService,
     private readonly kycService: KycService,
+    private readonly redemptionService: RedemptionService,
   ) {}
 
   @MessagePattern(GraphileWorkerPattern.REFRESH_USERS_REDEMPTION)
@@ -23,6 +26,17 @@ export class KycJobsController {
   async refreshUsersRedemption(): Promise<GraphileWorkerHandlerResponse> {
     for await (const user of this.usersGenerator()) {
       await this.kycService.refreshUser(user);
+    }
+
+    return { requeue: false };
+  }
+
+  @MessagePattern(GraphileWorkerPattern.ALLOCATION_CREATION)
+  @UseFilters(new GraphileWorkerException())
+  async createAllocations(): Promise<GraphileWorkerHandlerResponse> {
+    const redemptions = await this.redemptionService.findRedeemable();
+    for (const pool of POOLS) {
+      await this.kycService.allocate(pool, redemptions);
     }
 
     return { requeue: false };

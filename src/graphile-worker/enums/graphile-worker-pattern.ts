@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 export enum GraphileWorkerPattern {
+  ALLOCATION_CREATION = 'ALLOCATION_CREATION',
   CREATE_EVENT = 'CREATE_EVENT',
   CREATE_NODE_UPTIME_EVENT = 'CREATE_NODE_UPTIME_EVENT',
   DELETE_BLOCK_MINED_EVENT = 'DELETE_BLOCK_MINED_EVENT',

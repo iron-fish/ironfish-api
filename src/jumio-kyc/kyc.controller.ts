@@ -215,6 +215,16 @@ export class KycController {
     id: number,
   ): Promise<void> {
     await this.kycService.standaloneWatchlist(id);
+  }
+
+  @Get('/allocations')
+  @UseGuards(ApiKeyGuard)
+  async allocations(@Res() res: Response): Promise<void> {
+    await this.graphileWorkerService.addJob(
+      GraphileWorkerPattern.ALLOCATION_CREATION,
+    );
+
+    // Jumio requires a 200 explicitly
     res.status(HttpStatus.OK).send();
   }
 }

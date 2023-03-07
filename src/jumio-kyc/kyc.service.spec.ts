@@ -9,6 +9,7 @@ import crypto from 'crypto';
 import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { ApiConfigService } from '../api-config/api-config.service';
+import { AIRDROP_CONFIG, ORE_TO_IRON } from '../common/constants';
 import { JumioApiService } from '../jumio-api/jumio-api.service';
 import { JumioTransactionService } from '../jumio-transactions/jumio-transaction.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -18,6 +19,7 @@ import { UsersService } from '../users/users.service';
 import { JUMIO_CREATE_RESPONSE } from './fixtures/jumio-create-response';
 import { WORKFLOW_RETRIEVE_FIXTURE } from './fixtures/workflow';
 import { KycService } from './kyc.service';
+import { POOL1 } from './types/pools';
 
 describe('KycService', () => {
   let app: INestApplication;
@@ -44,6 +46,11 @@ describe('KycService', () => {
       .mockImplementation(() => Promise.resolve(JUMIO_CREATE_RESPONSE));
 
     await app.init();
+  });
+
+  beforeEach(async () => {
+    await prisma.redemption.deleteMany();
+    await prisma.userPoints.deleteMany();
   });
 
   afterAll(async () => {
@@ -156,6 +163,73 @@ describe('KycService', () => {
           false,
         );
       });
+    });
+  });
+
+  describe('allocate', () => {
+    it('should allocate ORE to users based on points', async () => {
+      const createUser = async (kycStatus: KycStatus) => {
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          countryCode: 'USA',
+        });
+        const redemption = await prisma.redemption.create({
+          data: {
+            kyc_status: kycStatus,
+            user_id: user.id,
+            public_address: 'fakepublicaddress',
+          },
+        });
+        return [user, redemption] as const;
+      };
+
+      // create users
+      const [user1, redemption1] = await createUser(KycStatus.SUCCESS);
+      const [user2, redemption2] = await createUser(KycStatus.SUCCESS);
+      const [user3, _redemption3] = await createUser(KycStatus.FAILED);
+      const [user4, redemption4] = await createUser(KycStatus.SUCCESS);
+
+      // grant points
+      await prisma.userPoints.upsert({
+        create: { pool1_points: 5, user_id: user1.id },
+        update: { pool1_points: 5 },
+        where: { user_id: user1.id },
+      });
+      await prisma.userPoints.upsert({
+        create: { pool1_points: 11, user_id: user2.id },
+        update: { pool1_points: 11 },
+        where: { user_id: user2.id },
+      });
+      await prisma.userPoints.upsert({
+        create: { pool1_points: 10000000, user_id: user3.id },
+        update: { pool1_points: 10000000 },
+        where: { user_id: user3.id },
+      });
+      // only points in pool2
+      await prisma.userPoints.upsert({
+        create: { pool2_points: 555555, user_id: user4.id },
+        update: { pool2_points: 555555 },
+        where: { user_id: user4.id },
+      });
+
+      await kycService.allocate(POOL1, [redemption1, redemption2, redemption4]);
+
+      const pool1 = AIRDROP_CONFIG.data.find((c) => c.name === POOL1);
+      assert.ok(pool1);
+
+      const user1Redemption = await redemptionService.findOrThrow(user1);
+      const user2Redemption = await redemptionService.findOrThrow(user2);
+      const user3Redemption = await redemptionService.findOrThrow(user3);
+      const user4Redemption = await redemptionService.findOrThrow(user3);
+      expect(user1Redemption.pool_one).toBe(
+        BigInt(Math.floor((5 / (11 + 5)) * (pool1.coins * ORE_TO_IRON))),
+      );
+      expect(user2Redemption.pool_one).toBe(
+        BigInt(Math.floor((11 / (11 + 5)) * (pool1.coins * ORE_TO_IRON))),
+      );
+      expect(user3Redemption.pool_one).toBeNull();
+      expect(user4Redemption.pool_one).toBeNull();
     });
   });
 });

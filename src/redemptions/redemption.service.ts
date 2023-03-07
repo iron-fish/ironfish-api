@@ -43,6 +43,12 @@ export class RedemptionService {
     });
   }
 
+  async findRedeemable(): Promise<Redemption[]> {
+    return this.prisma.redemption.findMany({
+      where: { kyc_status: KycStatus.SUCCESS },
+    });
+  }
+
   async calculateStatus(
     transactionStatus: JumioTransactionRetrieveResponse,
   ): Promise<{
@@ -267,6 +273,10 @@ export class RedemptionService {
       failureMessage?: string;
       publicAddress?: string;
       age?: number;
+      pool_one?: bigint;
+      pool_two?: bigint;
+      pool_three?: bigint;
+      pool_four?: bigint;
     },
     prisma?: BasePrismaClient,
   ): Promise<Redemption> {
@@ -279,6 +289,10 @@ export class RedemptionService {
         id_details: instanceToPlain(data.idDetails),
         failure_message: data.failureMessage,
         public_address: data.publicAddress,
+        pool_one: data.pool_one,
+        pool_two: data.pool_two,
+        pool_three: data.pool_three,
+        pool_four: data.pool_four,
         ...(data.age ? { age: data.age } : {}),
       },
       where: {
