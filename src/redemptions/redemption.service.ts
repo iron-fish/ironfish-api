@@ -255,7 +255,11 @@ export class RedemptionService {
     prisma?: BasePrismaClient,
   ): Promise<{ eligible: boolean; reason: string }> {
     if (!user.enable_kyc) {
-      return { eligible: false, reason: 'KYC not enabled on user' };
+      return {
+        eligible: false,
+        reason:
+          'KYC is not available for you account, please check back later as we continue to open KYC to new users',
+      };
     }
 
     if (user.ineligible_reason) {
@@ -270,7 +274,7 @@ export class RedemptionService {
       if (redemption.kyc_attempts >= kycMaxAttempts) {
         return {
           eligible: false,
-          reason: `Max attempts reached ${redemption.kyc_attempts} / ${kycMaxAttempts}`,
+          reason: `Max KYC attempts reached ${redemption.kyc_attempts} / ${kycMaxAttempts}`,
         };
       }
     }
@@ -279,7 +283,7 @@ export class RedemptionService {
     if (this.currentDate() > userDeadline) {
       return {
         eligible: false,
-        reason: `User has passed their deadline for kyc: ${userDeadline.toISOString()}`,
+        reason: `Your final deadline for kyc has passed: ${userDeadline.toUTCString()}`,
       };
     }
 
@@ -292,13 +296,16 @@ export class RedemptionService {
       points.pool4_points;
 
     if (!hasPoints) {
-      return { eligible: false, reason: 'User has no points' };
+      return {
+        eligible: false,
+        reason: 'Your account has no points, you are not eligible for airdrop',
+      };
     }
 
     if (this.hasBannedCountry(user.country_code)) {
       return {
         eligible: false,
-        reason: `User is from a banned country: ${user.country_code}`,
+        reason: `The country associated with your account is banned: ${user.country_code}`,
       };
     }
 

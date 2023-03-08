@@ -177,7 +177,7 @@ describe('RedemptionServiceSpec', () => {
       const eligiblity = await redemptionService.isEligible(user, redemption);
       expect(eligiblity.eligible).toBe(false);
       expect(eligiblity.reason).toContain(
-        'User has passed their deadline for kyc',
+        'Your final deadline for kyc has passed',
       );
     });
   });
