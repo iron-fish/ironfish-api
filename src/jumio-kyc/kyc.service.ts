@@ -56,9 +56,7 @@ export class KycService {
       );
 
       if (!canAttemptError.attemptable) {
-        throw new ForbiddenException(
-          `Not eligible to create transaction for user ${user.id}: ${canAttemptError.reason}`,
-        );
+        throw new ForbiddenException(canAttemptError.reason);
       }
 
       if (!redemption) {

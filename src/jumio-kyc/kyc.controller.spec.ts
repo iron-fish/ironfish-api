@@ -131,7 +131,7 @@ describe('KycController', () => {
       const user = await mockUser('PRK');
 
       await expect(kycService.attempt(user, 'foo')).rejects.toThrow(
-        'User is from a banned country: PRK',
+        'The country associated with your account is banned: PRK',
       );
 
       await request(app.getHttpServer())
