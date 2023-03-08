@@ -75,6 +75,7 @@ model Redemption {
   kyc_status  KycStatus
   jumio_account_id String?   @db.VarChar
   public_address   String    @db.VarChar
+  hashed_ip_address String?  @db.VarChar
   id_details       Json?
   failure_message  String?   @db.VarChar
   @@index([jumio_account_id], name: "index_redemption_jumio_account_id")

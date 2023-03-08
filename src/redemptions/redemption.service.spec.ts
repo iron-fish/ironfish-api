@@ -82,6 +82,7 @@ describe('RedemptionServiceSpec', () => {
       let redemption = await redemptionService.create(
         user,
         'fakepublicaddress',
+        '127.0.0.1',
       );
       const idDetails = [
         {
@@ -161,6 +162,7 @@ describe('RedemptionServiceSpec', () => {
       const redemption = await redemptionService.create(
         user,
         'fakepublicaddress',
+        '127.0.0.1',
       );
       await prismaService.userPoints.update({
         data: {
