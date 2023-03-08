@@ -2,11 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { INestApplication } from '@nestjs/common';
-import { KycStatus } from '@prisma/client';
+import { DecisionStatus, KycStatus } from '@prisma/client';
 import assert from 'assert';
 import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { AIRDROP_CONFIG } from '../common/constants';
+import { ImageChecksLabel } from '../jumio-api/interfaces/jumio-transaction-retrieve';
 import { WORKFLOW_RETRIEVE_FIXTURE } from '../jumio-kyc/fixtures/workflow';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
@@ -37,9 +38,9 @@ describe('RedemptionServiceSpec', () => {
       jest.clearAllMocks();
     });
 
-    it('should return banned if user from PRK', () => {
+    it('should return banned if user from PRK', async () => {
       const fixture = WORKFLOW_RETRIEVE_FIXTURE('PROCESSED', 'PRK', 'PASSED');
-      const status = redemptionService.calculateStatus(fixture);
+      const status = await redemptionService.calculateStatus(fixture);
       expect(status).toEqual({
         status: KycStatus.FAILED,
         failureMessage: 'Failure: Banned Country',
@@ -53,9 +54,9 @@ describe('RedemptionServiceSpec', () => {
       });
     });
 
-    it('should not ban with acceptable country', () => {
+    it('should not ban with acceptable country', async () => {
       const fixture = WORKFLOW_RETRIEVE_FIXTURE('PROCESSED', 'CHL', 'PASSED');
-      const status = redemptionService.calculateStatus(fixture);
+      const status = await redemptionService.calculateStatus(fixture);
       expect(status).toEqual({
         status: KycStatus.SUBMITTED,
         failureMessage: null,
@@ -178,6 +179,135 @@ describe('RedemptionServiceSpec', () => {
       expect(eligiblity.reason).toContain(
         'User has passed their deadline for kyc',
       );
+    });
+  });
+
+  describe('multi account detection', () => {
+    it('should reject scammer with face from different user', async () => {
+      /********* SETUP *******/
+      // two accounts, one user
+      const user1Account1 = await usersService.create({
+        email: faker.internet.email(),
+        graffiti: uuid(),
+        countryCode: 'IDN',
+        enable_kyc: true,
+      });
+      const user1Account2 = await usersService.create({
+        email: faker.internet.email(),
+        graffiti: uuid(),
+        countryCode: 'IDN',
+        enable_kyc: true,
+      });
+      const workflow1Id = uuid();
+      // user already passed 1 kyc with account1
+      await prismaService.jumioTransaction.create({
+        data: {
+          user_id: user1Account1.id,
+          web_href: 'http://jumio.com/uuid',
+          decision_status: 'PASSED',
+          workflow_execution_id: workflow1Id,
+        },
+      });
+      const imageCheck = {
+        id: '1568893e-5edc-453c-9c50-e47fa10578f8',
+        credentials: [
+          {
+            id: 'fakecredentialsid',
+            category: 'ID',
+          },
+          {
+            id: 'fakecredentialsid',
+            category: 'SELFIE',
+          },
+        ],
+        decision: {
+          type: 'WARNING',
+          details: {
+            label: 'REPEATED_FACE' as ImageChecksLabel,
+          },
+        },
+        data: {
+          faceSearchFindings: {
+            status: 'DONE',
+            findings: [workflow1Id],
+          },
+        },
+      };
+      /******* ENDSETUP *****/
+      const repeatedFaces = redemptionService.getRepeatedFaceWorkflowIds([
+        imageCheck,
+      ]);
+      const check = await redemptionService.multiAccountFailure(
+        user1Account2.id,
+        repeatedFaces,
+      );
+      expect(check).toContain('User with multiple accounts detected');
+    });
+
+    it('should allow submission of repeated face from same user', async () => {
+      /********* SETUP *******/
+      // two accounts, one user
+      const user1Account1 = await usersService.create({
+        email: faker.internet.email(),
+        graffiti: uuid(),
+        countryCode: 'IDN',
+        enable_kyc: true,
+      });
+      const workflow1Id = uuid();
+      // user already passed 1 kyc with account1
+      await prismaService.jumioTransaction.create({
+        data: {
+          user_id: user1Account1.id,
+          web_href: 'http://jumio.com/uuid',
+          decision_status: 'PASSED',
+          workflow_execution_id: workflow1Id,
+        },
+      });
+      const imageCheck = {
+        id: '1568893e-5edc-453c-9c50-e47fa10578f8',
+        credentials: [
+          {
+            id: 'fakecredentialsid',
+            category: 'ID',
+          },
+          {
+            id: 'fakecredentialsid',
+            category: 'SELFIE',
+          },
+        ],
+        decision: {
+          type: 'WARNING',
+          details: {
+            label: 'REPEATED_FACE' as ImageChecksLabel,
+          },
+        },
+        data: {
+          faceSearchFindings: {
+            status: 'DONE',
+            findings: [workflow1Id],
+          },
+        },
+      };
+      /******* ENDSETUP *****/
+      const repeatedFaces = redemptionService.getRepeatedFaceWorkflowIds([
+        imageCheck,
+      ]);
+      const check = await redemptionService.multiAccountFailure(
+        user1Account1.id,
+        repeatedFaces,
+      );
+      expect(check).toBeNull();
+      const fixture = WORKFLOW_RETRIEVE_FIXTURE(
+        'PROCESSED',
+        'CHL',
+        DecisionStatus.REJECTED,
+        String(user1Account1.id),
+        imageCheck,
+      );
+      const labels = redemptionService.getTransactionLabels(fixture);
+      const acceptableFace =
+        redemptionService.hasOnlyDuplicateFaceFailures(labels);
+      expect(acceptableFace).toBe(true);
     });
   });
 });

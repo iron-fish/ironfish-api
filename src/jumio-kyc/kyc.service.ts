@@ -212,7 +212,9 @@ export class KycService {
       transaction.workflow_execution_id,
     );
 
-    const calculatedStatus = this.redemptionService.calculateStatus(status);
+    const calculatedStatus = await this.redemptionService.calculateStatus(
+      status,
+    );
 
     // Has our user's KYC status changed
     if (redemption.kyc_status !== calculatedStatus.status) {

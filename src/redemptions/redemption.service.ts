@@ -6,8 +6,12 @@ import { DecisionStatus, KycStatus, Redemption, User } from '@prisma/client';
 import { instanceToPlain } from 'class-transformer';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { AIRDROP_CONFIG } from '../common/constants';
-import { JumioTransactionRetrieveResponse } from '../jumio-api/interfaces/jumio-transaction-retrieve';
+import {
+  ImageCheck,
+  JumioTransactionRetrieveResponse,
+} from '../jumio-api/interfaces/jumio-transaction-retrieve';
 import { IdDetails } from '../jumio-kyc/kyc.service';
+import { JumioTransactionService } from '../jumio-transactions/jumio-transaction.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { UserPointsService } from '../user-points/user-points.service';
@@ -18,6 +22,7 @@ export class RedemptionService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly userPointsService: UserPointsService,
+    private readonly jumioTransactionService: JumioTransactionService,
     private readonly config: ApiConfigService,
   ) {}
 
@@ -35,11 +40,15 @@ export class RedemptionService {
     });
   }
 
-  calculateStatus(transactionStatus: JumioTransactionRetrieveResponse): {
+  async calculateStatus(
+    transactionStatus: JumioTransactionRetrieveResponse,
+  ): Promise<{
     status: KycStatus;
     failureMessage: string | null;
     idDetails: IdDetails[];
-  } {
+  }> {
+    const userId = Number(transactionStatus.workflow.customerInternalReference);
+    const labels = this.getTransactionLabels(transactionStatus);
     // deal with banned countries
     const idDetails: IdDetails[] =
       transactionStatus.capabilities.extraction.map((extraction) => {
@@ -79,13 +88,16 @@ export class RedemptionService {
         idDetails,
       };
     }
+    const repeatedFaceWorkflowIds = this.getRepeatedFaceWorkflowIds(
+      transactionStatus.capabilities.imageChecks,
+    );
+    const multiAccountFailure = await this.multiAccountFailure(
+      userId,
+      repeatedFaceWorkflowIds,
+    );
+
     // TODO: HANDLE WARN, use decision.risk.score?
-    const failure =
-      this.livenessStatus(transactionStatus) ||
-      this.similarityStatus(transactionStatus) ||
-      this.dataChecksStatus(transactionStatus) ||
-      this.extractionStatus(transactionStatus) ||
-      this.usabilityStatus(transactionStatus);
+    const failure = multiAccountFailure || this.labelFailure(labels);
     if (failure) {
       return {
         status: KycStatus.FAILED,
@@ -93,48 +105,81 @@ export class RedemptionService {
         idDetails,
       };
     }
-
+    if (!multiAccountFailure && this.hasOnlyDuplicateFaceFailures(labels)) {
+      return {
+        status: KycStatus.SUBMITTED,
+        failureMessage: `Benign duplicate faces found`,
+        idDetails,
+      };
+    }
     return {
       status: KycStatus.TRY_AGAIN,
       failureMessage: null,
       idDetails,
     };
   }
-
-  similarityStatus(_response: JumioTransactionRetrieveResponse): string | null {
-    return null;
+  getTransactionLabels(status: JumioTransactionRetrieveResponse): string[] {
+    return [
+      ...status.capabilities.dataChecks.map((i) => i.decision.details.label),
+      ...status.capabilities.extraction.map((i) => i.decision.details.label),
+      ...status.capabilities.imageChecks.map((i) => i.decision.details.label),
+      ...status.capabilities.liveness.map((i) => i.decision.details.label),
+      ...status.capabilities.similarity.map((i) => i.decision.details.label),
+      ...status.capabilities.usability.map((i) => i.decision.details.label),
+    ];
   }
 
-  livenessStatus(response: JumioTransactionRetrieveResponse): string | null {
-    for (const check of response.capabilities.liveness) {
-      if (
-        ['PHOTOCOPY', 'DIGITAL_COPY', 'MANIPULATED', 'BLACK_WHITE'].includes(
-          check.decision.details.label,
-        )
-      ) {
-        return `Liveness check failed: ${check.decision.details.label}`;
+  getRepeatedFaceWorkflowIds(imageChecks: ImageCheck[]): string[] {
+    // for imageChecks, only duplicate face should pass
+    let repeatedFaceWorkflowIds: string[] = [];
+    for (const imageCheck of imageChecks) {
+      if (imageCheck.decision.details.label !== 'REPEATED_FACE') {
+        continue;
+      }
+      repeatedFaceWorkflowIds = repeatedFaceWorkflowIds.concat(
+        imageCheck.data.faceSearchFindings.findings,
+      );
+    }
+    return repeatedFaceWorkflowIds;
+  }
+
+  async multiAccountFailure(
+    userId: number,
+    repeatedFaceWorkflowIds: string[],
+  ): Promise<string | null> {
+    if (!repeatedFaceWorkflowIds.length) {
+      return null;
+    }
+    // lookup workflows returned as matching
+    const foundWorkflows = await this.jumioTransactionService.findByWorkflowIds(
+      repeatedFaceWorkflowIds,
+    );
+
+    // If any are found and don't match current user, ban the current user for scamming
+    for (const foundWorkflow of foundWorkflows) {
+      if (foundWorkflow.user_id !== userId) {
+        return `User with multiple accounts detected (alternate user id=${foundWorkflow.user_id} , current user id=${userId}), this transaction matches face from different account in transaction_id=${foundWorkflow.workflow_execution_id}`;
       }
     }
-
     return null;
   }
 
-  dataChecksStatus(_response: JumioTransactionRetrieveResponse): string | null {
-    return null;
-  }
-
-  extractionStatus(_response: JumioTransactionRetrieveResponse): string | null {
-    return null;
-  }
-
-  usabilityStatus(response: JumioTransactionRetrieveResponse): string | null {
-    for (const check of response.capabilities.usability) {
-      if (
-        check.decision.details.label === 'PHOTOCOPY' ||
-        check.decision.details.label === 'BLACK_WHITE'
-      ) {
-        return `Usability check failed: ${check.decision.details.label}`;
+  hasOnlyDuplicateFaceFailures(labels: string[]): boolean {
+    // if any other check failed, we can't pass
+    for (const label of labels) {
+      if (!['MATCH', 'REPEATED_FACE', 'OK'].includes(label)) {
+        return false;
       }
+    }
+    return true;
+  }
+
+  labelFailure(labels: string[]): string | null {
+    const failedLabels = labels.filter((i) =>
+      ['PHOTOCOPY', 'DIGITAL_COPY', 'MANIPULATED', 'BLACK_WHITE'].includes(i),
+    );
+    if (failedLabels.length) {
+      return `Failure due to label presence: ${failedLabels.join(',')}`;
     }
     return null;
   }

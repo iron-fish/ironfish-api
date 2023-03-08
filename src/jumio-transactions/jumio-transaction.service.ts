@@ -31,6 +31,14 @@ export class JumioTransactionService {
     });
   }
 
+  async findByWorkflowIds(
+    workflowExecutionIds: string[],
+  ): Promise<JumioTransaction[]> {
+    return await this.prisma.jumioTransaction.findMany({
+      where: { workflow_execution_id: { in: workflowExecutionIds } },
+    });
+  }
+
   async findLatestOrThrow(user: User): Promise<JumioTransaction> {
     const jumioTransactions = await this.getList(user);
     if (!jumioTransactions.length) {
