@@ -72,6 +72,7 @@ export class RedemptionService {
         idDetails,
       };
     }
+
     if (
       transactionStatus.workflow.status === 'SESSION_EXPIRED' ||
       transactionStatus.workflow.status === 'TOKEN_EXPIRED' ||

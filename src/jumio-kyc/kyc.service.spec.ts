@@ -79,6 +79,7 @@ describe('KycService', () => {
         user,
         '',
         '127.0.0.1',
+        10032,
       );
       expect(redemption.kyc_status).toBe(KycStatus.IN_PROGRESS);
       assert.ok(redemption.jumio_account_id);
@@ -114,7 +115,12 @@ describe('KycService', () => {
         where: { user_id: user.id },
       });
 
-      let { redemption } = await kycService.attempt(user, '', '127.0.0.1');
+      let { redemption } = await kycService.attempt(
+        user,
+        '',
+        '127.0.0.1',
+        10032,
+      );
       expect(redemption.kyc_status).toBe(KycStatus.IN_PROGRESS);
 
       await kycService.markComplete(user);
