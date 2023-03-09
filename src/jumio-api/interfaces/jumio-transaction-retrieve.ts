@@ -160,7 +160,7 @@ export interface JumioTransactionRetrieveResponse {
   };
   workflow: {
     id: string;
-    definitionKey: string;
+    definitionKey: number;
     userReference: string;
     status: 'INITIATED' | 'PROCESSED' | 'SESSION_EXPIRED' | 'TOKEN_EXPIRED';
     customerInternalReference: string;
@@ -284,3 +284,8 @@ export interface JumioTransactionRetrieveResponse {
     watchlistScreening: WatchlistScreenCheck[];
   };
 }
+
+export type JumioTransactionStandaloneSanction = Omit<
+  JumioTransactionRetrieveResponse,
+  'capabilities'
+> & { capabilities: { watchlistScreening: WatchlistScreenCheck[] } };

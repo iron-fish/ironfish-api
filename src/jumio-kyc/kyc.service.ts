@@ -1,7 +1,12 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { JumioTransaction, KycStatus, Redemption, User } from '@prisma/client';
 import assert from 'assert';
 import crypto from 'crypto';
@@ -41,7 +46,6 @@ export class KycService {
     user: User,
     publicAddress: string,
     ipAddress: string,
-    workflowDefinitionKey: number,
   ): Promise<{ redemption: Redemption; transaction: JumioTransaction }> {
     return this.prisma.$transaction(async (prisma) => {
       await prisma.$executeRawUnsafe(
@@ -69,11 +73,10 @@ export class KycService {
           prisma,
         );
       }
-
       const response = await this.jumioApiService.createAccountAndTransaction(
         user.id,
         redemption.jumio_account_id,
-        workflowDefinitionKey,
+        this.config.get<number>('JUMIO_WORKFLOW_DEFINITION'),
       );
 
       redemption = await this.redemptionService.update(
@@ -196,15 +199,66 @@ export class KycService {
     });
   }
 
+  async standaloneWatchlist(userId: number): Promise<JumioTransaction> {
+    const user = await this.usersService.findOrThrow(userId);
+    const redemption = await this.redemptionService.findOrThrow(user);
+    if (redemption.kyc_status !== 'SUBMITTED') {
+      throw new BadRequestException(
+        `Can only submit standalone watchlist screen for account in status SUBMITTED, currently ${redemption.kyc_status}`,
+      );
+    }
+    // TODO: if multiple standalone attempts occur, the last retrieval will return response without information about user (firstname lastname)
+    const latest = await this.jumioTransactionService.findLatest(user);
+    if (!latest) {
+      throw new NotFoundException(
+        'Historical transaction not found, cannot run standalone screen',
+      );
+    }
+
+    // create standalone
+    const standaloneCreate =
+      await this.jumioApiService.createAccountAndTransaction(
+        user.id,
+        redemption.jumio_account_id,
+        10010,
+      );
+    // get/upload name info
+    assert.ok(redemption.jumio_account_id);
+    const retrieval = await this.jumioApiService.transactionStatus(
+      redemption.jumio_account_id,
+      latest.workflow_execution_id,
+      false,
+    );
+
+    const screeningData =
+      this.jumioApiService.getScreeningDataFromRetrieval(retrieval);
+
+    // upload screening info
+    const uploadResponse = await this.jumioApiService.uploadScreeningData(
+      standaloneCreate.workflowExecution.credentials[0].api.parts.prepared_data,
+      standaloneCreate.workflowExecution.credentials[0].api.token,
+      screeningData,
+    );
+
+    const putResponse = await this.jumioApiService.putStandaloneScreening(
+      uploadResponse.api.workflowExecution,
+      uploadResponse.api.token,
+    );
+
+    // record standalone
+    return await this.jumioTransactionService.create(
+      user,
+      putResponse.workflowExecution.id,
+      '',
+    );
+  }
+
   async refresh(
     redemption: Redemption,
     transaction: JumioTransaction,
   ): Promise<void> {
     // Don't update redemption anymore for a user that has already passed KYC
-    if (
-      redemption.kyc_status === KycStatus.SUCCESS ||
-      redemption.kyc_status === KycStatus.SUBMITTED
-    ) {
+    if (redemption.kyc_status === KycStatus.SUCCESS) {
       return;
     }
 
@@ -214,19 +268,19 @@ export class KycService {
       transaction.workflow_execution_id,
     );
 
-    const calculatedStatus = await this.redemptionService.calculateStatus(
-      status,
-    );
+    const calculatedStatus =
+      status.workflow.definitionKey !== 10010
+        ? await this.redemptionService.calculateStatus(status)
+        : this.redemptionService.calculateStandaloneWatchlistStatus(status);
 
     // Has our user's KYC status changed
     if (redemption.kyc_status !== calculatedStatus.status) {
       redemption = await this.redemptionService.update(redemption, {
         kycStatus: calculatedStatus.status,
-        idDetails: calculatedStatus.idDetails,
         failureMessage: calculatedStatus.failureMessage ?? undefined,
+        idDetails: calculatedStatus.idDetails,
       });
     }
-
     await this.jumioTransactionService.update(transaction, {
       decisionStatus: status.decision.type,
       lastWorkflowFetch: status,

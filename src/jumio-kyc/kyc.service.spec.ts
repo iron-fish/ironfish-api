@@ -15,6 +15,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { RedemptionService } from '../redemptions/redemption.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
+import { JUMIO_CREATE_RESPONSE } from './fixtures/jumio-create-response';
 import { WORKFLOW_RETRIEVE_FIXTURE } from './fixtures/workflow';
 import { KycService } from './kyc.service';
 
@@ -25,6 +26,7 @@ describe('KycService', () => {
   let usersService: UsersService;
   let kycService: KycService;
   let redemptionService: RedemptionService;
+  let jumioApiService: JumioApiService;
   let jumioTransactionService: JumioTransactionService;
 
   beforeAll(async () => {
@@ -35,24 +37,11 @@ describe('KycService', () => {
     usersService = app.get(UsersService);
     redemptionService = app.get(RedemptionService);
     jumioTransactionService = app.get(JumioTransactionService);
-
-    const jumioApiService = app.get(JumioApiService);
+    jumioApiService = app.get(JumioApiService);
 
     jest
       .spyOn(jumioApiService, 'createAccountAndTransaction')
-      .mockImplementation(() =>
-        Promise.resolve({
-          account: {
-            id: uuid(),
-          },
-          web: {
-            href: 'http://kyc/test',
-          },
-          workflowExecution: {
-            id: uuid(),
-          },
-        }),
-      );
+      .mockImplementation(() => Promise.resolve(JUMIO_CREATE_RESPONSE));
 
     await app.init();
   });
@@ -79,7 +68,6 @@ describe('KycService', () => {
         user,
         '',
         '127.0.0.1',
-        10032,
       );
       expect(redemption.kyc_status).toBe(KycStatus.IN_PROGRESS);
       assert.ok(redemption.jumio_account_id);
@@ -115,12 +103,7 @@ describe('KycService', () => {
         where: { user_id: user.id },
       });
 
-      let { redemption } = await kycService.attempt(
-        user,
-        '',
-        '127.0.0.1',
-        10032,
-      );
+      let { redemption } = await kycService.attempt(user, '', '127.0.0.1');
       expect(redemption.kyc_status).toBe(KycStatus.IN_PROGRESS);
 
       await kycService.markComplete(user);

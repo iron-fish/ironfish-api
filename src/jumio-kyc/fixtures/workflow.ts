@@ -17,17 +17,19 @@ export const WORKFLOW_RETRIEVE_FIXTURE = (
   userId = '1',
   imageCheck: ImageCheck = IMAGE_CHECK_FIXTURE,
   watchlistCheck: WatchlistScreenCheck = WATCHLIST_SCREEN_FIXTURE(),
+  workflowId = 'fakeworkflowid',
+  accountId = 'accountId',
 ): JumioTransactionRetrieveResponse => {
   return {
     workflow: {
-      id: 'fakeworkflowid',
+      id: workflowId,
       status: workflowStatus,
-      definitionKey: '10013',
+      definitionKey: 10013,
       userReference: 'foobar',
       customerInternalReference: userId,
     },
     account: {
-      id: 'fakeaccountid',
+      id: accountId,
     },
     createdAt: '2023-03-02T18:48:37.319Z',
     startedAt: '2023-03-02T19:04:42.008Z',

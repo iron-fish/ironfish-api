@@ -5,8 +5,11 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import axios, { AxiosRequestConfig } from 'axios';
 import crypto from 'crypto';
 import { ApiConfigService } from '../api-config/api-config.service';
+import { ScreeningData } from '../jumio-kyc/interfaces/screening-data';
 import { LoggerService } from '../logger/logger.service';
 import { JumioAccountCreateResponse } from './interfaces/jumio-account-create';
+import { JumioPutStandaloneScreening } from './interfaces/jumio-put-standalone-screening';
+import { JumioStandaloneUpload } from './interfaces/jumio-standalone-screening-create';
 import { JumioTransactionRetrieveResponse } from './interfaces/jumio-transaction-retrieve';
 
 @Injectable()
@@ -19,6 +22,7 @@ export class JumioApiService {
   async transactionStatus(
     jumio_account_id: string,
     jumio_workflow_execution_id: string,
+    sanitize = true,
   ): Promise<JumioTransactionRetrieveResponse> {
     const baseUrl = this.config.get<string>('JUMIO_URL');
     const url = `https://retrieval.${baseUrl}/accounts/${jumio_account_id}/workflow-executions/${jumio_workflow_execution_id}`;
@@ -39,12 +43,14 @@ export class JumioApiService {
       });
 
     // Sanitize extracted values
-    for (const extraction of response.data.capabilities.extraction) {
-      const sanitized = {
-        issuingCountry: extraction.data.issuingCountry,
-      };
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
-      extraction.data = sanitized as any;
+    if (sanitize) {
+      for (const extraction of response.data.capabilities.extraction) {
+        const sanitized = {
+          issuingCountry: extraction.data.issuingCountry,
+        };
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
+        extraction.data = sanitized as any;
+      }
     }
 
     return response.data;
@@ -99,6 +105,98 @@ export class JumioApiService {
     });
 
     return response.data;
+  }
+
+  async uploadScreeningData(
+    url: string,
+    token: string,
+    data: ScreeningData,
+  ): Promise<JumioStandaloneUpload> {
+    const jsonData = JSON.stringify(data);
+    const config = {
+      method: 'post',
+      url: url,
+      headers: {
+        'User-Agent': 'IronFish Website/v1.0',
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      data: jsonData,
+    };
+    const promise = axios(config);
+
+    const response = await promise.catch((error) => {
+      if (axios.isAxiosError(error)) {
+        this.logger.warn(`${JSON.stringify(error.response?.data)}`);
+        throw new BadRequestException(`Error updating standalone ${url}`);
+      }
+      throw error;
+    });
+
+    return response.data as JumioStandaloneUpload;
+  }
+
+  async putStandaloneScreening(
+    url: string,
+    token: string,
+  ): Promise<JumioPutStandaloneScreening> {
+    const config = {
+      method: 'put',
+      url: url,
+      headers: {
+        'User-Agent': 'IronFish Website/v1.0',
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    };
+    const promise = axios(config);
+
+    const response = await promise.catch((error) => {
+      if (axios.isAxiosError(error)) {
+        this.logger.warn(`${JSON.stringify(error.response?.data)}`);
+
+        throw new BadRequestException(`Error updating standalone ${url}`);
+      }
+      throw error;
+    });
+
+    return response.data as JumioPutStandaloneScreening;
+  }
+
+  getScreeningDataFromRetrieval(
+    status: JumioTransactionRetrieveResponse,
+  ): ScreeningData {
+    let firstName = null;
+    let lastName = null;
+    let dateOfBirth = null;
+    let country = null;
+    for (const extraction of status.capabilities.extraction) {
+      if (extraction.data.dateOfBirth) {
+        dateOfBirth = extraction.data.dateOfBirth;
+      }
+      if (extraction.data.firstName) {
+        firstName = extraction.data.firstName;
+      }
+      if (extraction.data.lastName) {
+        lastName = extraction.data.lastName;
+      }
+      if (extraction.data.issuingCountry) {
+        country = extraction.data.issuingCountry;
+      }
+    }
+    if (!firstName || !lastName || !dateOfBirth || !country) {
+      throw new BadRequestException(
+        'Required user info field not present on transaction',
+      );
+    }
+    return {
+      firstName,
+      lastName,
+      dateOfBirth,
+      address: {
+        country: country,
+      },
+    };
   }
 
   private generateSignature(userId: number): { ts: number; hmac: string } {

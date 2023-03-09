@@ -11,6 +11,7 @@ import { v4 as uuid } from 'uuid';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
 import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
+import { JumioTransactionStandaloneSanction } from '../jumio-api/interfaces/jumio-transaction-retrieve';
 import { JumioApiService } from '../jumio-api/jumio-api.service';
 import { JumioTransactionService } from '../jumio-transactions/jumio-transaction.service';
 import { MagicLinkService } from '../magic-link/magic-link.service';
@@ -19,7 +20,12 @@ import { RedemptionService } from '../redemptions/redemption.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
 import { CALLBACK_FIXTURE } from './fixtures/callback';
+import { JUMIO_CREATE_RESPONSE } from './fixtures/jumio-create-response';
+import { WORKFLOW_CREATE_WATCHLIST_RESPONSE } from './fixtures/watchlist-create-response';
+import { WATCHLIST_PUT_RESPONSE } from './fixtures/watchlist-put-response';
+import { WATCHLIST_DATA_UPLOAD_RESPONSE } from './fixtures/watchlist-upload-response';
 import { WORKFLOW_RETRIEVE_FIXTURE } from './fixtures/workflow';
+import { WORKFLOW_RETRIEVE_WATCHLIST } from './fixtures/workflow-watchlist';
 import { KycService } from './kyc.service';
 import { serializeKyc } from './utils/serialize-kyc';
 
@@ -53,19 +59,7 @@ describe('KycController', () => {
 
     jest
       .spyOn(jumioApiService, 'createAccountAndTransaction')
-      .mockImplementation(() =>
-        Promise.resolve({
-          account: {
-            id: uuid(),
-          },
-          web: {
-            href: 'http://kyc/test',
-          },
-          workflowExecution: {
-            id: uuid(),
-          },
-        }),
-      );
+      .mockImplementation(() => Promise.resolve(JUMIO_CREATE_RESPONSE));
 
     await app.init();
   });
@@ -198,6 +192,7 @@ describe('KycController', () => {
           'PROCESSED',
           'CHL',
           DecisionStatus.PASSED,
+          user.id.toString(),
         ),
       });
       jest
@@ -254,6 +249,91 @@ describe('KycController', () => {
           .send(callbackData)
           .expect(HttpStatus.FORBIDDEN);
       });
+    });
+
+    describe('standalone watchlist', () => {
+      it.each([
+        [WORKFLOW_RETRIEVE_WATCHLIST('OK'), KycStatus.SUCCESS],
+        [WORKFLOW_RETRIEVE_WATCHLIST('ALERT'), KycStatus.FAILED],
+      ])(
+        'moves user to successful when requirements are met',
+        async (
+          watchlistRetrieve: JumioTransactionStandaloneSanction,
+          expectedStatus: KycStatus,
+        ) => {
+          const user = await mockUser();
+
+          let redemption = await redemptionService.create(user, 'foo', 'foo');
+          const transaction = await jumioTransactionService.create(
+            user,
+            'fakeworkflow',
+            'http://fake.com',
+          );
+          await jumioTransactionService.update(transaction, {
+            decisionStatus: DecisionStatus.PASSED,
+            lastWorkflowFetch: WORKFLOW_RETRIEVE_FIXTURE(
+              'PROCESSED',
+              'CHL',
+              DecisionStatus.PASSED,
+            ),
+          });
+          redemption = await redemptionService.update(redemption, {
+            kycStatus: KycStatus.SUBMITTED,
+            jumioAccountId: 'jumioaccountid',
+          });
+          jest
+            .spyOn(jumioApiService, 'createAccountAndTransaction')
+            // eslint-disable-next-line
+          .mockResolvedValueOnce(WORKFLOW_CREATE_WATCHLIST_RESPONSE as any);
+          jest
+            .spyOn(jumioApiService, 'transactionStatus')
+            .mockResolvedValueOnce(
+              WORKFLOW_RETRIEVE_FIXTURE(
+                'PROCESSED',
+                'CHL',
+                DecisionStatus.PASSED,
+              ),
+            );
+          jest
+            .spyOn(jumioApiService, 'uploadScreeningData')
+            .mockResolvedValueOnce(WATCHLIST_DATA_UPLOAD_RESPONSE);
+          jest
+            .spyOn(jumioApiService, 'putStandaloneScreening')
+            .mockResolvedValueOnce(WATCHLIST_PUT_RESPONSE);
+
+          const standaloneTransaction = await kycService.standaloneWatchlist(
+            user.id,
+          );
+
+          assert.ok(redemption.jumio_account_id);
+          const callbackData = CALLBACK_FIXTURE(
+            redemption.jumio_account_id,
+            standaloneTransaction.workflow_execution_id,
+            'PROCESSED',
+          );
+
+          jest
+            .spyOn(jumioApiService, 'transactionStatus')
+            // eslint-disable-next-line
+          .mockResolvedValueOnce(watchlistRetrieve as any);
+          jest
+            .spyOn(kycService, 'isSignatureValid')
+            .mockImplementationOnce(() => true);
+          const statusMock = jest.spyOn(
+            redemptionService,
+            'calculateStandaloneWatchlistStatus',
+          );
+          await request(app.getHttpServer())
+            .post('/kyc/callback')
+            .set('Authorization', 'did-token')
+            .send(callbackData)
+            .expect(HttpStatus.OK);
+
+          expect(statusMock).toHaveBeenCalled();
+          redemption = await redemptionService.findOrThrow(user);
+          expect(redemption.kyc_status).toBe(expectedStatus);
+        },
+      );
     });
   });
 

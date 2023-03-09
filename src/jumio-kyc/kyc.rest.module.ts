@@ -6,6 +6,7 @@ import { ApiConfigModule } from '../api-config/api-config.module';
 import { GraphileWorkerModule } from '../graphile-worker/graphile-worker.module';
 import { JumioTransactionModule } from '../jumio-transactions/jumio-transaction.module';
 import { RedemptionModule } from '../redemptions/redemption.module';
+import { UsersModule } from '../users/users.module';
 import { KycController } from './kyc.controller';
 import { KycModule } from './kyc.module';
 
@@ -17,6 +18,7 @@ import { KycModule } from './kyc.module';
     JumioTransactionModule,
     RedemptionModule,
     GraphileWorkerModule,
+    UsersModule,
   ],
 })
 export class KycRestModule {}
