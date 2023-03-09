@@ -8,6 +8,7 @@ import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { AIRDROP_CONFIG } from '../common/constants';
 import { ImageChecksLabel } from '../jumio-api/interfaces/jumio-transaction-retrieve';
+import { WATCHLIST_SCREEN_FIXTURE } from '../jumio-kyc/fixtures/watch-list';
 import { WORKFLOW_RETRIEVE_FIXTURE } from '../jumio-kyc/fixtures/workflow';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
@@ -58,7 +59,7 @@ describe('RedemptionServiceSpec', () => {
       const fixture = WORKFLOW_RETRIEVE_FIXTURE('PROCESSED', 'CHL', 'PASSED');
       const status = await redemptionService.calculateStatus(fixture);
       expect(status).toEqual({
-        status: KycStatus.SUBMITTED,
+        status: KycStatus.SUCCESS,
         failureMessage: null,
         idDetails: [
           {
@@ -310,6 +311,32 @@ describe('RedemptionServiceSpec', () => {
       const acceptableFace =
         redemptionService.hasOnlyDuplicateFaceFailures(labels);
       expect(acceptableFace).toBe(true);
+    });
+  });
+
+  describe('watchlistScreeningFailure', () => {
+    it('should return failure if user has alerted status', () => {
+      expect(
+        redemptionService.watchlistScreeningFailure([
+          WATCHLIST_SCREEN_FIXTURE('ALERT', 0),
+        ]),
+      ).not.toBeNull();
+    });
+
+    it('should return failure if if label is ok but results were returned', () => {
+      expect(
+        redemptionService.watchlistScreeningFailure([
+          WATCHLIST_SCREEN_FIXTURE('OK', 1),
+        ]),
+      ).not.toBeNull();
+    });
+
+    it('should not fail if status is ok and no results were returned', () => {
+      expect(
+        redemptionService.watchlistScreeningFailure([
+          WATCHLIST_SCREEN_FIXTURE('OK', 0),
+        ]),
+      ).toBeNull();
     });
   });
 });

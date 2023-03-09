@@ -5,8 +5,10 @@ import { DecisionStatus } from '@prisma/client';
 import {
   ImageCheck,
   JumioTransactionRetrieveResponse,
+  WatchlistScreenCheck,
 } from '../../jumio-api/interfaces/jumio-transaction-retrieve';
 import { IMAGE_CHECK_FIXTURE } from './image-check';
+import { WATCHLIST_SCREEN_FIXTURE } from './watch-list';
 
 export const WORKFLOW_RETRIEVE_FIXTURE = (
   workflowStatus: 'TOKEN_EXPIRED' | 'SESSION_EXPIRED' | 'PROCESSED',
@@ -14,12 +16,14 @@ export const WORKFLOW_RETRIEVE_FIXTURE = (
   decisionStatus: DecisionStatus,
   userId = '1',
   imageCheck: ImageCheck = IMAGE_CHECK_FIXTURE,
+  watchlistCheck: WatchlistScreenCheck = WATCHLIST_SCREEN_FIXTURE(),
 ): JumioTransactionRetrieveResponse => {
   return {
     workflow: {
       id: 'fakeworkflowid',
       status: workflowStatus,
       definitionKey: '10013',
+      userReference: 'foobar',
       customerInternalReference: userId,
     },
     account: {
@@ -247,6 +251,7 @@ export const WORKFLOW_RETRIEVE_FIXTURE = (
           },
         },
       ],
+      watchlistScreening: [watchlistCheck],
     },
   };
 };

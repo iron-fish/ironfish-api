@@ -87,6 +87,17 @@ export type ImageChecksLabel =
   | 'PRECONDITION_NOT_FULFILLED'
   | 'TECHNICAL_ERROR';
 
+export type WatchlistScreeningLabels =
+  | 'NOT_ENOUGH_DATA'
+  | 'VALIDATION_FAILED'
+  | 'INVALID_MERCHANT_SETTINGS'
+  | 'TECHNICAL_ERROR'
+  | 'EXTRACTION_NOT_DONE'
+  | 'NO_VALID_ID_CREDENTIAL'
+  | 'PRECONDITION_NOT_FULFILLED'
+  | 'OK'
+  | 'ALERT';
+
 export type ImageCheck = {
   id: string;
   credentials: {
@@ -102,8 +113,30 @@ export type ImageCheck = {
   data: {
     faceSearchFindings: {
       status: string;
-      findings: string[];
+      findings?: string[];
     };
+  };
+};
+
+export type WatchlistScreenCheck = {
+  id: string;
+  credentials: {
+    id: string;
+    category: string;
+  }[];
+  decision: {
+    type: 'PASSED' | 'WARNING' | 'NOT_EXECUTED';
+    details: {
+      label: WatchlistScreeningLabels;
+    };
+  };
+  data: {
+    searchDate: string;
+    searchResults: number;
+    searchId: string;
+    searchResultUrl: string;
+    searchReference: string;
+    searchStatus: 'DONE' | 'NOT_DONE' | 'ERROR' | 'SUCCESS';
   };
 };
 
@@ -128,6 +161,7 @@ export interface JumioTransactionRetrieveResponse {
   workflow: {
     id: string;
     definitionKey: string;
+    userReference: string;
     status: 'INITIATED' | 'PROCESSED' | 'SESSION_EXPIRED' | 'TOKEN_EXPIRED';
     customerInternalReference: string;
   };
@@ -192,7 +226,7 @@ export interface JumioTransactionRetrieveResponse {
       id: string;
       credentials: [
         {
-          id: 'fakecredentialsid';
+          id: string;
           category: 'ID';
         },
       ];
@@ -226,8 +260,8 @@ export interface JumioTransactionRetrieveResponse {
         dateOfBirth: string;
         expiryDate: string;
         documentNumber: string;
-        optionalMrzField1: string;
-        optionalMrzField2: string;
+        optionalMrzField1?: string;
+        optionalMrzField2?: string;
         currentAge: string;
       };
     }[];
@@ -247,5 +281,6 @@ export interface JumioTransactionRetrieveResponse {
       };
     }[];
     imageChecks: ImageCheck[];
+    watchlistScreening: WatchlistScreenCheck[];
   };
 }

@@ -211,7 +211,7 @@ describe('KycController', () => {
         .expect(HttpStatus.OK);
 
       redemption = await redemptionService.findOrThrow(user);
-      expect(redemption.kyc_status).toBe(KycStatus.SUBMITTED);
+      expect(redemption.kyc_status).toBe(KycStatus.SUCCESS);
     });
 
     describe('with an invalid signature', () => {

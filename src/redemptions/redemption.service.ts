@@ -10,6 +10,7 @@ import { AIRDROP_CONFIG } from '../common/constants';
 import {
   ImageCheck,
   JumioTransactionRetrieveResponse,
+  WatchlistScreenCheck,
 } from '../jumio-api/interfaces/jumio-transaction-retrieve';
 import { IdDetails } from '../jumio-kyc/kyc.service';
 import { JumioTransactionService } from '../jumio-transactions/jumio-transaction.service';
@@ -84,11 +85,14 @@ export class RedemptionService {
     }
     if (transactionStatus.decision.type === DecisionStatus.PASSED) {
       return {
-        status: KycStatus.SUBMITTED,
+        status: KycStatus.SUCCESS,
         failureMessage: null,
         idDetails,
       };
     }
+    const watchlistScreeningFailure = this.watchlistScreeningFailure(
+      transactionStatus.capabilities.watchlistScreening,
+    );
     const repeatedFaceWorkflowIds = this.getRepeatedFaceWorkflowIds(
       transactionStatus.capabilities.imageChecks,
     );
@@ -98,7 +102,10 @@ export class RedemptionService {
     );
 
     // TODO: HANDLE WARN, use decision.risk.score?
-    const failure = multiAccountFailure || this.labelFailure(labels);
+    const failure =
+      watchlistScreeningFailure ||
+      multiAccountFailure ||
+      this.labelFailure(labels);
     if (failure) {
       return {
         status: KycStatus.FAILED,
@@ -130,6 +137,20 @@ export class RedemptionService {
     ];
   }
 
+  watchlistScreeningFailure(
+    watchlistChecks: WatchlistScreenCheck[],
+  ): string | null {
+    for (const watchlistCheck of watchlistChecks) {
+      if (
+        watchlistCheck.decision.details.label === 'ALERT' ||
+        watchlistCheck.data.searchResults !== 0
+      ) {
+        return 'Watchlist screening failed, you are ineligble for airdrop';
+      }
+    }
+    return null;
+  }
+
   getRepeatedFaceWorkflowIds(imageChecks: ImageCheck[]): string[] {
     // for imageChecks, only duplicate face should pass
     let repeatedFaceWorkflowIds: string[] = [];
@@ -137,9 +158,11 @@ export class RedemptionService {
       if (imageCheck.decision.details.label !== 'REPEATED_FACE') {
         continue;
       }
-      repeatedFaceWorkflowIds = repeatedFaceWorkflowIds.concat(
-        imageCheck.data.faceSearchFindings.findings,
-      );
+      if (imageCheck.data.faceSearchFindings.findings !== undefined) {
+        repeatedFaceWorkflowIds = repeatedFaceWorkflowIds.concat(
+          imageCheck.data.faceSearchFindings.findings,
+        );
+      }
     }
     return repeatedFaceWorkflowIds;
   }

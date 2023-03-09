@@ -90,7 +90,7 @@ describe('KycService', () => {
       await kycService.refresh(redemption, transaction);
 
       redemption = await redemptionService.findOrThrow(user);
-      expect(redemption.kyc_status).toBe(KycStatus.SUBMITTED);
+      expect(redemption.kyc_status).toBe(KycStatus.SUCCESS);
 
       transaction = await jumioTransactionService.findOrThrow(transaction.id);
       expect(transaction.decision_status).toBe('PASSED');
