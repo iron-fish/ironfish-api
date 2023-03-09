@@ -260,16 +260,16 @@ export class RedemptionService {
     redemption?: Redemption | null,
     prisma?: BasePrismaClient,
   ): Promise<{ eligible: boolean; reason: string }> {
+    if (user.ineligible_reason) {
+      return { eligible: false, reason: user.ineligible_reason };
+    }
+
     if (!user.enable_kyc) {
       return {
         eligible: false,
         reason:
           'KYC is not available for you account, please check back later as we continue to open KYC to new users',
       };
-    }
-
-    if (user.ineligible_reason) {
-      return { eligible: false, reason: user.ineligible_reason };
     }
 
     if (redemption) {
