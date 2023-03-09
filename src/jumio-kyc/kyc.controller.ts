@@ -61,10 +61,14 @@ export class KycController {
     @Req()
     req: Request,
   ): Promise<SerializedKyc> {
+    const workflowDefinitionKey = this.config.get<number>(
+      'JUMIO_WORKFLOW_DEFINITION',
+    );
     const { redemption, transaction } = await this.kycService.attempt(
       user,
       dto.public_address,
       fetchIpAddressFromRequest(req),
+      workflowDefinitionKey,
     );
 
     const { eligible, reason: eligibleReason } =

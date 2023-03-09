@@ -34,7 +34,7 @@ describe('JumioApiService', () => {
     describe('when calling jumio', () => {
       it('creates account when jumioAccountId is not present', async () => {
         const postMock = axiosMock();
-        await jumioApiService.createAccountAndTransaction(123, null);
+        await jumioApiService.createAccountAndTransaction(123, null, 10032);
 
         expect(postMock).toHaveBeenCalledWith(
           'https://account.amer-1.jumio.ai/api/v1/accounts',
@@ -65,7 +65,11 @@ describe('JumioApiService', () => {
       it('updates existing account when jumioAccountId is present', async () => {
         const postMock = axiosMock('put');
 
-        await jumioApiService.createAccountAndTransaction(123, 'fooaccount');
+        await jumioApiService.createAccountAndTransaction(
+          123,
+          'fooaccount',
+          10032,
+        );
 
         expect(postMock).toHaveBeenCalledWith(
           'https://account.amer-1.jumio.ai/api/v1/accounts/fooaccount',

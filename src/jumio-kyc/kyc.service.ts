@@ -41,6 +41,7 @@ export class KycService {
     user: User,
     publicAddress: string,
     ipAddress: string,
+    workflowDefinitionKey: number,
   ): Promise<{ redemption: Redemption; transaction: JumioTransaction }> {
     return this.prisma.$transaction(async (prisma) => {
       await prisma.$executeRawUnsafe(
@@ -72,6 +73,7 @@ export class KycService {
       const response = await this.jumioApiService.createAccountAndTransaction(
         user.id,
         redemption.jumio_account_id,
+        workflowDefinitionKey,
       );
 
       redemption = await this.redemptionService.update(

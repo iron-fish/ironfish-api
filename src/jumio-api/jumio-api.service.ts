@@ -53,6 +53,7 @@ export class JumioApiService {
   async createAccountAndTransaction(
     userId: number,
     jumioAccountId: string | null,
+    workflowDefinitionKey: number,
   ): Promise<JumioAccountCreateResponse> {
     let url =
       'https://account.' + this.config.get<string>('JUMIO_URL') + '/accounts';
@@ -69,7 +70,7 @@ export class JumioApiService {
       userReference: `t=${ts},v1=${hmac}`,
       callbackUrl: this.getCallbackUrl(),
       workflowDefinition: {
-        key: this.config.get<number>('JUMIO_WORKFLOW_DEFINITION'),
+        key: workflowDefinitionKey,
         capabilities: {
           watchlistScreening: {
             additionalProperties: '',
