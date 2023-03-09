@@ -87,6 +87,17 @@ export type ImageChecksLabel =
   | 'PRECONDITION_NOT_FULFILLED'
   | 'TECHNICAL_ERROR';
 
+export type WatchlistScreeningLabels =
+  | 'NOT_ENOUGH_DATA'
+  | 'VALIDATION_FAILED'
+  | 'INVALID_MERCHANT_SETTINGS'
+  | 'TECHNICAL_ERROR'
+  | 'EXTRACTION_NOT_DONE'
+  | 'NO_VALID_ID_CREDENTIAL'
+  | 'PRECONDITION_NOT_FULFILLED'
+  | 'OK'
+  | 'ALERT';
+
 export type ImageCheck = {
   id: string;
   credentials: {
@@ -247,5 +258,25 @@ export interface JumioTransactionRetrieveResponse {
       };
     }[];
     imageChecks: ImageCheck[];
+    watchlistScreening: {
+      id: string;
+      credentials: {
+        id: string;
+        category: string;
+      }[];
+      decision: {
+        type: 'PASSED' | 'WARNING' | 'NOT_EXECUTED';
+        details: {
+          label: WatchlistScreeningLabels;
+        };
+      };
+      data: {
+        searchDate: string;
+        searchResults: number;
+        searchResultUrl: string;
+        searchReference: string;
+        searchStatus: 'DONE' | 'NOT_DONE' | 'ERROR';
+      };
+    }[];
   };
 }

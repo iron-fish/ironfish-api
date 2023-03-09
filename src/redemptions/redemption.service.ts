@@ -71,6 +71,14 @@ export class RedemptionService {
         idDetails,
       };
     }
+
+    if (this.sanctionScreenFailure(transactionStatus)) {
+      return {
+        status: KycStatus.FAILED,
+        failureMessage: 'Sanction screening failed, ineligible for airdrop.',
+        idDetails,
+      };
+    }
     if (
       transactionStatus.workflow.status === 'SESSION_EXPIRED' ||
       transactionStatus.workflow.status === 'TOKEN_EXPIRED' ||
@@ -142,6 +150,15 @@ export class RedemptionService {
       );
     }
     return repeatedFaceWorkflowIds;
+  }
+
+  sanctionScreenFailure(status: JumioTransactionRetrieveResponse): boolean {
+    for (const screen of status.capabilities.watchlistScreening) {
+      if (screen.decision.details.label === 'ALERT') {
+        return true;
+      }
+    }
+    return false;
   }
 
   async multiAccountFailure(

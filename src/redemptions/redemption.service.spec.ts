@@ -312,4 +312,29 @@ describe('RedemptionServiceSpec', () => {
       expect(acceptableFace).toBe(true);
     });
   });
+
+  describe('sanctionScreenFailure', () => {
+    it('returns true when user fails sanction screeinging', () => {
+      const failFixture = WORKFLOW_RETRIEVE_FIXTURE(
+        'PROCESSED',
+        'CHL',
+        DecisionStatus.REJECTED,
+        'fakeaccountid',
+        undefined,
+        'ALERT', // sanction screening label
+      );
+      expect(redemptionService.sanctionScreenFailure(failFixture)).toBe(true);
+    });
+    it('returns false when user passes sanction screeinging', () => {
+      const failFixture = WORKFLOW_RETRIEVE_FIXTURE(
+        'PROCESSED',
+        'CHL',
+        DecisionStatus.REJECTED,
+        'fakeaccountid',
+        undefined,
+        'OK', // sanction screening label
+      );
+      expect(redemptionService.sanctionScreenFailure(failFixture)).toBe(false);
+    });
+  });
 });

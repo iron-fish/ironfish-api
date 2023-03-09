@@ -5,6 +5,7 @@ import { DecisionStatus } from '@prisma/client';
 import {
   ImageCheck,
   JumioTransactionRetrieveResponse,
+  WatchlistScreeningLabels,
 } from '../../jumio-api/interfaces/jumio-transaction-retrieve';
 import { IMAGE_CHECK_FIXTURE } from './image-check';
 
@@ -14,6 +15,7 @@ export const WORKFLOW_RETRIEVE_FIXTURE = (
   decisionStatus: DecisionStatus,
   userId = '1',
   imageCheck: ImageCheck = IMAGE_CHECK_FIXTURE,
+  screeningLabel: WatchlistScreeningLabels = 'OK',
 ): JumioTransactionRetrieveResponse => {
   return {
     workflow: {
@@ -244,6 +246,30 @@ export const WORKFLOW_RETRIEVE_FIXTURE = (
             details: {
               label: 'OK',
             },
+          },
+        },
+      ],
+      watchlistScreening: [
+        {
+          id: 'fakeid',
+          credentials: [
+            {
+              id: 'fakeid',
+              category: 'fakecategory',
+            },
+          ],
+          decision: {
+            type: 'PASSED',
+            details: {
+              label: screeningLabel,
+            },
+          },
+          data: {
+            searchDate: '2021-03-12T15:47:17.234Z',
+            searchResults: 123,
+            searchResultUrl: 'http://foo.com',
+            searchReference: 'referenceid',
+            searchStatus: 'DONE',
           },
         },
       ],
