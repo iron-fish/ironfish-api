@@ -115,7 +115,7 @@ export class RedemptionService {
     }
     if (!multiAccountFailure && this.hasOnlyDuplicateFaceFailures(labels)) {
       return {
-        status: KycStatus.SUBMITTED,
+        status: KycStatus.SUCCESS,
         failureMessage: `Benign duplicate faces found`,
         idDetails,
       };
