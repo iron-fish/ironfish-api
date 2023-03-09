@@ -268,7 +268,7 @@ export class RedemptionService {
       return {
         eligible: false,
         reason:
-          'KYC is not available for you account, please check back later as we continue to open KYC to new users',
+          'KYC is not yet available for your account, please check back later as we continue to open KYC to new users',
       };
     }
 
