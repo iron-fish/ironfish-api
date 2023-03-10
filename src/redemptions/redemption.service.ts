@@ -141,10 +141,7 @@ export class RedemptionService {
     watchlistChecks: WatchlistScreenCheck[],
   ): string | null {
     for (const watchlistCheck of watchlistChecks) {
-      if (
-        watchlistCheck.decision.details.label === 'ALERT' ||
-        watchlistCheck.data.searchResults !== 0
-      ) {
+      if (watchlistCheck.decision.details.label === 'ALERT') {
         return 'Watchlist screening failed, you are ineligble for airdrop';
       }
     }

@@ -323,12 +323,20 @@ describe('RedemptionServiceSpec', () => {
       ).not.toBeNull();
     });
 
-    it('should return failure if if label is ok but results were returned', () => {
+    it('should not fail if if label is WARNING', () => {
       expect(
         redemptionService.watchlistScreeningFailure([
-          WATCHLIST_SCREEN_FIXTURE('OK', 1),
+          WATCHLIST_SCREEN_FIXTURE('WARNING', 0),
         ]),
-      ).not.toBeNull();
+      ).toBeNull();
+    });
+
+    it('should not fail if if label is VALIDATION_FAILED', () => {
+      expect(
+        redemptionService.watchlistScreeningFailure([
+          WATCHLIST_SCREEN_FIXTURE('VALIDATION_FAILED', 0),
+        ]),
+      ).toBeNull();
     });
 
     it('should not fail if status is ok and no results were returned', () => {
