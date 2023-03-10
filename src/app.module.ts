@@ -88,6 +88,7 @@ export const REST_MODULES = [
         DYNO: joi.string().allow('').default(''),
         ENABLE_PHASE_3_END_CHECK: joi.boolean().default(true),
         ENABLE_SIGNUP: joi.boolean().default(true),
+        ENABLE_USER_UPDATING: joi.boolean().default(true),
         GRAPHILE_CONCURRENCY: joi.number().required(),
         INCENTIVIZED_TESTNET_URL: joi.string().required(),
         INFLUXDB_API_TOKEN: joi.string().required(),
