@@ -183,6 +183,39 @@ describe('RedemptionServiceSpec', () => {
         'Your final deadline for kyc has passed',
       );
     });
+
+    it('should be eligible if success and max attempts', async () => {
+      const user = await usersService.create({
+        email: faker.internet.email(),
+        graffiti: uuid(),
+        countryCode: 'IDN',
+        enable_kyc: true,
+      });
+
+      let redemption = await redemptionService.create(
+        user,
+        'fakepublicaddress',
+        '127.0.0.1',
+      );
+
+      redemption = await prismaService.redemption.update({
+        data: { kyc_status: KycStatus.SUCCESS, kyc_attempts: 5 },
+        where: { id: redemption.id },
+      });
+
+      await prismaService.userPoints.update({
+        data: {
+          pool2_points: 100,
+        },
+        where: {
+          user_id: user.id,
+        },
+      });
+
+      await expect(
+        redemptionService.isEligible(user, redemption),
+      ).resolves.toMatchObject({ eligible: true });
+    });
   });
 
   describe('multi account detection', () => {
