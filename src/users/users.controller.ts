@@ -365,6 +365,11 @@ export class UsersController {
     if (id !== user.id) {
       throw new ForbiddenException();
     }
+
+    if (!this.config.get<boolean>('ENABLE_USER_UPDATING')) {
+      return user;
+    }
+
     return this.usersUpdater.update(user, {
       discord: dto.discord,
       github: dto.github,
