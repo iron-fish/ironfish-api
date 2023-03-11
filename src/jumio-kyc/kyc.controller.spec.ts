@@ -162,6 +162,24 @@ describe('KycController', () => {
     });
   });
 
+  describe('PUT /kyc', () => {
+    it('updates public address of user', async () => {
+      const user = await mockUser();
+      let redemption = await redemptionService.create(
+        user,
+        'fakeaddress',
+        'fakeip',
+      );
+      await request(app.getHttpServer())
+        .put(`/kyc`)
+        .set('Authorization', 'did-token')
+        .send({ public_address: 'updatedaddress' })
+        .expect(HttpStatus.OK);
+      redemption = await redemptionService.findOrThrow(user);
+      expect(redemption.public_address).toBe('updatedaddress');
+    });
+  });
+
   describe('POST /callback', () => {
     it('resolves 200 when transaction found/updated', async () => {
       const user = await mockUser();
