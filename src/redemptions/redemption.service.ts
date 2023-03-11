@@ -214,10 +214,11 @@ export class RedemptionService {
   async update(
     redemption: Redemption,
     data: {
-      kycStatus: KycStatus;
+      kycStatus?: KycStatus;
       jumioAccountId?: string;
       idDetails?: IdDetails[];
       failureMessage?: string;
+      publicAddress?: string;
     },
     prisma?: BasePrismaClient,
   ): Promise<Redemption> {
@@ -229,6 +230,7 @@ export class RedemptionService {
         jumio_account_id: data.jumioAccountId,
         id_details: instanceToPlain(data.idDetails),
         failure_message: data.failureMessage,
+        public_address: data.publicAddress,
       },
       where: {
         id: redemption.id,

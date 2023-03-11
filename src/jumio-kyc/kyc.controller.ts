@@ -9,6 +9,7 @@ import {
   HttpStatus,
   Param,
   Post,
+  Put,
   Req,
   Res,
   UseGuards,
@@ -82,6 +83,28 @@ export class KycController {
       attemptableReason,
       this.config,
     );
+  }
+
+  @ApiExcludeEndpoint()
+  @Put()
+  @UseGuards(MagicLinkGuard)
+  async updateAddress(
+    @Context() { user }: MagicLinkContext,
+    @Body(
+      new ValidationPipe({
+        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+      }),
+    )
+    dto: CreateKycDto,
+    @Res()
+    res: Response,
+  ): Promise<void> {
+    const redemption = await this.redemptionService.findOrThrow(user);
+
+    await this.redemptionService.update(redemption, {
+      publicAddress: dto.public_address,
+    });
+    res.status(HttpStatus.OK).send();
   }
 
   @ApiExcludeEndpoint()
