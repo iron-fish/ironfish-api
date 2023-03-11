@@ -43,7 +43,7 @@ export class JumioApiService {
       });
 
     // Sanitize extracted values
-    if (sanitize) {
+    if (sanitize && 'extraction' in response.data.capabilities) {
       for (const extraction of response.data.capabilities.extraction) {
         const sanitized = {
           issuingCountry: extraction.data.issuingCountry,
