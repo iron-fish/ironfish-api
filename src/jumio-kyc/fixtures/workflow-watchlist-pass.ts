@@ -8,7 +8,7 @@ export const WORKFLOW_RETRIEVE_WATCHLIST_PASS: JumioTransactionStandaloneSanctio
     workflow: {
       id: 'b94de56f-75b7-4df2-9320-eebba497f138',
       status: 'PROCESSED',
-      definitionKey: 10010,
+      definitionKey: '10010',
       userReference: 'foo',
       customerInternalReference: 'application',
     },

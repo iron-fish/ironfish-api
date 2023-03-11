@@ -76,7 +76,7 @@ export class KycService {
       const response = await this.jumioApiService.createAccountAndTransaction(
         user.id,
         redemption.jumio_account_id,
-        this.config.get<number>('JUMIO_WORKFLOW_DEFINITION'),
+        String(this.config.get<number>('JUMIO_WORKFLOW_DEFINITION')),
       );
 
       redemption = await this.redemptionService.update(
@@ -220,7 +220,7 @@ export class KycService {
       await this.jumioApiService.createAccountAndTransaction(
         user.id,
         redemption.jumio_account_id,
-        10010,
+        '10010',
       );
     // get/upload name info
     assert.ok(redemption.jumio_account_id);
@@ -269,7 +269,7 @@ export class KycService {
     );
 
     const calculatedStatus =
-      status.workflow.definitionKey !== 10010
+      status.workflow.definitionKey !== '10010'
         ? await this.redemptionService.calculateStatus(status)
         : this.redemptionService.calculateStandaloneWatchlistStatus(status);
 

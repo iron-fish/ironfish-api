@@ -24,7 +24,7 @@ export const WORKFLOW_RETRIEVE_FIXTURE = (
     workflow: {
       id: workflowId,
       status: workflowStatus,
-      definitionKey: 10013,
+      definitionKey: '10013',
       userReference: 'foobar',
       customerInternalReference: userId,
     },

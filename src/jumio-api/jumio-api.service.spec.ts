@@ -34,7 +34,7 @@ describe('JumioApiService', () => {
     describe('when calling jumio', () => {
       it('creates account when jumioAccountId is not present', async () => {
         const postMock = axiosMock();
-        await jumioApiService.createAccountAndTransaction(123, null, 10032);
+        await jumioApiService.createAccountAndTransaction(123, null, '10032');
 
         expect(postMock).toHaveBeenCalledWith(
           'https://account.amer-1.jumio.ai/api/v1/accounts',
@@ -43,7 +43,7 @@ describe('JumioApiService', () => {
             customerInternalReference: expect.any(Number),
             userReference: expect.any(String),
             workflowDefinition: expect.objectContaining({
-              key: expect.any(Number),
+              key: expect.any(String),
               capabilities: {
                 watchlistScreening: expect.objectContaining({
                   additionalProperties: '',
@@ -68,7 +68,7 @@ describe('JumioApiService', () => {
         await jumioApiService.createAccountAndTransaction(
           123,
           'fooaccount',
-          10032,
+          '10032',
         );
 
         expect(postMock).toHaveBeenCalledWith(
@@ -78,7 +78,7 @@ describe('JumioApiService', () => {
             customerInternalReference: expect.any(Number),
             userReference: expect.any(String),
             workflowDefinition: {
-              key: expect.any(Number),
+              key: expect.any(String),
               capabilities: {
                 watchlistScreening: expect.objectContaining({
                   additionalProperties: '',

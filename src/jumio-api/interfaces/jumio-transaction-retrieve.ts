@@ -160,7 +160,7 @@ export interface JumioTransactionRetrieveResponse {
   };
   workflow: {
     id: string;
-    definitionKey: number;
+    definitionKey: string;
     userReference: string;
     status: 'INITIATED' | 'PROCESSED' | 'SESSION_EXPIRED' | 'TOKEN_EXPIRED';
     customerInternalReference: string;
