@@ -28,6 +28,7 @@ import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-
 import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { JumioTransactionService } from '../jumio-transactions/jumio-transaction.service';
 import { RedemptionService } from '../redemptions/redemption.service';
+import { UsersService } from '../users/users.service';
 import { CreateKycDto } from './dto/create-kyc.dto';
 import { JumioCallbackData } from './interfaces/jumio-callback-data';
 import { RefreshUserRedemptionOptions } from './interfaces/refresh-user-redemption-options';
@@ -45,6 +46,7 @@ export class KycController {
     private readonly kycService: KycService,
     private readonly graphileWorkerService: GraphileWorkerService,
     private readonly config: ApiConfigService,
+    private readonly usersService: UsersService,
   ) {}
 
   @ApiExcludeEndpoint()
@@ -179,5 +181,17 @@ export class KycController {
   @UseGuards(MagicLinkGuard)
   async markComplete(@Context() { user }: MagicLinkContext): Promise<void> {
     await this.kycService.markComplete(user);
+  }
+
+  @ApiExcludeEndpoint()
+  @Get('/sanctions/:id')
+  @UseGuards(ApiKeyGuard)
+  async sanctionScreening(
+    @Res() res: Response,
+    @Param('id', new IntIsSafeForPrismaPipe())
+    id: number,
+  ): Promise<void> {
+    await this.kycService.standaloneWatchlist(id);
+    res.status(HttpStatus.OK).send();
   }
 }

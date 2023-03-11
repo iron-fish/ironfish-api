@@ -10,6 +10,7 @@ import { AIRDROP_CONFIG } from '../common/constants';
 import {
   ImageCheck,
   JumioTransactionRetrieveResponse,
+  JumioTransactionStandaloneSanction,
   WatchlistScreenCheck,
 } from '../jumio-api/interfaces/jumio-transaction-retrieve';
 import { IdDetails } from '../jumio-kyc/kyc.service';
@@ -72,6 +73,7 @@ export class RedemptionService {
         idDetails,
       };
     }
+
     if (
       transactionStatus.workflow.status === 'SESSION_EXPIRED' ||
       transactionStatus.workflow.status === 'TOKEN_EXPIRED' ||
@@ -126,6 +128,33 @@ export class RedemptionService {
       idDetails,
     };
   }
+
+  // this response will only be a subset of JumioTransactionRetrieveResponse
+  calculateStandaloneWatchlistStatus(
+    transactionStatus: JumioTransactionStandaloneSanction,
+  ): {
+    status: KycStatus;
+    failureMessage: string | null;
+    idDetails: undefined;
+  } {
+    if (
+      this.watchlistScreeningFailure(
+        transactionStatus.capabilities.watchlistScreening,
+      )
+    ) {
+      return {
+        status: KycStatus.FAILED,
+        failureMessage: 'Sanction screening failed, ineligible for airdrop.',
+        idDetails: undefined,
+      };
+    }
+    return {
+      status: KycStatus.SUCCESS,
+      failureMessage: '',
+      idDetails: undefined,
+    };
+  }
+
   getTransactionLabels(status: JumioTransactionRetrieveResponse): string[] {
     return [
       ...status.capabilities.dataChecks.map((i) => i.decision.details.label),

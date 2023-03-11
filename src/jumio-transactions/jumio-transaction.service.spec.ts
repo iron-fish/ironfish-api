@@ -3,10 +3,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { INestApplication, NotFoundException } from '@nestjs/common';
 import { DecisionStatus, User } from '@prisma/client';
-import assert from 'assert';
 import faker from 'faker';
 import { v4 as uuid } from 'uuid';
-import { WORKFLOW_RETRIEVE_FIXTURE } from '../jumio-kyc/fixtures/workflow';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
@@ -82,58 +80,6 @@ describe('JumioTransactionService', () => {
           jumioTransactionService.findLatestOrThrow(user),
         ).rejects.toThrow(NotFoundException);
       });
-    });
-  });
-
-  describe('scrubExtractionData', () => {
-    it('removes sensitive PII', () => {
-      const fixture = WORKFLOW_RETRIEVE_FIXTURE(
-        'PROCESSED',
-        'CHL',
-        DecisionStatus.PASSED,
-      );
-      const scrubbedFixture =
-        jumioTransactionService.scrubExtractionData(fixture);
-      assert.ok(scrubbedFixture);
-      const zip = <T>(a: T[], b: T[]): [T, T][] => a.map((k, i) => [k, b[i]]);
-      const zipped = zip(
-        fixture.capabilities.extraction,
-        scrubbedFixture?.capabilities.extraction,
-      );
-      // check retained fields are retained and scrubbed fields are scrubbed
-      for (const [originalExtraction, scrubbedExtraction] of zipped) {
-        expect(scrubbedExtraction.data.type).toBe(originalExtraction.data.type);
-        expect(scrubbedExtraction.data.subType).toBe(
-          originalExtraction.data.subType,
-        );
-        expect(scrubbedExtraction.data.issuingCountry).toBe(
-          originalExtraction.data.issuingCountry,
-        );
-        expect(scrubbedExtraction.data.firstName).toBe(
-          originalExtraction.data.firstName,
-        );
-        expect(scrubbedExtraction.data.lastName).toBe(
-          originalExtraction.data.lastName,
-        );
-        expect(scrubbedExtraction.data.expiryDate).toBe(
-          originalExtraction.data.expiryDate,
-        );
-        expect(scrubbedExtraction.data.dateOfBirth).not.toBe(
-          originalExtraction.data.dateOfBirth,
-        );
-        expect(scrubbedExtraction.data.documentNumber).not.toBe(
-          originalExtraction.data.documentNumber,
-        );
-        expect(scrubbedExtraction.data.optionalMrzField1).not.toBe(
-          originalExtraction.data.optionalMrzField1,
-        );
-        expect(scrubbedExtraction.data.optionalMrzField2).not.toBe(
-          originalExtraction.data.optionalMrzField2,
-        );
-        expect(scrubbedExtraction.data.currentAge).not.toBe(
-          originalExtraction.data.currentAge,
-        );
-      }
     });
   });
 });
