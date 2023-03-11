@@ -59,7 +59,7 @@ export class JumioApiService {
   async createAccountAndTransaction(
     userId: number,
     jumioAccountId: string | null,
-    workflowDefinitionKey: number,
+    workflowDefinitionKey: string,
   ): Promise<JumioAccountCreateResponse> {
     let url =
       'https://account.' + this.config.get<string>('JUMIO_URL') + '/accounts';
