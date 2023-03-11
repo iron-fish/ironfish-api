@@ -19,6 +19,8 @@ export const WORKFLOW_RETRIEVE_FIXTURE = (
   watchlistCheck: WatchlistScreenCheck = WATCHLIST_SCREEN_FIXTURE(),
   workflowId = 'fakeworkflowid',
   accountId = 'accountId',
+  firstName = 'Jason',
+  lastName = 'Spafford',
 ): JumioTransactionRetrieveResponse => {
   return {
     workflow: {
@@ -125,8 +127,8 @@ export const WORKFLOW_RETRIEVE_FIXTURE = (
             type: 'ID_CARD',
             subType: 'NATIONAL_ID',
             issuingCountry: idCountryCode,
-            firstName: 'MUMBO',
-            lastName: 'JUMBO',
+            firstName: firstName,
+            lastName: lastName,
             dateOfBirth: '1970-01-01',
             expiryDate: '2050-01-01',
             documentNumber: '1111111',
