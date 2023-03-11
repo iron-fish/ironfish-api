@@ -175,16 +175,23 @@ export class JumioApiService {
         dateOfBirth = extraction.data.dateOfBirth;
       }
       if (extraction.data.firstName) {
-        firstName = extraction.data.firstName;
+        firstName =
+          extraction.data.firstName === 'N/A' ? '' : extraction.data.firstName;
       }
       if (extraction.data.lastName) {
-        lastName = extraction.data.lastName;
+        lastName =
+          extraction.data.lastName === 'N/A' ? '' : extraction.data.lastName;
       }
       if (extraction.data.issuingCountry) {
         country = extraction.data.issuingCountry;
       }
     }
-    if (!firstName || !lastName || !dateOfBirth || !country) {
+    if (
+      firstName === null ||
+      lastName === null ||
+      dateOfBirth === null ||
+      country === null
+    ) {
       throw new BadRequestException(
         'Required user info field not present on transaction',
       );

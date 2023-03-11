@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { INestApplication } from '@nestjs/common';
 import axios from 'axios';
+import { WORKFLOW_RETRIEVE_FIXTURE } from '../jumio-kyc/fixtures/workflow';
 import { bootstrapTestApp } from '../test/test-app';
 import { JumioApiService } from './jumio-api.service';
 
@@ -95,6 +96,49 @@ describe('JumioApiService', () => {
             }),
           },
         );
+      });
+    });
+  });
+
+  describe('getScreeningDataFromRetrieval', () => {
+    it('returns correct names when present', () => {
+      const data = jumioApiService.getScreeningDataFromRetrieval(
+        WORKFLOW_RETRIEVE_FIXTURE(
+          'PROCESSED',
+          'CHL',
+          'PASSED',
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          'Jason',
+          'Spafford',
+        ),
+      );
+      expect(data).toMatchObject({
+        firstName: 'Jason',
+        lastName: 'Spafford',
+      });
+    });
+    it('returns empty string when names not present', () => {
+      const data = jumioApiService.getScreeningDataFromRetrieval(
+        WORKFLOW_RETRIEVE_FIXTURE(
+          'PROCESSED',
+          'CHL',
+          'PASSED',
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          'N/A',
+          '房建民',
+        ),
+      );
+      expect(data).toMatchObject({
+        firstName: '',
+        lastName: '房建民',
       });
     });
   });
