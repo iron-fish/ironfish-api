@@ -104,10 +104,7 @@ export class RedemptionService {
     );
 
     // TODO: HANDLE WARN, use decision.risk.score?
-    const failure =
-      watchlistScreeningFailure ||
-      multiAccountFailure ||
-      this.labelFailure(labels);
+    const failure = watchlistScreeningFailure || multiAccountFailure;
     if (failure) {
       return {
         status: KycStatus.FAILED,
@@ -222,16 +219,6 @@ export class RedemptionService {
       }
     }
     return true;
-  }
-
-  labelFailure(labels: string[]): string | null {
-    const failedLabels = labels.filter((i) =>
-      ['PHOTOCOPY', 'DIGITAL_COPY', 'MANIPULATED', 'BLACK_WHITE'].includes(i),
-    );
-    if (failedLabels.length) {
-      return `Failure due to label presence: ${failedLabels.join(',')}`;
-    }
-    return null;
   }
 
   async findByJumioAccountId(jumioAccountId: string): Promise<Redemption> {
