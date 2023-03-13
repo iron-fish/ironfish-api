@@ -298,6 +298,14 @@ export class RedemptionService {
     redemption?: Redemption | null,
     prisma?: BasePrismaClient,
   ): Promise<{ eligible: boolean; reason: string }> {
+    if (
+      redemption &&
+      (redemption.kyc_status === KycStatus.SUBMITTED ||
+        redemption.kyc_status === KycStatus.SUCCESS)
+    ) {
+      return { eligible: true, reason: '' };
+    }
+
     if (user.ineligible_reason) {
       return { eligible: false, reason: user.ineligible_reason };
     }
@@ -315,11 +323,7 @@ export class RedemptionService {
         redemption.kyc_max_attempts ??
         this.config.get<number>('KYC_MAX_ATTEMPTS');
 
-      if (
-        redemption.kyc_attempts >= kycMaxAttempts &&
-        redemption.kyc_status !== KycStatus.SUBMITTED &&
-        redemption.kyc_status !== KycStatus.SUCCESS
-      ) {
+      if (redemption.kyc_attempts >= kycMaxAttempts) {
         return {
           eligible: false,
           reason: `Max KYC attempts reached ${redemption.kyc_attempts} / ${kycMaxAttempts}`,
