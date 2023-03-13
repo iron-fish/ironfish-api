@@ -1,20 +1,25 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { ImageChecksLabel } from '../../jumio-api/interfaces/jumio-transaction-retrieve';
+import {
+  LivenessCheck,
+  LivenessLabel,
+} from '../../jumio-api/interfaces/jumio-transaction-retrieve';
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-export const IMAGE_CHECK_FIXTURE = (
-  label: ImageChecksLabel = 'REPEATED_FACE',
-) => {
+export const LIVENESS_CHECK_FIXTURE = (
+  label: LivenessLabel = 'OK',
+): LivenessCheck => {
   return {
-    id: '1568893e-5edc-453c-9c50-e47fa10578f8',
+    id: '3bfa4f49-148d-4361-acc3-10928f69562a',
+    validFaceMapForAuthentication:
+      'https://retrieval.amer-1.jumio.ai/api/v1/accounts/fakeaccountid/credentials/fakecredentialsid/parts/FACEMAP',
     credentials: [
       {
         id: 'fakecredentialsid',
-        category: 'ID',
+        category: 'FACEMAP',
       },
       {
         id: 'fakecredentialsid',
@@ -22,19 +27,15 @@ export const IMAGE_CHECK_FIXTURE = (
       },
     ],
     decision: {
-      type: 'WARNING',
+      type: 'PASSED',
       details: {
         label: label,
       },
     },
     data: {
-      faceSearchFindings: {
-        status: 'DONE',
-        findings: [
-          'f7fe3c49-6221-4d87-b8b9-0cd243b65088',
-          '85b26f35-cf4e-4a68-8bce-88c20f06d3ff',
-        ],
-      },
+      type: 'IPROOV_STANDARD',
+      predictedAge: 31,
+      ageConfidenceRange: '21-41',
     },
   };
 };

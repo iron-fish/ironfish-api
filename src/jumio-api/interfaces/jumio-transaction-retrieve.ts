@@ -140,6 +140,31 @@ export type WatchlistScreenCheck = {
   };
 };
 
+export type LivenessCheck = {
+  id: string;
+  validFaceMapForAuthentication: string;
+  credentials: [
+    {
+      id: string;
+      category: string;
+    },
+    {
+      id: string;
+      category: string;
+    },
+  ];
+  decision: {
+    type: 'NOT_EXECUTED' | 'PASSED' | 'REJECTED' | 'WARNING';
+    details: {
+      label: LivenessLabel;
+    };
+  };
+  data: {
+    type: string;
+    predictedAge: number;
+    ageConfidenceRange: string;
+  };
+};
 export interface JumioTransactionRetrieveResponse {
   account: {
     id: string;
@@ -175,31 +200,6 @@ export interface JumioTransactionRetrieveResponse {
     };
   };
   capabilities: {
-    liveness: {
-      id: string;
-      validFaceMapForAuthentication: string;
-      credentials: [
-        {
-          id: string;
-          category: string;
-        },
-        {
-          id: string;
-          category: string;
-        },
-      ];
-      decision: {
-        type: 'NOT_EXECUTED' | 'PASSED' | 'REJECTED' | 'WARNING';
-        details: {
-          label: LivenessLabel;
-        };
-      };
-      data: {
-        type: string;
-        predictedAge: number;
-        ageConfidenceRange: string;
-      };
-    }[];
     similarity: {
       id: string;
       credentials: [
@@ -282,6 +282,7 @@ export interface JumioTransactionRetrieveResponse {
     }[];
     imageChecks: ImageCheck[];
     watchlistScreening: WatchlistScreenCheck[];
+    liveness: LivenessCheck[];
   };
 }
 
