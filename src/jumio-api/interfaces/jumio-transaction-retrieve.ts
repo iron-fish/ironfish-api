@@ -98,6 +98,14 @@ export type WatchlistScreeningLabels =
   | 'OK'
   | 'ALERT';
 
+export type WorkflowStatus =
+  | 'INITIATED'
+  | 'PROCESSED'
+  | 'SESSION_EXPIRED'
+  | 'TOKEN_EXPIRED';
+
+export type DecisionType = 'NOT_EXECUTED' | 'PASSED' | 'REJECTED' | 'WARNING';
+
 export type ImageCheck = {
   id: string;
   credentials: {
@@ -187,11 +195,11 @@ export interface JumioTransactionRetrieveResponse {
     id: string;
     definitionKey: string;
     userReference: string;
-    status: 'INITIATED' | 'PROCESSED' | 'SESSION_EXPIRED' | 'TOKEN_EXPIRED';
+    status: WorkflowStatus;
     customerInternalReference: string;
   };
   decision: {
-    type: 'NOT_EXECUTED' | 'PASSED' | 'REJECTED' | 'WARNING';
+    type: DecisionType;
     details: {
       label: string;
     };

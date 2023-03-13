@@ -42,7 +42,7 @@ describe('RedemptionServiceSpec', () => {
     });
 
     it('should return banned if user from PRK', async () => {
-      const fixture = WORKFLOW_RETRIEVE_FIXTURE('PROCESSED', 'PRK', 'PASSED');
+      const fixture = WORKFLOW_RETRIEVE_FIXTURE({ idCountryCode: 'PRK' });
       const status = await redemptionService.calculateStatus(fixture);
       expect(status).toEqual({
         status: KycStatus.FAILED,
@@ -58,7 +58,7 @@ describe('RedemptionServiceSpec', () => {
     });
 
     it('should not ban with acceptable country', async () => {
-      const fixture = WORKFLOW_RETRIEVE_FIXTURE('PROCESSED', 'CHL', 'PASSED');
+      const fixture = WORKFLOW_RETRIEVE_FIXTURE();
       const status = await redemptionService.calculateStatus(fixture);
       expect(status).toEqual({
         status: KycStatus.SUCCESS,
@@ -335,33 +335,23 @@ describe('RedemptionServiceSpec', () => {
         repeatedFaces,
       );
       expect(check).toBeNull();
-      const fixture = WORKFLOW_RETRIEVE_FIXTURE(
-        'PROCESSED',
-        'CHL',
-        DecisionStatus.REJECTED,
-        String(user1Account1.id),
+      const fixture = WORKFLOW_RETRIEVE_FIXTURE({
+        decisionStatus: DecisionStatus.REJECTED,
+        userId: String(user1Account1.id),
         imageCheck,
-      );
+      });
       const labels = redemptionService.getTransactionLabels(fixture);
       const acceptableFace = redemptionService.hasOnlyBenignWarnings(labels);
       expect(acceptableFace).toBe(true);
     });
 
     it('should allow LIVENESS_UNDETERMINED warning for success if risk score acceptable', async () => {
-      const fixture = WORKFLOW_RETRIEVE_FIXTURE(
-        'PROCESSED',
-        'CHL',
-        DecisionStatus.WARNING,
-        '1231232',
-        IMAGE_CHECK_FIXTURE('OK'),
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        LIVENESS_CHECK_FIXTURE('LIVENESS_UNDETERMINED'),
-        49,
-      );
+      const fixture = WORKFLOW_RETRIEVE_FIXTURE({
+        decisionStatus: DecisionStatus.WARNING,
+        imageCheck: IMAGE_CHECK_FIXTURE('OK'),
+        livenessCheck: LIVENESS_CHECK_FIXTURE('LIVENESS_UNDETERMINED'),
+        riskScore: 49,
+      });
       const status = await redemptionService.calculateStatus(fixture);
       expect(status).toMatchObject({
         status: KycStatus.SUCCESS,
@@ -370,20 +360,12 @@ describe('RedemptionServiceSpec', () => {
     });
 
     it('should NOT allow LIVENESS_UNDETERMINED warning for success if risk score is too high', async () => {
-      const fixture = WORKFLOW_RETRIEVE_FIXTURE(
-        'PROCESSED',
-        'CHL',
-        DecisionStatus.WARNING,
-        '1231232',
-        IMAGE_CHECK_FIXTURE('OK'),
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        LIVENESS_CHECK_FIXTURE('LIVENESS_UNDETERMINED'),
-        51,
-      );
+      const fixture = WORKFLOW_RETRIEVE_FIXTURE({
+        decisionStatus: DecisionStatus.WARNING,
+        imageCheck: IMAGE_CHECK_FIXTURE('OK'),
+        livenessCheck: LIVENESS_CHECK_FIXTURE('LIVENESS_UNDETERMINED'),
+        riskScore: 51,
+      });
       const status = await redemptionService.calculateStatus(fixture);
       expect(status).toMatchObject({
         status: KycStatus.TRY_AGAIN,

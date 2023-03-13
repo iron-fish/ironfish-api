@@ -7,25 +7,40 @@ import {
   JumioTransactionRetrieveResponse,
   LivenessCheck,
   WatchlistScreenCheck,
+  WorkflowStatus,
 } from '../../jumio-api/interfaces/jumio-transaction-retrieve';
 import { IMAGE_CHECK_FIXTURE } from './image-check';
 import { LIVENESS_CHECK_FIXTURE } from './liveness-check';
 import { WATCHLIST_SCREEN_FIXTURE } from './watch-list';
 
-export const WORKFLOW_RETRIEVE_FIXTURE = (
-  workflowStatus: 'TOKEN_EXPIRED' | 'SESSION_EXPIRED' | 'PROCESSED',
-  idCountryCode: string,
-  decisionStatus: DecisionStatus,
+export type JumioWorkflowRetrieveParams = {
+  workflowStatus?: WorkflowStatus;
+  idCountryCode?: string;
+  workflowId?: string;
+  accountId?: string;
+  firstName?: string;
+  lastName?: string;
+  decisionStatus?: DecisionStatus;
+  userId?: string;
+  imageCheck?: ImageCheck;
+  watchlistCheck?: WatchlistScreenCheck;
+  livenessCheck?: LivenessCheck;
+  riskScore?: number;
+};
+export const WORKFLOW_RETRIEVE_FIXTURE = ({
+  workflowStatus = 'PROCESSED',
+  idCountryCode = 'CHL',
+  decisionStatus = DecisionStatus.PASSED,
   userId = '1',
-  imageCheck: ImageCheck = IMAGE_CHECK_FIXTURE(),
-  watchlistCheck: WatchlistScreenCheck = WATCHLIST_SCREEN_FIXTURE(),
-  workflowId = 'fakeworkflowid',
-  accountId = 'accountId',
+  imageCheck = IMAGE_CHECK_FIXTURE(),
+  watchlistCheck = WATCHLIST_SCREEN_FIXTURE(),
+  workflowId = 'eb776622-26a2-499b-b824-6449c92d1617',
+  accountId = '684fcf21-bcf3-4916-b007-35dc70102f56',
   firstName = 'Jason',
   lastName = 'Spafford',
-  livenessCheck: LivenessCheck = LIVENESS_CHECK_FIXTURE(),
+  livenessCheck = LIVENESS_CHECK_FIXTURE(),
   riskScore = 50,
-): JumioTransactionRetrieveResponse => {
+}: JumioWorkflowRetrieveParams = {}): JumioTransactionRetrieveResponse => {
   return {
     workflow: {
       id: workflowId,

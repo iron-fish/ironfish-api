@@ -103,18 +103,7 @@ describe('JumioApiService', () => {
   describe('getScreeningDataFromRetrieval', () => {
     it('returns correct names when present', () => {
       const data = jumioApiService.getScreeningDataFromRetrieval(
-        WORKFLOW_RETRIEVE_FIXTURE(
-          'PROCESSED',
-          'CHL',
-          'PASSED',
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          'Jason',
-          'Spafford',
-        ),
+        WORKFLOW_RETRIEVE_FIXTURE({ firstName: 'Jason', lastName: 'Spafford' }),
       );
       expect(data).toMatchObject({
         firstName: 'Jason',
@@ -123,18 +112,7 @@ describe('JumioApiService', () => {
     });
     it('returns empty string when names not present', () => {
       const data = jumioApiService.getScreeningDataFromRetrieval(
-        WORKFLOW_RETRIEVE_FIXTURE(
-          'PROCESSED',
-          'CHL',
-          'PASSED',
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          'N/A',
-          '房建民',
-        ),
+        WORKFLOW_RETRIEVE_FIXTURE({ firstName: 'N/A', lastName: '房建民' }),
       );
       expect(data).toMatchObject({
         firstName: '',

@@ -206,12 +206,9 @@ describe('KycController', () => {
       );
 
       jest.spyOn(axios, 'get').mockResolvedValueOnce({
-        data: WORKFLOW_RETRIEVE_FIXTURE(
-          'PROCESSED',
-          'CHL',
-          DecisionStatus.PASSED,
-          user.id.toString(),
-        ),
+        data: WORKFLOW_RETRIEVE_FIXTURE({
+          userId: user.id.toString(),
+        }),
       });
       jest
         .spyOn(kycService, 'isSignatureValid')
@@ -254,11 +251,9 @@ describe('KycController', () => {
         );
 
         jest.spyOn(axios, 'get').mockResolvedValueOnce({
-          data: WORKFLOW_RETRIEVE_FIXTURE(
-            'PROCESSED',
-            'CHL',
-            DecisionStatus.PASSED,
-          ),
+          data: WORKFLOW_RETRIEVE_FIXTURE({
+            decisionStatus: DecisionStatus.PASSED,
+          }),
         });
 
         await request(app.getHttpServer())
@@ -289,11 +284,7 @@ describe('KycController', () => {
           );
           await jumioTransactionService.update(transaction, {
             decisionStatus: DecisionStatus.PASSED,
-            lastWorkflowFetch: WORKFLOW_RETRIEVE_FIXTURE(
-              'PROCESSED',
-              'CHL',
-              DecisionStatus.PASSED,
-            ),
+            lastWorkflowFetch: WORKFLOW_RETRIEVE_FIXTURE(),
           });
           redemption = await redemptionService.update(redemption, {
             kycStatus: KycStatus.SUBMITTED,
@@ -305,13 +296,7 @@ describe('KycController', () => {
           .mockResolvedValueOnce(WORKFLOW_CREATE_WATCHLIST_RESPONSE as any);
           jest
             .spyOn(jumioApiService, 'transactionStatus')
-            .mockResolvedValueOnce(
-              WORKFLOW_RETRIEVE_FIXTURE(
-                'PROCESSED',
-                'CHL',
-                DecisionStatus.PASSED,
-              ),
-            );
+            .mockResolvedValueOnce(WORKFLOW_RETRIEVE_FIXTURE());
           jest
             .spyOn(jumioApiService, 'uploadScreeningData')
             .mockResolvedValueOnce(WATCHLIST_DATA_UPLOAD_RESPONSE);
