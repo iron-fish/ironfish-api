@@ -112,10 +112,14 @@ export class RedemptionService {
         idDetails,
       };
     }
-    if (!multiAccountFailure && this.hasOnlyDuplicateFaceFailures(labels)) {
+    if (
+      !multiAccountFailure &&
+      this.hasOnlyBenignWarnings(labels) &&
+      transactionStatus.decision.risk.score < 50
+    ) {
       return {
         status: KycStatus.SUCCESS,
-        failureMessage: `Benign duplicate faces found`,
+        failureMessage: `Benign warning labels found: ${labels.join(',')}`,
         idDetails,
       };
     }
@@ -211,10 +215,14 @@ export class RedemptionService {
     return null;
   }
 
-  hasOnlyDuplicateFaceFailures(labels: string[]): boolean {
+  hasOnlyBenignWarnings(labels: string[]): boolean {
     // if any other check failed, we can't pass
     for (const label of labels) {
-      if (!['MATCH', 'REPEATED_FACE', 'OK'].includes(label)) {
+      if (
+        !['MATCH', 'REPEATED_FACE', 'LIVENESS_UNDETERMINED', 'OK'].includes(
+          label,
+        )
+      ) {
         return false;
       }
     }

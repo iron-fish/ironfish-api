@@ -8,6 +8,8 @@ import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { AIRDROP_CONFIG } from '../common/constants';
 import { ImageChecksLabel } from '../jumio-api/interfaces/jumio-transaction-retrieve';
+import { IMAGE_CHECK_FIXTURE } from '../jumio-kyc/fixtures/image-check';
+import { LIVENESS_CHECK_FIXTURE } from '../jumio-kyc/fixtures/liveness-check';
 import { WATCHLIST_SCREEN_FIXTURE } from '../jumio-kyc/fixtures/watch-list';
 import { WORKFLOW_RETRIEVE_FIXTURE } from '../jumio-kyc/fixtures/workflow';
 import { PrismaService } from '../prisma/prisma.service';
@@ -341,9 +343,52 @@ describe('RedemptionServiceSpec', () => {
         imageCheck,
       );
       const labels = redemptionService.getTransactionLabels(fixture);
-      const acceptableFace =
-        redemptionService.hasOnlyDuplicateFaceFailures(labels);
+      const acceptableFace = redemptionService.hasOnlyBenignWarnings(labels);
       expect(acceptableFace).toBe(true);
+    });
+
+    it('should allow LIVENESS_UNDETERMINED warning for success if risk score acceptable', async () => {
+      const fixture = WORKFLOW_RETRIEVE_FIXTURE(
+        'PROCESSED',
+        'CHL',
+        DecisionStatus.WARNING,
+        '1231232',
+        IMAGE_CHECK_FIXTURE('OK'),
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        LIVENESS_CHECK_FIXTURE('LIVENESS_UNDETERMINED'),
+        49,
+      );
+      const status = await redemptionService.calculateStatus(fixture);
+      expect(status).toMatchObject({
+        status: KycStatus.SUCCESS,
+        failureMessage: expect.stringContaining('Benign'),
+      });
+    });
+
+    it('should NOT allow LIVENESS_UNDETERMINED warning for success if risk score is too high', async () => {
+      const fixture = WORKFLOW_RETRIEVE_FIXTURE(
+        'PROCESSED',
+        'CHL',
+        DecisionStatus.WARNING,
+        '1231232',
+        IMAGE_CHECK_FIXTURE('OK'),
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        LIVENESS_CHECK_FIXTURE('LIVENESS_UNDETERMINED'),
+        51,
+      );
+      const status = await redemptionService.calculateStatus(fixture);
+      expect(status).toMatchObject({
+        status: KycStatus.TRY_AGAIN,
+        failureMessage: null,
+      });
     });
   });
 

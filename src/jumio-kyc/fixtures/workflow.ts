@@ -5,9 +5,11 @@ import { DecisionStatus } from '@prisma/client';
 import {
   ImageCheck,
   JumioTransactionRetrieveResponse,
+  LivenessCheck,
   WatchlistScreenCheck,
 } from '../../jumio-api/interfaces/jumio-transaction-retrieve';
 import { IMAGE_CHECK_FIXTURE } from './image-check';
+import { LIVENESS_CHECK_FIXTURE } from './liveness-check';
 import { WATCHLIST_SCREEN_FIXTURE } from './watch-list';
 
 export const WORKFLOW_RETRIEVE_FIXTURE = (
@@ -15,12 +17,14 @@ export const WORKFLOW_RETRIEVE_FIXTURE = (
   idCountryCode: string,
   decisionStatus: DecisionStatus,
   userId = '1',
-  imageCheck: ImageCheck = IMAGE_CHECK_FIXTURE,
+  imageCheck: ImageCheck = IMAGE_CHECK_FIXTURE(),
   watchlistCheck: WatchlistScreenCheck = WATCHLIST_SCREEN_FIXTURE(),
   workflowId = 'fakeworkflowid',
   accountId = 'accountId',
   firstName = 'Jason',
   lastName = 'Spafford',
+  livenessCheck: LivenessCheck = LIVENESS_CHECK_FIXTURE(),
+  riskScore = 50,
 ): JumioTransactionRetrieveResponse => {
   return {
     workflow: {
@@ -101,7 +105,7 @@ export const WORKFLOW_RETRIEVE_FIXTURE = (
         label: 'PASSED',
       },
       risk: {
-        score: 50,
+        score: riskScore,
       },
     },
     steps: {
@@ -162,34 +166,7 @@ export const WORKFLOW_RETRIEVE_FIXTURE = (
           },
         },
       ],
-      liveness: [
-        {
-          id: '3bfa4f49-148d-4361-acc3-10928f69562a',
-          validFaceMapForAuthentication:
-            'https://retrieval.amer-1.jumio.ai/api/v1/accounts/fakeaccountid/credentials/fakecredentialsid/parts/FACEMAP',
-          credentials: [
-            {
-              id: 'fakecredentialsid',
-              category: 'FACEMAP',
-            },
-            {
-              id: 'fakecredentialsid',
-              category: 'SELFIE',
-            },
-          ],
-          decision: {
-            type: 'PASSED',
-            details: {
-              label: 'OK',
-            },
-          },
-          data: {
-            type: 'IPROOV_STANDARD',
-            predictedAge: 31,
-            ageConfidenceRange: '21-41',
-          },
-        },
-      ],
+      liveness: [livenessCheck],
       dataChecks: [
         {
           id: '07d10b79-b84a-454d-94ac-8b80d53f208a',
