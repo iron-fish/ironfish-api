@@ -274,13 +274,13 @@ export class KycService {
         : this.redemptionService.calculateStandaloneWatchlistStatus(status);
 
     // Has our user's KYC status changed
-    if (redemption.kyc_status !== calculatedStatus.status) {
-      redemption = await this.redemptionService.update(redemption, {
-        kycStatus: calculatedStatus.status,
-        failureMessage: calculatedStatus.failureMessage ?? undefined,
-        idDetails: calculatedStatus.idDetails,
-      });
-    }
+    redemption = await this.redemptionService.update(redemption, {
+      kycStatus: calculatedStatus.status,
+      failureMessage: calculatedStatus.failureMessage ?? undefined,
+      idDetails: calculatedStatus.idDetails,
+      age: calculatedStatus.age,
+    });
+
     await this.jumioTransactionService.update(transaction, {
       decisionStatus: status.decision.type,
       lastWorkflowFetch: status,

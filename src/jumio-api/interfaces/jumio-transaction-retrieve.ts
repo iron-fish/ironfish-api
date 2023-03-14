@@ -173,6 +173,35 @@ export type LivenessCheck = {
     ageConfidenceRange: string;
   };
 };
+
+export type ExtractionCheck = {
+  id: string;
+  decision: {
+    type: 'NOT_EXECUTED' | 'PASSED';
+    details: {
+      label: ExtractionLabel;
+    };
+  };
+  credentials: [
+    {
+      id: string;
+      category: string;
+    },
+  ];
+  data: {
+    type: string;
+    subType: string;
+    issuingCountry: string; // http://en.wikipedia.org/wiki/ISO_3166-1_alpha-3
+    firstName: string;
+    lastName: string;
+    dateOfBirth: string;
+    expiryDate: string;
+    documentNumber: string;
+    optionalMrzField1?: string;
+    optionalMrzField2?: string;
+    currentAge?: string;
+  };
+};
 export interface JumioTransactionRetrieveResponse {
   account: {
     id: string;
@@ -245,34 +274,7 @@ export interface JumioTransactionRetrieveResponse {
         };
       };
     }[];
-    extraction: {
-      id: string;
-      decision: {
-        type: 'NOT_EXECUTED' | 'PASSED';
-        details: {
-          label: ExtractionLabel;
-        };
-      };
-      credentials: [
-        {
-          id: string;
-          category: string;
-        },
-      ];
-      data: {
-        type: string;
-        subType: string;
-        issuingCountry: string; // http://en.wikipedia.org/wiki/ISO_3166-1_alpha-3
-        firstName: string;
-        lastName: string;
-        dateOfBirth: string;
-        expiryDate: string;
-        documentNumber: string;
-        optionalMrzField1?: string;
-        optionalMrzField2?: string;
-        currentAge: string;
-      };
-    }[];
+    extraction: ExtractionCheck[];
     usability: {
       id: string;
       credentials: [

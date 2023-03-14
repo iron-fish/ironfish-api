@@ -49,7 +49,14 @@ export class RedemptionService {
     status: KycStatus;
     failureMessage: string | null;
     idDetails: IdDetails[];
+    age: number | undefined;
   }> {
+    const age =
+      Math.min(
+        ...transactionStatus.capabilities.extraction.map((extraction) => {
+          return Number(extraction.data.currentAge);
+        }),
+      ) ?? undefined;
     const userId = Number(transactionStatus.workflow.customerInternalReference);
     const labels = this.getTransactionLabels(transactionStatus);
     // deal with banned countries
@@ -71,9 +78,17 @@ export class RedemptionService {
         status: KycStatus.FAILED,
         failureMessage: 'Failure: Banned Country',
         idDetails,
+        age,
       };
     }
-
+    if (age < 18) {
+      return {
+        status: KycStatus.TRY_AGAIN,
+        failureMessage: this.minorAgeMessage(age),
+        idDetails,
+        age,
+      };
+    }
     if (
       transactionStatus.workflow.status === 'SESSION_EXPIRED' ||
       transactionStatus.workflow.status === 'TOKEN_EXPIRED' ||
@@ -83,6 +98,7 @@ export class RedemptionService {
         status: KycStatus.TRY_AGAIN,
         failureMessage: null,
         idDetails,
+        age,
       };
     }
     if (transactionStatus.decision.type === DecisionStatus.PASSED) {
@@ -90,6 +106,7 @@ export class RedemptionService {
         status: KycStatus.SUCCESS,
         failureMessage: null,
         idDetails,
+        age,
       };
     }
     const watchlistScreeningFailure = this.watchlistScreeningFailure(
@@ -110,6 +127,7 @@ export class RedemptionService {
         status: KycStatus.FAILED,
         failureMessage: failure,
         idDetails,
+        age,
       };
     }
     if (
@@ -121,12 +139,14 @@ export class RedemptionService {
         status: KycStatus.SUCCESS,
         failureMessage: `Benign warning labels found: ${labels.join(',')}`,
         idDetails,
+        age,
       };
     }
     return {
       status: KycStatus.TRY_AGAIN,
       failureMessage: null,
       idDetails,
+      age,
     };
   }
 
@@ -137,6 +157,7 @@ export class RedemptionService {
     status: KycStatus;
     failureMessage: string | null;
     idDetails: undefined;
+    age: undefined;
   } {
     if (
       this.watchlistScreeningFailure(
@@ -147,12 +168,14 @@ export class RedemptionService {
         status: KycStatus.FAILED,
         failureMessage: 'Sanction screening failed, ineligible for airdrop.',
         idDetails: undefined,
+        age: undefined,
       };
     }
     return {
       status: KycStatus.SUCCESS,
       failureMessage: '',
       idDetails: undefined,
+      age: undefined,
     };
   }
 
@@ -243,6 +266,7 @@ export class RedemptionService {
       idDetails?: IdDetails[];
       failureMessage?: string;
       publicAddress?: string;
+      age?: number;
     },
     prisma?: BasePrismaClient,
   ): Promise<Redemption> {
@@ -255,6 +279,7 @@ export class RedemptionService {
         id_details: instanceToPlain(data.idDetails),
         failure_message: data.failureMessage,
         public_address: data.publicAddress,
+        ...(data.age ? { age: data.age } : {}),
       },
       where: {
         id: redemption.id,
@@ -335,6 +360,13 @@ export class RedemptionService {
         return {
           eligible: false,
           reason: `Max KYC attempts reached ${redemption.kyc_attempts} / ${kycMaxAttempts}`,
+        };
+      }
+
+      if (redemption.age && redemption.age < 18) {
+        return {
+          eligible: true,
+          reason: this.minorAgeMessage(redemption.age),
         };
       }
     }
@@ -430,4 +462,7 @@ export class RedemptionService {
 
     return { attemptable: true, reason: '' };
   }
+
+  minorAgeMessage = (age: number): string =>
+    `You must be 18 years old. You are ${age} years old.`;
 }

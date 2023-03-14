@@ -8,6 +8,7 @@ import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { AIRDROP_CONFIG } from '../common/constants';
 import { ImageChecksLabel } from '../jumio-api/interfaces/jumio-transaction-retrieve';
+import { EXTRACTION_CHECK_FIXTURE } from '../jumio-kyc/fixtures/extraction-check';
 import { IMAGE_CHECK_FIXTURE } from '../jumio-kyc/fixtures/image-check';
 import { LIVENESS_CHECK_FIXTURE } from '../jumio-kyc/fixtures/liveness-check';
 import { WATCHLIST_SCREEN_FIXTURE } from '../jumio-kyc/fixtures/watch-list';
@@ -42,7 +43,9 @@ describe('RedemptionServiceSpec', () => {
     });
 
     it('should return banned if user from PRK', async () => {
-      const fixture = WORKFLOW_RETRIEVE_FIXTURE({ idCountryCode: 'PRK' });
+      const fixture = WORKFLOW_RETRIEVE_FIXTURE({
+        extractionCheck: EXTRACTION_CHECK_FIXTURE({ idCountryCode: 'PRK' }),
+      });
       const status = await redemptionService.calculateStatus(fixture);
       expect(status).toEqual({
         status: KycStatus.FAILED,
@@ -54,6 +57,7 @@ describe('RedemptionServiceSpec', () => {
             id_type: 'ID_CARD',
           },
         ],
+        age: 70,
       });
     });
 
@@ -70,6 +74,7 @@ describe('RedemptionServiceSpec', () => {
             id_type: 'ID_CARD',
           },
         ],
+        age: 70,
       });
     });
   });
@@ -186,6 +191,32 @@ describe('RedemptionServiceSpec', () => {
       );
     });
 
+    it('should be eligible BUT with warning if under 18', async () => {
+      const age = 10;
+      const user = await usersService.create({
+        email: faker.internet.email(),
+        graffiti: uuid(),
+        countryCode: 'IDN',
+        enable_kyc: true,
+      });
+      let redemption = await redemptionService.create(
+        user,
+        'fakepublicaddress',
+        '127.0.0.1',
+      );
+      redemption = await redemptionService.update(redemption, { age });
+      await prismaService.userPoints.update({
+        data: {
+          pool2_points: 100,
+        },
+        where: {
+          user_id: user.id,
+        },
+      });
+      const eligiblity = await redemptionService.isEligible(user, redemption);
+      expect(eligiblity.eligible).toBe(true);
+      expect(eligiblity.reason).toBe(redemptionService.minorAgeMessage(age));
+    });
     it('should be eligible if success and max attempts', async () => {
       const user = await usersService.create({
         email: faker.internet.email(),
@@ -356,6 +387,54 @@ describe('RedemptionServiceSpec', () => {
       expect(status).toMatchObject({
         status: KycStatus.SUCCESS,
         failureMessage: expect.stringContaining('Benign'),
+      });
+    });
+
+    it('should not allow minors to pass KYC', async () => {
+      const age = 10;
+      const fixture = WORKFLOW_RETRIEVE_FIXTURE({
+        extractionCheck: EXTRACTION_CHECK_FIXTURE({
+          age,
+        }),
+      });
+      const status = await redemptionService.calculateStatus(fixture);
+      expect(status).toMatchObject({
+        status: KycStatus.TRY_AGAIN,
+        failureMessage: redemptionService.minorAgeMessage(Number(age)),
+      });
+    });
+
+    it('should allow adults to pass KYC', async () => {
+      const age = 18;
+      const fixture = WORKFLOW_RETRIEVE_FIXTURE({
+        extractionCheck: EXTRACTION_CHECK_FIXTURE({
+          age,
+        }),
+      });
+      const status = await redemptionService.calculateStatus(fixture);
+      expect(status).toMatchObject({
+        status: KycStatus.SUCCESS,
+        failureMessage: null,
+      });
+    });
+
+    it('should bypass age check if not present', async () => {
+      const extractionFixture = EXTRACTION_CHECK_FIXTURE();
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { currentAge, ...data } = extractionFixture.data;
+      const agelessFixture = {
+        ...extractionFixture,
+        data: data,
+      };
+
+      // remove the age from returned info
+      const fixture = WORKFLOW_RETRIEVE_FIXTURE({
+        extractionCheck: agelessFixture,
+      });
+      const status = await redemptionService.calculateStatus(fixture);
+      expect(status).toMatchObject({
+        status: KycStatus.SUCCESS,
+        failureMessage: null,
       });
     });
 
