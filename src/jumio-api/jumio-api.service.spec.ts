@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { INestApplication } from '@nestjs/common';
 import axios from 'axios';
+import { EXTRACTION_CHECK_FIXTURE } from '../jumio-kyc/fixtures/extraction-check';
 import { WORKFLOW_RETRIEVE_FIXTURE } from '../jumio-kyc/fixtures/workflow';
 import { bootstrapTestApp } from '../test/test-app';
 import { JumioApiService } from './jumio-api.service';
@@ -103,7 +104,12 @@ describe('JumioApiService', () => {
   describe('getScreeningDataFromRetrieval', () => {
     it('returns correct names when present', () => {
       const data = jumioApiService.getScreeningDataFromRetrieval(
-        WORKFLOW_RETRIEVE_FIXTURE({ firstName: 'Jason', lastName: 'Spafford' }),
+        WORKFLOW_RETRIEVE_FIXTURE({
+          extractionCheck: EXTRACTION_CHECK_FIXTURE({
+            firstName: 'Jason',
+            lastName: 'Spafford',
+          }),
+        }),
       );
       expect(data).toMatchObject({
         firstName: 'Jason',
@@ -112,7 +118,12 @@ describe('JumioApiService', () => {
     });
     it('returns empty string when names not present', () => {
       const data = jumioApiService.getScreeningDataFromRetrieval(
-        WORKFLOW_RETRIEVE_FIXTURE({ firstName: 'N/A', lastName: '房建民' }),
+        WORKFLOW_RETRIEVE_FIXTURE({
+          extractionCheck: EXTRACTION_CHECK_FIXTURE({
+            firstName: 'N/A',
+            lastName: '房建民',
+          }),
+        }),
       );
       expect(data).toMatchObject({
         firstName: '',
