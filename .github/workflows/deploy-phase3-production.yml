@@ -7,9 +7,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Promote Staging
-        uses: tiltshift/heroku-promote-app@v1
+      - name: Check out Git repository
+        uses: actions/checkout@v2
+      - uses: akhileshns/heroku-deploy@v3.12.12
         with:
-          heroku_app_name: ${{ secrets.HEROKU_APP_NAME_STAGING_PHASE3 }}
+          heroku_app_name: ${{ secrets.HEROKU_APP_NAME_PHASE3 }}
           heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
           heroku_email: ${{ secrets.HEROKU_EMAIL }}
