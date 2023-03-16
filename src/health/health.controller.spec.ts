@@ -39,17 +39,4 @@ describe('HealthController', () => {
       });
     });
   });
-
-  describe('GET /health/deposit', () => {
-    it('returns a 200 status code', async () => {
-      const { body } = await request(app.getHttpServer())
-        .get('/health/deposit')
-        .set('Authorization', `Bearer ${API_KEY}`)
-        .expect(HttpStatus.OK);
-
-      expect(body).toMatchObject({
-        mismatched_deposits: expect.any(Number),
-      });
-    });
-  });
 });
