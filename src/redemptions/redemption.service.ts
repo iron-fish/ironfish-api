@@ -6,7 +6,7 @@ import { DecisionStatus, KycStatus, Redemption, User } from '@prisma/client';
 import { instanceToPlain } from 'class-transformer';
 import { createHash } from 'crypto';
 import { ApiConfigService } from '../api-config/api-config.service';
-import { AIRDROP_CONFIG } from '../common/constants';
+import { KYC_DEADLINE } from '../common/constants';
 import {
   ImageCheck,
   JumioTransactionRetrieveResponse,
@@ -371,11 +371,10 @@ export class RedemptionService {
       }
     }
 
-    const userDeadline = await this.userDeadline(user.id);
-    if (this.currentDate() > userDeadline) {
+    if (this.currentDate() > KYC_DEADLINE) {
       return {
         eligible: false,
-        reason: `Your final deadline for kyc has passed: ${userDeadline.toUTCString()}`,
+        reason: `Your final deadline for kyc has passed: ${KYC_DEADLINE.toUTCString()}`,
       };
     }
 
@@ -406,31 +405,6 @@ export class RedemptionService {
 
   currentDate(): Date {
     return new Date();
-  }
-
-  async userDeadline(userId: number): Promise<Date> {
-    const userPoints = await this.userPointsService.findOrThrow(userId);
-    const eligiblePools = [];
-    const pool1 = AIRDROP_CONFIG.data.find((c) => c.name === 'pool_one');
-    if (pool1 && userPoints.pool1_points !== 0) {
-      eligiblePools.push(pool1);
-    }
-    const pool2 = AIRDROP_CONFIG.data.find((c) => c.name === 'pool_two');
-    if (pool2 && userPoints.pool2_points !== 0) {
-      eligiblePools.push(pool2);
-    }
-    const pool3 = AIRDROP_CONFIG.data.find((c) => c.name === 'pool_three');
-    if (pool3 && userPoints.pool3_points !== 0) {
-      eligiblePools.push(pool3);
-    }
-    const pool4 = AIRDROP_CONFIG.data.find((c) => c.name === 'pool_four');
-    if (pool4 && userPoints.pool4_points !== 0) {
-      eligiblePools.push(pool4);
-    }
-    const maxTs = eligiblePools.length
-      ? Math.max(...eligiblePools.map((e) => e.kyc_completed_by.getTime()))
-      : 0;
-    return new Date(maxTs);
   }
 
   hasBannedCountry = (country_code: string): boolean =>

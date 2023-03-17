@@ -3,10 +3,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { INestApplication } from '@nestjs/common';
 import { DecisionStatus, KycStatus } from '@prisma/client';
-import assert from 'assert';
 import faker from 'faker';
 import { v4 as uuid } from 'uuid';
-import { AIRDROP_CONFIG } from '../common/constants';
 import { ImageChecksLabel } from '../jumio-api/interfaces/jumio-transaction-retrieve';
 import { EXTRACTION_CHECK_FIXTURE } from '../jumio-kyc/fixtures/extraction-check';
 import { IMAGE_CHECK_FIXTURE } from '../jumio-kyc/fixtures/image-check';
@@ -105,57 +103,6 @@ describe('RedemptionServiceSpec', () => {
         idDetails,
       });
       expect(redemption.id_details).toEqual(idDetails);
-    });
-  });
-
-  describe('userDeadline', () => {
-    it('should return pool2 date if user only has pool2', async () => {
-      const userPoints = await prismaService.userPoints.create({
-        data: {
-          user: {
-            create: {
-              email: faker.internet.email(),
-              graffiti: uuid(),
-              country_code: 'IDN',
-              enable_kyc: true,
-            },
-          },
-          pool2_points: 100,
-        },
-      });
-      const pool2 = AIRDROP_CONFIG.data.find((a) => a.name === 'pool_two');
-      assert.ok(pool2);
-      const calculatedDate = await redemptionService.userDeadline(
-        userPoints.user_id,
-      );
-      expect(calculatedDate).toEqual(pool2?.kyc_completed_by);
-    });
-    it('should return max date if user only has all pools', async () => {
-      const userPoints = await prismaService.userPoints.create({
-        data: {
-          user: {
-            create: {
-              email: faker.internet.email(),
-              graffiti: uuid(),
-              country_code: 'IDN',
-              enable_kyc: true,
-            },
-          },
-          pool1_points: 100,
-          pool2_points: 100,
-          pool3_points: 100,
-          pool4_points: 100,
-        },
-      });
-      const calculatedDate = await redemptionService.userDeadline(
-        userPoints.user_id,
-      );
-      const maxDate = new Date(
-        Math.max(
-          ...AIRDROP_CONFIG.data.map((p) => p.kyc_completed_by.getTime()),
-        ),
-      );
-      expect(calculatedDate).toEqual(maxDate);
     });
   });
 
