@@ -19,7 +19,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { UserPointsService } from '../user-points/user-points.service';
 
-export const AIRDROP_BANNED_COUNTRIES = ['IRN', 'PRK', 'AFG', 'CUB'];
+export const AIRDROP_BANNED_COUNTRIES = ['IRN', 'PRK', 'CUB'];
 @Injectable()
 export class RedemptionService {
   constructor(
