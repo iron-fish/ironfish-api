@@ -18,4 +18,5 @@ export interface SerializedKyc {
   can_attempt_reason: string;
   can_create: boolean;
   can_create_reason: string;
+  help_url: string;
 }

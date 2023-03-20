@@ -72,6 +72,16 @@ export class UsersService {
     return results;
   }
 
+  async findManyById(ids: number[]): Promise<User[]> {
+    return this.prisma.user.findMany({
+      where: {
+        id: {
+          in: ids,
+        },
+      },
+    });
+  }
+
   async findByGraffitiOrThrow(graffiti: string): Promise<User> {
     const record = await this.findByGraffiti(graffiti);
     if (!record) {

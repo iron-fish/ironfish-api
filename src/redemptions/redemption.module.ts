@@ -6,6 +6,7 @@ import { ApiConfigModule } from '../api-config/api-config.module';
 import { JumioTransactionModule } from '../jumio-transactions/jumio-transaction.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { UserPointsModule } from '../user-points/user-points.module';
+import { UsersModule } from '../users/users.module';
 import { RedemptionService } from './redemption.service';
 
 @Module({
@@ -13,6 +14,7 @@ import { RedemptionService } from './redemption.service';
   imports: [
     PrismaModule,
     UserPointsModule,
+    UsersModule,
     JumioTransactionModule,
     ApiConfigModule,
   ],
