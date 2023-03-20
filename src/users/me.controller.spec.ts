@@ -14,14 +14,14 @@ describe('MeController', () => {
   let magicLinkService: MagicLinkService;
   let usersService: UsersService;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     app = await bootstrapTestApp();
     magicLinkService = app.get(MagicLinkService);
     usersService = app.get(UsersService);
     await app.init();
   });
 
-  afterAll(async () => {
+  afterEach(async () => {
     await app.close();
   });
 
@@ -61,6 +61,38 @@ describe('MeController', () => {
           graffiti: user.graffiti,
           telegram: user.telegram,
         });
+      });
+    });
+
+    describe('with a invalid user', () => {
+      it('returns the error', async () => {
+        jest
+          .spyOn(magicLinkService, 'getEmailFromHeader')
+          .mockImplementationOnce(() => Promise.resolve('test@gmail.com'));
+
+        const { statusCode, error } = await request(app.getHttpServer())
+          .get('/me')
+          .set('Authorization', 'did-token');
+
+        expect(statusCode).toBe(HttpStatus.NOT_FOUND);
+
+        expect(error).toBeDefined();
+      });
+    });
+
+    describe('fails to get email', () => {
+      it('returns the error', async () => {
+        jest
+          .spyOn(magicLinkService, 'getEmailFromHeader')
+          .mockImplementationOnce(() => Promise.reject());
+
+        const { statusCode, error } = await request(app.getHttpServer())
+          .get('/me')
+          .set('Authorization', 'did-token');
+
+        expect(statusCode).toBe(HttpStatus.BAD_REQUEST);
+
+        expect(error).toBeDefined();
       });
     });
   });
