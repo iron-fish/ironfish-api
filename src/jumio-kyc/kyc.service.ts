@@ -178,7 +178,7 @@ export class KycService {
     });
   }
 
-  async refreshUser(user: User): Promise<void> {
+  refreshUser(user: User): Promise<void> {
     return this.prisma.$transaction(async (prisma) => {
       await prisma.$executeRawUnsafe(
         'SELECT pg_advisory_xact_lock(HASHTEXT($1));',
@@ -272,8 +272,8 @@ export class KycService {
       status,
     );
 
-    // Has our user's KYC status changed
-    redemption = await this.redemptionService.update(redemption, {
+    // Has our user's KYC status changed?
+    await this.redemptionService.update(redemption, {
       kycStatus: calculatedStatus.status,
       failureMessage: calculatedStatus.failureMessage ?? undefined,
       idDetails: calculatedStatus.idDetails,

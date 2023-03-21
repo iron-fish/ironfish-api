@@ -27,6 +27,7 @@ import { IntIsSafeForPrismaPipe } from '../common/pipes/int-is-safe-for-prisma.p
 import { fetchIpAddressFromRequest } from '../common/utils/request';
 import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
 import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
+import { JumioTransactionRetrieveResponse } from '../jumio-api/interfaces/jumio-transaction-retrieve';
 import { JumioTransactionService } from '../jumio-transactions/jumio-transaction.service';
 import { RedemptionService } from '../redemptions/redemption.service';
 import { UsersService } from '../users/users.service';
@@ -130,19 +131,18 @@ export class KycController {
   > {
     const redemption = await this.redemptionService.find(user);
 
-    const {
-      eligible,
-      reason: eligibleReason,
-      helpUrl,
-    } = await this.redemptionService.isEligible(user, redemption);
+    const eligibility = await this.redemptionService.isEligible(
+      user,
+      redemption,
+    );
 
     const { attemptable, reason: attemptableReason } =
       await this.redemptionService.canAttempt(redemption, user);
 
     if (!redemption) {
       return {
-        can_attempt: eligible,
-        can_attempt_reason: eligibleReason,
+        can_attempt: eligibility.eligible,
+        can_attempt_reason: eligibility.reason,
         can_create: attemptable,
         can_create_reason: attemptableReason,
       };
@@ -151,14 +151,29 @@ export class KycController {
     const jumioTransaction =
       await this.jumioTransactionService.findLatestOrThrow(user);
 
+    // If we have a latest attempt, override with that reasons failure
+    if (jumioTransaction.last_workflow_fetch && !eligibility.reason) {
+      const { failureUrl, failureMessage } =
+        await this.redemptionService.calculateStatus(
+          jumioTransaction.last_workflow_fetch as unknown as JumioTransactionRetrieveResponse,
+        );
+
+      if (failureMessage) {
+        eligibility.reason = failureMessage;
+      }
+      if (failureUrl) {
+        eligibility.helpUrl = failureUrl;
+      }
+    }
+
     return serializeKyc(
       redemption,
       jumioTransaction,
-      eligible,
-      eligibleReason,
+      eligibility.eligible,
+      eligibility.reason,
       attemptable,
       attemptableReason,
-      helpUrl,
+      eligibility.helpUrl,
       this.config,
     );
   }
