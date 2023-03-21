@@ -21,6 +21,20 @@ import { UserPointsService } from '../user-points/user-points.service';
 import { UsersService } from '../users/users.service';
 
 export const AIRDROP_BANNED_COUNTRIES = ['IRN', 'PRK', 'CUB'];
+
+export const HELP_URLS = {
+  USER_BANNED: 'https://coda.io/d/_dte_X_jrtqj/KYC-FAQ_su_vf#_luFte',
+  MAX_ATTEMPTS: 'https://coda.io/d/_dte_X_jrtqj/KYC-FAQ_su_vf#_luJAy',
+  MIN_AGE: 'https://coda.io/d/_dte_X_jrtqj/KYC-FAQ_su_vf#_luqdC',
+  WATCHLIST: 'https://coda.io/d/_dte_X_jrtqj/KYC-FAQ_su_vf#_luOvv',
+  ENABLE_KYC: '',
+  BANNED_COUNRTY_ID: '',
+  BANNED_COUNTRY_GRAFFITI: '',
+  DEADLINE: '',
+  NO_POINTS: '',
+  REPEATED_FACE: '',
+};
+
 @Injectable()
 export class RedemptionService {
   constructor(
@@ -206,16 +220,19 @@ export class RedemptionService {
   getRepeatedFaceWorkflowIds(imageChecks: ImageCheck[]): string[] {
     // for imageChecks, only duplicate face should pass
     let repeatedFaceWorkflowIds: string[] = [];
+
     for (const imageCheck of imageChecks) {
       if (imageCheck.decision.details.label !== 'REPEATED_FACE') {
         continue;
       }
+
       if (imageCheck.data.faceSearchFindings.findings !== undefined) {
         repeatedFaceWorkflowIds = repeatedFaceWorkflowIds.concat(
           imageCheck.data.faceSearchFindings.findings,
         );
       }
     }
+
     return repeatedFaceWorkflowIds;
   }
 
@@ -345,7 +362,7 @@ export class RedemptionService {
       return {
         eligible: false,
         reason: user.ineligible_reason,
-        helpUrl: 'https://coda.io/d/_dte_X_jrtqj/KYC-FAQ_su_vf#_luFte',
+        helpUrl: HELP_URLS.USER_BANNED,
       };
     }
 
@@ -354,7 +371,7 @@ export class RedemptionService {
         eligible: false,
         reason:
           'KYC will open for your account soon, please be patient and check back later.',
-        helpUrl: '',
+        helpUrl: HELP_URLS.ENABLE_KYC,
       };
     }
 
@@ -367,7 +384,7 @@ export class RedemptionService {
         return {
           eligible: false,
           reason: `Max KYC attempts reached ${redemption.kyc_attempts} / ${kycMaxAttempts}`,
-          helpUrl: 'https://coda.io/d/_dte_X_jrtqj/KYC-FAQ_su_vf#_luJAy',
+          helpUrl: HELP_URLS.MAX_ATTEMPTS,
         };
       }
 
@@ -375,7 +392,7 @@ export class RedemptionService {
         return {
           eligible: true,
           reason: this.minorAgeMessage(redemption.age),
-          helpUrl: 'https://coda.io/d/_dte_X_jrtqj/KYC-FAQ_su_vf#_luqdC',
+          helpUrl: HELP_URLS.MIN_AGE,
         };
       }
 
@@ -390,12 +407,14 @@ export class RedemptionService {
           .some((c) => c);
       }
       if (kycCountries && hasBannedCountry) {
+        const reason = `A country associated with your KYC attempt is banned: ${kycCountries
+          .map((c) => c.id_issuing_country)
+          .join(', ')}`;
+
         return {
           eligible: false,
-          reason: `A country associated with your KYC attempt is banned: ${kycCountries
-            .map((c) => c.id_issuing_country)
-            .join(', ')}`,
-          helpUrl: '',
+          reason,
+          helpUrl: HELP_URLS.BANNED_COUNRTY_ID,
         };
       }
     }
@@ -404,7 +423,7 @@ export class RedemptionService {
       return {
         eligible: false,
         reason: `Your final deadline for kyc has passed: ${KYC_DEADLINE.toUTCString()}`,
-        helpUrl: '',
+        helpUrl: HELP_URLS.DEADLINE,
       };
     }
 
@@ -420,7 +439,7 @@ export class RedemptionService {
       return {
         eligible: false,
         reason: 'Your account has no points, you are not eligible for airdrop',
-        helpUrl: '',
+        helpUrl: HELP_URLS.NO_POINTS,
       };
     }
 
@@ -428,7 +447,7 @@ export class RedemptionService {
       return {
         eligible: false,
         reason: `The country associated with your graffiti is banned: ${user.country_code}`,
-        helpUrl: '',
+        helpUrl: HELP_URLS.BANNED_COUNTRY_GRAFFITI,
       };
     }
 
@@ -446,7 +465,7 @@ export class RedemptionService {
       return {
         eligible: false,
         reason: watchlistScreeningFailure,
-        helpUrl: 'https://coda.io/d/_dte_X_jrtqj/KYC-FAQ_su_vf#_luOvv',
+        helpUrl: HELP_URLS.WATCHLIST,
       };
     }
 
@@ -465,11 +484,11 @@ export class RedemptionService {
       const graffitis = users.map((u) => u.graffiti);
       return {
         eligible: false,
-        reason: `You cannot KYC for more than one account. 
+        reason: `You cannot KYC for more than one account.
         You have completed KYC with other graffitis${
           graffitis ? ': ' + graffitis.join(', ') : ''
         }`,
-        helpUrl: '',
+        helpUrl: HELP_URLS.REPEATED_FACE,
       };
     }
 
