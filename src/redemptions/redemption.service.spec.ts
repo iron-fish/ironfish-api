@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { INestApplication } from '@nestjs/common';
 import { DecisionStatus, KycStatus } from '@prisma/client';
+import { instanceToPlain } from 'class-transformer';
 import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { ImageChecksLabel } from '../jumio-api/interfaces/jumio-transaction-retrieve';
@@ -163,7 +164,140 @@ describe('RedemptionServiceSpec', () => {
       const eligiblity = await redemptionService.isEligible(user, redemption);
       expect(eligiblity.eligible).toBe(true);
       expect(eligiblity.reason).toBe(redemptionService.minorAgeMessage(age));
+      expect(eligiblity.helpUrl).toBe(
+        'https://coda.io/d/_dte_X_jrtqj/KYC-FAQ_su_vf#_luqdC',
+      );
     });
+
+    it('should not be eligible with watchlist screening failure', async () => {
+      const user = await usersService.create({
+        email: faker.internet.email(),
+        graffiti: uuid(),
+        countryCode: 'IDN',
+        enable_kyc: true,
+      });
+      const redemption = await redemptionService.create(
+        user,
+        'fakepublicaddress',
+        '127.0.0.1',
+      );
+      await prismaService.userPoints.update({
+        data: {
+          pool2_points: 100,
+        },
+        where: {
+          user_id: user.id,
+        },
+      });
+      const lastWorkflowFetch = WORKFLOW_RETRIEVE_FIXTURE({
+        watchlistCheck: WATCHLIST_SCREEN_FIXTURE('ALERT', 1),
+      });
+      await prismaService.jumioTransaction.create({
+        data: {
+          user_id: user.id,
+          workflow_execution_id: 'fakeworkflowid',
+          web_href: 'http://foo.com',
+          decision_status: DecisionStatus.PASSED,
+          last_workflow_fetch: instanceToPlain(lastWorkflowFetch),
+        },
+      });
+      const eligiblity = await redemptionService.isEligible(user, redemption);
+      expect(eligiblity.eligible).toBe(false);
+      expect(eligiblity.reason).toContain('Watchlist screening failed');
+      expect(eligiblity.helpUrl).toBe(
+        'https://coda.io/d/_dte_X_jrtqj/KYC-FAQ_su_vf#_luOvv',
+      );
+    });
+
+    it('should not be eligible with repeated faces on past kyc', async () => {
+      const user = await usersService.create({
+        email: faker.internet.email(),
+        graffiti: uuid(),
+        countryCode: 'IDN',
+        enable_kyc: true,
+      });
+      const user2 = await usersService.create({
+        email: faker.internet.email(),
+        graffiti: 'IAlreadyKycd',
+        countryCode: 'IDN',
+        enable_kyc: true,
+      });
+
+      await prismaService.jumioTransaction.create({
+        data: {
+          user_id: user2.id,
+          workflow_execution_id: 'alreadyPassedWorkflowId',
+          web_href: 'http://foo.com',
+          decision_status: DecisionStatus.PASSED,
+        },
+      });
+
+      const redemption = await redemptionService.create(
+        user,
+        'fakepublicaddress',
+        '127.0.0.1',
+      );
+      await prismaService.userPoints.update({
+        data: {
+          pool2_points: 100,
+        },
+        where: {
+          user_id: user.id,
+        },
+      });
+      const lastWorkflowFetch = WORKFLOW_RETRIEVE_FIXTURE({
+        imageCheck: IMAGE_CHECK_FIXTURE(undefined, ['alreadyPassedWorkflowId']),
+      });
+      await prismaService.jumioTransaction.create({
+        data: {
+          user_id: user.id,
+          workflow_execution_id: 'fakeworkflowid',
+          web_href: 'http://foo.com',
+          decision_status: DecisionStatus.PASSED,
+          last_workflow_fetch: instanceToPlain(lastWorkflowFetch),
+        },
+      });
+      const eligiblity = await redemptionService.isEligible(user, redemption);
+      expect(eligiblity.eligible).toBe(false);
+      expect(eligiblity.reason).toContain(
+        'You cannot KYC for more than one account',
+      );
+      expect(eligiblity.reason).toContain(user2.graffiti);
+      expect(eligiblity.helpUrl).toBe('');
+    });
+
+    it('should not be eligible with kyc banned country', async () => {
+      const user = await usersService.create({
+        email: faker.internet.email(),
+        graffiti: uuid(),
+        countryCode: 'IDN',
+        enable_kyc: true,
+      });
+      let redemption = await redemptionService.create(
+        user,
+        'fakepublicaddress',
+        '127.0.0.1',
+      );
+      redemption = await redemptionService.update(redemption, {
+        idDetails: [
+          { id_issuing_country: 'PRK', id_subtype: 'foo', id_type: 'bar' },
+        ],
+      });
+      await prismaService.userPoints.update({
+        data: {
+          pool2_points: 100,
+        },
+        where: {
+          user_id: user.id,
+        },
+      });
+      const eligiblity = await redemptionService.isEligible(user, redemption);
+      expect(eligiblity.eligible).toBe(false);
+      expect(eligiblity.reason).toBe(
+        'A country associated with your KYC attempt is banned: PRK',
+      );
+    });
+
     it('should be eligible if success and max attempts', async () => {
       const user = await usersService.create({
         email: faker.internet.email(),

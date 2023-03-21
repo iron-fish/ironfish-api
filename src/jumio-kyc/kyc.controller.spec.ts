@@ -116,6 +116,7 @@ describe('KycController', () => {
           '',
           false,
           'Redemption status is not TRY_AGAIN: IN_PROGRESS',
+          '',
           config,
         ),
       );
@@ -127,7 +128,7 @@ describe('KycController', () => {
       await expect(
         kycService.attempt(user, 'foo', '127.0.0.1'),
       ).rejects.toThrow(
-        'The country associated with your account is banned: PRK',
+        'The country associated with your graffiti is banned: PRK',
       );
 
       await request(app.getHttpServer())
@@ -362,6 +363,7 @@ describe('KycController', () => {
           '',
           false,
           'Redemption status is not TRY_AGAIN: IN_PROGRESS',
+          '',
           config,
         ),
       );

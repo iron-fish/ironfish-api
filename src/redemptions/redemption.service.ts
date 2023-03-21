@@ -18,6 +18,7 @@ import { JumioTransactionService } from '../jumio-transactions/jumio-transaction
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { UserPointsService } from '../user-points/user-points.service';
+import { UsersService } from '../users/users.service';
 
 export const AIRDROP_BANNED_COUNTRIES = ['IRN', 'PRK', 'CUB'];
 @Injectable()
@@ -27,6 +28,7 @@ export class RedemptionService {
     private readonly userPointsService: UserPointsService,
     private readonly jumioTransactionService: JumioTransactionService,
     private readonly config: ApiConfigService,
+    private readonly usersService: UsersService,
   ) {}
 
   async findOrThrow(user: User): Promise<Redemption> {
@@ -330,17 +332,21 @@ export class RedemptionService {
     user: User,
     redemption?: Redemption | null,
     prisma?: BasePrismaClient,
-  ): Promise<{ eligible: boolean; reason: string }> {
+  ): Promise<{ eligible: boolean; reason: string; helpUrl: string }> {
     if (
       redemption &&
       (redemption.kyc_status === KycStatus.SUBMITTED ||
         redemption.kyc_status === KycStatus.SUCCESS)
     ) {
-      return { eligible: true, reason: '' };
+      return { eligible: true, reason: '', helpUrl: '' };
     }
 
     if (user.ineligible_reason) {
-      return { eligible: false, reason: user.ineligible_reason };
+      return {
+        eligible: false,
+        reason: user.ineligible_reason,
+        helpUrl: 'https://coda.io/d/_dte_X_jrtqj/KYC-FAQ_su_vf#_luFte',
+      };
     }
 
     if (!user.enable_kyc) {
@@ -348,6 +354,7 @@ export class RedemptionService {
         eligible: false,
         reason:
           'KYC will open for your account soon, please be patient and check back later.',
+        helpUrl: '',
       };
     }
 
@@ -360,6 +367,7 @@ export class RedemptionService {
         return {
           eligible: false,
           reason: `Max KYC attempts reached ${redemption.kyc_attempts} / ${kycMaxAttempts}`,
+          helpUrl: 'https://coda.io/d/_dte_X_jrtqj/KYC-FAQ_su_vf#_luJAy',
         };
       }
 
@@ -367,6 +375,27 @@ export class RedemptionService {
         return {
           eligible: true,
           reason: this.minorAgeMessage(redemption.age),
+          helpUrl: 'https://coda.io/d/_dte_X_jrtqj/KYC-FAQ_su_vf#_luqdC',
+        };
+      }
+
+      let hasBannedCountry = null;
+      let kycCountries = null;
+      if (redemption.id_details) {
+        kycCountries = redemption.id_details as Array<{
+          id_issuing_country: string;
+        }>;
+        hasBannedCountry = kycCountries
+          .map((c) => this.hasBannedCountry(c.id_issuing_country))
+          .some((c) => c);
+      }
+      if (kycCountries && hasBannedCountry) {
+        return {
+          eligible: false,
+          reason: `A country associated with your KYC attempt is banned: ${kycCountries
+            .map((c) => c.id_issuing_country)
+            .join(', ')}`,
+          helpUrl: '',
         };
       }
     }
@@ -375,6 +404,7 @@ export class RedemptionService {
       return {
         eligible: false,
         reason: `Your final deadline for kyc has passed: ${KYC_DEADLINE.toUTCString()}`,
+        helpUrl: '',
       };
     }
 
@@ -390,17 +420,60 @@ export class RedemptionService {
       return {
         eligible: false,
         reason: 'Your account has no points, you are not eligible for airdrop',
+        helpUrl: '',
       };
     }
 
     if (this.hasBannedCountry(user.country_code)) {
       return {
         eligible: false,
-        reason: `The country associated with your account is banned: ${user.country_code}`,
+        reason: `The country associated with your graffiti is banned: ${user.country_code}`,
+        helpUrl: '',
       };
     }
 
-    return { eligible: true, reason: '' };
+    const transaction = await this.jumioTransactionService.findLatest(user);
+    const transactionStatus = transaction
+      ? (transaction.last_workflow_fetch as unknown as JumioTransactionRetrieveResponse)
+      : null;
+
+    const watchlistScreeningFailure = transactionStatus
+      ? this.watchlistScreeningFailure(
+          transactionStatus.capabilities.watchlistScreening,
+        )
+      : null;
+    if (watchlistScreeningFailure) {
+      return {
+        eligible: false,
+        reason: watchlistScreeningFailure,
+        helpUrl: 'https://coda.io/d/_dte_X_jrtqj/KYC-FAQ_su_vf#_luOvv',
+      };
+    }
+
+    const repeatedFaceWorkflowIds = transactionStatus
+      ? this.getRepeatedFaceWorkflowIds(
+          transactionStatus.capabilities.imageChecks,
+        )
+      : null;
+    if (repeatedFaceWorkflowIds) {
+      const transactions = await this.jumioTransactionService.findByWorkflowIds(
+        repeatedFaceWorkflowIds,
+      );
+      const users = await this.usersService.findManyById(
+        transactions.map((t) => t.user_id),
+      );
+      const graffitis = users.map((u) => u.graffiti);
+      return {
+        eligible: false,
+        reason: `You cannot KYC for more than one account. 
+        You have completed KYC with other graffitis${
+          graffitis ? ': ' + graffitis.join(', ') : ''
+        }`,
+        helpUrl: '',
+      };
+    }
+
+    return { eligible: true, reason: '', helpUrl: '' };
   }
 
   currentDate(): Date {

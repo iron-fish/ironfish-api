@@ -13,6 +13,7 @@ export function serializeKyc(
   canAttemptReason: string,
   canCreate: boolean,
   canCreateReason: string,
+  helpUrl: string,
   config: ApiConfigService,
 ): SerializedKyc {
   assert.ok(redemption.jumio_account_id);
@@ -34,5 +35,6 @@ export function serializeKyc(
     can_attempt_reason: canAttemptReason,
     can_create: canCreate,
     can_create_reason: canCreateReason,
+    help_url: helpUrl,
   };
 }
