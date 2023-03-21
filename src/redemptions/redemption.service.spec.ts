@@ -3,7 +3,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { INestApplication } from '@nestjs/common';
 import { DecisionStatus, KycStatus } from '@prisma/client';
-import { instanceToPlain } from 'class-transformer';
 import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { ImageChecksLabel } from '../jumio-api/interfaces/jumio-transaction-retrieve';
@@ -139,36 +138,6 @@ describe('RedemptionServiceSpec', () => {
       expect(eligiblity.eligible).toBe(false);
       expect(eligiblity.reason).toContain(
         'Your final deadline for kyc has passed',
-      );
-    });
-
-    it('should be eligible BUT with warning if under 18', async () => {
-      const age = 10;
-      const user = await usersService.create({
-        email: faker.internet.email(),
-        graffiti: uuid(),
-        countryCode: 'IDN',
-        enable_kyc: true,
-      });
-      let redemption = await redemptionService.create(
-        user,
-        'fakepublicaddress',
-        '127.0.0.1',
-      );
-      redemption = await redemptionService.update(redemption, { age });
-      await prismaService.userPoints.update({
-        data: {
-          pool2_points: 100,
-        },
-        where: {
-          user_id: user.id,
-        },
-      });
-      const eligiblity = await redemptionService.isEligible(user, redemption);
-      expect(eligiblity.eligible).toBe(true);
-      expect(eligiblity.reason).toBe(redemptionService.minorAgeMessage(age));
-      expect(eligiblity.helpUrl).toBe(
-        'https://coda.io/d/_dte_X_jrtqj/KYC-FAQ_su_vf#_luqdC',
       );
     });
 
@@ -380,16 +349,16 @@ describe('RedemptionServiceSpec', () => {
     });
 
     it('should not allow minors to pass KYC', async () => {
-      const age = 10;
       const fixture = WORKFLOW_RETRIEVE_FIXTURE({
-        extractionCheck: EXTRACTION_CHECK_FIXTURE({
-          age,
-        }),
+        extractionCheck: EXTRACTION_CHECK_FIXTURE({ age: 10 }),
       });
+
       const status = await redemptionService.calculateStatus(fixture);
+
       expect(status).toMatchObject({
         status: KycStatus.TRY_AGAIN,
-        failureMessage: redemptionService.minorAgeMessage(Number(age)),
+        failureMessage: expect.stringContaining('10'),
+        failureUrl: HELP_URLS.MIN_AGE,
       });
     });
 

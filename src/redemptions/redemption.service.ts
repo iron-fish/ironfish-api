@@ -394,14 +394,6 @@ export class RedemptionService {
         };
       }
 
-      if (redemption.age && redemption.age < 18) {
-        return {
-          eligible: true,
-          reason: this.minorAgeMessage(redemption.age),
-          helpUrl: HELP_URLS.MIN_AGE,
-        };
-      }
-
       if (redemption.id_details) {
         const kycCountries = redemption.id_details as Array<{
           id_issuing_country: string;
@@ -428,7 +420,7 @@ export class RedemptionService {
     if (this.currentDate() > KYC_DEADLINE) {
       return {
         eligible: false,
-        reason: `Your final deadline for kyc has passed: ${KYC_DEADLINE.toUTCString()}`,
+        reason: `Your final deadline for kyc has passed: ${KYC_DEADLINE.toUTCString()}.`,
         helpUrl: HELP_URLS.DEADLINE,
       };
     }
@@ -444,7 +436,7 @@ export class RedemptionService {
     if (!hasPoints) {
       return {
         eligible: false,
-        reason: 'Your account has no points, you are not eligible for airdrop',
+        reason: 'Your account has no points.',
         helpUrl: HELP_URLS.NO_POINTS,
       };
     }
@@ -493,7 +485,4 @@ export class RedemptionService {
 
     return { attemptable: true, reason: '' };
   }
-
-  minorAgeMessage = (age: number): string =>
-    `You must be 18 years old. You are ${age} years old.`;
 }
