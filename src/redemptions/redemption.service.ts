@@ -396,26 +396,26 @@ export class RedemptionService {
         };
       }
 
-      let hasBannedCountry = null;
-      let kycCountries = null;
       if (redemption.id_details) {
-        kycCountries = redemption.id_details as Array<{
+        const kycCountries = redemption.id_details as Array<{
           id_issuing_country: string;
         }>;
-        hasBannedCountry = kycCountries
+
+        const hasBannedCountry = kycCountries
           .map((c) => this.hasBannedCountry(c.id_issuing_country))
           .some((c) => c);
-      }
-      if (kycCountries && hasBannedCountry) {
-        const reason = `A country associated with your KYC attempt is banned: ${kycCountries
-          .map((c) => c.id_issuing_country)
-          .join(', ')}`;
 
-        return {
-          eligible: false,
-          reason,
-          helpUrl: HELP_URLS.BANNED_COUNRTY_ID,
-        };
+        if (kycCountries && hasBannedCountry) {
+          const reason = `A country associated with your KYC attempt is banned: ${kycCountries
+            .map((c) => c.id_issuing_country)
+            .join(', ')}`;
+
+          return {
+            eligible: false,
+            reason,
+            helpUrl: HELP_URLS.BANNED_COUNRTY_ID,
+          };
+        }
       }
     }
 
@@ -452,34 +452,40 @@ export class RedemptionService {
     }
 
     const transaction = await this.jumioTransactionService.findLatest(user);
-    const transactionStatus = transaction
-      ? (transaction.last_workflow_fetch as unknown as JumioTransactionRetrieveResponse)
-      : null;
 
-    const watchlistScreeningFailure = transactionStatus
-      ? this.watchlistScreeningFailure(
+    if (transaction) {
+      const transactionStatus =
+        transaction.last_workflow_fetch as unknown as JumioTransactionRetrieveResponse;
+
+      if (transactionStatus) {
+        const watchlistScreeningFailure = this.watchlistScreeningFailure(
           transactionStatus.capabilities.watchlistScreening,
-        )
-      : null;
-    if (watchlistScreeningFailure) {
-      return {
-        eligible: false,
-        reason: watchlistScreeningFailure,
-        helpUrl: HELP_URLS.WATCHLIST,
-      };
-    }
+        );
 
-    if (transactionStatus) {
-      const repeatedFaceWorkflowIds = this.getRepeatedFaceWorkflowIds(
-        transactionStatus.capabilities.imageChecks,
-      );
+        if (watchlistScreeningFailure) {
+          return {
+            eligible: false,
+            reason: watchlistScreeningFailure,
+            helpUrl: HELP_URLS.WATCHLIST,
+          };
+        }
 
-      if (repeatedFaceWorkflowIds) {
-        return {
-          eligible: false,
-          reason: 'You cannot KYC for more than one account.',
-          helpUrl: HELP_URLS.REPEATED_FACE,
-        };
+        const repeatedFaceWorkflowIds = this.getRepeatedFaceWorkflowIds(
+          transactionStatus.capabilities.imageChecks,
+        );
+
+        const multiAccountFailure = await this.multiAccountFailure(
+          user.id,
+          repeatedFaceWorkflowIds,
+        );
+
+        if (multiAccountFailure) {
+          return {
+            eligible: false,
+            reason: 'You cannot KYC for more than one account.',
+            helpUrl: HELP_URLS.REPEATED_FACE,
+          };
+        }
       }
     }
 
