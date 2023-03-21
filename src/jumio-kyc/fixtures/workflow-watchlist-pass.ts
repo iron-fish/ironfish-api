@@ -1,9 +1,9 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { JumioTransactionStandaloneSanction } from '../../jumio-api/interfaces/jumio-transaction-retrieve';
+import { JumioTransactionRetrieveResponse } from '../../jumio-api/interfaces/jumio-transaction-retrieve';
 
-export const WORKFLOW_RETRIEVE_WATCHLIST_PASS: JumioTransactionStandaloneSanction =
+export const WORKFLOW_RETRIEVE_WATCHLIST_PASS: JumioTransactionRetrieveResponse =
   {
     workflow: {
       id: 'b94de56f-75b7-4df2-9320-eebba497f138',

@@ -10,7 +10,6 @@ import { KYC_DEADLINE } from '../common/constants';
 import {
   ImageCheck,
   JumioTransactionRetrieveResponse,
-  JumioTransactionStandaloneSanction,
   WatchlistScreenCheck,
 } from '../jumio-api/interfaces/jumio-transaction-retrieve';
 import { IdDetails } from '../jumio-kyc/kyc.service';
@@ -64,40 +63,46 @@ export class RedemptionService {
   ): Promise<{
     status: KycStatus;
     failureMessage: string | null;
-    idDetails: IdDetails[];
+    idDetails: IdDetails[] | undefined;
     age: number | undefined;
   }> {
-    const age =
-      Math.min(
+    let age = undefined;
+    let idDetails: IdDetails[] | undefined = undefined;
+
+    if (transactionStatus.capabilities.extraction) {
+      age = Math.min(
         ...transactionStatus.capabilities.extraction.map((extraction) => {
           return Number(extraction.data.currentAge);
         }),
-      ) ?? undefined;
+      );
+
+      idDetails = transactionStatus.capabilities.extraction.map((e) => ({
+        id_issuing_country: e.data.issuingCountry,
+        id_subtype: e.data.subType,
+        id_type: e.data.type,
+      }));
+    }
+
     const userId = Number(transactionStatus.workflow.customerInternalReference);
     const labels = this.getTransactionLabels(transactionStatus);
-    // deal with banned countries
-    const idDetails: IdDetails[] =
-      transactionStatus.capabilities.extraction.map((extraction) => {
-        return {
-          id_issuing_country: extraction.data.issuingCountry,
-          id_subtype: extraction.data.subType,
-          id_type: extraction.data.type,
-        };
-      });
-    const banned = idDetails
-      .map((detail) => detail.id_issuing_country)
-      .map(this.hasBannedCountry)
-      .filter((i) => i);
 
-    if (banned.length) {
-      return {
-        status: KycStatus.FAILED,
-        failureMessage: 'Failure: Banned Country',
-        idDetails,
-        age,
-      };
+    if (idDetails) {
+      // deal with banned countries
+      const banned = idDetails.find((detail) =>
+        this.hasBannedCountry(detail.id_issuing_country),
+      );
+
+      if (banned) {
+        return {
+          status: KycStatus.FAILED,
+          failureMessage: 'Failure: Banned Country',
+          idDetails,
+          age,
+        };
+      }
     }
-    if (age < 18) {
+
+    if (age && age < 18) {
       return {
         status: KycStatus.TRY_AGAIN,
         failureMessage: this.minorAgeMessage(age),
@@ -105,6 +110,7 @@ export class RedemptionService {
         age,
       };
     }
+
     if (
       transactionStatus.workflow.status === 'SESSION_EXPIRED' ||
       transactionStatus.workflow.status === 'TOKEN_EXPIRED' ||
@@ -117,6 +123,42 @@ export class RedemptionService {
         age,
       };
     }
+
+    if (transactionStatus.capabilities.watchlistScreening) {
+      const watchlistScreeningFailure = this.watchlistScreeningFailure(
+        transactionStatus.capabilities.watchlistScreening,
+      );
+
+      if (watchlistScreeningFailure) {
+        return {
+          status: KycStatus.FAILED,
+          failureMessage: watchlistScreeningFailure,
+          idDetails,
+          age,
+        };
+      }
+    }
+
+    if (transactionStatus.capabilities.imageChecks) {
+      const repeatedFaceWorkflowIds = this.getRepeatedFaceWorkflowIds(
+        transactionStatus.capabilities.imageChecks,
+      );
+
+      const multiAccountFailure = await this.multiAccountFailure(
+        userId,
+        repeatedFaceWorkflowIds,
+      );
+
+      if (multiAccountFailure) {
+        return {
+          status: KycStatus.FAILED,
+          failureMessage: multiAccountFailure,
+          idDetails,
+          age,
+        };
+      }
+    }
+
     if (transactionStatus.decision.type === DecisionStatus.PASSED) {
       return {
         status: KycStatus.SUCCESS,
@@ -125,29 +167,8 @@ export class RedemptionService {
         age,
       };
     }
-    const watchlistScreeningFailure = this.watchlistScreeningFailure(
-      transactionStatus.capabilities.watchlistScreening,
-    );
-    const repeatedFaceWorkflowIds = this.getRepeatedFaceWorkflowIds(
-      transactionStatus.capabilities.imageChecks,
-    );
-    const multiAccountFailure = await this.multiAccountFailure(
-      userId,
-      repeatedFaceWorkflowIds,
-    );
 
-    // TODO: HANDLE WARN, use decision.risk.score?
-    const failure = watchlistScreeningFailure || multiAccountFailure;
-    if (failure) {
-      return {
-        status: KycStatus.FAILED,
-        failureMessage: failure,
-        idDetails,
-        age,
-      };
-    }
     if (
-      !multiAccountFailure &&
       this.hasOnlyBenignWarnings(labels) &&
       transactionStatus.decision.risk.score < 50
     ) {
@@ -158,6 +179,7 @@ export class RedemptionService {
         age,
       };
     }
+
     return {
       status: KycStatus.TRY_AGAIN,
       failureMessage: null,
@@ -166,43 +188,16 @@ export class RedemptionService {
     };
   }
 
-  // this response will only be a subset of JumioTransactionRetrieveResponse
-  calculateStandaloneWatchlistStatus(
-    transactionStatus: JumioTransactionStandaloneSanction,
-  ): {
-    status: KycStatus;
-    failureMessage: string | null;
-    idDetails: undefined;
-    age: undefined;
-  } {
-    if (
-      this.watchlistScreeningFailure(
-        transactionStatus.capabilities.watchlistScreening,
-      )
-    ) {
-      return {
-        status: KycStatus.FAILED,
-        failureMessage: 'Sanction screening failed, ineligible for airdrop.',
-        idDetails: undefined,
-        age: undefined,
-      };
-    }
-    return {
-      status: KycStatus.SUCCESS,
-      failureMessage: '',
-      idDetails: undefined,
-      age: undefined,
-    };
-  }
-
   getTransactionLabels(status: JumioTransactionRetrieveResponse): string[] {
+    const capabilities = status.capabilities;
+
     return [
-      ...status.capabilities.dataChecks.map((i) => i.decision.details.label),
-      ...status.capabilities.extraction.map((i) => i.decision.details.label),
-      ...status.capabilities.imageChecks.map((i) => i.decision.details.label),
-      ...status.capabilities.liveness.map((i) => i.decision.details.label),
-      ...status.capabilities.similarity.map((i) => i.decision.details.label),
-      ...status.capabilities.usability.map((i) => i.decision.details.label),
+      ...(capabilities.dataChecks?.map((i) => i.decision.details.label) ?? []),
+      ...(capabilities.extraction?.map((i) => i.decision.details.label) ?? []),
+      ...(capabilities.imageChecks?.map((i) => i.decision.details.label) ?? []),
+      ...(capabilities.liveness?.map((i) => i.decision.details.label) ?? []),
+      ...(capabilities.similarity?.map((i) => i.decision.details.label) ?? []),
+      ...(capabilities.usability?.map((i) => i.decision.details.label) ?? []),
     ];
   }
 
@@ -458,33 +453,37 @@ export class RedemptionService {
         transaction.last_workflow_fetch as unknown as JumioTransactionRetrieveResponse;
 
       if (transactionStatus) {
-        const watchlistScreeningFailure = this.watchlistScreeningFailure(
-          transactionStatus.capabilities.watchlistScreening,
-        );
+        if (transactionStatus.capabilities.watchlistScreening) {
+          const watchlistScreeningFailure = this.watchlistScreeningFailure(
+            transactionStatus.capabilities.watchlistScreening,
+          );
 
-        if (watchlistScreeningFailure) {
-          return {
-            eligible: false,
-            reason: watchlistScreeningFailure,
-            helpUrl: HELP_URLS.WATCHLIST,
-          };
+          if (watchlistScreeningFailure) {
+            return {
+              eligible: false,
+              reason: watchlistScreeningFailure,
+              helpUrl: HELP_URLS.WATCHLIST,
+            };
+          }
         }
 
-        const repeatedFaceWorkflowIds = this.getRepeatedFaceWorkflowIds(
-          transactionStatus.capabilities.imageChecks,
-        );
+        if (transactionStatus.capabilities.imageChecks) {
+          const repeatedFaceWorkflowIds = this.getRepeatedFaceWorkflowIds(
+            transactionStatus.capabilities.imageChecks,
+          );
 
-        const multiAccountFailure = await this.multiAccountFailure(
-          user.id,
-          repeatedFaceWorkflowIds,
-        );
+          const multiAccountFailure = await this.multiAccountFailure(
+            user.id,
+            repeatedFaceWorkflowIds,
+          );
 
-        if (multiAccountFailure) {
-          return {
-            eligible: false,
-            reason: 'You cannot KYC for more than one account.',
-            helpUrl: HELP_URLS.REPEATED_FACE,
-          };
+          if (multiAccountFailure) {
+            return {
+              eligible: false,
+              reason: 'You cannot KYC for more than one account.',
+              helpUrl: HELP_URLS.REPEATED_FACE,
+            };
+          }
         }
       }
     }

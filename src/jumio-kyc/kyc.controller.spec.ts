@@ -11,7 +11,7 @@ import { v4 as uuid } from 'uuid';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
 import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
-import { JumioTransactionStandaloneSanction } from '../jumio-api/interfaces/jumio-transaction-retrieve';
+import { JumioTransactionRetrieveResponse } from '../jumio-api/interfaces/jumio-transaction-retrieve';
 import { JumioApiService } from '../jumio-api/jumio-api.service';
 import { JumioTransactionService } from '../jumio-transactions/jumio-transaction.service';
 import { MagicLinkService } from '../magic-link/magic-link.service';
@@ -272,12 +272,13 @@ describe('KycController', () => {
       ])(
         'moves user to successful when requirements are met',
         async (
-          watchlistRetrieve: JumioTransactionStandaloneSanction,
+          watchlistRetrieve: JumioTransactionRetrieveResponse,
           expectedStatus: KycStatus,
         ) => {
           const user = await mockUser();
 
           let redemption = await redemptionService.create(user, 'foo', 'foo');
+
           const transaction = await jumioTransactionService.create(
             user,
             'fakeworkflow',
@@ -293,8 +294,7 @@ describe('KycController', () => {
           });
           jest
             .spyOn(jumioApiService, 'createAccountAndTransaction')
-            // eslint-disable-next-line
-          .mockResolvedValueOnce(WORKFLOW_CREATE_WATCHLIST_RESPONSE as any);
+            .mockResolvedValueOnce(WORKFLOW_CREATE_WATCHLIST_RESPONSE);
           jest
             .spyOn(jumioApiService, 'transactionStatus')
             .mockResolvedValueOnce(WORKFLOW_RETRIEVE_FIXTURE());
@@ -318,15 +318,11 @@ describe('KycController', () => {
 
           jest
             .spyOn(jumioApiService, 'transactionStatus')
-            // eslint-disable-next-line
-          .mockResolvedValueOnce(watchlistRetrieve as any);
+            .mockResolvedValueOnce(watchlistRetrieve);
           jest
             .spyOn(kycService, 'isSignatureValid')
             .mockImplementationOnce(() => true);
-          const statusMock = jest.spyOn(
-            redemptionService,
-            'calculateStandaloneWatchlistStatus',
-          );
+          const statusMock = jest.spyOn(redemptionService, 'calculateStatus');
           await request(app.getHttpServer())
             .post('/kyc/callback')
             .set('Authorization', 'did-token')
