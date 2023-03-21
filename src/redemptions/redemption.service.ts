@@ -469,27 +469,18 @@ export class RedemptionService {
       };
     }
 
-    const repeatedFaceWorkflowIds = transactionStatus
-      ? this.getRepeatedFaceWorkflowIds(
-          transactionStatus.capabilities.imageChecks,
-        )
-      : null;
-    if (repeatedFaceWorkflowIds) {
-      const transactions = await this.jumioTransactionService.findByWorkflowIds(
-        repeatedFaceWorkflowIds,
+    if (transactionStatus) {
+      const repeatedFaceWorkflowIds = this.getRepeatedFaceWorkflowIds(
+        transactionStatus.capabilities.imageChecks,
       );
-      const users = await this.usersService.findManyById(
-        transactions.map((t) => t.user_id),
-      );
-      const graffitis = users.map((u) => u.graffiti);
-      return {
-        eligible: false,
-        reason: `You cannot KYC for more than one account.
-        You have completed KYC with other graffitis${
-          graffitis ? ': ' + graffitis.join(', ') : ''
-        }`,
-        helpUrl: HELP_URLS.REPEATED_FACE,
-      };
+
+      if (repeatedFaceWorkflowIds) {
+        return {
+          eligible: false,
+          reason: 'You cannot KYC for more than one account.',
+          helpUrl: HELP_URLS.REPEATED_FACE,
+        };
+      }
     }
 
     return { eligible: true, reason: '', helpUrl: '' };

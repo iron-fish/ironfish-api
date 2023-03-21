@@ -262,7 +262,7 @@ describe('RedemptionServiceSpec', () => {
       expect(eligiblity.reason).toContain(
         'You cannot KYC for more than one account',
       );
-      expect(eligiblity.reason).toContain(user2.graffiti);
+      expect(eligiblity.reason).toContain('more than one account');
       expect(eligiblity.helpUrl).toBe('');
     });
 
