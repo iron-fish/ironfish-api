@@ -1,10 +1,16 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-export const WORKFLOW_CREATE_WATCHLIST_RESPONSE = {
+
+import { JumioAccountCreateResponse } from '../../jumio-api/interfaces/jumio-account-create';
+
+export const WORKFLOW_CREATE_WATCHLIST_RESPONSE: JumioAccountCreateResponse = {
   timestamp: '2023-03-10T04:30:53.549Z',
   account: {
     id: 'aefa1cc2-011a-4615-8e7d-fdcaddb508cd',
+  },
+  web: {
+    href: 'https://api.amer-1.jumio.ai/api/v1/accounts/aefa1cc2-011a-4615-8e7d-fdcaddb508cd',
   },
   workflowExecution: {
     id: 'b94de56f-75b7-4df2-9320-eebba497f138',

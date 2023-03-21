@@ -268,10 +268,9 @@ export class KycService {
       transaction.workflow_execution_id,
     );
 
-    const calculatedStatus =
-      status.workflow.definitionKey !== '10010'
-        ? await this.redemptionService.calculateStatus(status)
-        : this.redemptionService.calculateStandaloneWatchlistStatus(status);
+    const calculatedStatus = await this.redemptionService.calculateStatus(
+      status,
+    );
 
     // Has our user's KYC status changed
     redemption = await this.redemptionService.update(redemption, {

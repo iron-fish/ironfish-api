@@ -43,7 +43,7 @@ export class JumioApiService {
       });
 
     // Sanitize extracted values
-    if (sanitize && 'extraction' in response.data.capabilities) {
+    if (sanitize && response.data.capabilities.extraction) {
       for (const extraction of response.data.capabilities.extraction) {
         const sanitized = {
           issuingCountry: extraction.data.issuingCountry,
@@ -170,22 +170,28 @@ export class JumioApiService {
     let lastName = null;
     let dateOfBirth = null;
     let country = null;
-    for (const extraction of status.capabilities.extraction) {
-      if (extraction.data.dateOfBirth) {
-        dateOfBirth = extraction.data.dateOfBirth;
-      }
-      if (extraction.data.firstName) {
-        firstName =
-          extraction.data.firstName === 'N/A' ? '' : extraction.data.firstName;
-      }
-      if (extraction.data.lastName) {
-        lastName =
-          extraction.data.lastName === 'N/A' ? '' : extraction.data.lastName;
-      }
-      if (extraction.data.issuingCountry) {
-        country = extraction.data.issuingCountry;
+
+    if (status.capabilities.extraction) {
+      for (const extraction of status.capabilities.extraction) {
+        if (extraction.data.dateOfBirth) {
+          dateOfBirth = extraction.data.dateOfBirth;
+        }
+        if (extraction.data.firstName) {
+          firstName =
+            extraction.data.firstName === 'N/A'
+              ? ''
+              : extraction.data.firstName;
+        }
+        if (extraction.data.lastName) {
+          lastName =
+            extraction.data.lastName === 'N/A' ? '' : extraction.data.lastName;
+        }
+        if (extraction.data.issuingCountry) {
+          country = extraction.data.issuingCountry;
+        }
       }
     }
+
     if (
       firstName === null ||
       lastName === null ||
@@ -196,6 +202,7 @@ export class JumioApiService {
         'Required user info field not present on transaction',
       );
     }
+
     return {
       firstName,
       lastName,

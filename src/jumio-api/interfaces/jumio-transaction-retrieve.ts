@@ -237,7 +237,7 @@ export interface JumioTransactionRetrieveResponse {
     };
   };
   capabilities: {
-    similarity: {
+    similarity?: {
       id: string;
       credentials: [
         {
@@ -259,7 +259,7 @@ export interface JumioTransactionRetrieveResponse {
         similarity: string;
       };
     }[];
-    dataChecks: {
+    dataChecks?: {
       id: string;
       credentials: [
         {
@@ -274,8 +274,8 @@ export interface JumioTransactionRetrieveResponse {
         };
       };
     }[];
-    extraction: ExtractionCheck[];
-    usability: {
+    extraction?: ExtractionCheck[];
+    usability?: {
       id: string;
       credentials: [
         {
@@ -290,13 +290,8 @@ export interface JumioTransactionRetrieveResponse {
         };
       };
     }[];
-    imageChecks: ImageCheck[];
-    watchlistScreening: WatchlistScreenCheck[];
-    liveness: LivenessCheck[];
+    imageChecks?: ImageCheck[];
+    watchlistScreening?: WatchlistScreenCheck[];
+    liveness?: LivenessCheck[];
   };
 }
-
-export type JumioTransactionStandaloneSanction = Omit<
-  JumioTransactionRetrieveResponse,
-  'capabilities'
-> & { capabilities: { watchlistScreening: WatchlistScreenCheck[] } };

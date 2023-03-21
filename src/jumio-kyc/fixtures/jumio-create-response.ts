@@ -2,8 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { v4 as uuid } from 'uuid';
+import { JumioAccountCreateResponse } from '../../jumio-api/interfaces/jumio-account-create';
 
-export const JUMIO_CREATE_RESPONSE = {
+export const JUMIO_CREATE_RESPONSE: JumioAccountCreateResponse = {
+  timestamp: '2023-03-10T04:30:53.549Z',
   account: {
     id: uuid(),
   },
@@ -15,6 +17,8 @@ export const JUMIO_CREATE_RESPONSE = {
     credentials: [
       {
         id: uuid(),
+        category: 'DATA',
+        allowedChannels: ['API'],
         api: {
           token: 'faketoken',
           parts: {
