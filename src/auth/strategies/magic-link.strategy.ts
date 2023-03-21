@@ -26,25 +26,30 @@ export class MagicLinkStrategy extends PassportStrategy(
   async authenticate(req: Request): Promise<void> {
     const { authorization } = req.headers;
     if (!authorization) {
-      return this.fail();
+      return this.fail('unauthorized');
     }
 
     if (this.config.get('DISABLE_LOGIN')) {
-      return this.fail();
+      return this.fail('disable_login');
+    }
+
+    let email;
+    try {
+      email = await this.magicLinkService.getEmailFromHeader(authorization);
+    } catch {
+      return this.fail('empty_email');
     }
 
     try {
-      const email = await this.magicLinkService.getEmailFromHeader(
-        authorization,
-      );
       const user = await this.usersService.findByEmailOrThrow(email);
       req.context = {
         ...req.context,
         user,
       } as MagicLinkContext;
     } catch {
-      return this.fail();
+      return this.fail('no_account_found');
     }
+
     return this.pass();
   }
 }

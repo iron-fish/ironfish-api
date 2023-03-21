@@ -2,7 +2,8 @@
 
 exports[`MeController GET /me with no logged in user returns a 401 1`] = `
 Object {
-  "message": "Unauthorized",
+  "error": "Unauthorized",
+  "message": "unauthorized",
   "statusCode": 401,
 }
 `;
