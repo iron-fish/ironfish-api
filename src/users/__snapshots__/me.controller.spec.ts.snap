@@ -3,7 +3,7 @@
 exports[`MeController GET /me fails to get email returns the error 1`] = `
 Object {
   "error": "Unauthorized",
-  "message": "Error: failed to get the email. Please try again.",
+  "message": "Error: Failed to get the email. Please try again.",
   "statusCode": 401,
 }
 `;
@@ -11,7 +11,7 @@ Object {
 exports[`MeController GET /me fails to validate token email returns the error 1`] = `
 Object {
   "error": "Unauthorized",
-  "message": "Error: failed to get the email. Please try again.",
+  "message": "Error: Failed to get the email. Please try again.",
   "statusCode": 401,
 }
 `;
