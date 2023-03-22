@@ -22,16 +22,19 @@ import { UsersService } from '../users/users.service';
 export const AIRDROP_BANNED_COUNTRIES = ['IRN', 'PRK', 'CUB'];
 
 export const HELP_URLS = {
-  USER_BANNED: 'https://coda.io/d/_dte_X_jrtqj/KYC-FAQ_su_vf#_luFte',
-  MAX_ATTEMPTS: 'https://coda.io/d/_dte_X_jrtqj/KYC-FAQ_su_vf#_luJAy',
-  MIN_AGE: 'https://coda.io/d/_dte_X_jrtqj/KYC-FAQ_su_vf#_luqdC',
-  WATCHLIST: 'https://coda.io/d/_dte_X_jrtqj/KYC-FAQ_su_vf#_luOvv',
+  USER_BANNED: 'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_luVT4',
+  MAX_ATTEMPTS: 'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_luQTU',
+  MIN_AGE: 'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_luTf-',
+  WATCHLIST: 'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_lur0O',
+  EXPIRED: 'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_luMjq',
   ENABLE_KYC: '',
-  BANNED_COUNRTY_ID: '',
-  BANNED_COUNTRY_GRAFFITI: '',
-  DEADLINE: '',
-  NO_POINTS: '',
-  REPEATED_FACE: '',
+  BANNED_COUNTRY_ID: 'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_lufLy',
+  BANNED_COUNTRY_GRAFFITI:
+    'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_lu-9p',
+  DEADLINE: 'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_ludCK',
+  NO_POINTS: 'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_lu1kK',
+  REPEATED_FACE: 'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_lu2o3',
+  UNKNOWN: 'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_luysd',
 };
 
 @Injectable()
@@ -62,6 +65,7 @@ export class RedemptionService {
     transactionStatus: JumioTransactionRetrieveResponse,
   ): Promise<{
     status: KycStatus;
+    failureUrl: string | null;
     failureMessage: string | null;
     idDetails: IdDetails[] | undefined;
     age: number | undefined;
@@ -95,7 +99,8 @@ export class RedemptionService {
       if (banned) {
         return {
           status: KycStatus.FAILED,
-          failureMessage: 'Failure: Banned Country',
+          failureUrl: HELP_URLS.BANNED_COUNTRY_ID,
+          failureMessage: `Your country is banned ${banned.id_issuing_country}.`,
           idDetails,
           age,
         };
@@ -105,7 +110,8 @@ export class RedemptionService {
     if (age && age < 18) {
       return {
         status: KycStatus.TRY_AGAIN,
-        failureMessage: this.minorAgeMessage(age),
+        failureUrl: HELP_URLS.MIN_AGE,
+        failureMessage: `You must be 18 years old. You are ${age} years old.`,
         idDetails,
         age,
       };
@@ -118,7 +124,8 @@ export class RedemptionService {
     ) {
       return {
         status: KycStatus.TRY_AGAIN,
-        failureMessage: null,
+        failureUrl: HELP_URLS.EXPIRED,
+        failureMessage: `Time limit of 15 minutes.`,
         idDetails,
         age,
       };
@@ -132,7 +139,8 @@ export class RedemptionService {
       if (watchlistScreeningFailure) {
         return {
           status: KycStatus.FAILED,
-          failureMessage: watchlistScreeningFailure,
+          failureUrl: HELP_URLS.WATCHLIST,
+          failureMessage: 'You are on the United States OFAC sanction list.',
           idDetails,
           age,
         };
@@ -150,8 +158,10 @@ export class RedemptionService {
       );
 
       if (multiAccountFailure) {
+        // If multiple accounts are found, ban the current user for scamming
         return {
           status: KycStatus.FAILED,
+          failureUrl: HELP_URLS.REPEATED_FACE,
           failureMessage: multiAccountFailure,
           idDetails,
           age,
@@ -163,6 +173,7 @@ export class RedemptionService {
       return {
         status: KycStatus.SUCCESS,
         failureMessage: null,
+        failureUrl: null,
         idDetails,
         age,
       };
@@ -174,6 +185,7 @@ export class RedemptionService {
     ) {
       return {
         status: KycStatus.SUCCESS,
+        failureUrl: null,
         failureMessage: `Benign warning labels found: ${labels.join(',')}`,
         idDetails,
         age,
@@ -182,7 +194,8 @@ export class RedemptionService {
 
     return {
       status: KycStatus.TRY_AGAIN,
-      failureMessage: null,
+      failureUrl: HELP_URLS.UNKNOWN,
+      failureMessage: 'You have failed for an unknown reason.',
       idDetails,
       age,
     };
@@ -243,10 +256,9 @@ export class RedemptionService {
       repeatedFaceWorkflowIds,
     );
 
-    // If any are found and don't match current user, ban the current user for scamming
     for (const foundWorkflow of foundWorkflows) {
       if (foundWorkflow.user_id !== userId) {
-        return `User with multiple accounts detected (alternate user id=${foundWorkflow.user_id} , current user id=${userId}), this transaction matches face from different account in transaction_id=${foundWorkflow.workflow_execution_id}`;
+        return `You have already attempted KYC for another graffiti (${foundWorkflow.user_id}).`;
       }
     }
     return null;
@@ -383,14 +395,6 @@ export class RedemptionService {
         };
       }
 
-      if (redemption.age && redemption.age < 18) {
-        return {
-          eligible: true,
-          reason: this.minorAgeMessage(redemption.age),
-          helpUrl: HELP_URLS.MIN_AGE,
-        };
-      }
-
       if (redemption.id_details) {
         const kycCountries = redemption.id_details as Array<{
           id_issuing_country: string;
@@ -408,7 +412,7 @@ export class RedemptionService {
           return {
             eligible: false,
             reason,
-            helpUrl: HELP_URLS.BANNED_COUNRTY_ID,
+            helpUrl: HELP_URLS.BANNED_COUNTRY_ID,
           };
         }
       }
@@ -417,7 +421,7 @@ export class RedemptionService {
     if (this.currentDate() > KYC_DEADLINE) {
       return {
         eligible: false,
-        reason: `Your final deadline for kyc has passed: ${KYC_DEADLINE.toUTCString()}`,
+        reason: `Your final deadline for kyc has passed: ${KYC_DEADLINE.toUTCString()}.`,
         helpUrl: HELP_URLS.DEADLINE,
       };
     }
@@ -433,7 +437,7 @@ export class RedemptionService {
     if (!hasPoints) {
       return {
         eligible: false,
-        reason: 'Your account has no points, you are not eligible for airdrop',
+        reason: 'Your account has no points.',
         helpUrl: HELP_URLS.NO_POINTS,
       };
     }
@@ -444,48 +448,6 @@ export class RedemptionService {
         reason: `The country associated with your graffiti is banned: ${user.country_code}`,
         helpUrl: HELP_URLS.BANNED_COUNTRY_GRAFFITI,
       };
-    }
-
-    const transaction = await this.jumioTransactionService.findLatest(user);
-
-    if (transaction) {
-      const transactionStatus =
-        transaction.last_workflow_fetch as unknown as JumioTransactionRetrieveResponse;
-
-      if (transactionStatus) {
-        if (transactionStatus.capabilities.watchlistScreening) {
-          const watchlistScreeningFailure = this.watchlistScreeningFailure(
-            transactionStatus.capabilities.watchlistScreening,
-          );
-
-          if (watchlistScreeningFailure) {
-            return {
-              eligible: false,
-              reason: watchlistScreeningFailure,
-              helpUrl: HELP_URLS.WATCHLIST,
-            };
-          }
-        }
-
-        if (transactionStatus.capabilities.imageChecks) {
-          const repeatedFaceWorkflowIds = this.getRepeatedFaceWorkflowIds(
-            transactionStatus.capabilities.imageChecks,
-          );
-
-          const multiAccountFailure = await this.multiAccountFailure(
-            user.id,
-            repeatedFaceWorkflowIds,
-          );
-
-          if (multiAccountFailure) {
-            return {
-              eligible: false,
-              reason: 'You cannot KYC for more than one account.',
-              helpUrl: HELP_URLS.REPEATED_FACE,
-            };
-          }
-        }
-      }
     }
 
     return { eligible: true, reason: '', helpUrl: '' };
@@ -524,7 +486,4 @@ export class RedemptionService {
 
     return { attemptable: true, reason: '' };
   }
-
-  minorAgeMessage = (age: number): string =>
-    `You must be 18 years old. You are ${age} years old.`;
 }

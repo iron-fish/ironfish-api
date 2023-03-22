@@ -3,7 +3,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { INestApplication } from '@nestjs/common';
 import { DecisionStatus, KycStatus } from '@prisma/client';
-import { instanceToPlain } from 'class-transformer';
 import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { ImageChecksLabel } from '../jumio-api/interfaces/jumio-transaction-retrieve';
@@ -15,7 +14,7 @@ import { WORKFLOW_RETRIEVE_FIXTURE } from '../jumio-kyc/fixtures/workflow';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
-import { RedemptionService } from './redemption.service';
+import { HELP_URLS, RedemptionService } from './redemption.service';
 
 describe('RedemptionServiceSpec', () => {
   let app: INestApplication;
@@ -45,10 +44,13 @@ describe('RedemptionServiceSpec', () => {
       const fixture = WORKFLOW_RETRIEVE_FIXTURE({
         extractionCheck: EXTRACTION_CHECK_FIXTURE({ idCountryCode: 'PRK' }),
       });
+
       const status = await redemptionService.calculateStatus(fixture);
-      expect(status).toEqual({
+
+      expect(status).toMatchObject({
         status: KycStatus.FAILED,
-        failureMessage: 'Failure: Banned Country',
+        failureMessage: expect.stringContaining('banned PRK'),
+        failureUrl: HELP_URLS.BANNED_COUNTRY_ID,
         idDetails: [
           {
             id_issuing_country: 'PRK',
@@ -56,16 +58,17 @@ describe('RedemptionServiceSpec', () => {
             id_type: 'ID_CARD',
           },
         ],
-        age: 70,
       });
     });
 
     it('should not ban with acceptable country', async () => {
       const fixture = WORKFLOW_RETRIEVE_FIXTURE();
       const status = await redemptionService.calculateStatus(fixture);
-      expect(status).toEqual({
+
+      expect(status).toMatchObject({
         status: KycStatus.SUCCESS,
         failureMessage: null,
+        failureUrl: null,
         idDetails: [
           {
             id_issuing_country: 'CHL',
@@ -73,7 +76,6 @@ describe('RedemptionServiceSpec', () => {
             id_type: 'ID_CARD',
           },
         ],
-        age: 70,
       });
     });
   });
@@ -137,133 +139,6 @@ describe('RedemptionServiceSpec', () => {
       expect(eligiblity.reason).toContain(
         'Your final deadline for kyc has passed',
       );
-    });
-
-    it('should be eligible BUT with warning if under 18', async () => {
-      const age = 10;
-      const user = await usersService.create({
-        email: faker.internet.email(),
-        graffiti: uuid(),
-        countryCode: 'IDN',
-        enable_kyc: true,
-      });
-      let redemption = await redemptionService.create(
-        user,
-        'fakepublicaddress',
-        '127.0.0.1',
-      );
-      redemption = await redemptionService.update(redemption, { age });
-      await prismaService.userPoints.update({
-        data: {
-          pool2_points: 100,
-        },
-        where: {
-          user_id: user.id,
-        },
-      });
-      const eligiblity = await redemptionService.isEligible(user, redemption);
-      expect(eligiblity.eligible).toBe(true);
-      expect(eligiblity.reason).toBe(redemptionService.minorAgeMessage(age));
-      expect(eligiblity.helpUrl).toBe(
-        'https://coda.io/d/_dte_X_jrtqj/KYC-FAQ_su_vf#_luqdC',
-      );
-    });
-
-    it('should not be eligible with watchlist screening failure', async () => {
-      const user = await usersService.create({
-        email: faker.internet.email(),
-        graffiti: uuid(),
-        countryCode: 'IDN',
-        enable_kyc: true,
-      });
-      const redemption = await redemptionService.create(
-        user,
-        'fakepublicaddress',
-        '127.0.0.1',
-      );
-      await prismaService.userPoints.update({
-        data: {
-          pool2_points: 100,
-        },
-        where: {
-          user_id: user.id,
-        },
-      });
-      const lastWorkflowFetch = WORKFLOW_RETRIEVE_FIXTURE({
-        watchlistCheck: WATCHLIST_SCREEN_FIXTURE('ALERT', 1),
-      });
-      await prismaService.jumioTransaction.create({
-        data: {
-          user_id: user.id,
-          workflow_execution_id: 'fakeworkflowid',
-          web_href: 'http://foo.com',
-          decision_status: DecisionStatus.PASSED,
-          last_workflow_fetch: instanceToPlain(lastWorkflowFetch),
-        },
-      });
-      const eligiblity = await redemptionService.isEligible(user, redemption);
-      expect(eligiblity.eligible).toBe(false);
-      expect(eligiblity.reason).toContain('Watchlist screening failed');
-      expect(eligiblity.helpUrl).toBe(
-        'https://coda.io/d/_dte_X_jrtqj/KYC-FAQ_su_vf#_luOvv',
-      );
-    });
-
-    it('should not be eligible with repeated faces on past kyc', async () => {
-      const user = await usersService.create({
-        email: faker.internet.email(),
-        graffiti: uuid(),
-        countryCode: 'IDN',
-        enable_kyc: true,
-      });
-      const user2 = await usersService.create({
-        email: faker.internet.email(),
-        graffiti: 'IAlreadyKycd',
-        countryCode: 'IDN',
-        enable_kyc: true,
-      });
-
-      await prismaService.jumioTransaction.create({
-        data: {
-          user_id: user2.id,
-          workflow_execution_id: 'alreadyPassedWorkflowId',
-          web_href: 'http://foo.com',
-          decision_status: DecisionStatus.PASSED,
-        },
-      });
-
-      const redemption = await redemptionService.create(
-        user,
-        'fakepublicaddress',
-        '127.0.0.1',
-      );
-      await prismaService.userPoints.update({
-        data: {
-          pool2_points: 100,
-        },
-        where: {
-          user_id: user.id,
-        },
-      });
-      const lastWorkflowFetch = WORKFLOW_RETRIEVE_FIXTURE({
-        imageCheck: IMAGE_CHECK_FIXTURE(undefined, ['alreadyPassedWorkflowId']),
-      });
-      await prismaService.jumioTransaction.create({
-        data: {
-          user_id: user.id,
-          workflow_execution_id: 'fakeworkflowid',
-          web_href: 'http://foo.com',
-          decision_status: DecisionStatus.PASSED,
-          last_workflow_fetch: instanceToPlain(lastWorkflowFetch),
-        },
-      });
-      const eligiblity = await redemptionService.isEligible(user, redemption);
-      expect(eligiblity.eligible).toBe(false);
-      expect(eligiblity.reason).toContain(
-        'You cannot KYC for more than one account',
-      );
-      expect(eligiblity.reason).toContain('more than one account');
-      expect(eligiblity.helpUrl).toBe('');
     });
 
     it('should not be eligible with kyc banned country', async () => {
@@ -391,7 +266,9 @@ describe('RedemptionServiceSpec', () => {
         user1Account2.id,
         repeatedFaces,
       );
-      expect(check).toContain('User with multiple accounts detected');
+      expect(check).toContain(
+        'You have already attempted KYC for another graffiti',
+      );
     });
 
     it('should allow submission of repeated face from same user', async () => {
@@ -472,16 +349,16 @@ describe('RedemptionServiceSpec', () => {
     });
 
     it('should not allow minors to pass KYC', async () => {
-      const age = 10;
       const fixture = WORKFLOW_RETRIEVE_FIXTURE({
-        extractionCheck: EXTRACTION_CHECK_FIXTURE({
-          age,
-        }),
+        extractionCheck: EXTRACTION_CHECK_FIXTURE({ age: 10 }),
       });
+
       const status = await redemptionService.calculateStatus(fixture);
+
       expect(status).toMatchObject({
         status: KycStatus.TRY_AGAIN,
-        failureMessage: redemptionService.minorAgeMessage(Number(age)),
+        failureMessage: expect.stringContaining('10'),
+        failureUrl: HELP_URLS.MIN_AGE,
       });
     });
 
@@ -529,7 +406,8 @@ describe('RedemptionServiceSpec', () => {
       const status = await redemptionService.calculateStatus(fixture);
       expect(status).toMatchObject({
         status: KycStatus.TRY_AGAIN,
-        failureMessage: null,
+        failureMessage: expect.stringContaining('unknown'),
+        failureUrl: HELP_URLS.UNKNOWN,
       });
     });
   });
