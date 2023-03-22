@@ -26,18 +26,18 @@ export class MagicLinkStrategy extends PassportStrategy(
   async authenticate(req: Request): Promise<void> {
     const { authorization } = req.headers;
     if (!authorization) {
-      return this.fail('unauthorized');
+      return this.fail('Error: Request header is invalid.');
     }
 
     if (this.config.get('DISABLE_LOGIN')) {
-      return this.fail('disable_login');
+      return this.fail('Error: Login is disabled.');
     }
 
     let email;
     try {
       email = await this.magicLinkService.getEmailFromHeader(authorization);
     } catch {
-      return this.fail('empty_email');
+      return this.fail('Error: Failed to get the email. Please try again.');
     }
 
     try {
@@ -47,7 +47,7 @@ export class MagicLinkStrategy extends PassportStrategy(
         user,
       } as MagicLinkContext;
     } catch {
-      return this.fail('no_account_found');
+      return this.fail('Error: No Iron Fish account exists for this email.');
     }
 
     return this.pass();

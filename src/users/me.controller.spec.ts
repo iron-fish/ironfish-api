@@ -70,29 +70,46 @@ describe('MeController', () => {
           .spyOn(magicLinkService, 'getEmailFromHeader')
           .mockImplementationOnce(() => Promise.resolve('test@gmail.com'));
 
-        const { statusCode, error } = await request(app.getHttpServer())
+        const { body } = await request(app.getHttpServer())
           .get('/me')
-          .set('Authorization', 'did-token');
+          .set('Authorization', 'did-token')
+          .expect(HttpStatus.UNAUTHORIZED);
 
-        expect(statusCode).toBe(HttpStatus.NOT_FOUND);
+        expect(body).toMatchSnapshot();
+      });
+    });
 
-        expect(error).toBeDefined();
+    describe('fails to validate token email', () => {
+      it('returns the error', async () => {
+        const { body } = await request(app.getHttpServer())
+          .get('/me')
+          .set(
+            'Authorization',
+            'Bearer 4a492e6ee781be0f12fff2a7921846b14d2a11dcdfb004dd0a06edf28665d654.uuC9pgfmIDqvG785e1xikW7POUM',
+          )
+          .expect(HttpStatus.UNAUTHORIZED);
+
+        expect(body).toMatchSnapshot();
       });
     });
 
     describe('fails to get email', () => {
       it('returns the error', async () => {
         jest
-          .spyOn(magicLinkService, 'getEmailFromHeader')
-          .mockImplementationOnce(() => Promise.reject());
+          .spyOn(magicLinkService, 'getEmailFromToken')
+          .mockImplementationOnce(() =>
+            Promise.reject(new Error('No email found for token')),
+          );
 
-        const { statusCode, error } = await request(app.getHttpServer())
+        const { body } = await request(app.getHttpServer())
           .get('/me')
-          .set('Authorization', 'did-token');
+          .set(
+            'Authorization',
+            'Bearer 4a492e6ee781be0f12fff2a7921846b14d2a11dcdfb004dd0a06edf28665d654.uuC9pgfmIDqvG785e1xikW7POUM',
+          )
+          .expect(HttpStatus.UNAUTHORIZED);
 
-        expect(statusCode).toBe(HttpStatus.BAD_REQUEST);
-
-        expect(error).toBeDefined();
+        expect(body).toMatchSnapshot();
       });
     });
   });
