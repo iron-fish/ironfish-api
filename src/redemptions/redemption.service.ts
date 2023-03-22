@@ -22,18 +22,19 @@ import { UsersService } from '../users/users.service';
 export const AIRDROP_BANNED_COUNTRIES = ['IRN', 'PRK', 'CUB'];
 
 export const HELP_URLS = {
-  USER_BANNED: 'https://coda.io/d/_dte_X_jrtqj/KYC-FAQ_su_vf#_luFte',
-  MAX_ATTEMPTS: 'https://coda.io/d/_dte_X_jrtqj/KYC-FAQ_su_vf#_luJAy',
-  MIN_AGE: 'https://coda.io/d/_dte_X_jrtqj/KYC-FAQ_su_vf#_luqdC',
-  WATCHLIST: 'https://coda.io/d/_dte_X_jrtqj/KYC-FAQ_su_vf#_luOvv',
-  EXPIRED: '',
+  USER_BANNED: 'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_luVT4',
+  MAX_ATTEMPTS: 'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_luQTU',
+  MIN_AGE: 'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_luTf-',
+  WATCHLIST: 'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_lur0O',
+  EXPIRED: 'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_luMjq',
   ENABLE_KYC: '',
-  BANNED_COUNTRY_ID: '',
-  BANNED_COUNTRY_GRAFFITI: '',
-  DEADLINE: '',
-  NO_POINTS: '',
-  REPEATED_FACE: '',
-  UNKNOWN: '',
+  BANNED_COUNTRY_ID: 'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_lufLy',
+  BANNED_COUNTRY_GRAFFITI:
+    'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_lu-9p',
+  DEADLINE: 'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_ludCK',
+  NO_POINTS: 'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_lu1kK',
+  REPEATED_FACE: 'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_lu2o3',
+  UNKNOWN: 'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_luysd',
 };
 
 @Injectable()
