@@ -16,7 +16,10 @@ import { JumioApiService } from '../jumio-api/jumio-api.service';
 import { JumioTransactionService } from '../jumio-transactions/jumio-transaction.service';
 import { MagicLinkService } from '../magic-link/magic-link.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { RedemptionService } from '../redemptions/redemption.service';
+import {
+  HELP_URLS,
+  RedemptionService,
+} from '../redemptions/redemption.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
 import { CALLBACK_FIXTURE } from './fixtures/callback';
@@ -25,6 +28,7 @@ import { WORKFLOW_CREATE_WATCHLIST_RESPONSE } from './fixtures/watchlist-create-
 import { WATCHLIST_PUT_RESPONSE } from './fixtures/watchlist-put-response';
 import { WATCHLIST_DATA_UPLOAD_RESPONSE } from './fixtures/watchlist-upload-response';
 import { WORKFLOW_RETRIEVE_FIXTURE } from './fixtures/workflow';
+import { WORKFLOW_EXPIRED } from './fixtures/workflow-expired';
 import { WORKFLOW_RETRIEVE_WATCHLIST } from './fixtures/workflow-watchlist';
 import { KycService } from './kyc.service';
 import { serializeKyc } from './utils/serialize-kyc';
@@ -363,6 +367,36 @@ describe('KycController', () => {
           config,
         ),
       );
+    });
+
+    it('should get kyc info for expired workflow', async () => {
+      const user = await mockUser();
+
+      const redemption = await redemptionService.create(user, 'foo', 'foo');
+      await redemptionService.update(redemption, {
+        kycStatus: KycStatus.TRY_AGAIN,
+        jumioAccountId: 'jumioaccountid',
+      });
+
+      const transaction = await jumioTransactionService.create(
+        user,
+        'fakeworkflow',
+        'http://fake.com',
+      );
+      await jumioTransactionService.update(transaction, {
+        decisionStatus: DecisionStatus.NOT_EXECUTED,
+        lastWorkflowFetch: WORKFLOW_EXPIRED,
+      });
+
+      const { body } = await request(app.getHttpServer())
+        .get(`/kyc`)
+        .set('Authorization', 'did-token')
+        .expect(HttpStatus.OK);
+
+      expect(body).toMatchObject({
+        can_attempt: true,
+        help_url: HELP_URLS.EXPIRED,
+      });
     });
   });
 

@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { DecisionStatus, KycStatus, Redemption, User } from '@prisma/client';
+import assert from 'assert';
 import { instanceToPlain } from 'class-transformer';
 import { createHash } from 'crypto';
 import { ApiConfigService } from '../api-config/api-config.service';
@@ -74,17 +75,30 @@ export class RedemptionService {
     let idDetails: IdDetails[] | undefined = undefined;
 
     if (transactionStatus.capabilities.extraction) {
-      age = Math.min(
-        ...transactionStatus.capabilities.extraction.map((extraction) => {
-          return Number(extraction.data.currentAge);
-        }),
-      );
+      age =
+        Math.min(
+          ...transactionStatus.capabilities.extraction.map((extraction) => {
+            return Number(extraction.data.currentAge);
+          }),
+        ) || undefined;
 
-      idDetails = transactionStatus.capabilities.extraction.map((e) => ({
-        id_issuing_country: e.data.issuingCountry,
-        id_subtype: e.data.subType,
-        id_type: e.data.type,
-      }));
+      const ids = transactionStatus.capabilities.extraction
+        .filter((e) => e.data.issuingCountry && e.data.subType && e.data.type)
+        .map((e) => {
+          assert.ok(e.data.issuingCountry);
+          assert.ok(e.data.subType);
+          assert.ok(e.data.type);
+
+          return {
+            id_issuing_country: e.data.issuingCountry,
+            id_subtype: e.data.subType,
+            id_type: e.data.type,
+          };
+        });
+
+      if (ids.length) {
+        idDetails = ids;
+      }
     }
 
     const userId = Number(transactionStatus.workflow.customerInternalReference);
@@ -234,7 +248,7 @@ export class RedemptionService {
         continue;
       }
 
-      if (imageCheck.data.faceSearchFindings.findings !== undefined) {
+      if (imageCheck.data?.faceSearchFindings.findings !== undefined) {
         repeatedFaceWorkflowIds = repeatedFaceWorkflowIds.concat(
           imageCheck.data.faceSearchFindings.findings,
         );

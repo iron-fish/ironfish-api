@@ -153,16 +153,15 @@ export class KycController {
 
     // If we have a latest attempt, override with that reasons failure
     if (jumioTransaction.last_workflow_fetch && !eligibility.reason) {
-      const { failureUrl, failureMessage } =
-        await this.redemptionService.calculateStatus(
-          jumioTransaction.last_workflow_fetch as unknown as JumioTransactionRetrieveResponse,
-        );
+      const status = await this.redemptionService.calculateStatus(
+        jumioTransaction.last_workflow_fetch as unknown as JumioTransactionRetrieveResponse,
+      );
 
-      if (failureMessage) {
-        eligibility.reason = failureMessage;
+      if (status.failureMessage) {
+        eligibility.reason = status.failureMessage;
       }
-      if (failureUrl) {
-        eligibility.helpUrl = failureUrl;
+      if (status.failureUrl) {
+        eligibility.helpUrl = status.failureUrl;
       }
     }
 

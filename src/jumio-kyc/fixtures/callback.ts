@@ -16,6 +16,7 @@ export const CALLBACK_FIXTURE = (
       id: workflowId,
       href: '',
       status: workflowStatus,
+      definitionKey: '10032',
     },
     account: {
       id: accountId,

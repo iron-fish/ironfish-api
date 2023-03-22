@@ -11,6 +11,7 @@ import { IMAGE_CHECK_FIXTURE } from '../jumio-kyc/fixtures/image-check';
 import { LIVENESS_CHECK_FIXTURE } from '../jumio-kyc/fixtures/liveness-check';
 import { WATCHLIST_SCREEN_FIXTURE } from '../jumio-kyc/fixtures/watch-list';
 import { WORKFLOW_RETRIEVE_FIXTURE } from '../jumio-kyc/fixtures/workflow';
+import { WORKFLOW_EXPIRED } from '../jumio-kyc/fixtures/workflow-expired';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
@@ -58,6 +59,18 @@ describe('RedemptionServiceSpec', () => {
             id_type: 'ID_CARD',
           },
         ],
+      });
+    });
+
+    it('should try again on expired workflow', async () => {
+      const status = await redemptionService.calculateStatus(WORKFLOW_EXPIRED);
+
+      expect(status).toMatchObject({
+        status: KycStatus.TRY_AGAIN,
+        failureMessage: 'Time limit of 15 minutes.',
+        failureUrl: HELP_URLS.EXPIRED,
+        idDetails: undefined,
+        age: undefined,
       });
     });
 

@@ -118,7 +118,7 @@ export type ImageCheck = {
       label: ImageChecksLabel;
     };
   };
-  data: {
+  data?: {
     faceSearchFindings: {
       status: string;
       findings?: string[];
@@ -128,9 +128,10 @@ export type ImageCheck = {
 
 export type WatchlistScreenCheck = {
   id: string;
-  credentials: {
+  credentials?: {
     id: string;
     category: string;
+    parts?: unknown[];
   }[];
   decision: {
     type: 'PASSED' | 'WARNING' | 'NOT_EXECUTED';
@@ -139,18 +140,18 @@ export type WatchlistScreenCheck = {
     };
   };
   data: {
-    searchDate: string;
-    searchResults: number;
-    searchId: string;
-    searchResultUrl: string;
-    searchReference: string;
-    searchStatus: 'DONE' | 'NOT_DONE' | 'ERROR' | 'SUCCESS';
+    searchDate?: string;
+    searchResults?: number;
+    searchId?: string;
+    searchResultUrl?: string;
+    searchReference?: string;
+    searchStatus?: 'DONE' | 'NOT_DONE' | 'ERROR' | 'SUCCESS';
   };
 };
 
 export type LivenessCheck = {
   id: string;
-  validFaceMapForAuthentication: string;
+  validFaceMapForAuthentication?: string;
   credentials: [
     {
       id: string;
@@ -167,7 +168,7 @@ export type LivenessCheck = {
       label: LivenessLabel;
     };
   };
-  data: {
+  data?: {
     type: string;
     predictedAge: number;
     ageConfidenceRange: string;
@@ -189,14 +190,14 @@ export type ExtractionCheck = {
     },
   ];
   data: {
-    type: string;
-    subType: string;
-    issuingCountry: string; // http://en.wikipedia.org/wiki/ISO_3166-1_alpha-3
-    firstName: string;
-    lastName: string;
-    dateOfBirth: string;
-    expiryDate: string;
-    documentNumber: string;
+    type?: string;
+    subType?: string;
+    issuingCountry?: string; // http://en.wikipedia.org/wiki/ISO_3166-1_alpha-3
+    firstName?: string;
+    lastName?: string;
+    dateOfBirth?: string;
+    expiryDate?: string;
+    documentNumber?: string;
     optionalMrzField1?: string;
     optionalMrzField2?: string;
     currentAge?: string;
@@ -207,12 +208,12 @@ export interface JumioTransactionRetrieveResponse {
     id: string;
   };
   createdAt: string;
-  startedAt: string;
+  startedAt?: string;
   completedAt: string;
   credentials: {
     id: string;
     category: string;
-    parts: {
+    parts?: {
       classifier: string;
       href?: string;
     }[];
@@ -239,16 +240,11 @@ export interface JumioTransactionRetrieveResponse {
   capabilities: {
     similarity?: {
       id: string;
-      credentials: [
-        {
-          id: string;
-          category: string;
-        },
-        {
-          id: string;
-          category: string;
-        },
-      ];
+      credentials: {
+        id: string;
+        category: string;
+        parts?: unknown[];
+      }[];
       decision: {
         type: string;
         details: {
@@ -256,17 +252,16 @@ export interface JumioTransactionRetrieveResponse {
         };
       };
       data: {
-        similarity: string;
+        similarity?: string;
       };
     }[];
     dataChecks?: {
       id: string;
-      credentials: [
-        {
-          id: string;
-          category: 'ID';
-        },
-      ];
+      credentials: {
+        id: string;
+        category: 'ID';
+        parts?: unknown[];
+      }[];
       decision: {
         type: 'NOT_EXECUTED' | 'PASSED' | 'REJECTED';
         details: {
@@ -277,12 +272,10 @@ export interface JumioTransactionRetrieveResponse {
     extraction?: ExtractionCheck[];
     usability?: {
       id: string;
-      credentials: [
-        {
-          id: string;
-          category: string;
-        },
-      ];
+      credentials: {
+        id: string;
+        category: string;
+      }[];
       decision: {
         type: 'NOT_EXECUTED' | 'PASSED' | 'REJECTED' | 'WARNING';
         details: {
