@@ -42,10 +42,24 @@ export class MagicLinkStrategy extends PassportStrategy(
     let email;
     try {
       email = await this.magicLinkService.getEmailFromHeader(authorization);
-    } catch {
+    } catch (err) {
+      if (err instanceof Error) {
+        return this.fail({
+          code: err.name,
+          message: `Error: ${err.message}. Please try again.`,
+        });
+      }
+
       return this.fail({
         code: 'email_error',
         message: 'Error: Failed to get the email. Please try again.',
+      });
+    }
+
+    if (!email) {
+      return this.fail({
+        code: 'email_error',
+        message: 'Error: Email can not be empty. Please try again.',
       });
     }
 

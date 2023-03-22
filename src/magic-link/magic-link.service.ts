@@ -20,7 +20,16 @@ export class MagicLinkService {
   }
 
   async getEmailFromToken(didToken: string): Promise<string> {
-    this.magic.token.validate(didToken);
+    try {
+      this.magic.token.validate(didToken);
+    } catch (err) {
+      if (err instanceof Error) {
+        throw new Error(`Fail to validate token. ${err.message}`);
+      }
+
+      throw new Error(`Fail to validate token.`);
+    }
+
     const { email } = await this.getMetadataFromToken(didToken);
     if (!email) {
       throw new Error('No email found for token');
