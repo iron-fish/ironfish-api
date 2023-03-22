@@ -15,8 +15,10 @@ import { PrismaService } from '../prisma/prisma.service';
 import { RedemptionService } from '../redemptions/redemption.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
+import { CALLBACK_EXPIRED } from './fixtures/callback-expired';
 import { JUMIO_CREATE_RESPONSE } from './fixtures/jumio-create-response';
 import { WORKFLOW_RETRIEVE_FIXTURE } from './fixtures/workflow';
+import { WORKFLOW_EXPIRED } from './fixtures/workflow-expired';
 import { KycService } from './kyc.service';
 
 describe('KycService', () => {
@@ -48,6 +50,43 @@ describe('KycService', () => {
 
   afterAll(async () => {
     await app.close();
+  });
+
+  describe('handleCallback', () => {
+    it('should fetch workflow for expired callback', async () => {
+      const user = await usersService.create({
+        email: faker.internet.email(),
+        graffiti: uuid(),
+        countryCode: 'USA',
+        enable_kyc: true,
+      });
+
+      const redemption = await redemptionService.create(user, 'foo', 'foo');
+      await redemptionService.update(redemption, {
+        kycStatus: KycStatus.TRY_AGAIN,
+        jumioAccountId: 'jumioaccountid',
+      });
+
+      await jumioTransactionService.create(
+        user,
+        'fakeworkflow',
+        'http://fake.com',
+      );
+
+      jest
+        .spyOn(kycService, 'isSignatureValid')
+        .mockImplementationOnce(() => true);
+
+      const transactionStatusSpy = jest
+        .spyOn(jumioApiService, 'transactionStatus')
+        .mockResolvedValueOnce(WORKFLOW_EXPIRED);
+
+      await kycService.handleCallback(CALLBACK_EXPIRED('fakeworkflow'));
+      expect(transactionStatusSpy).toHaveBeenCalledTimes(1);
+
+      const transaction = await jumioTransactionService.findLatestOrThrow(user);
+      expect(transaction.last_workflow_fetch).toEqual(WORKFLOW_EXPIRED);
+    });
   });
 
   describe('refresh', () => {
