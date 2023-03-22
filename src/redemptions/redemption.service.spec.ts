@@ -12,6 +12,7 @@ import { LIVENESS_CHECK_FIXTURE } from '../jumio-kyc/fixtures/liveness-check';
 import { WATCHLIST_SCREEN_FIXTURE } from '../jumio-kyc/fixtures/watch-list';
 import { WORKFLOW_RETRIEVE_FIXTURE } from '../jumio-kyc/fixtures/workflow';
 import { WORKFLOW_EXPIRED } from '../jumio-kyc/fixtures/workflow-expired';
+import { WORKFLOW_USABILITY_ERROR } from '../jumio-kyc/fixtures/workflow-usability-error';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
@@ -71,6 +72,17 @@ describe('RedemptionServiceSpec', () => {
         failureUrl: HELP_URLS.EXPIRED,
         idDetails: undefined,
         age: undefined,
+      });
+    });
+
+    it('should check usability label', async () => {
+      const status = await redemptionService.calculateStatus(
+        WORKFLOW_USABILITY_ERROR,
+      );
+
+      expect(status).toMatchObject({
+        status: KycStatus.TRY_AGAIN,
+        failureUrl: HELP_URLS.DOC_MISSING_SIGNATURE,
       });
     });
 

@@ -11,6 +11,7 @@ import { KYC_DEADLINE } from '../common/constants';
 import {
   ImageCheck,
   JumioTransactionRetrieveResponse,
+  UsabilityLabel,
   WatchlistScreenCheck,
 } from '../jumio-api/interfaces/jumio-transaction-retrieve';
 import { IdDetails } from '../jumio-kyc/kyc.service';
@@ -28,6 +29,14 @@ export const HELP_URLS = {
   MIN_AGE: 'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_luTf-',
   WATCHLIST: 'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_lur0O',
   EXPIRED: 'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_luMjq',
+  DOC_MISSING_DATA_POINTS:
+    'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_luCoT',
+  DOC_BLURRED: 'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_luO9-',
+  DOC_PHOTOCOPY: 'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_lu6j-',
+  DOC_GLARE: 'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_lu9Ae',
+  DOC_MISSING_SIGNATURE:
+    'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_luu2r',
+  DOC_BAD_QUALITY: 'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_lul9P',
   ENABLE_KYC: '',
   BANNED_COUNTRY_ID: 'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_lufLy',
   BANNED_COUNTRY_GRAFFITI:
@@ -37,6 +46,54 @@ export const HELP_URLS = {
   REPEATED_FACE: 'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_lu2o3',
   UNKNOWN: 'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_luysd',
 };
+
+const USABILITY_ERRORS = new Map<
+  UsabilityLabel,
+  { message: string; url: string }
+>([
+  [
+    'MISSING_MANDATORY_DATAPOINTS',
+    {
+      message: 'Your ID is missing information.',
+      url: HELP_URLS.DOC_MISSING_DATA_POINTS,
+    },
+  ],
+  [
+    'BLURRED',
+    {
+      message: 'Your ID is blurry.',
+      url: HELP_URLS.DOC_BLURRED,
+    },
+  ],
+  [
+    'GLARE',
+    {
+      message: 'Your ID has a glare.',
+      url: HELP_URLS.DOC_GLARE,
+    },
+  ],
+  [
+    'BAD_QUALITY',
+    {
+      message: 'Your photo is bad quality.',
+      url: HELP_URLS.DOC_BAD_QUALITY,
+    },
+  ],
+  [
+    'MISSING_SIGNATURE',
+    {
+      message: 'Your ID is missing a signature.',
+      url: HELP_URLS.DOC_MISSING_SIGNATURE,
+    },
+  ],
+  [
+    'GLARE',
+    {
+      message: 'Your ID looks like a photocopy.',
+      url: HELP_URLS.DOC_PHOTOCOPY,
+    },
+  ],
+]);
 
 @Injectable()
 export class RedemptionService {
@@ -180,6 +237,26 @@ export class RedemptionService {
           idDetails,
           age,
         };
+      }
+    }
+
+    if (transactionStatus.capabilities.usability) {
+      const rejected = transactionStatus.capabilities.usability.find(
+        (u) => u.decision.type === 'REJECTED',
+      );
+
+      if (rejected) {
+        const error = USABILITY_ERRORS.get(rejected.decision.details.label);
+
+        if (error) {
+          return {
+            status: KycStatus.TRY_AGAIN,
+            failureUrl: error.url,
+            failureMessage: error.message,
+            idDetails,
+            age,
+          };
+        }
       }
     }
 
