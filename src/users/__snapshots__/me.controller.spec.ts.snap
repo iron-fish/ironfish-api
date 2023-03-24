@@ -2,32 +2,28 @@
 
 exports[`MeController GET /me fails to get email returns the error 1`] = `
 Object {
-  "error": "Unauthorized",
+  "code": "email_error",
   "message": "Error: Failed to get the email. Please try again.",
-  "statusCode": 401,
 }
 `;
 
 exports[`MeController GET /me fails to validate token email returns the error 1`] = `
 Object {
-  "error": "Unauthorized",
+  "code": "email_error",
   "message": "Error: Failed to get the email. Please try again.",
-  "statusCode": 401,
 }
 `;
 
 exports[`MeController GET /me with a invalid user returns the error 1`] = `
 Object {
-  "error": "Unauthorized",
+  "code": "user_not_found",
   "message": "Error: No Iron Fish account exists for this email.",
-  "statusCode": 401,
 }
 `;
 
 exports[`MeController GET /me with no logged in user returns a 401 1`] = `
 Object {
-  "error": "Unauthorized",
+  "code": "no_authorization",
   "message": "Error: Request header is invalid.",
-  "statusCode": 401,
 }
 `;

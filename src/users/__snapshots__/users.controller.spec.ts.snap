@@ -122,8 +122,7 @@ Object {
 
 exports[`UsersController PUT /users/:id with no logged in user returns a 401 1`] = `
 Object {
-  "error": "Unauthorized",
+  "code": "no_authorization",
   "message": "Error: Request header is invalid.",
-  "statusCode": 401,
 }
 `;
