@@ -10,13 +10,14 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import passport from 'passport';
 
 @Injectable()
 export class MagicLinkGuard extends AuthGuard('magic-link') {
   handleRequest<User>(
     err: Error,
     user: User,
-    info: string,
+    info: passport.StrategyFailure,
     _context: ExecutionContext,
   ): User {
     if (info && !user) {
