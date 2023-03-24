@@ -17,8 +17,7 @@ export class MagicLinkGuard extends AuthGuard('magic-link') {
     err: Error,
     user: User,
     info: string,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    context: ExecutionContext,
+    _context: ExecutionContext,
   ): User {
     if (info && !user) {
       throw new UnauthorizedException(info);
