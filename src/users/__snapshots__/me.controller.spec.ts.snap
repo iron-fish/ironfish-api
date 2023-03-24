@@ -1,9 +1,29 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`MeController GET /me fails to get email returns the error 1`] = `
+Object {
+  "code": "email_error",
+  "message": "Error: Failed to get the email. Please try again.",
+}
+`;
+
+exports[`MeController GET /me fails to validate token email returns the error 1`] = `
+Object {
+  "code": "email_error",
+  "message": "Error: Failed to get the email. Please try again.",
+}
+`;
+
+exports[`MeController GET /me with a invalid user returns the error 1`] = `
+Object {
+  "code": "user_not_found",
+  "message": "Error: No Iron Fish account exists for this email.",
+}
+`;
+
 exports[`MeController GET /me with no logged in user returns a 401 1`] = `
 Object {
-  "error": "Unauthorized",
-  "message": "unauthorized",
-  "statusCode": 401,
+  "code": "no_authorization",
+  "message": "Error: Request header is invalid.",
 }
 `;
