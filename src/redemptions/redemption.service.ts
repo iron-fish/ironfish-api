@@ -250,7 +250,7 @@ export class RedemptionService {
 
     if (transactionStatus.capabilities.usability) {
       const rejected = transactionStatus.capabilities.usability.find(
-        (u) => u.decision.type === 'REJECTED',
+        (u) => u.decision.type === 'REJECTED' || u.decision.type === 'WARNING',
       );
 
       if (rejected) {
