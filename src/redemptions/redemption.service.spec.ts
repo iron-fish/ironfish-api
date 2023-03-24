@@ -12,6 +12,7 @@ import { LIVENESS_CHECK_FIXTURE } from '../jumio-kyc/fixtures/liveness-check';
 import { WATCHLIST_SCREEN_FIXTURE } from '../jumio-kyc/fixtures/watch-list';
 import { WORKFLOW_RETRIEVE_FIXTURE } from '../jumio-kyc/fixtures/workflow';
 import { WORKFLOW_EXPIRED } from '../jumio-kyc/fixtures/workflow-expired';
+import { WORKFLOW_UNSUPPORTED } from '../jumio-kyc/fixtures/workflow-unsupported';
 import { WORKFLOW_USABILITY_ERROR } from '../jumio-kyc/fixtures/workflow-usability-error';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
@@ -60,6 +61,20 @@ describe('RedemptionServiceSpec', () => {
             id_type: 'ID_CARD',
           },
         ],
+      });
+    });
+
+    it('should detect unsupported document', async () => {
+      const status = await redemptionService.calculateStatus(
+        WORKFLOW_UNSUPPORTED,
+      );
+
+      expect(status).toMatchObject({
+        status: KycStatus.TRY_AGAIN,
+        failureMessage: 'Your ID is not supported.',
+        failureUrl: HELP_URLS.DOC_UNSUPPORTED,
+        idDetails: undefined,
+        age: undefined,
       });
     });
 
