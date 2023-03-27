@@ -210,6 +210,16 @@ export class KycController {
 
   @ApiExcludeEndpoint()
   @UseGuards(ApiKeyGuard)
+  @Get('estimate/:user_id')
+  async estimate(
+    @Param('user_id', new IntIsSafeForPrismaPipe())
+    user_id: number,
+  ): Promise<{ pool1: number; pool2: number; pool3: number; pool4: number }> {
+    return this.kycService.estimate(user_id);
+  }
+
+  @ApiExcludeEndpoint()
+  @UseGuards(ApiKeyGuard)
   @Post('refresh/:user_id')
   async refreshUser(
     @Param('user_id', new IntIsSafeForPrismaPipe())
