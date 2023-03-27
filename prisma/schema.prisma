@@ -79,10 +79,10 @@ model Redemption {
   id_details       Json?
   age              Int?
   failure_message  String?   @db.VarChar
-  pool1_ore        BigInt?
-  pool2_ore        BigInt?
-  pool3_ore        BigInt?
-  pool4_ore        BigInt?
+  pool_one         BigInt?
+  pool_two         BigInt?
+  pool_three       BigInt?
+  pool_four        BigInt?
   @@index([jumio_account_id], name: "index_redemption_jumio_account_id")
   @@index([user_id], name: "index_redemption_on_user_id")
   @@map("redemptions")

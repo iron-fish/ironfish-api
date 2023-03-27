@@ -11,12 +11,15 @@ import { JumioTransaction, KycStatus, Redemption, User } from '@prisma/client';
 import assert from 'assert';
 import crypto from 'crypto';
 import { ApiConfigService } from '../api-config/api-config.service';
+import { AIRDROP_CONFIG, ORE_TO_IRON } from '../common/constants';
 import { JumioApiService } from '../jumio-api/jumio-api.service';
 import { JumioTransactionService } from '../jumio-transactions/jumio-transaction.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedemptionService } from '../redemptions/redemption.service';
+import { UserPointsService } from '../user-points/user-points.service';
 import { UsersService } from '../users/users.service';
 import { JumioCallbackData } from './interfaces/jumio-callback-data';
+import { Pool } from './types/pools';
 
 export type IdDetails = {
   id_issuing_country: string;
@@ -40,6 +43,7 @@ export class KycService {
     private readonly prisma: PrismaService,
     private readonly redemptionService: RedemptionService,
     private readonly usersService: UsersService,
+    private readonly userPointsService: UserPointsService,
   ) {}
 
   async attempt(
@@ -302,5 +306,30 @@ export class KycService {
       .toString('hex');
 
     return signature === expectedSignature;
+  }
+
+  async allocate(pool: Pool, redemptions: Redemption[]): Promise<void> {
+    //pool_one -> pool1_points
+    const pointsColumn = this.userPointsService.poolToColumn(pool);
+    const airdropPool = AIRDROP_CONFIG.data.find((c) => c.name === pool);
+    assert.ok(airdropPool);
+    const poolOre = airdropPool.coins * ORE_TO_IRON;
+
+    const totalPoints = await this.userPointsService.poolTotal(pool);
+
+    // allocate
+    for (const redemption of redemptions) {
+      const userPoints = await this.userPointsService.findOrThrow(
+        redemption.user_id,
+      );
+      const userPoolPoints = userPoints[pointsColumn];
+      if (!userPoolPoints) {
+        await this.redemptionService.update(redemption, { [pool]: 0 });
+        continue;
+      }
+
+      const allocatedOre = Math.floor((userPoolPoints / totalPoints) * poolOre);
+      await this.redemptionService.update(redemption, { [pool]: allocatedOre });
+    }
   }
 }
