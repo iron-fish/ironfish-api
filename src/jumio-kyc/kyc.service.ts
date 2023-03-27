@@ -11,7 +11,14 @@ import { JumioTransaction, KycStatus, Redemption, User } from '@prisma/client';
 import assert from 'assert';
 import crypto from 'crypto';
 import { ApiConfigService } from '../api-config/api-config.service';
-import { AIRDROP_CONFIG, ORE_TO_IRON } from '../common/constants';
+import {
+  AIRDROP_CONFIG,
+  ORE_TO_IRON,
+  POOL1_TOKENS,
+  POOL2_TOKENS,
+  POOL3_TOKENS,
+  POOL4_TOKENS,
+} from '../common/constants';
 import { JumioApiService } from '../jumio-api/jumio-api.service';
 import { JumioTransactionService } from '../jumio-transactions/jumio-transaction.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -306,6 +313,33 @@ export class KycService {
       .toString('hex');
 
     return signature === expectedSignature;
+  }
+
+  async estimate(
+    userId: number,
+  ): Promise<{ pool1: number; pool2: number; pool3: number; pool4: number }> {
+    const user = await this.userPointsService.findOrThrow(userId);
+
+    const [pool1, pool2, pool3, pool4] = await Promise.all([
+      this.userPointsService.poolTotal('pool_one'),
+      this.userPointsService.poolTotal('pool_two'),
+      this.userPointsService.poolTotal('pool_three'),
+      this.userPointsService.poolTotal('pool_four'),
+    ]);
+
+    const getTokens = (points: number, total: number, pool: number) => {
+      const ratio = points / pool;
+      const ore = Math.floor(ratio * total);
+      const iron = ore / ORE_TO_IRON;
+      return iron;
+    };
+
+    return {
+      pool1: getTokens(user.pool1_points ?? 0, pool1, POOL1_TOKENS),
+      pool2: getTokens(user.pool2_points ?? 0, pool2, POOL2_TOKENS),
+      pool3: getTokens(user.pool3_points ?? 0, pool3, POOL3_TOKENS),
+      pool4: getTokens(user.pool4_points ?? 0, pool4, POOL4_TOKENS),
+    };
   }
 
   async allocate(pool: Pool, redemptions: Redemption[]): Promise<void> {

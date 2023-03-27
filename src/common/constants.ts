@@ -62,32 +62,37 @@ export const PHASE_3_END = new Date(Date.UTC(2023, 1, 26, 0, 0, 0));
 export const KYC_DEADLINE = new Date(Date.UTC(2023, 3, 14, 0, 0, 0));
 export const AIRDROP_DEADLINE = new Date(Date.UTC(2023, 3, 21, 0, 0, 0));
 
+export const POOL1_TOKENS = 420000;
+export const POOL2_TOKENS = 210000;
+export const POOL3_TOKENS = 105000;
+export const POOL4_TOKENS = 210000;
+
 export const AIRDROP_CONFIG = {
   data: [
     {
       airdrop_completed_by: AIRDROP_DEADLINE,
-      coins: 105000,
+      coins: POOL3_TOKENS,
       kyc_completed_by: KYC_DEADLINE,
       name: 'pool_three',
       pool_name: 'Code Contributions Pool',
     },
     {
       airdrop_completed_by: AIRDROP_DEADLINE,
-      coins: 420000,
+      coins: POOL1_TOKENS,
       kyc_completed_by: KYC_DEADLINE,
       name: 'pool_one',
       pool_name: 'Phase 1 Pool',
     },
     {
       airdrop_completed_by: AIRDROP_DEADLINE,
-      coins: 210000,
+      coins: POOL2_TOKENS,
       kyc_completed_by: KYC_DEADLINE,
       name: 'pool_two',
       pool_name: 'Phase 2 Pool',
     },
     {
       airdrop_completed_by: AIRDROP_DEADLINE,
-      coins: 210000,
+      coins: POOL4_TOKENS,
       kyc_completed_by: KYC_DEADLINE,
       name: 'pool_four',
       pool_name: 'Phase 3 Pool',
