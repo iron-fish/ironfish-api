@@ -325,6 +325,7 @@ export class KycService {
       );
       const userPoolPoints = userPoints[pointsColumn];
       if (!userPoolPoints) {
+        await this.redemptionService.update(redemption, { [pool]: 0 });
         continue;
       }
 
