@@ -185,6 +185,7 @@ export class RedemptionService {
       );
 
       if (banned) {
+            assert.ok(banned.id_issuing_country)
         return {
           status: KycStatus.FAILED,
           failureUrl: HELP_URLS.BANNED_COUNTRY_ID,
