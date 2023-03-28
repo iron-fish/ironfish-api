@@ -1,9 +1,12 @@
-name: PROD - Deploy Phase3 API
-on: workflow_dispatch
+name: ARCHIVE - Deploy Phase 3 API
+on:
+  push:
+    branches:
+      - phase3
 
 jobs:
   deploy:
-    name: Deploy Phase3 Production API
+    name: Deploy Phase 3 API
     runs-on: ubuntu-latest
 
     steps:
@@ -11,6 +14,6 @@ jobs:
         uses: actions/checkout@v2
       - uses: akhileshns/heroku-deploy@v3.12.12
         with:
-          heroku_app_name: ${{ secrets.HEROKU_APP_NAME_PROD_PHASE3 }}
+          heroku_app_name: ironfish-api-phase3
           heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
           heroku_email: ${{ secrets.HEROKU_EMAIL }}
