@@ -189,7 +189,7 @@ export class RedemptionService {
         return {
           status: KycStatus.FAILED,
           failureUrl: HELP_URLS.BANNED_COUNTRY_ID,
-          failureMessage: `Your country is banned ${
+          failureMessage: `Your country is banned ${banned.id_issuing_country}.`,       
             banned.id_issuing_country ?? ''
           }.`,
           idDetails,
