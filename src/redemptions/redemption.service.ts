@@ -9,10 +9,16 @@ import { createHash } from 'crypto';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { KYC_DEADLINE } from '../common/constants';
 import {
+  DataChecksLabel,
+  ExtractionLabel,
   ImageCheck,
+  ImageChecksLabel,
   JumioTransactionRetrieveResponse,
+  LivenessLabel,
+  SimilarityLabel,
   UsabilityLabel,
   WatchlistScreenCheck,
+  WatchlistScreeningLabels,
 } from '../jumio-api/interfaces/jumio-transaction-retrieve';
 import { IdDetails } from '../jumio-kyc/kyc.service';
 import { JumioTransactionService } from '../jumio-transactions/jumio-transaction.service';
@@ -20,7 +26,6 @@ import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { UserPointsService } from '../user-points/user-points.service';
 import { UsersService } from '../users/users.service';
-import { matchApprovedLabels } from './approve-list';
 
 export const AIRDROP_BANNED_COUNTRIES = ['IRN', 'PRK', 'CUB'];
 
@@ -104,6 +109,25 @@ const USABILITY_ERRORS = new Map<
   ],
 ]);
 
+export const BENIGN_FAILURES: ApprovedLabelSet[] = [
+  {
+    maxRiskScore: 50,
+    usabilityLabels: ['NOT_UPLOADED', 'OK'],
+    livenessLabels: ['BAD_QUALITY', 'OK'],
+  },
+];
+
+export type ApprovedLabelSet = {
+  maxRiskScore: number;
+  similarityLabels?: SimilarityLabel[];
+  dataChecksLabels?: DataChecksLabel[];
+  extractionLabels?: ExtractionLabel[];
+  usabilityLabels?: UsabilityLabel[];
+  imageChecksLabels?: ImageChecksLabel[];
+  watchlistScreeningLabels?: WatchlistScreeningLabels[];
+  livenessLabels?: LivenessLabel[];
+};
+
 @Injectable()
 export class RedemptionService {
   constructor(
@@ -185,13 +209,11 @@ export class RedemptionService {
       );
 
       if (banned) {
-            assert.ok(banned.id_issuing_country)
+        assert.ok(banned.id_issuing_country);
         return {
           status: KycStatus.FAILED,
           failureUrl: HELP_URLS.BANNED_COUNTRY_ID,
-          failureMessage: `Your country is banned ${banned.id_issuing_country}.`,       
-            banned.id_issuing_country ?? ''
-          }.`,
+          failureMessage: `Your country is banned ${banned.id_issuing_country}.`,
           idDetails,
           age,
         };
@@ -302,12 +324,12 @@ export class RedemptionService {
         age,
       };
     }
-    const matchedApproval = matchApprovedLabels(transactionStatus);
+    const matchedApproval = this.matchApprovedLabels(transactionStatus);
     if (matchedApproval) {
       return {
         status: KycStatus.SUCCESS,
         failureUrl: null,
-        failureMessage: `Approved benign label set: ${matchedApproval}`,
+        failureMessage: null,
         idDetails,
         age,
       };
@@ -612,5 +634,57 @@ export class RedemptionService {
     }
 
     return { attemptable: true, reason: '' };
+  }
+
+  matchApprovedLabels(status: JumioTransactionRetrieveResponse): boolean {
+    const approvals = BENIGN_FAILURES.map((approvedLabelSet) =>
+      this.matchApproveLabelSet(status, approvedLabelSet),
+    ).filter((a) => a);
+
+    return approvals.length > 0 ? true : false;
+  }
+
+  matchApproveLabelSet(
+    status: JumioTransactionRetrieveResponse,
+    {
+      maxRiskScore,
+      dataChecksLabels = ['OK'],
+      extractionLabels = ['OK'],
+      imageChecksLabels = ['OK', 'REPEATED_FACE'],
+      livenessLabels = ['OK'],
+      similarityLabels = ['MATCH'],
+      usabilityLabels = ['OK'],
+      watchlistScreeningLabels = ['OK'],
+    }: ApprovedLabelSet,
+  ): boolean {
+    if (status.decision.risk.score > maxRiskScore) {
+      return false;
+    }
+    if (
+      !status.capabilities.dataChecks?.every((c) =>
+        dataChecksLabels.includes(c.decision.details.label),
+      ) ||
+      !status.capabilities.extraction?.every((c) =>
+        extractionLabels.includes(c.decision.details.label),
+      ) ||
+      !status.capabilities.imageChecks?.every((c) =>
+        imageChecksLabels.includes(c.decision.details.label),
+      ) ||
+      !status.capabilities.liveness?.every((c) =>
+        livenessLabels.includes(c.decision.details.label),
+      ) ||
+      !status.capabilities.similarity?.every((c) =>
+        similarityLabels.includes(c.decision.details.label),
+      ) ||
+      !status.capabilities.usability?.every((c) =>
+        usabilityLabels.includes(c.decision.details.label),
+      ) ||
+      !status.capabilities.watchlistScreening?.every((c) =>
+        watchlistScreeningLabels.includes(c.decision.details.label),
+      )
+    ) {
+      return false;
+    }
+    return true;
   }
 }

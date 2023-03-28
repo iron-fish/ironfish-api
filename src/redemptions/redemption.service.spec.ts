@@ -17,6 +17,7 @@ import { WORKFLOW_USABILITY_ERROR } from '../jumio-kyc/fixtures/workflow-usabili
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
+import { APPROVED_LIVENESS_FAILURE_FIXTURE } from './fixtures/approved-liveness-failure';
 import { HELP_URLS, RedemptionService } from './redemption.service';
 
 describe('RedemptionServiceSpec', () => {
@@ -483,6 +484,15 @@ describe('RedemptionServiceSpec', () => {
           WATCHLIST_SCREEN_FIXTURE('OK', 0),
         ]),
       ).toBeNull();
+    });
+  });
+
+  describe('approve-list', () => {
+    it('should allow benign liveness failure', () => {
+      const matched = redemptionService.matchApprovedLabels(
+        APPROVED_LIVENESS_FAILURE_FIXTURE,
+      );
+      expect(matched).toBe(true);
     });
   });
 });
