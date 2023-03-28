@@ -1,12 +1,12 @@
-name: STAGING - Deploy Phase1 API
+name: PROD - Deploy Phase 2 API
 on:
   push:
     branches:
-      - phase1
+      - phase2
 
 jobs:
   deploy:
-    name: Deploy Phase1 Staging API
+    name: Deploy Phase 2 API
     runs-on: ubuntu-latest
 
     steps:
@@ -14,6 +14,6 @@ jobs:
         uses: actions/checkout@v2
       - uses: akhileshns/heroku-deploy@v3.12.12
         with:
-          heroku_app_name: ${{ secrets.HEROKU_APP_NAME_STAGING_PHASE1 }}
+          heroku_app_name: ${{ secrets.HEROKU_APP_NAME_PHASE2 }}
           heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
           heroku_email: ${{ secrets.HEROKU_EMAIL }}
