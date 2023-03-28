@@ -29,9 +29,9 @@ import { JumioCallbackData } from './interfaces/jumio-callback-data';
 import { Pool } from './types/pools';
 
 export type IdDetails = {
-  id_issuing_country: string;
-  id_type: string;
-  id_subtype: string;
+  id_issuing_country?: string;
+  id_type?: string;
+  id_subtype?: string;
 };
 
 export type KycDetails = {

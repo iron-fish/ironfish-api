@@ -20,6 +20,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { UserPointsService } from '../user-points/user-points.service';
 import { UsersService } from '../users/users.service';
+import { matchApprovedLabels } from './approve-list';
 
 export const AIRDROP_BANNED_COUNTRIES = ['IRN', 'PRK', 'CUB'];
 
@@ -177,15 +178,19 @@ export class RedemptionService {
 
     if (idDetails) {
       // deal with banned countries
-      const banned = idDetails.find((detail) =>
-        this.hasBannedCountry(detail.id_issuing_country),
+      const banned = idDetails.find(
+        (detail) =>
+          detail.id_issuing_country &&
+          this.hasBannedCountry(detail.id_issuing_country),
       );
 
       if (banned) {
         return {
           status: KycStatus.FAILED,
           failureUrl: HELP_URLS.BANNED_COUNTRY_ID,
-          failureMessage: `Your country is banned ${banned.id_issuing_country}.`,
+          failureMessage: `Your country is banned ${
+            banned.id_issuing_country ?? ''
+          }.`,
           idDetails,
           age,
         };
@@ -296,7 +301,16 @@ export class RedemptionService {
         age,
       };
     }
-
+    const matchedApproval = matchApprovedLabels(transactionStatus);
+    if (matchedApproval) {
+      return {
+        status: KycStatus.SUCCESS,
+        failureUrl: null,
+        failureMessage: `Approved benign label set: ${matchedApproval}`,
+        idDetails,
+        age,
+      };
+    }
     return {
       status: KycStatus.TRY_AGAIN,
       failureUrl: HELP_URLS.UNKNOWN,
@@ -368,7 +382,6 @@ export class RedemptionService {
     }
     return null;
   }
-
   hasOnlyBenignWarnings(labels: string[]): boolean {
     // if any other check failed, we can't pass
     for (const label of labels) {

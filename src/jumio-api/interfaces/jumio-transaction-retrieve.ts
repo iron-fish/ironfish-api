@@ -152,16 +152,10 @@ export type WatchlistScreenCheck = {
 export type LivenessCheck = {
   id: string;
   validFaceMapForAuthentication?: string;
-  credentials: [
-    {
-      id: string;
-      category: string;
-    },
-    {
-      id: string;
-      category: string;
-    },
-  ];
+  credentials: {
+    id: string;
+    category: string;
+  }[];
   decision: {
     type: 'NOT_EXECUTED' | 'PASSED' | 'REJECTED' | 'WARNING';
     details: {
@@ -183,12 +177,10 @@ export type ExtractionCheck = {
       label: ExtractionLabel;
     };
   };
-  credentials: [
-    {
-      id: string;
-      category: string;
-    },
-  ];
+  credentials: {
+    id: string;
+    category: string;
+  }[];
   data: {
     type?: string;
     subType?: string;
