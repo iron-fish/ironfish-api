@@ -2,15 +2,15 @@
 
 exports[`MeController GET /me fails to get email returns the error 1`] = `
 Object {
-  "code": "email_error",
-  "message": "Error: Failed to get the email. Please try again.",
+  "code": "Error",
+  "message": "Error: No email found for token. Please try again.",
 }
 `;
 
 exports[`MeController GET /me fails to validate token email returns the error 1`] = `
 Object {
-  "code": "email_error",
-  "message": "Error: Failed to get the email. Please try again.",
+  "code": "Error",
+  "message": "Error: Fail to validate token. Magic Admin SDK Error: [ERROR_MALFORMED_TOKEN] The DID token is malformed or failed to parse.. Please try again.",
 }
 `;
 
