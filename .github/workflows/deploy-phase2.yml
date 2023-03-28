@@ -1,4 +1,4 @@
-name: PROD - Deploy Phase 2 API
+name: ARCHIVE - Deploy Phase 2 API
 on:
   push:
     branches:
