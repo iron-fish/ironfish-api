@@ -40,6 +40,8 @@ export const HELP_URLS = {
   DOC_BLURRED: 'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_luO9-',
   DOC_PHOTOCOPY: 'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_lu6j-',
   DOC_UNSUPPORTED: 'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_lui5e',
+  LIVENESS_UNDETERMINED:
+    'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_lu3dq',
   DOC_GLARE: 'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_lu9Ae',
   DOC_MISSING_SIGNATURE:
     'https://coda.io/d/_dte_X_jrtqj/Fail-Reasons_sucnO#_luu2r',
@@ -105,6 +107,13 @@ const USABILITY_ERRORS = new Map<
     {
       message: 'Your ID is not supported.',
       url: HELP_URLS.DOC_UNSUPPORTED,
+    },
+  ],
+  [
+    'LIVENESS_UNDETERMINED',
+    {
+      message: 'Your face recognition failed.',
+      url: HELP_URLS.LIVENESS_UNDETERMINED,
     },
   ],
 ]);
