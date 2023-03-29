@@ -279,6 +279,14 @@ export class RedemptionService {
           idDetails,
           age,
         };
+      } else if (this.hasOnlyBenignFaceWarnings(labels)) {
+        return {
+          status: KycStatus.SUCCESS,
+          failureUrl: null,
+          failureMessage: null,
+          idDetails,
+          age,
+        };
       }
     }
 
@@ -312,18 +320,6 @@ export class RedemptionService {
       };
     }
 
-    if (
-      this.hasOnlyBenignWarnings(labels) &&
-      transactionStatus.decision.risk.score < 50
-    ) {
-      return {
-        status: KycStatus.SUCCESS,
-        failureUrl: null,
-        failureMessage: `Benign warning labels found: ${labels.join(',')}`,
-        idDetails,
-        age,
-      };
-    }
     const matchedApproval = this.matchApprovedLabels(transactionStatus);
     if (matchedApproval) {
       return {
@@ -405,13 +401,16 @@ export class RedemptionService {
     }
     return null;
   }
-  hasOnlyBenignWarnings(labels: string[]): boolean {
+  hasOnlyBenignFaceWarnings(labels: string[]): boolean {
     // if any other check failed, we can't pass
     for (const label of labels) {
       if (
-        !['MATCH', 'REPEATED_FACE', 'LIVENESS_UNDETERMINED', 'OK'].includes(
-          label,
-        )
+        ![
+          'MATCH',
+          'REPEATED_FACE',
+          'MISMATCHING_DATA_REPEATED_FACE',
+          'OK',
+        ].includes(label)
       ) {
         return false;
       }

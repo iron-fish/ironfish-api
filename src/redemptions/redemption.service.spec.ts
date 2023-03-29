@@ -19,6 +19,7 @@ import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
 import { APPROVED_LIVENESS_FAILURE_FIXTURE } from './fixtures/approved-liveness-failure';
 import { APPROVED_LIVENESS_UNDETERMINED_FIXTURE } from './fixtures/approved-liveness-undertermined';
+import { APPROVED_REPEATED_FACE_FAILURE } from './fixtures/approved-repeated-face-failure';
 import { HELP_URLS, RedemptionService } from './redemption.service';
 
 describe('RedemptionServiceSpec', () => {
@@ -372,21 +373,30 @@ describe('RedemptionServiceSpec', () => {
         imageCheck,
       });
       const labels = redemptionService.getTransactionLabels(fixture);
-      const acceptableFace = redemptionService.hasOnlyBenignWarnings(labels);
+      const acceptableFace =
+        redemptionService.hasOnlyBenignFaceWarnings(labels);
       expect(acceptableFace).toBe(true);
+    });
+
+    it('should allow submission of repeated face from same user with multiple kycs', async () => {
+      const status = await redemptionService.calculateStatus(
+        APPROVED_REPEATED_FACE_FAILURE,
+      );
+      expect(status).toMatchObject({
+        status: KycStatus.SUCCESS,
+        failureMessage: null,
+      });
     });
 
     it('should allow LIVENESS_UNDETERMINED warning for success if risk score acceptable', async () => {
       const fixture = WORKFLOW_RETRIEVE_FIXTURE({
-        decisionStatus: DecisionStatus.WARNING,
         imageCheck: IMAGE_CHECK_FIXTURE('OK'),
         livenessCheck: LIVENESS_CHECK_FIXTURE('LIVENESS_UNDETERMINED'),
-        riskScore: 49,
+        riskScore: 40,
       });
       const status = await redemptionService.calculateStatus(fixture);
       expect(status).toMatchObject({
         status: KycStatus.SUCCESS,
-        failureMessage: expect.stringContaining('Benign'),
       });
     });
 
