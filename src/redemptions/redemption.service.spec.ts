@@ -18,6 +18,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
 import { APPROVED_LIVENESS_FAILURE_FIXTURE } from './fixtures/approved-liveness-failure';
+import { APPROVED_LIVENESS_UNDETERMINED_FIXTURE } from './fixtures/approved-liveness-undertermined';
 import { HELP_URLS, RedemptionService } from './redemption.service';
 
 describe('RedemptionServiceSpec', () => {
@@ -491,6 +492,12 @@ describe('RedemptionServiceSpec', () => {
     it('should allow benign liveness failure', () => {
       const matched = redemptionService.matchApprovedLabels(
         APPROVED_LIVENESS_FAILURE_FIXTURE,
+      );
+      expect(matched).toBe(true);
+    });
+    it('should allow benign liveness undetermined', () => {
+      const matched = redemptionService.matchApprovedLabels(
+        APPROVED_LIVENESS_UNDETERMINED_FIXTURE,
       );
       expect(matched).toBe(true);
     });
