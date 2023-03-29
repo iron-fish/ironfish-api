@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { EventType } from '@prisma/client';
+import { IsNotEmpty } from 'class-validator';
 import faker from 'faker';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
@@ -777,6 +778,53 @@ describe('UsersController', () => {
           id: user.id,
           discord: options.discord,
         });
+      });
+    });
+  });
+
+  describe('POST /users/:id/token', () => {
+    describe('without api token', () => {
+      it('returns a 401', async () => {
+        const { body } = await request(app.getHttpServer())
+          .post('/users/0/token')
+          .expect(HttpStatus.UNAUTHORIZED);
+
+        expect(body).toMatchSnapshot();
+      });
+    });
+
+    describe('with a mismatch in id', () => {
+      it('returns a 403', async () => {
+        await usersService.create({
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          countryCode: faker.address.countryCode('alpha-3'),
+        });
+
+        const { body } = await request(app.getHttpServer())
+          .post('/users/0/token')
+          .set('Authorization', 'Bearer test')
+          .expect(HttpStatus.NOT_FOUND);
+
+        expect(body).toMatchSnapshot();
+      });
+    });
+
+    describe('with a valid payload', () => {
+      it('create auth token', async () => {
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          countryCode: faker.address.countryCode('alpha-3'),
+        });
+
+        const { body } = await request(app.getHttpServer())
+          .post(`/users/${user.id}/token`)
+          .set('Authorization', 'Bearer test')
+          .expect(HttpStatus.CREATED);
+
+        expect(body.email).toEqual(user.email);
+        expect(body.url).toBeDefined();
       });
     });
   });
