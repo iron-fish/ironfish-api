@@ -395,7 +395,6 @@ export class UsersController {
       expiresIn: '1 days',
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
     const token: string = sign(
       { sub: user.email, iat: Date.now() },
       secret,
