@@ -113,7 +113,7 @@ Object {
 }
 `;
 
-exports[`UsersController POST /users/:id/token with a mismatch in id returns a 403 1`] = `
+exports[`UsersController POST /users/:id/token with invalid user id returns a 404 1`] = `
 Object {
   "message": "Not Found",
   "statusCode": 404,
