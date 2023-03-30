@@ -794,14 +794,8 @@ describe('UsersController', () => {
 
     describe('with invalid user id', () => {
       it('returns a 404', async () => {
-        const user = await usersService.create({
-          email: faker.internet.email(),
-          graffiti: uuid(),
-          countryCode: faker.address.countryCode('alpha-3'),
-        });
-
         const { body } = await request(app.getHttpServer())
-          .post(`/users/${user.id + 1}/token`)
+          .post(`/users/0/token`)
           .set('Authorization', 'Bearer test')
           .expect(HttpStatus.NOT_FOUND);
 
@@ -823,7 +817,11 @@ describe('UsersController', () => {
           .expect(HttpStatus.CREATED);
 
         expect(body.email).toEqual(user.email);
-        expect(body.url).toBeDefined();
+
+        const url: string = body.url;
+        expect(url.substring(0, 35)).toBe(
+          'https://api.ironfish.network/login/',
+        );
       });
     });
   });
