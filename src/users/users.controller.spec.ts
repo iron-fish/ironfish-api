@@ -3,7 +3,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { EventType } from '@prisma/client';
-import { IsNotEmpty } from 'class-validator';
 import faker from 'faker';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
