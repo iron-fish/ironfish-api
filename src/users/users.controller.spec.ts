@@ -794,14 +794,14 @@ describe('UsersController', () => {
 
     describe('with invalid user id', () => {
       it('returns a 404', async () => {
-        await usersService.create({
+        const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: uuid(),
           countryCode: faker.address.countryCode('alpha-3'),
         });
 
         const { body } = await request(app.getHttpServer())
-          .post('/users/0/token')
+          .post(`/users/${user.id + 1}/token`)
           .set('Authorization', 'Bearer test')
           .expect(HttpStatus.NOT_FOUND);
 

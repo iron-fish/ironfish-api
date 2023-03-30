@@ -392,7 +392,7 @@ export class UsersController {
     const secret: Secret = this.config.get<string>('JWT_TOKEN_SECRET');
     const options: SignOptions = {
       algorithm: 'HS256',
-      expiresIn: '1 days',
+      expiresIn: '1d',
     };
 
     const token: string = sign(
