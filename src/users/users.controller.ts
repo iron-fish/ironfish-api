@@ -24,7 +24,9 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { Request } from 'express';
+import { Secret, sign, SignOptions } from 'jsonwebtoken';
 import { ApiConfigService } from '../api-config/api-config.service';
+import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { MagicLinkGuard } from '../auth/guards/magic-link.guard';
 import { DEFAULT_LIMIT, MAX_LIMIT, MS_PER_DAY } from '../common/constants';
 import { Context } from '../common/decorators/context';
@@ -46,6 +48,7 @@ import { UserMetricsQueryDto } from './dto/user-metrics-query.dto';
 import { UserQueryDto } from './dto/user-query.dto';
 import { UsersQueryDto } from './dto/users-query.dto';
 import { SerializedUser } from './interfaces/serialized-user';
+import { SerializedUserLoginUrl } from './interfaces/serialized-user-login-url';
 import { SerializedUserMetrics } from './interfaces/serialized-user-metrics';
 import { SerializedUserWithRank } from './interfaces/serialized-user-with-rank';
 import { UsersService } from './users.service';
@@ -375,5 +378,32 @@ export class UsersController {
       github: dto.github,
       telegram: dto.telegram,
     });
+  }
+
+  @ApiExcludeEndpoint()
+  @Post(':id/token')
+  @UseGuards(ApiKeyGuard)
+  async createAuthToken(
+    @Param('id', new IntIsSafeForPrismaPipe())
+    id: number,
+  ): Promise<SerializedUserLoginUrl> {
+    const user = await this.usersService.findOrThrow(id);
+
+    const secret: Secret = this.config.get<string>('JWT_TOKEN_SECRET');
+    const options: SignOptions = {
+      algorithm: 'HS256',
+      expiresIn: '1d',
+    };
+
+    const token: string = sign(
+      { sub: user.email, iat: Date.now() },
+      secret,
+      options,
+    );
+
+    return {
+      url: `https://api.ironfish.network/login/${token}`,
+      email: user.email,
+    };
   }
 }
