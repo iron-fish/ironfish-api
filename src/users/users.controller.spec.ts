@@ -792,8 +792,8 @@ describe('UsersController', () => {
       });
     });
 
-    describe('with a mismatch in id', () => {
-      it('returns a 403', async () => {
+    describe('with invalid user id', () => {
+      it('returns a 404', async () => {
         await usersService.create({
           email: faker.internet.email(),
           graffiti: uuid(),
