@@ -3,19 +3,23 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import faker from 'faker';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
+import { ApiConfigService } from '../api-config/api-config.service';
 import { MagicLinkService } from '../magic-link/magic-link.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
 
 describe('AuthController', () => {
   let app: INestApplication;
+  let config: ApiConfigService;
   let magicLinkService: MagicLinkService;
   let usersService: UsersService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
+    config = app.get(ApiConfigService);
     magicLinkService = app.get(MagicLinkService);
     usersService = app.get(UsersService);
     await app.init();
@@ -74,7 +78,67 @@ describe('AuthController', () => {
       });
     });
 
-    describe('with a valid token', () => {
+    describe('with an expired jwt', () => {
+      it('returns a 422 with the error', async () => {
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          countryCode: faker.address.countryCode('alpha-3'),
+        });
+
+        const secret = config.get<string>('JWT_TOKEN_SECRET');
+        const options: SignOptions = {
+          algorithm: 'HS256',
+          expiresIn: '0d',
+        };
+
+        const token = jwt.sign(
+          { sub: user.email, iat: Math.floor(Date.now() / 1000) },
+          secret,
+          options,
+        );
+
+        const { body } = await request(app.getHttpServer())
+          .get('/login')
+          .query({ token })
+          .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+
+        expect(body).toMatchSnapshot();
+      });
+    });
+
+    describe('with a valid jwt token query parameter', () => {
+      it('updates the last login for a user', async () => {
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          countryCode: faker.address.countryCode('alpha-3'),
+        });
+
+        const secret = config.get<string>('JWT_TOKEN_SECRET');
+        const options: SignOptions = {
+          algorithm: 'HS256',
+          expiresIn: '1d',
+        };
+
+        const token = jwt.sign(
+          { sub: user.email, iat: Math.floor(Date.now() / 1000) },
+          secret,
+          options,
+        );
+
+        const updateLastLoginAt = jest.spyOn(usersService, 'updateLastLoginAt');
+
+        await request(app.getHttpServer())
+          .get('/login')
+          .query({ token })
+          .expect(HttpStatus.OK);
+
+        expect(updateLastLoginAt).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('with a valid token header', () => {
       it('updates the last login for a user', async () => {
         const user = await usersService.create({
           email: faker.internet.email(),
