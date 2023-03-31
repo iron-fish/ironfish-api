@@ -136,7 +136,7 @@ Object {
 
 exports[`UsersController PUT /users/:id with no logged in user returns a 401 1`] = `
 Object {
-  "code": "no_authorization",
-  "message": "Error: Request header is invalid.",
+  "code": "jwt_token_error",
+  "message": "Error: Jwt token has error. jwt must be provided",
 }
 `;
