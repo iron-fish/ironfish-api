@@ -820,7 +820,7 @@ describe('UsersController', () => {
 
         const url: string = body.url;
         expect(url.substring(0, 35)).toBe(
-          'https://api.ironfish.network/login/',
+          'https://api.ironfish.network/login?',
         );
       });
     });
