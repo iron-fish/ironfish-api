@@ -136,7 +136,7 @@ Object {
 
 exports[`UsersController PUT /users/:id with no logged in user returns a 401 1`] = `
 Object {
-  "code": "jwt_token_error",
+  "code": "JsonWebTokenError",
   "message": "Error: Jwt token has error. jwt must be provided",
 }
 `;

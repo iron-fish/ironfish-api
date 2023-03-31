@@ -9,7 +9,7 @@ Object {
 
 exports[`MeController GET /me fails to get email returns the error for jwt token 1`] = `
 Object {
-  "code": "jwt_token_error",
+  "code": "JsonWebTokenError",
   "message": "Error: Jwt token has error. invalid signature",
 }
 `;
@@ -23,7 +23,7 @@ Object {
 
 exports[`MeController GET /me fails to validate token email returns the error for jwt token 1`] = `
 Object {
-  "code": "jwt_token_error",
+  "code": "JsonWebTokenError",
   "message": "Error: Jwt token has error. invalid signature",
 }
 `;
@@ -44,7 +44,7 @@ Object {
 
 exports[`MeController GET /me with no logged in user returns a 401 1`] = `
 Object {
-  "code": "jwt_token_error",
+  "code": "JsonWebTokenError",
   "message": "Error: Jwt token has error. jwt must be provided",
 }
 `;

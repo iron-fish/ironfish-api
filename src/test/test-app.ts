@@ -4,6 +4,7 @@
 import { INestApplication } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
+import cookieParser from 'cookie-parser';
 import { json } from 'express';
 import joi from 'joi';
 import { JOBS_MODULES, REST_MODULES } from '../app.module';
@@ -60,5 +61,6 @@ export async function bootstrapTestApp(): Promise<INestApplication> {
 
   const app = module.createNestApplication();
   app.use(json({ limit: '10mb' }));
+  app.use(cookieParser('secret'));
   return app;
 }

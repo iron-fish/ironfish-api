@@ -13,6 +13,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import assert from 'assert';
 import cluster from 'cluster';
 import compression from 'compression';
+import cookieParser from 'cookie-parser';
 import express from 'express';
 import { json } from 'express';
 import helmet from 'helmet';
@@ -61,6 +62,7 @@ async function bootstrap(): Promise<void> {
   app.use(compression());
   app.use(helmet());
   app.use(json({ limit: '10mb' }));
+  app.use(cookieParser(config.get('JWT_TOKEN_SECRET')));
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Iron Fish API')

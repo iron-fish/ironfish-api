@@ -3,7 +3,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import cookie from 'cookie';
 import { Request } from 'express';
 import jwt, { JsonWebTokenError } from 'jsonwebtoken';
 import { Strategy } from 'passport';
@@ -34,7 +33,6 @@ export class MagicLinkStrategy extends PassportStrategy(
     }
 
     const { authorization } = req.headers;
-    const cookies = cookie.parse(req.headers.cookie || '');
 
     let email;
     if (authorization) {
@@ -46,12 +44,13 @@ export class MagicLinkStrategy extends PassportStrategy(
           message: 'Error: Failed to get the email. Please try again.',
         });
       }
-    } else if (cookies) {
+    } else if (req.cookies) {
       try {
-        const token: string = cookies.jwt;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+        const token: string = req.cookies.jwt;
         const decoded = jwt.verify(token, this.config.get('JWT_TOKEN_SECRET'));
 
-        if (decoded.sub === undefined || decoded.sub.toString().length === 0) {
+        if (!decoded.sub || decoded.sub.toString().length === 0) {
           return this.fail({
             code: 'invalid_token',
             message: 'Error: Jwt token is missing email.',
@@ -61,23 +60,10 @@ export class MagicLinkStrategy extends PassportStrategy(
         email = decoded.sub.toString();
       } catch (err) {
         if (err instanceof JsonWebTokenError) {
-          switch (err.name) {
-            case 'TokenExpiredError':
-              return this.fail({
-                code: 'token_expired',
-                message: 'Error: Jwt token is expired.',
-              });
-            case 'JsonWebTokenError':
-              return this.fail({
-                code: 'jwt_token_error',
-                message: `Error: Jwt token has error. ${err.message}`,
-              });
-            default:
-              return this.fail({
-                code: 'token_verification_error',
-                message: `Error: Failed to verify token. ${err.name} ${err.message}`,
-              });
-          }
+          return this.fail({
+            code: err.name,
+            message: `Error: Jwt token has error. ${err.message}`,
+          });
         } else {
           return this.fail({
             code: 'token_error',
