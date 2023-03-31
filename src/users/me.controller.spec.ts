@@ -124,7 +124,7 @@ describe('MeController', () => {
         const { body } = await request(app.getHttpServer())
           .get('/me')
           .set(
-            'cookie',
+            'Cookie',
             cookie.serialize('jwt', String(token), {
               httpOnly: true,
               maxAge: 60 * 60 * 24,
@@ -161,7 +161,7 @@ describe('MeController', () => {
         const { body } = await request(app.getHttpServer())
           .get('/me')
           .set(
-            'cookie',
+            'Cookie',
             cookie.serialize('jwt', String(token), {
               httpOnly: true,
               maxAge: 60 * 60 * 24,
