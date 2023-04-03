@@ -31,6 +31,7 @@ export function serializeKyc(
     public_address: redemption.public_address,
     jumio_workflow_execution_id: transaction.workflow_execution_id,
     jumio_web_href: transaction.web_href,
+    transaction_hash: redemption.transaction_hash,
     can_attempt: canAttempt,
     can_attempt_reason: canAttemptReason,
     can_create: canCreate,
