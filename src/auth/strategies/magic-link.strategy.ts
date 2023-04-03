@@ -47,7 +47,7 @@ export class MagicLinkStrategy extends PassportStrategy(
     } else if (req.cookies) {
       try {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-        const token: string = req.cookies.jwt;
+        const token: string = req.cookies.ironfish_jwt;
         const decoded = jwt.verify(token, this.config.get('JWT_TOKEN_SECRET'));
 
         if (!decoded.sub || decoded.sub.toString().length === 0) {

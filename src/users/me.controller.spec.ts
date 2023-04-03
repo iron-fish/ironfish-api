@@ -80,7 +80,7 @@ describe('MeController', () => {
           .get('/me')
           .set(
             'cookie',
-            cookie.serialize('jwt', String(token), {
+            cookie.serialize('ironfish_jwt', String(token), {
               httpOnly: true,
               maxAge: 60 * 60 * 24,
             }),
@@ -125,7 +125,7 @@ describe('MeController', () => {
           .get('/me')
           .set(
             'Cookie',
-            cookie.serialize('jwt', String(token), {
+            cookie.serialize('ironfish_jwt', String(token), {
               httpOnly: true,
               maxAge: 60 * 60 * 24,
             }),
@@ -162,7 +162,7 @@ describe('MeController', () => {
           .get('/me')
           .set(
             'Cookie',
-            cookie.serialize('jwt', String(token), {
+            cookie.serialize('ironfish_jwt', String(token), {
               httpOnly: true,
               maxAge: 60 * 60 * 24,
             }),
@@ -205,7 +205,7 @@ describe('MeController', () => {
           .get('/me')
           .set(
             'Cookie',
-            cookie.serialize('jwt', String(token), {
+            cookie.serialize('ironfish_jwt', String(token), {
               httpOnly: true,
               maxAge: 60 * 60 * 24,
             }),

@@ -7,6 +7,7 @@ import { Test } from '@nestjs/testing';
 import cookieParser from 'cookie-parser';
 import { json } from 'express';
 import joi from 'joi';
+import { ApiConfigService } from '../api-config/api-config.service';
 import { JOBS_MODULES, REST_MODULES } from '../app.module';
 import { AuthModule } from '../auth/auth.module';
 import { DatadogModule } from '../datadog/datadog.module';
@@ -61,6 +62,7 @@ export async function bootstrapTestApp(): Promise<INestApplication> {
 
   const app = module.createNestApplication();
   app.use(json({ limit: '10mb' }));
-  app.use(cookieParser('secret'));
+  const config = app.get(ApiConfigService);
+  app.use(cookieParser(config.get('JWT_TOKEN_SECRET')));
   return app;
 }
