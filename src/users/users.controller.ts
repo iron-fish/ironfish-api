@@ -402,7 +402,7 @@ export class UsersController {
     );
 
     return {
-      url: `https://api.ironfish.network/login/${token}`,
+      url: `https://api.ironfish.network/login?token=${token}`,
       email: user.email,
     };
   }

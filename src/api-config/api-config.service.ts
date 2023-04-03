@@ -24,6 +24,10 @@ export class ApiConfigService {
     return value;
   }
 
+  isLocal(): boolean {
+    return this.get<string>('NODE_ENV') === 'development';
+  }
+
   isStaging(): boolean {
     return this.get<string>('NODE_ENV') === 'staging';
   }
