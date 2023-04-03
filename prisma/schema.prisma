@@ -72,10 +72,11 @@ model Redemption {
   user_id          Int       @unique
   kyc_attempts     Int       @default(0)
   kyc_max_attempts Int?
-  kyc_status  KycStatus
+  kyc_status       KycStatus
   jumio_account_id String?   @db.VarChar
   public_address   String    @db.VarChar
   hashed_ip_address String?  @db.VarChar
+  transaction_hash String?   @db.VarChar
   id_details       Json?
   age              Int?
   failure_message  String?   @db.VarChar
