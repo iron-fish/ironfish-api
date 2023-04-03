@@ -122,9 +122,9 @@ describe('AuthController', () => {
           .expect(HttpStatus.FOUND);
 
         expect(header.location).toBe(
-          `${config.get<string>(
-            'INCENTIVIZED_TESTNET_URL',
-          )}/leaderboard?toast=${btoa('User not found')}`,
+          `${config.get<string>('INCENTIVIZED_TESTNET_URL')}/login?toast=${btoa(
+            'User not found',
+          )}&persist=true`,
         );
       });
     });
@@ -155,9 +155,9 @@ describe('AuthController', () => {
           .expect(HttpStatus.FOUND);
 
         expect(header.location).toBe(
-          `${config.get<string>(
-            'INCENTIVIZED_TESTNET_URL',
-          )}/leaderboard?toast=${btoa('jwt expired')}`,
+          `${config.get<string>('INCENTIVIZED_TESTNET_URL')}/login?toast=${btoa(
+            'jwt expired',
+          )}&persist=true`,
         );
       });
     });
@@ -190,7 +190,7 @@ describe('AuthController', () => {
           .expect(HttpStatus.FOUND);
 
         expect(header.location).toBe(
-          `${config.get<string>('INCENTIVIZED_TESTNET_URL')}/leaderboard`,
+          `${config.get<string>('INCENTIVIZED_TESTNET_URL')}/login`,
         );
         expect(updateLastLoginAt).toHaveBeenCalledTimes(1);
       });

@@ -76,7 +76,7 @@ export class AuthController {
   ): Promise<void> {
     const redirectUrl = `${this.config.get<string>(
       'INCENTIVIZED_TESTNET_URL',
-    )}/leaderboard`;
+    )}/login`;
     if (this.config.get<boolean>('DISABLE_LOGIN')) {
       res.redirect(`${redirectUrl}?toast=${btoa('Login is disabled')}`);
       return;
@@ -95,11 +95,15 @@ export class AuthController {
       res.redirect(redirectUrl);
     } catch (error: unknown) {
       if (error instanceof Error) {
-        res.redirect(`${redirectUrl}?toast=${btoa(error.message)}`);
+        res.redirect(
+          `${redirectUrl}?toast=${btoa(error.message)}&persist=true`,
+        );
         return;
       }
 
-      res.redirect(`${redirectUrl}?toast=${btoa('Unknown error')}`);
+      res.redirect(
+        `${redirectUrl}?toast=${btoa('Unknown error')}&persist=true`,
+      );
     }
   }
 
@@ -127,7 +131,7 @@ export class AuthController {
         });
       }
 
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('Error verifying email');
     }
   }
 
