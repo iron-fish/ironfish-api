@@ -102,6 +102,33 @@ describe('AuthController', () => {
   });
 
   describe('GET /login', () => {
+    describe('with a missing user', () => {
+      it('redirects with an error toast', async () => {
+        const secret = config.get<string>('JWT_TOKEN_SECRET');
+        const options: SignOptions = {
+          algorithm: 'HS256',
+          expiresIn: '1d',
+        };
+
+        const token = jwt.sign(
+          { sub: 'fake@email.com', iat: Math.floor(Date.now() / 1000) },
+          secret,
+          options,
+        );
+
+        const { header } = await request(app.getHttpServer())
+          .get('/login')
+          .query({ token })
+          .expect(HttpStatus.FOUND);
+
+        expect(header.location).toBe(
+          `${config.get<string>(
+            'INCENTIVIZED_TESTNET_URL',
+          )}/leaderboard?toast=${btoa('User not found')}`,
+        );
+      });
+    });
+
     describe('with an expired jwt', () => {
       it('redirects with an error toast', async () => {
         const user = await usersService.create({
