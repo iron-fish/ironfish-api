@@ -1,12 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`AuthController POST /login with an expired jwt returns a 422 with the error 1`] = `
-Object {
-  "code": "TokenExpiredError",
-  "message": "jwt expired",
-}
-`;
-
 exports[`AuthController POST /login with an invalid token throws a 401 1`] = `
 Object {
   "message": "Unauthorized",

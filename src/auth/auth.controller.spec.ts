@@ -78,8 +78,32 @@ describe('AuthController', () => {
       });
     });
 
+    describe('with a valid token header', () => {
+      it('updates the last login for a user', async () => {
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          countryCode: faker.address.countryCode('alpha-3'),
+        });
+
+        const updateLastLoginAt = jest.spyOn(usersService, 'updateLastLoginAt');
+        jest
+          .spyOn(magicLinkService, 'getEmailFromHeader')
+          .mockImplementationOnce(() => Promise.resolve(user.email));
+
+        await request(app.getHttpServer())
+          .post('/login')
+          .set('Authorization', 'valid-token')
+          .expect(HttpStatus.OK);
+
+        expect(updateLastLoginAt).toHaveBeenCalledTimes(1);
+      });
+    });
+  });
+
+  describe('GET /login', () => {
     describe('with an expired jwt', () => {
-      it('returns a 422 with the error', async () => {
+      it('redirects with an error toast', async () => {
         const user = await usersService.create({
           email: faker.internet.email(),
           graffiti: uuid(),
@@ -98,12 +122,16 @@ describe('AuthController', () => {
           options,
         );
 
-        const { body } = await request(app.getHttpServer())
+        const { header } = await request(app.getHttpServer())
           .get('/login')
           .query({ token })
-          .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+          .expect(HttpStatus.FOUND);
 
-        expect(body).toMatchSnapshot();
+        expect(header.location).toBe(
+          `${config.get<string>(
+            'INCENTIVIZED_TESTNET_URL',
+          )}/leaderboard?toast=${btoa('jwt expired')}`,
+        );
       });
     });
 
@@ -129,33 +157,14 @@ describe('AuthController', () => {
 
         const updateLastLoginAt = jest.spyOn(usersService, 'updateLastLoginAt');
 
-        await request(app.getHttpServer())
+        const { header } = await request(app.getHttpServer())
           .get('/login')
           .query({ token })
-          .expect(HttpStatus.OK);
+          .expect(HttpStatus.FOUND);
 
-        expect(updateLastLoginAt).toHaveBeenCalledTimes(1);
-      });
-    });
-
-    describe('with a valid token header', () => {
-      it('updates the last login for a user', async () => {
-        const user = await usersService.create({
-          email: faker.internet.email(),
-          graffiti: uuid(),
-          countryCode: faker.address.countryCode('alpha-3'),
-        });
-
-        const updateLastLoginAt = jest.spyOn(usersService, 'updateLastLoginAt');
-        jest
-          .spyOn(magicLinkService, 'getEmailFromHeader')
-          .mockImplementationOnce(() => Promise.resolve(user.email));
-
-        await request(app.getHttpServer())
-          .post('/login')
-          .set('Authorization', 'valid-token')
-          .expect(HttpStatus.OK);
-
+        expect(header.location).toBe(
+          `${config.get<string>('INCENTIVIZED_TESTNET_URL')}/leaderboard`,
+        );
         expect(updateLastLoginAt).toHaveBeenCalledTimes(1);
       });
     });

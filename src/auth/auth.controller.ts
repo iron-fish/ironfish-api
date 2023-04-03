@@ -74,21 +74,33 @@ export class AuthController {
     { token }: LoginQueryDto,
     @Res() res: Response,
   ): Promise<void> {
+    const redirectUrl = `${this.config.get<string>(
+      'INCENTIVIZED_TESTNET_URL',
+    )}/leaderboard`;
     if (this.config.get<boolean>('DISABLE_LOGIN')) {
-      throw new UnauthorizedException();
+      res.redirect(`${redirectUrl}?toast=${btoa('Login is disabled')}`);
+      return;
     }
 
-    const email = this.verifyEmailFromJwt(token);
+    try {
+      const email = this.verifyEmailFromJwt(token);
+      const user = await this.usersService.findByEmail(email);
+      if (user) {
+        await this.usersService.updateLastLoginAt(user);
+      } else {
+        throw new UnauthorizedException('User not found');
+      }
 
-    const user = await this.usersService.findByEmail(email);
-    if (user) {
-      await this.usersService.updateLastLoginAt(user);
-    } else {
-      throw new UnauthorizedException({ error: 'user_invalid' });
+      this.setResponseHeaders(res, token);
+      res.redirect(redirectUrl);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        res.redirect(`${redirectUrl}?toast=${btoa(error.message)}`);
+        return;
+      }
+
+      res.redirect(`${redirectUrl}?toast=${btoa('Unknown error')}`);
     }
-
-    this.setResponseHeaders(res, token);
-    res.sendStatus(HttpStatus.OK);
   }
 
   private verifyEmailFromJwt(token: string): string {
