@@ -9,7 +9,11 @@ import crypto from 'crypto';
 import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { ApiConfigService } from '../api-config/api-config.service';
-import { AIRDROP_CONFIG, ORE_TO_IRON } from '../common/constants';
+import {
+  AIRDROP_CONFIG,
+  AIRDROP_ORE_FEE,
+  ORE_TO_IRON,
+} from '../common/constants';
 import { JumioApiService } from '../jumio-api/jumio-api.service';
 import { JumioTransactionService } from '../jumio-transactions/jumio-transaction.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -262,10 +266,16 @@ describe('KycService', () => {
       const user3Redemption = await redemptionService.findOrThrow(user3);
       const user4Redemption = await redemptionService.findOrThrow(user3);
       expect(user1Redemption.pool_one).toBe(
-        BigInt(Math.floor((5 / (11 + 5)) * (pool1.coins * ORE_TO_IRON))),
+        BigInt(
+          Math.floor((5 / (11 + 5)) * (pool1.coins * ORE_TO_IRON)) -
+            AIRDROP_ORE_FEE,
+        ),
       );
       expect(user2Redemption.pool_one).toBe(
-        BigInt(Math.floor((11 / (11 + 5)) * (pool1.coins * ORE_TO_IRON))),
+        BigInt(
+          Math.floor((11 / (11 + 5)) * (pool1.coins * ORE_TO_IRON)) -
+            AIRDROP_ORE_FEE,
+        ),
       );
       expect(user3Redemption.pool_one).toBeNull();
       expect(user4Redemption.pool_one).toBeNull();

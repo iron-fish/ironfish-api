@@ -13,6 +13,7 @@ import crypto from 'crypto';
 import { ApiConfigService } from '../api-config/api-config.service';
 import {
   AIRDROP_CONFIG,
+  AIRDROP_ORE_FEE,
   ORE_TO_IRON,
   POOL1_TOKENS,
   POOL2_TOKENS,
@@ -362,8 +363,11 @@ export class KycService {
         continue;
       }
 
-      const allocatedOre = Math.floor((userPoolPoints / totalPoints) * poolOre);
-      await this.redemptionService.update(redemption, { [pool]: allocatedOre });
+      const allocatedOre =
+        Math.floor((userPoolPoints / totalPoints) * poolOre) - AIRDROP_ORE_FEE;
+      await this.redemptionService.update(redemption, {
+        [pool]: allocatedOre < 0 ? 0 : allocatedOre,
+      });
     }
   }
 }

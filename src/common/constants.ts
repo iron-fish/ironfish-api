@@ -99,3 +99,5 @@ export const AIRDROP_CONFIG = {
     },
   ],
 };
+
+export const AIRDROP_ORE_FEE = 10;
