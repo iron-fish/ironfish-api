@@ -77,6 +77,11 @@ export class AuthController {
     const redirectUrl = `${this.config.get<string>(
       'INCENTIVIZED_TESTNET_URL',
     )}/login`;
+
+    const dashboardUrl = `${this.config.get<string>(
+      'INCENTIVIZED_TESTNET_URL',
+    )}/dashboard`;
+
     if (this.config.get<boolean>('DISABLE_LOGIN')) {
       res.redirect(`${redirectUrl}?toast=${btoa('Login is disabled')}`);
       return;
@@ -92,7 +97,7 @@ export class AuthController {
       }
 
       this.setResponseHeaders(res, token);
-      res.redirect(redirectUrl);
+      res.redirect(dashboardUrl);
     } catch (error: unknown) {
       if (error instanceof Error) {
         res.redirect(

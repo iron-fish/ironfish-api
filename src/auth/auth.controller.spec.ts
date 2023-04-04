@@ -190,7 +190,7 @@ describe('AuthController', () => {
           .expect(HttpStatus.FOUND);
 
         expect(header.location).toBe(
-          `${config.get<string>('INCENTIVIZED_TESTNET_URL')}/login`,
+          `${config.get<string>('INCENTIVIZED_TESTNET_URL')}/dashboard`,
         );
         expect(updateLastLoginAt).toHaveBeenCalledTimes(1);
       });
