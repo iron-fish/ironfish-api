@@ -142,9 +142,10 @@ export class AuthController {
     };
 
     if (!this.config.isLocal()) {
-      cookieOptions.domain = new URL(
-        this.config.get<string>('INCENTIVIZED_TESTNET_URL'),
-      ).host;
+      const host = new URL(this.config.get<string>('INCENTIVIZED_TESTNET_URL'))
+        .host;
+      cookieOptions.domain = `.${host.split('.').slice(-2).join('.')}`;
+
       cookieOptions.sameSite = 'none';
       cookieOptions.secure = true;
     }
