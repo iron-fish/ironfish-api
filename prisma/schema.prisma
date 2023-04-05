@@ -77,6 +77,7 @@ model Redemption {
   public_address   String    @db.VarChar
   hashed_ip_address String?  @db.VarChar
   transaction_hash String?   @db.VarChar
+  sent_ore         BigInt?
   id_details       Json?
   age              Int?
   failure_message  String?   @db.VarChar
