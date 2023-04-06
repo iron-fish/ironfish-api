@@ -5,6 +5,7 @@ import { HttpStatus, INestApplication } from '@nestjs/common';
 import cookie from 'cookie';
 import faker from 'faker';
 import jwt from 'jsonwebtoken';
+import ms from 'ms';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
 import { MagicLinkService } from '../magic-link/magic-link.service';
@@ -73,7 +74,7 @@ describe('MeController', () => {
         });
 
         const token = jwt.sign({ sub: user.email, iat: Date.now() }, 'secret', {
-          expiresIn: '1d',
+          expiresIn: ms('1d'),
         });
 
         const { body } = await request(app.getHttpServer())
@@ -117,7 +118,7 @@ describe('MeController', () => {
           { sub: 'test@gmail.com', iat: Date.now() },
           'secret',
           {
-            expiresIn: '1d',
+            expiresIn: ms('1d'),
           },
         );
 
@@ -154,7 +155,30 @@ describe('MeController', () => {
           { sub: 'test@gmail.com', iat: Date.now() },
           'secret1',
           {
-            expiresIn: '1d',
+            expiresIn: ms('1d'),
+          },
+        );
+
+        const { body } = await request(app.getHttpServer())
+          .get('/me')
+          .set(
+            'Cookie',
+            cookie.serialize('ironfish_jwt', String(token), {
+              httpOnly: true,
+              maxAge: 60 * 60 * 24,
+            }),
+          )
+          .expect(HttpStatus.UNAUTHORIZED);
+
+        expect(body).toMatchSnapshot();
+      });
+
+      it('returns the error for expired jwt token', async () => {
+        const token = jwt.sign(
+          { sub: 'test@gmail.com', iat: Date.now() },
+          'secret',
+          {
+            expiresIn: 1,
           },
         );
 
@@ -197,7 +221,7 @@ describe('MeController', () => {
           { name: 'test@gmail.com', iat: Date.now() },
           'secret1',
           {
-            expiresIn: '1d',
+            expiresIn: ms('1d'),
           },
         );
 

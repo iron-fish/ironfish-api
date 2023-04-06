@@ -25,6 +25,7 @@ import {
 } from '@nestjs/swagger';
 import { Request } from 'express';
 import { Secret, sign, SignOptions } from 'jsonwebtoken';
+import ms from 'ms';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { MagicLinkGuard } from '../auth/guards/magic-link.guard';
@@ -392,7 +393,7 @@ export class UsersController {
     const secret: Secret = this.config.get<string>('JWT_TOKEN_SECRET');
     const options: SignOptions = {
       algorithm: 'HS256',
-      expiresIn: '1d',
+      expiresIn: ms('1d'),
     };
 
     const token: string = sign(
