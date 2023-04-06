@@ -63,6 +63,17 @@ export class AuthController {
   }
 
   @ApiExcludeEndpoint()
+  @Post('logout')
+  logout(@Req() req: Request, @Res() res: Response): void {
+    if (!('ironfish_jwt' in req.cookies)) {
+      throw new UnprocessableEntityException('User is not logged in');
+    }
+
+    res.clearCookie('ironfish_jwt');
+    res.sendStatus(HttpStatus.OK);
+  }
+
+  @ApiExcludeEndpoint()
   @Get('login')
   async jwtLogin(
     @Query(
