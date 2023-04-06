@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { HttpStatus, INestApplication } from '@nestjs/common';
+import cookie from 'cookie';
 import faker from 'faker';
 import jwt, { SignOptions } from 'jsonwebtoken';
 import request from 'supertest';
@@ -97,6 +98,45 @@ describe('AuthController', () => {
           .expect(HttpStatus.OK);
 
         expect(updateLastLoginAt).toHaveBeenCalledTimes(1);
+      });
+    });
+  });
+
+  describe('POST /logout', () => {
+    describe('if there is no jwt', () => {
+      it('returns a 422', async () => {
+        await request(app.getHttpServer())
+          .post('/logout')
+          .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+      });
+    });
+
+    describe('with a jwt', () => {
+      it('clears the cookie', async () => {
+        const secret = config.get<string>('JWT_TOKEN_SECRET');
+        const options: SignOptions = {
+          algorithm: 'HS256',
+          expiresIn: '1d',
+        };
+
+        const token = jwt.sign(
+          { sub: 'fake@email.com', iat: Math.floor(Date.now() / 1000) },
+          secret,
+          options,
+        );
+
+        const response = await request(app.getHttpServer())
+          .post('/logout')
+          .set(
+            'Cookie',
+            cookie.serialize('ironfish_jwt', String(token), {
+              httpOnly: true,
+              maxAge: 60 * 60 * 24,
+            }),
+          )
+          .expect(HttpStatus.OK);
+
+        expect(response.get('Set-Cookie')[0]).toMatch('ironfish_jwt=;');
       });
     });
   });
