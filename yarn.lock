@@ -738,9 +738,9 @@
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
-"@magic-sdk/admin@1.8.0":
-  version "1.8.0"
-  resolved "https://registry.npmjs.org/@magic-sdk/admin/-/admin-1.8.0.tgz"
+"@magic-sdk/admin@1.9.2":
+  version "1.9.2"
+  resolved "https://registry.yarnpkg.com/@magic-sdk/admin/-/admin-1.9.2.tgz#286bf45760c5a93190957aa721e5bd277b498f4d"
   dependencies:
     "@types/atob" "^2.1.2"
     atob "^2.1.2"
