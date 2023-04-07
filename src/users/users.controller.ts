@@ -396,7 +396,7 @@ export class UsersController {
     };
 
     const token: string = sign(
-      { sub: user.email, iat: Date.now() },
+      { sub: user.email, iat: Math.floor(Date.now() / 1000) },
       secret,
       options,
     );
