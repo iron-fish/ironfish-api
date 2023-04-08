@@ -72,9 +72,13 @@ describe('MeController', () => {
           countryCode: faker.address.countryCode('alpha-3'),
         });
 
-        const token = jwt.sign({ sub: user.email, iat: Date.now() }, 'secret', {
-          expiresIn: '1d',
-        });
+        const token = jwt.sign(
+          { sub: user.email, iat: Math.floor(Date.now() / 1000) },
+          'secret',
+          {
+            expiresIn: '1d',
+          },
+        );
 
         const { body } = await request(app.getHttpServer())
           .get('/me')
@@ -114,7 +118,7 @@ describe('MeController', () => {
 
       it('returns the error for jwt token', async () => {
         const token = jwt.sign(
-          { sub: 'test@gmail.com', iat: Date.now() },
+          { sub: 'test@gmail.com', iat: Math.floor(Date.now() / 1000) },
           'secret',
           {
             expiresIn: '1d',
@@ -151,10 +155,33 @@ describe('MeController', () => {
 
       it('returns the error for jwt token', async () => {
         const token = jwt.sign(
-          { sub: 'test@gmail.com', iat: Date.now() },
+          { sub: 'test@gmail.com', iat: Math.floor(Date.now() / 1000) },
           'secret1',
           {
             expiresIn: '1d',
+          },
+        );
+
+        const { body } = await request(app.getHttpServer())
+          .get('/me')
+          .set(
+            'Cookie',
+            cookie.serialize('ironfish_jwt', String(token), {
+              httpOnly: true,
+              maxAge: 60 * 60 * 24,
+            }),
+          )
+          .expect(HttpStatus.UNAUTHORIZED);
+
+        expect(body).toMatchSnapshot();
+      });
+
+      it('returns the error for expired jwt token', async () => {
+        const token = jwt.sign(
+          { sub: 'test@gmail.com', iat: Math.floor(Date.now() / 1000) - 100 },
+          'secret',
+          {
+            expiresIn: 1,
           },
         );
 
@@ -194,7 +221,7 @@ describe('MeController', () => {
 
       it('returns the error for jwt token', async () => {
         const token = jwt.sign(
-          { name: 'test@gmail.com', iat: Date.now() },
+          { name: 'test@gmail.com', iat: Math.floor(Date.now() / 1000) },
           'secret1',
           {
             expiresIn: '1d',

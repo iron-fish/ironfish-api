@@ -21,6 +21,13 @@ Object {
 }
 `;
 
+exports[`MeController GET /me fails to validate token email returns the error for expired jwt token 1`] = `
+Object {
+  "code": "TokenExpiredError",
+  "message": "Error: Jwt token has error. jwt expired",
+}
+`;
+
 exports[`MeController GET /me fails to validate token email returns the error for jwt token 1`] = `
 Object {
   "code": "JsonWebTokenError",

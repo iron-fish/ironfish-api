@@ -4,7 +4,7 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Request } from 'express';
-import jwt, { JsonWebTokenError } from 'jsonwebtoken';
+import jwt, { JsonWebTokenError, VerifyOptions } from 'jsonwebtoken';
 import { Strategy } from 'passport';
 import { ApiConfigService } from '../../api-config/api-config.service';
 import { MagicLinkContext } from '../../common/interfaces/magic-link-context';
@@ -48,7 +48,23 @@ export class MagicLinkStrategy extends PassportStrategy(
       try {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
         const token: string = req.cookies.ironfish_jwt;
-        const decoded = jwt.verify(token, this.config.get('JWT_TOKEN_SECRET'));
+        const options: VerifyOptions & { complete?: false } = {
+          ignoreExpiration: false,
+          algorithms: ['HS256'],
+        };
+
+        const decoded = jwt.verify(
+          token,
+          this.config.get('JWT_TOKEN_SECRET'),
+          options,
+        );
+
+        if (typeof decoded === 'string') {
+          return this.fail({
+            code: 'invalid_token',
+            message: 'Error: Jwt token has invalid payload.',
+          });
+        }
 
         if (!decoded.sub || decoded.sub.toString().length === 0) {
           return this.fail({
