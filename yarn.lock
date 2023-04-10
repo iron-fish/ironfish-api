@@ -438,9 +438,9 @@
   dependencies:
     node-gyp-build "^4.5.0"
 
-"@datadog/native-iast-taint-tracking@1.1.1":
-  version "1.1.1"
-  resolved "https://registry.npmjs.org/@datadog/native-iast-taint-tracking/-/native-iast-taint-tracking-1.1.1.tgz"
+"@datadog/native-iast-taint-tracking@1.3.1":
+  version "1.3.1"
+  resolved "https://registry.yarnpkg.com/@datadog/native-iast-taint-tracking/-/native-iast-taint-tracking-1.3.1.tgz#49b3befc3049370f4034babcf57c3d67e9f4d56b"
   dependencies:
     node-gyp-build "^3.9.0"
 
@@ -450,9 +450,9 @@
   dependencies:
     node-gyp-build "^3.9.0"
 
-"@datadog/pprof@^2.0.0":
-  version "2.0.0"
-  resolved "https://registry.npmjs.org/@datadog/pprof/-/pprof-2.0.0.tgz"
+"@datadog/pprof@^2.1.0":
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/@datadog/pprof/-/pprof-2.1.0.tgz#acc8a7a2a74442cfd725abc620a5f8505dbe1807"
   dependencies:
     delay "^5.0.0"
     node-gyp-build "^3.9.0"
@@ -2013,15 +2013,15 @@ data-urls@^2.0.0:
     whatwg-mimetype "^2.3.0"
     whatwg-url "^8.0.0"
 
-dd-trace@3.15.0:
-  version "3.15.0"
-  resolved "https://registry.npmjs.org/dd-trace/-/dd-trace-3.15.0.tgz"
+dd-trace@3.17.1:
+  version "3.17.1"
+  resolved "https://registry.yarnpkg.com/dd-trace/-/dd-trace-3.17.1.tgz#4f38e056c7548312e6cedaab189fb37ebabd04d6"
   dependencies:
     "@datadog/native-appsec" "2.0.0"
     "@datadog/native-iast-rewriter" "2.0.1"
-    "@datadog/native-iast-taint-tracking" "1.1.1"
+    "@datadog/native-iast-taint-tracking" "1.3.1"
     "@datadog/native-metrics" "^1.5.0"
-    "@datadog/pprof" "^2.0.0"
+    "@datadog/pprof" "^2.1.0"
     "@datadog/sketches-js" "^2.1.0"
     crypto-randomuuid "^1.0.0"
     diagnostics_channel "^1.1.0"
@@ -2043,7 +2043,7 @@ dd-trace@3.15.0:
     path-to-regexp "^0.1.2"
     protobufjs "^7.1.2"
     retry "^0.10.1"
-    semver "^5.5.0"
+    semver "^7.3.8"
 
 debug@2.6.9:
   version "2.6.9"
@@ -4506,10 +4506,6 @@ semver@7.3.8, semver@7.x, semver@^7.3.2, semver@^7.3.4, semver@^7.3.7, semver@^7
   resolved "https://registry.npmjs.org/semver/-/semver-7.3.8.tgz"
   dependencies:
     lru-cache "^6.0.0"
-
-semver@^5.5.0:
-  version "5.7.1"
-  resolved "https://registry.npmjs.org/semver/-/semver-5.7.1.tgz"
 
 semver@^6.0.0, semver@^6.3.0:
   version "6.3.0"
