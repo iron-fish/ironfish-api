@@ -4,6 +4,7 @@
 import { JumioTransaction, Redemption } from '@prisma/client';
 import assert from 'assert';
 import { ApiConfigService } from '../../api-config/api-config.service';
+import { ORE_TO_IRON } from '../../common/constants';
 import { SerializedKyc } from '../interfaces/serialized-kyc';
 
 export function serializeKyc(
@@ -21,6 +22,10 @@ export function serializeKyc(
   const maxAttempts =
     redemption.kyc_max_attempts ?? config.get<number>('KYC_MAX_ATTEMPTS');
 
+  const sentIron = redemption.sent_ore
+    ? Number(redemption.sent_ore) / ORE_TO_IRON
+    : null;
+
   return {
     redemption_id: redemption.id,
     user_id: redemption.user_id,
@@ -32,6 +37,7 @@ export function serializeKyc(
     jumio_workflow_execution_id: transaction.workflow_execution_id,
     jumio_web_href: transaction.web_href,
     transaction_hash: redemption.transaction_hash,
+    sent_iron: sentIron,
     can_attempt: canAttempt,
     can_attempt_reason: canAttemptReason,
     can_create: canCreate,
