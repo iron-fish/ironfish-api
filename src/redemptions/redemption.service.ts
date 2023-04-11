@@ -118,6 +118,26 @@ const USABILITY_ERRORS = new Map<
   ],
 ]);
 
+const IMAGE_CHECK_ERRORS = new Map<
+  ImageChecksLabel,
+  { message: string; url: string }
+>([
+  [
+    'MANIPULATED_DOCUMENT_SECURITY_CHECKS',
+    {
+      message: "Your document's security features are manipulated.",
+      url: HELP_URLS.UNKNOWN,
+    },
+  ],
+  [
+    'MANIPULATED_DOCUMENT_PHOTO',
+    {
+      message: "Your document's photo looks modified.",
+      url: HELP_URLS.UNKNOWN,
+    },
+  ],
+]);
+
 export const BENIGN_FAILURES: ApprovedLabelSet[] = [
   {
     maxRiskScore: 50,
@@ -310,6 +330,26 @@ export class RedemptionService {
 
       if (rejected) {
         const error = USABILITY_ERRORS.get(rejected.decision.details.label);
+
+        if (error) {
+          return {
+            status: KycStatus.TRY_AGAIN,
+            failureUrl: error.url,
+            failureMessage: error.message,
+            idDetails,
+            age,
+          };
+        }
+      }
+    }
+
+    if (transactionStatus.capabilities.imageChecks) {
+      const rejected = transactionStatus.capabilities.imageChecks.find(
+        (u) => u.decision.type === 'REJECTED' || u.decision.type === 'WARNING',
+      );
+
+      if (rejected) {
+        const error = IMAGE_CHECK_ERRORS.get(rejected.decision.details.label);
 
         if (error) {
           return {
