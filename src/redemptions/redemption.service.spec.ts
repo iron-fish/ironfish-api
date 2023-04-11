@@ -12,6 +12,7 @@ import { LIVENESS_CHECK_FIXTURE } from '../jumio-kyc/fixtures/liveness-check';
 import { WATCHLIST_SCREEN_FIXTURE } from '../jumio-kyc/fixtures/watch-list';
 import { WORKFLOW_RETRIEVE_FIXTURE } from '../jumio-kyc/fixtures/workflow';
 import { WORKFLOW_EXPIRED } from '../jumio-kyc/fixtures/workflow-expired';
+import { WORKFLOW_SIMILARITY } from '../jumio-kyc/fixtures/workflow-similarity';
 import { WORKFLOW_UNSUPPORTED } from '../jumio-kyc/fixtures/workflow-unsupported';
 import { WORKFLOW_USABILITY_ERROR } from '../jumio-kyc/fixtures/workflow-usability-error';
 import { PrismaService } from '../prisma/prisma.service';
@@ -90,6 +91,18 @@ describe('RedemptionServiceSpec', () => {
         failureUrl: HELP_URLS.EXPIRED,
         idDetails: undefined,
         age: undefined,
+      });
+    });
+
+    it('should try again on similarity', async () => {
+      const status = await redemptionService.calculateStatus(
+        WORKFLOW_SIMILARITY,
+      );
+
+      expect(status).toMatchObject({
+        status: KycStatus.SUCCESS,
+        failureMessage: null,
+        failureUrl: null,
       });
     });
 

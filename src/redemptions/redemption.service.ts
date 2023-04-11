@@ -121,6 +121,10 @@ const USABILITY_ERRORS = new Map<
 export const BENIGN_FAILURES: ApprovedLabelSet[] = [
   {
     maxRiskScore: 50,
+    similarityLabels: ['NOT_POSSIBLE'],
+  },
+  {
+    maxRiskScore: 50,
     usabilityLabels: ['NOT_UPLOADED', 'LIVENESS_UNDETERMINED', 'OK'],
     livenessLabels: ['BAD_QUALITY', 'OK'],
   },
