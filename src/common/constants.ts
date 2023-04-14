@@ -59,7 +59,7 @@ export const POOL_4_CATEGORIES: Array<EventType> = [
 
 // 2023 Feb 26 12 AM UTC
 export const PHASE_3_END = new Date(Date.UTC(2023, 1, 26, 0, 0, 0));
-export const KYC_DEADLINE = new Date(Date.UTC(2023, 3, 14, 0, 0, 0));
+export const KYC_DEADLINE = new Date(Date.UTC(2023, 3, 15, 0, 0, 0));
 export const AIRDROP_DEADLINE = new Date(Date.UTC(2023, 3, 21, 0, 0, 0));
 
 export const POOL1_TOKENS = 420000;
