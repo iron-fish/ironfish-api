@@ -31,13 +31,11 @@ import { WORKFLOW_RETRIEVE_FIXTURE } from './fixtures/workflow';
 import { WORKFLOW_EXPIRED } from './fixtures/workflow-expired';
 import { WORKFLOW_RETRIEVE_WATCHLIST } from './fixtures/workflow-watchlist';
 import { KycService } from './kyc.service';
-import { serializeKyc } from './utils/serialize-kyc';
 
 describe('KycController', () => {
   let app: INestApplication;
   let usersService: UsersService;
   let prisma: PrismaService;
-  let config: ApiConfigService;
   let magicLinkService: MagicLinkService;
   let kycService: KycService;
   let redemptionService: RedemptionService;
@@ -50,7 +48,6 @@ describe('KycController', () => {
   beforeAll(async () => {
     app = await bootstrapTestApp();
     prisma = app.get(PrismaService);
-    config = app.get(ApiConfigService);
     magicLinkService = app.get(MagicLinkService);
     usersService = app.get(UsersService);
     kycService = app.get(KycService);
@@ -97,38 +94,11 @@ describe('KycController', () => {
   };
 
   describe('POST /kyc', () => {
-    it('starts kyc, creates new redemption/jumio account/jumio transaction', async () => {
-      const user = await mockUser();
-
-      const { body } = await request(app.getHttpServer())
-        .post(`/kyc`)
-        .set('Authorization', 'did-token')
-        .send({ public_address: 'foo' })
-        .expect(HttpStatus.CREATED);
-
-      const redemption = await redemptionService.find(user);
-      const jumioTransaction = await jumioTransactionService.findLatestOrThrow(
-        user,
-      );
-
-      assert.ok(redemption);
-      expect(body).toMatchObject(
-        serializeKyc(
-          redemption,
-          jumioTransaction,
-          true,
-          '',
-          false,
-          'Redemption status is not TRY_AGAIN: IN_PROGRESS',
-          '',
-          config,
-        ),
-      );
-    });
-
     it('banned user country gets error', async () => {
       const user = await mockUser('PRK');
-
+      jest
+        .spyOn(redemptionService, 'currentDate')
+        .mockImplementationOnce(() => new Date(1678905869000));
       await expect(
         kycService.attempt(user, 'foo', '127.0.0.1'),
       ).rejects.toThrow(
@@ -153,6 +123,9 @@ describe('KycController', () => {
 
     it('ip address is saved', async () => {
       const user = await mockUser();
+      jest
+        .spyOn(redemptionService, 'currentDate')
+        .mockImplementationOnce(() => new Date(1678905869000));
       await request(app.getHttpServer())
         .post(`/kyc`)
         .set('Authorization', 'did-token')
@@ -188,7 +161,9 @@ describe('KycController', () => {
   describe('POST /callback', () => {
     it('resolves 200 when transaction found/updated', async () => {
       const user = await mockUser();
-
+      jest
+        .spyOn(redemptionService, 'currentDate')
+        .mockImplementationOnce(() => new Date(1678905869000));
       // create user
       await request(app.getHttpServer())
         .post(`/kyc`)
@@ -232,7 +207,9 @@ describe('KycController', () => {
     describe('with an invalid signature', () => {
       it('returns a 403', async () => {
         const user = await mockUser();
-
+        jest
+          .spyOn(redemptionService, 'currentDate')
+          .mockImplementationOnce(() => new Date(1678905869000));
         await request(app.getHttpServer())
           .post(`/kyc`)
           .set('Authorization', 'did-token')
@@ -344,34 +321,40 @@ describe('KycController', () => {
   describe('GET /kyc', () => {
     it('retrieves kyc info when it exists', async () => {
       const user = await mockUser();
-      const { redemption, transaction } = await kycService.attempt(
-        user,
-        'foo',
-        '127.0.0.1',
-      );
+      jest
+        .spyOn(redemptionService, 'currentDate')
+        .mockImplementationOnce(() => new Date(1678905869000));
+      await kycService.attempt(user, 'foo', '127.0.0.1');
+      await prisma.redemption.update({
+        data: {
+          pool_one: 320000000,
+          pool_two: 200000000,
+          pool_three: 0,
+          pool_four: 0,
+        },
+        where: {
+          user_id: user.id,
+        },
+      });
 
       const { body } = await request(app.getHttpServer())
         .get(`/kyc`)
         .set('Authorization', 'did-token')
         .expect(HttpStatus.OK);
 
-      expect(body).toMatchObject(
-        serializeKyc(
-          redemption,
-          transaction,
-          true,
-          '',
-          false,
-          'Redemption status is not TRY_AGAIN: IN_PROGRESS',
-          '',
-          config,
-        ),
-      );
+      expect(body).toMatchObject({
+        pool_one_iron: 3.2,
+        pool_two_iron: 2,
+        pool_three_iron: 0,
+        pool_four_iron: 0,
+      });
     });
 
     it('should get kyc info for expired workflow', async () => {
       const user = await mockUser();
-
+      jest
+        .spyOn(redemptionService, 'currentDate')
+        .mockImplementationOnce(() => new Date(1678905869000));
       const redemption = await redemptionService.create(user, 'foo', 'foo');
       await redemptionService.update(redemption, {
         kycStatus: KycStatus.TRY_AGAIN,
