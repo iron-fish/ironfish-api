@@ -8,5 +8,6 @@ export interface SerializedKycConfig {
     kyc_completed_by: Date;
     name: string;
     pool_name: string;
+    total_points: number;
   }[];
 }

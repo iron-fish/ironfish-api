@@ -75,6 +75,7 @@ export const AIRDROP_CONFIG = {
       kyc_completed_by: KYC_DEADLINE,
       name: 'pool_three',
       pool_name: 'Code Contributions Pool',
+      total_points: 65250,
     },
     {
       airdrop_completed_by: AIRDROP_DEADLINE,
@@ -82,6 +83,7 @@ export const AIRDROP_CONFIG = {
       kyc_completed_by: KYC_DEADLINE,
       name: 'pool_one',
       pool_name: 'Phase 1 Pool',
+      total_points: 9993890,
     },
     {
       airdrop_completed_by: AIRDROP_DEADLINE,
@@ -89,6 +91,7 @@ export const AIRDROP_CONFIG = {
       kyc_completed_by: KYC_DEADLINE,
       name: 'pool_two',
       pool_name: 'Phase 2 Pool',
+      total_points: 67971717,
     },
     {
       airdrop_completed_by: AIRDROP_DEADLINE,
@@ -96,6 +99,7 @@ export const AIRDROP_CONFIG = {
       kyc_completed_by: KYC_DEADLINE,
       name: 'pool_four',
       pool_name: 'Phase 3 Pool',
+      total_points: 93223810,
     },
   ],
 };
