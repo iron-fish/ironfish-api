@@ -58,5 +58,6 @@ export function serializeKyc(
     pool_two_iron,
     pool_three_iron,
     pool_four_iron,
+    airdrop_transaction_hash: redemption.transaction_hash,
   };
 }
