@@ -135,6 +135,7 @@ model Block {
   graffiti                 String             @db.VarChar
   size                     Int?
   difficulty               BigInt
+  work                     BigInt?
   blocks_transactions      BlockTransaction[]
   event                    Event?
 
