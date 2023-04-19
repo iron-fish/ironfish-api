@@ -50,6 +50,7 @@ export class BlocksService {
       type,
       size,
       timeSinceLastBlockMs,
+      work,
     }: UpsertBlockOptions,
   ): Promise<{
     block: Block;
@@ -77,6 +78,7 @@ export class BlocksService {
         previous_block_hash: previousBlockHash,
         size,
         difficulty,
+        work,
         time_since_last_block_ms: timeSinceLastBlockMs,
       },
       update: {
@@ -88,6 +90,7 @@ export class BlocksService {
         previous_block_hash: previousBlockHash,
         size,
         difficulty,
+        work,
         time_since_last_block_ms: timeSinceLastBlockMs,
       },
       where: {
