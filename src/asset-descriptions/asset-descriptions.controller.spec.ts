@@ -65,7 +65,7 @@ describe('AssetDescriptionsController', () => {
           hash: uuid(),
           sequence: faker.datatype.number(),
           difficulty: faker.datatype.number(),
-          work: faker.datatype.number(),
+          work: BigInt(faker.datatype.number()),
           timestamp: new Date(),
           transactionsCount: 1,
           type: BlockOperation.CONNECTED,
