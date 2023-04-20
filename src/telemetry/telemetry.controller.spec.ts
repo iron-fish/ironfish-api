@@ -40,7 +40,7 @@ function mockTelemetryPoints() {
     },
   ];
   const measurement = 'node_started';
-  const tags = [{ name: 'version', value: '0.1.24' }];
+  const tags = [{ name: 'version', value: '1.0.0' }];
   const timestamp = new Date();
 
   return [{ fields, measurement, tags, timestamp }];
