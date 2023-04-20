@@ -556,6 +556,7 @@ describe('DepositsUpsertService', () => {
       hash: operation.block.hash,
       sequence: operation.block.sequence,
       difficulty: faker.datatype.number(),
+      work: faker.datatype.number(),
       timestamp: operation.block.timestamp,
       transactionsCount: transaction1.notes.length,
       type:
