@@ -381,7 +381,7 @@ describe('TelemetryController', () => {
 
           jest.spyOn(versionsService, 'getLatestAtDate').mockResolvedValue({
             id: 1,
-            version: '0.1.30',
+            version: '1.0.8',
             created_at: new Date(),
           });
 
