@@ -92,7 +92,7 @@ const TELEMETRY_WHITELIST = new Map<string, true | Array<string>>([
 
 @Controller('telemetry')
 export class TelemetryController {
-  private readonly MINIMUM_TELEMETRY_VERSION = '0.1.24';
+  private readonly MINIMUM_TELEMETRY_VERSION = '1.0.0';
 
   constructor(
     private readonly config: ApiConfigService,
