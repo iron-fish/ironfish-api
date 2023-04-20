@@ -187,6 +187,7 @@ describe('BlocksController', () => {
         id: expect.any(Number),
         main: true,
         hash_rate: expect.any(Number),
+        reward: expect.any(String),
       });
     });
   });

@@ -111,6 +111,10 @@ export class BlocksController {
       hash: head.previous_block_hash,
     });
 
+    const reward = head.transactions.reduce(
+      (reward, transaction) => reward + BigInt(Math.abs(transaction.fee)),
+      0n,
+    );
     let hashRate = 0;
     if (previous && previous.work !== null && head.work !== null) {
       const workDifference = head.work - previous.work;
@@ -121,6 +125,7 @@ export class BlocksController {
     return {
       ...serializedBlockFromRecord(head),
       hash_rate: hashRate,
+      reward: reward.toString(),
     };
   }
 

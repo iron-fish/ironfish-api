@@ -5,4 +5,5 @@ import { SerializedBlock } from './serialized-block';
 
 export interface SerializedBlockHead extends SerializedBlock {
   hash_rate: number;
+  reward: string;
 }

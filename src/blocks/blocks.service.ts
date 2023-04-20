@@ -116,7 +116,7 @@ export class BlocksService {
     return { block, deleteBlockMinedOptions, upsertBlockMinedOptions };
   }
 
-  async head(): Promise<Block> {
+  async head(): Promise<Block & { transactions: Transaction[] }> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
     const block = await this.prisma.block.findFirst({
       orderBy: {
@@ -130,7 +130,10 @@ export class BlocksService {
     if (!block) {
       throw new NotFoundException();
     }
-    return block;
+
+    const transactions =
+      await this.blocksTransactionsService.findTransactionsByBlock(block);
+    return { ...block, transactions };
   }
 
   async list(options: ListBlocksOptions): Promise<{
