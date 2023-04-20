@@ -186,6 +186,7 @@ describe('BlocksController', () => {
       expect(body).toMatchObject({
         id: expect.any(Number),
         main: true,
+        hash_rate: expect.any(Number),
       });
     });
   });
