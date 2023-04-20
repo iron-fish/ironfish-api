@@ -57,8 +57,8 @@ export class BlocksDailyService {
         date: true,
       },
     });
-    // 2021 December 1 12 AM UTC
-    const defaultStart = new Date(Date.UTC(2021, 11, 1, 0, 0, 0));
+    // 2023 April 20 12 AM UTC
+    const defaultStart = new Date(Date.UTC(2023, 3, 20, 0, 0, 0));
     const latestDate = aggregate._max.date;
     if (!latestDate) {
       return defaultStart;
