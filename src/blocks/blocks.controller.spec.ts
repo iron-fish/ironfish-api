@@ -90,7 +90,7 @@ describe('BlocksController', () => {
           blocks.push({
             hash: uuid(),
             difficulty: faker.datatype.number(),
-            work: faker.datatype.number(),
+            work: BigInt(faker.datatype.number()),
             type: BlockOperation.CONNECTED,
             sequence: faker.datatype.number(),
             timestamp: new Date(),
