@@ -126,7 +126,7 @@ model Block {
   updated_at               DateTime           @default(now()) @updatedAt @db.Timestamp(6)
   hash                     String             @db.VarChar
   sequence                 Int
-  previous_block_hash      String?            @db.VarChar
+  previous_block_hash      String             @db.VarChar
   main                     Boolean
   network_version          Int
   transactions_count       Int
