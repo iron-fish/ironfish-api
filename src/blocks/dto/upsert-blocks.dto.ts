@@ -27,15 +27,14 @@ export class BlockDto {
   @Type(() => Number)
   readonly sequence!: number;
 
-  @Max(Number.MAX_SAFE_INTEGER)
   @IsInt()
   @Type(() => Number)
   readonly difficulty!: number;
 
-  @Max(Number.MAX_SAFE_INTEGER)
+  @IsOptional()
   @IsInt()
   @Type(() => Number)
-  readonly work!: number;
+  readonly work?: number;
 
   @IsEnum(BlockOperation)
   readonly type!: BlockOperation;
