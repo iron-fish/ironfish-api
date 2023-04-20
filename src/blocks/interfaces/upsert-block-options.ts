@@ -7,7 +7,7 @@ export interface UpsertBlockOptions {
   hash: string;
   sequence: number;
   difficulty: number;
-  work: number;
+  work?: number;
   type: BlockOperation;
   timestamp: Date;
   transactionsCount: number;
