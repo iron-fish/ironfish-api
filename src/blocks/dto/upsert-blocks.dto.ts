@@ -48,7 +48,7 @@ export class BlockDto {
 
   @IsOptional()
   @IsString()
-  readonly previous_block_hash?: string;
+  readonly previous_block_hash!: string;
 
   @Max(Number.MAX_SAFE_INTEGER)
   @IsInt()
