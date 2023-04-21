@@ -15,7 +15,7 @@ import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
 import { BlocksService } from './blocks.service';
 import { BlockOperation } from './enums/block-operation';
-import { Block, Transaction } from '.prisma/client';
+import { Block, Prisma, Transaction } from '.prisma/client';
 
 describe('BlocksService', () => {
   let app: INestApplication;
@@ -42,7 +42,7 @@ describe('BlocksService', () => {
       const options = {
         hash: uuid(),
         sequence: faker.datatype.number(),
-        difficulty: faker.datatype.number(),
+        difficulty: BigInt(faker.datatype.number()),
         work: BigInt(faker.datatype.number()),
         timestamp: new Date(),
         transactionsCount: 1,
@@ -57,7 +57,8 @@ describe('BlocksService', () => {
         id: expect.any(Number),
         hash: options.hash,
         sequence: options.sequence,
-        difficulty: BigInt(options.difficulty),
+        difficulty: new Prisma.Decimal(options.difficulty.toString()),
+        work: new Prisma.Decimal(options.work.toString()),
         timestamp: options.timestamp,
         transactions_count: options.transactionsCount,
         main: true,
@@ -71,7 +72,7 @@ describe('BlocksService', () => {
       const options = {
         hash: uuid(),
         sequence: faker.datatype.number(),
-        difficulty: faker.datatype.number(),
+        difficulty: BigInt(faker.datatype.number()),
         work: BigInt(faker.datatype.number()),
         timestamp: new Date(),
         transactionsCount: 1,
@@ -98,7 +99,7 @@ describe('BlocksService', () => {
       const options = {
         hash: uuid(),
         sequence: faker.datatype.number(),
-        difficulty: faker.datatype.number(),
+        difficulty: BigInt(faker.datatype.number()),
         work: BigInt(faker.datatype.number()),
         timestamp: new Date(),
         transactionsCount: 1,
@@ -130,7 +131,7 @@ describe('BlocksService', () => {
       await blocksService.upsert(prisma, {
         hash: hash,
         sequence: faker.datatype.number(),
-        difficulty: faker.datatype.number(),
+        difficulty: BigInt(faker.datatype.number()),
         work: BigInt(faker.datatype.number()),
         timestamp: new Date(),
         transactionsCount: 1,
@@ -160,7 +161,7 @@ describe('BlocksService', () => {
         const options = {
           hash: uuid(),
           sequence: faker.datatype.number(),
-          difficulty: faker.datatype.number(),
+          difficulty: BigInt(faker.datatype.number()),
           work: BigInt(faker.datatype.number()),
           timestamp: new Date('2000-01-01T00:00:00Z'),
           transactionsCount: 1,
@@ -211,7 +212,7 @@ describe('BlocksService', () => {
         const { block } = await blocksService.upsert(prisma, {
           hash: uuid(),
           sequence: faker.datatype.number(),
-          difficulty: faker.datatype.number(),
+          difficulty: BigInt(faker.datatype.number()),
           work: BigInt(faker.datatype.number()),
           timestamp: new Date(),
           transactionsCount: 1,
@@ -231,7 +232,7 @@ describe('BlocksService', () => {
         const { block } = await blocksService.upsert(prisma, {
           hash: testBlockHash,
           sequence: faker.datatype.number(),
-          difficulty: faker.datatype.number(),
+          difficulty: BigInt(faker.datatype.number()),
           work: BigInt(faker.datatype.number()),
           timestamp: new Date(),
           transactionsCount: 1,
@@ -249,7 +250,7 @@ describe('BlocksService', () => {
         const { block } = await blocksService.upsert(prisma, {
           hash: testBlockHash,
           sequence: faker.datatype.number(),
-          difficulty: faker.datatype.number(),
+          difficulty: BigInt(faker.datatype.number()),
           work: BigInt(faker.datatype.number()),
           timestamp: new Date(),
           transactionsCount: 1,
@@ -275,7 +276,7 @@ describe('BlocksService', () => {
         const { block } = await blocksService.upsert(prisma, {
           hash: uuid(),
           sequence: testBlockSequence,
-          difficulty: faker.datatype.number(),
+          difficulty: BigInt(faker.datatype.number()),
           work: BigInt(faker.datatype.number()),
           timestamp: new Date(),
           transactionsCount: 1,
@@ -297,7 +298,7 @@ describe('BlocksService', () => {
         await blocksService.upsert(prisma, {
           hash: uuid(),
           sequence: faker.datatype.number(),
-          difficulty: faker.datatype.number(),
+          difficulty: BigInt(faker.datatype.number()),
           work: BigInt(faker.datatype.number()),
           timestamp: new Date(),
           transactionsCount: 1,
@@ -368,7 +369,7 @@ describe('BlocksService', () => {
         await blocksService.upsert(prisma, {
           hash: uuid(),
           sequence: faker.datatype.number(),
-          difficulty: faker.datatype.number(),
+          difficulty: BigInt(faker.datatype.number()),
           work: BigInt(faker.datatype.number()),
           timestamp: new Date(),
           transactionsCount: 1,
@@ -433,7 +434,7 @@ describe('BlocksService', () => {
       await blocksService.upsert(prisma, {
         hash: uuid(),
         sequence: faker.datatype.number(),
-        difficulty: faker.datatype.number(),
+        difficulty: BigInt(faker.datatype.number()),
         work: BigInt(faker.datatype.number()),
         timestamp: date,
         transactionsCount: 1,
@@ -492,7 +493,7 @@ describe('BlocksService', () => {
         await blocksService.upsert(prisma, {
           hash: uuid(),
           sequence: faker.datatype.number(),
-          difficulty: faker.datatype.number(),
+          difficulty: BigInt(faker.datatype.number()),
           work: BigInt(faker.datatype.number()),
           timestamp: new Date(),
           transactionsCount: 1,
@@ -506,7 +507,7 @@ describe('BlocksService', () => {
         await blocksService.upsert(prisma, {
           hash: uuid(),
           sequence: faker.datatype.number(),
-          difficulty: faker.datatype.number(),
+          difficulty: BigInt(faker.datatype.number()),
           work: BigInt(faker.datatype.number()),
           timestamp: new Date(),
           transactionsCount: 1,

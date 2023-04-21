@@ -6,7 +6,7 @@ import { BlockOperation } from '../enums/block-operation';
 export interface UpsertBlockOptions {
   hash: string;
   sequence: number;
-  difficulty: number;
+  difficulty: bigint;
   work?: bigint;
   type: BlockOperation;
   timestamp: Date;
