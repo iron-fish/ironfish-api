@@ -15,6 +15,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiExcludeEndpoint, ApiOperation, ApiTags } from '@nestjs/swagger';
+import assert from 'assert';
 import { Response } from 'express';
 import { AssetDescriptionsService } from '../asset-descriptions/asset-descriptions.service';
 import { AssetsService } from '../assets/assets.service';
@@ -119,9 +120,11 @@ export class BlocksController {
       hashRate = divide(workDifference, BigInt(diffInMs)) * 1000;
     }
 
+    assert.ok(head.transactions[0]);
     return {
       ...serializedBlockFromRecord(head),
       hash_rate: hashRate,
+      reward: Math.abs(head.transactions[0].fee).toString(),
     };
   }
 

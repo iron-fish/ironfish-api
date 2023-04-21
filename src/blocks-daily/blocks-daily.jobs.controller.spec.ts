@@ -61,6 +61,7 @@ describe('BlocksDailyJobsController', () => {
             network_version: 0,
             size: faker.datatype.number(),
             time_since_last_block_ms: faker.datatype.number(),
+            transactions: [],
           }),
         );
       });
@@ -99,6 +100,7 @@ describe('BlocksDailyJobsController', () => {
             network_version: 0,
             size: faker.datatype.number(),
             time_since_last_block_ms: faker.datatype.number(),
+            transactions: [],
           }),
         );
       });
