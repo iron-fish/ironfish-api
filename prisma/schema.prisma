@@ -134,8 +134,8 @@ model Block {
   time_since_last_block_ms Int?
   graffiti                 String             @db.VarChar
   size                     Int?
-  difficulty               BigInt
-  work                     BigInt?
+  difficulty               Decimal?
+  work                     Decimal?
   blocks_transactions      BlockTransaction[]
   event                    Event?
 
