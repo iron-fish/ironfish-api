@@ -26,7 +26,7 @@ export class BlocksDailyService {
     return this.prisma.blockDaily.upsert({
       create: {
         average_block_time_ms: options.averageBlockTimeMs,
-        average_difficulty_millis: options.averageDifficultyMillis,
+        average_difficulty: options.averageDifficulty,
         blocks_count: options.blocksCount,
         blocks_with_graffiti_count: options.blocksWithGraffitiCount,
         chain_sequence: options.chainSequence,
@@ -37,7 +37,7 @@ export class BlocksDailyService {
       },
       update: {
         average_block_time_ms: options.averageBlockTimeMs,
-        average_difficulty_millis: options.averageDifficultyMillis,
+        average_difficulty: options.averageDifficulty,
         blocks_count: options.blocksCount,
         blocks_with_graffiti_count: options.blocksWithGraffitiCount,
         chain_sequence: options.chainSequence,

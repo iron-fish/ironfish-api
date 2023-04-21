@@ -10,7 +10,7 @@ export function serializedBlockMetricsFromRecord(
   return {
     object: 'block_metrics',
     average_block_time_ms: record.average_block_time_ms,
-    average_difficulty: Number(record.average_difficulty_millis / BigInt(1000)),
+    average_difficulty: record.average_difficulty.toNumber(),
     blocks_count: record.blocks_count,
     blocks_with_graffiti_count: record.blocks_with_graffiti_count,
     chain_sequence: record.chain_sequence,

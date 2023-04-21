@@ -263,7 +263,7 @@ export class BlocksService {
     const dateMetricsResponse = await this.prisma.$queryRawUnsafe<
       {
         average_block_time_ms: number;
-        average_difficulty_millis: bigint;
+        average_difficulty: Prisma.Decimal;
         blocks_count: bigint;
         blocks_with_graffiti_count: bigint;
         chain_sequence: number;
@@ -274,7 +274,7 @@ export class BlocksService {
       `
       SELECT
         FLOOR(COALESCE(EXTRACT(EPOCH FROM MAX(timestamp) - MIN(timestamp)), 0) * 1000 / GREATEST(COUNT(*), 1)) AS average_block_time_ms,
-        COALESCE(FLOOR(AVG(difficulty) * 1000), 0) AS average_difficulty_millis,
+        COALESCE(AVG(difficulty), 0) AS average_difficulty,
         COUNT(*) AS blocks_count,
         COALESCE(SUM(CASE WHEN graffiti != '' THEN 1 ELSE 0 END), 0) AS blocks_with_graffiti_count,
         COALESCE(MAX(sequence), 0) AS chain_sequence,
@@ -327,7 +327,7 @@ export class BlocksService {
 
     return {
       averageBlockTimeMs: dateMetricsResponse[0].average_block_time_ms,
-      averageDifficultyMillis: dateMetricsResponse[0].average_difficulty_millis,
+      averageDifficulty: dateMetricsResponse[0].average_difficulty,
       blocksCount: Number(dateMetricsResponse[0].blocks_count),
       blocksWithGraffitiCount: Number(
         dateMetricsResponse[0].blocks_with_graffiti_count,

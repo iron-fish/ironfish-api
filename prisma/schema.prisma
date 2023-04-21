@@ -209,7 +209,7 @@ model BlockDaily {
   blocks_with_graffiti_count Int
   cumulative_unique_graffiti Int
   transactions_count         Int
-  average_difficulty_millis  BigInt
+  average_difficulty         Decimal
   chain_sequence             Int
 
   @@index([date], map: "index_blocks_daily_on_date")
