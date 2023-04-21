@@ -6,7 +6,6 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { Decimal } from '@prisma/client/runtime';
 import is from '@sindresorhus/is';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
@@ -264,7 +263,7 @@ export class BlocksService {
     const dateMetricsResponse = await this.prisma.$queryRawUnsafe<
       {
         average_block_time_ms: number;
-        average_difficulty_millis: Decimal;
+        average_difficulty_millis: bigint;
         blocks_count: bigint;
         blocks_with_graffiti_count: bigint;
         chain_sequence: number;
@@ -328,8 +327,7 @@ export class BlocksService {
 
     return {
       averageBlockTimeMs: dateMetricsResponse[0].average_block_time_ms,
-      averageDifficultyMillis:
-        dateMetricsResponse[0].average_difficulty_millis.toNumber(),
+      averageDifficultyMillis: dateMetricsResponse[0].average_difficulty_millis,
       blocksCount: Number(dateMetricsResponse[0].blocks_count),
       blocksWithGraffitiCount: Number(
         dateMetricsResponse[0].blocks_with_graffiti_count,

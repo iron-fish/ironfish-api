@@ -446,7 +446,7 @@ describe('BlocksService', () => {
       const metrics = await blocksService.getDateMetrics(date);
       expect(metrics).toMatchObject({
         averageBlockTimeMs: expect.any(Number),
-        averageDifficultyMillis: expect.any(Number),
+        averageDifficultyMillis: expect.anything(),
         blocksCount: expect.any(Number),
         blocksWithGraffitiCount: expect.any(Number),
         chainSequence: expect.any(Number),

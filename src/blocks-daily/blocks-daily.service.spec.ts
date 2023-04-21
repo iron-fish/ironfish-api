@@ -83,7 +83,7 @@ describe('BlocksDailyService', () => {
     it('upserts a BlockDaily record', async () => {
       const options = {
         averageBlockTimeMs: 0,
-        averageDifficultyMillis: 0,
+        averageDifficultyMillis: 0n,
         blocksCount: 0,
         blocksWithGraffitiCount: 0,
         chainSequence: 0,
@@ -113,7 +113,7 @@ describe('BlocksDailyService', () => {
     it('returns the next date from the last daily snapshot', async () => {
       const options = {
         averageBlockTimeMs: 0,
-        averageDifficultyMillis: 0,
+        averageDifficultyMillis: 0n,
         blocksCount: 0,
         blocksWithGraffitiCount: 0,
         chainSequence: 0,
