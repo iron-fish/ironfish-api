@@ -98,7 +98,7 @@ describe('BlocksDailyService', () => {
       expect(blockDaily).toMatchObject({
         id: expect.any(Number),
         average_block_time_ms: options.averageBlockTimeMs,
-        averageDifficulty: new Prisma.Decimal(0),
+        average_difficulty: new Prisma.Decimal(0),
         blocks_count: options.blocksCount,
         blocks_with_graffiti_count: options.blocksWithGraffitiCount,
         chain_sequence: options.chainSequence,
