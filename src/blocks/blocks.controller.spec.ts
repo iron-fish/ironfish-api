@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import { Block } from '@prisma/client';
+import { Block, Prisma } from '@prisma/client';
 import faker from 'faker';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
@@ -726,7 +726,7 @@ describe('BlocksController', () => {
         const end = '2021-07-01T00:00:00.000Z';
         await blocksDailyService.upsert({
           averageBlockTimeMs: 0,
-          averageDifficultyMillis: 0n,
+          averageDifficulty: new Prisma.Decimal(0),
           blocksCount: 0,
           blocksWithGraffitiCount: 0,
           chainSequence: 0,
