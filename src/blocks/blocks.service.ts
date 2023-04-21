@@ -76,8 +76,8 @@ export class BlocksService {
         network_version: networkVersion,
         previous_block_hash: previousBlockHash,
         size,
-        difficulty,
-        work,
+        difficulty: difficulty.toString(),
+        work: work ? work.toString() : null,
         time_since_last_block_ms: timeSinceLastBlockMs,
       },
       update: {
@@ -88,8 +88,8 @@ export class BlocksService {
         transactions_count: transactionsCount,
         previous_block_hash: previousBlockHash,
         size,
-        difficulty,
-        work,
+        difficulty: difficulty.toString(),
+        work: work ? work.toString() : null,
         time_since_last_block_ms: timeSinceLastBlockMs,
       },
       where: {

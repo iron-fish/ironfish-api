@@ -113,7 +113,8 @@ export class BlocksController {
 
     let hashRate = 0;
     if (previous && previous.work !== null && head.work !== null) {
-      const workDifference = head.work - previous.work;
+      const workDifference =
+        BigInt(head.work.toNumber()) - BigInt(previous.work.toNumber());
       const diffInMs = head.timestamp.getTime() - previous.timestamp.getTime();
       hashRate = divide(workDifference, BigInt(diffInMs)) * 1000;
     }

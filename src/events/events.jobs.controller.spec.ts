@@ -138,7 +138,7 @@ describe('EventsJobsController', () => {
         const { block } = await blocksService.upsert(prisma, {
           hash: ulid(),
           sequence: faker.datatype.number(),
-          difficulty: faker.datatype.number(),
+          difficulty: BigInt(faker.datatype.number()),
           work: BigInt(faker.datatype.number()),
           timestamp: new Date(),
           transactionsCount: 1,
@@ -165,7 +165,7 @@ describe('EventsJobsController', () => {
         const { block } = await blocksService.upsert(prisma, {
           hash: ulid().toLowerCase(),
           sequence: faker.datatype.number(),
-          difficulty: faker.datatype.number(),
+          difficulty: BigInt(faker.datatype.number()),
           work: BigInt(faker.datatype.number()),
           timestamp: new Date(),
           transactionsCount: 1,
@@ -236,7 +236,7 @@ describe('EventsJobsController', () => {
         const { block } = await blocksService.upsert(prisma, {
           hash: ulid(),
           sequence: faker.datatype.number(),
-          difficulty: faker.datatype.number(),
+          difficulty: BigInt(faker.datatype.number()),
           work: BigInt(faker.datatype.number()),
           timestamp: new Date(),
           transactionsCount: 1,
@@ -257,7 +257,7 @@ describe('EventsJobsController', () => {
         const { block } = await blocksService.upsert(prisma, {
           hash: ulid().toLowerCase(),
           sequence: faker.datatype.number(),
-          difficulty: faker.datatype.number(),
+          difficulty: BigInt(faker.datatype.number()),
           work: BigInt(faker.datatype.number()),
           timestamp: new Date(),
           transactionsCount: 1,

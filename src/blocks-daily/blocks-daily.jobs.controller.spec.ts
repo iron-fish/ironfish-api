@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { INestApplication } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { BlocksService } from '../blocks/blocks.service';
@@ -49,8 +50,8 @@ describe('BlocksDailyJobsController', () => {
             created_at: new Date(),
             updated_at: new Date(),
             hash: uuid(),
-            difficulty: BigInt(faker.datatype.number()),
-            work: BigInt(faker.datatype.number()),
+            difficulty: new Prisma.Decimal(faker.datatype.number()),
+            work: new Prisma.Decimal(faker.datatype.number()),
             main: true,
             sequence: 0,
             timestamp: new Date(),
@@ -87,8 +88,8 @@ describe('BlocksDailyJobsController', () => {
             created_at: new Date(),
             updated_at: new Date(),
             hash: uuid(),
-            difficulty: BigInt(faker.datatype.number()),
-            work: BigInt(faker.datatype.number()),
+            difficulty: new Prisma.Decimal(faker.datatype.number()),
+            work: new Prisma.Decimal(faker.datatype.number()),
             main: true,
             sequence: 0,
             timestamp: getNextDate(new Date(new Date().getTime() + 10)),
