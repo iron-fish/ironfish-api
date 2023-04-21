@@ -726,7 +726,7 @@ describe('BlocksController', () => {
         const end = '2021-07-01T00:00:00.000Z';
         await blocksDailyService.upsert({
           averageBlockTimeMs: 0,
-          averageDifficultyMillis: 0,
+          averageDifficultyMillis: 0n,
           blocksCount: 0,
           blocksWithGraffitiCount: 0,
           chainSequence: 0,
