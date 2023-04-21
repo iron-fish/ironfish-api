@@ -3,7 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 export interface BlocksDateMetrics {
   averageBlockTimeMs: number;
-  averageDifficultyMillis: number;
+  averageDifficultyMillis: bigint;
   blocksCount: number;
   blocksWithGraffitiCount: number;
   chainSequence: number;
