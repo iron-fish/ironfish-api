@@ -30,6 +30,7 @@ describe('BlocksDailyService', () => {
         data: {
           average_block_time_ms: 1,
           average_difficulty: 1000,
+          average_block_size: 1000,
           blocks_count: 1,
           blocks_with_graffiti_count: 1,
           chain_sequence: 1,
@@ -43,6 +44,7 @@ describe('BlocksDailyService', () => {
         data: {
           average_block_time_ms: 1,
           average_difficulty: 1000,
+          average_block_size: 1000,
           blocks_count: 1,
           blocks_with_graffiti_count: 1,
           chain_sequence: 1,
@@ -56,6 +58,7 @@ describe('BlocksDailyService', () => {
         data: {
           average_block_time_ms: 1,
           average_difficulty: 1000,
+          average_block_size: 1000,
           blocks_count: 1,
           blocks_with_graffiti_count: 1,
           chain_sequence: 1,
@@ -85,6 +88,7 @@ describe('BlocksDailyService', () => {
       const options = {
         averageBlockTimeMs: 0,
         averageDifficulty: new Prisma.Decimal(0),
+        averageBlockSize: new Prisma.Decimal(0),
         blocksCount: 0,
         blocksWithGraffitiCount: 0,
         chainSequence: 0,
@@ -99,6 +103,7 @@ describe('BlocksDailyService', () => {
         id: expect.any(Number),
         average_block_time_ms: options.averageBlockTimeMs,
         average_difficulty: new Prisma.Decimal(0),
+        average_block_size: new Prisma.Decimal(0),
         blocks_count: options.blocksCount,
         blocks_with_graffiti_count: options.blocksWithGraffitiCount,
         chain_sequence: options.chainSequence,
@@ -115,6 +120,7 @@ describe('BlocksDailyService', () => {
       const options = {
         averageBlockTimeMs: 0,
         averageDifficulty: new Prisma.Decimal(0),
+        averageBlockSize: new Prisma.Decimal(0),
         blocksCount: 0,
         blocksWithGraffitiCount: 0,
         chainSequence: 0,

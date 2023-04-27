@@ -32,6 +32,7 @@ describe('BlocksDailyLoader', () => {
       const mockMetrics = {
         averageBlockTimeMs: 0,
         averageDifficulty: new Prisma.Decimal(0),
+        averageBlockSize: new Prisma.Decimal(0),
         blocksCount: 0,
         blocksWithGraffitiCount: 0,
         chainSequence: 0,

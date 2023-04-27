@@ -448,6 +448,7 @@ describe('BlocksService', () => {
       expect(metrics).toMatchObject({
         averageBlockTimeMs: expect.any(Number),
         averageDifficulty: expect.anything(),
+        averageBlockSize: expect.anything(),
         blocksCount: expect.any(Number),
         blocksWithGraffitiCount: expect.any(Number),
         chainSequence: expect.any(Number),
