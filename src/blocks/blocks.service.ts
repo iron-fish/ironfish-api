@@ -267,6 +267,7 @@ export class BlocksService {
       {
         average_block_time_ms: number;
         average_difficulty: Prisma.Decimal;
+        average_block_size: Prisma.Decimal;
         blocks_count: bigint;
         blocks_with_graffiti_count: bigint;
         chain_sequence: number;
@@ -278,6 +279,7 @@ export class BlocksService {
       SELECT
         FLOOR(COALESCE(EXTRACT(EPOCH FROM MAX(timestamp) - MIN(timestamp)), 0) * 1000 / GREATEST(COUNT(*), 1)) AS average_block_time_ms,
         COALESCE(AVG(difficulty), 0) AS average_difficulty,
+        COALESCE(AVG(size), 0) AS average_block_size,
         COUNT(*) AS blocks_count,
         COALESCE(SUM(CASE WHEN graffiti != '' THEN 1 ELSE 0 END), 0) AS blocks_with_graffiti_count,
         COALESCE(MAX(sequence), 0) AS chain_sequence,
@@ -331,6 +333,7 @@ export class BlocksService {
     return {
       averageBlockTimeMs: dateMetricsResponse[0].average_block_time_ms,
       averageDifficulty: dateMetricsResponse[0].average_difficulty,
+      averageBlockSize: dateMetricsResponse[0].average_block_size,
       blocksCount: Number(dateMetricsResponse[0].blocks_count),
       blocksWithGraffitiCount: Number(
         dateMetricsResponse[0].blocks_with_graffiti_count,

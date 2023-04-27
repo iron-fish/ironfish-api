@@ -5,6 +5,7 @@ export interface SerializedBlockMetrics {
   object: 'block_metrics';
   average_block_time_ms: number;
   average_difficulty: number;
+  average_block_size: number;
   blocks_count: number;
   blocks_with_graffiti_count: number;
   chain_sequence: number;

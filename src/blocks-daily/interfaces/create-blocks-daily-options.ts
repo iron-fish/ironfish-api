@@ -6,6 +6,7 @@ import { Prisma } from '@prisma/client';
 export interface CreateBlocksDailyOptions {
   averageBlockTimeMs: number;
   averageDifficulty: Prisma.Decimal;
+  averageBlockSize: Prisma.Decimal;
   blocksCount: number;
   blocksWithGraffitiCount: number;
   chainSequence: number;

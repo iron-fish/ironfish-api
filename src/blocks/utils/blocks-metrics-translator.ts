@@ -11,6 +11,7 @@ export function serializedBlockMetricsFromRecord(
     object: 'block_metrics',
     average_block_time_ms: record.average_block_time_ms,
     average_difficulty: record.average_difficulty.toNumber(),
+    average_block_size: record.average_block_size.toNumber(),
     blocks_count: record.blocks_count,
     blocks_with_graffiti_count: record.blocks_with_graffiti_count,
     chain_sequence: record.chain_sequence,
