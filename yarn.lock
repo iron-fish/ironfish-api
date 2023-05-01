@@ -1389,9 +1389,9 @@
   version "2.0.1"
   resolved "https://registry.npmjs.org/@webpack-cli/info/-/info-2.0.1.tgz"
 
-"@webpack-cli/serve@^2.0.1":
-  version "2.0.1"
-  resolved "https://registry.npmjs.org/@webpack-cli/serve/-/serve-2.0.1.tgz"
+"@webpack-cli/serve@^2.0.2":
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/@webpack-cli/serve/-/serve-2.0.2.tgz#10aa290e44a182c02e173a89452781b1acbc86d9"
 
 "@xtuc/ieee754@^1.2.0":
   version "1.2.0"
@@ -1872,13 +1872,13 @@ combined-stream@^1.0.8:
   dependencies:
     delayed-stream "~1.0.0"
 
+commander@^10.0.1:
+  version "10.0.1"
+  resolved "https://registry.yarnpkg.com/commander/-/commander-10.0.1.tgz#881ee46b4f77d1c1dccc5823433aa39b022cbe06"
+
 commander@^2.20.0:
   version "2.20.3"
   resolved "https://registry.npmjs.org/commander/-/commander-2.20.3.tgz"
-
-commander@^9.4.1:
-  version "9.4.1"
-  resolved "https://registry.npmjs.org/commander/-/commander-9.4.1.tgz"
 
 component-emitter@^1.3.0:
   version "1.3.0"
@@ -5089,16 +5089,16 @@ webidl-conversions@^6.1.0:
   version "6.1.0"
   resolved "https://registry.npmjs.org/webidl-conversions/-/webidl-conversions-6.1.0.tgz"
 
-webpack-cli@5.0.1:
-  version "5.0.1"
-  resolved "https://registry.npmjs.org/webpack-cli/-/webpack-cli-5.0.1.tgz"
+webpack-cli@5.0.2:
+  version "5.0.2"
+  resolved "https://registry.yarnpkg.com/webpack-cli/-/webpack-cli-5.0.2.tgz#2954c10ecb61c5d4dad6f68ee2d77f051741946c"
   dependencies:
     "@discoveryjs/json-ext" "^0.5.0"
     "@webpack-cli/configtest" "^2.0.1"
     "@webpack-cli/info" "^2.0.1"
-    "@webpack-cli/serve" "^2.0.1"
+    "@webpack-cli/serve" "^2.0.2"
     colorette "^2.0.14"
-    commander "^9.4.1"
+    commander "^10.0.1"
     cross-spawn "^7.0.3"
     envinfo "^7.7.3"
     fastest-levenshtein "^1.0.12"
