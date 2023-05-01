@@ -57,7 +57,7 @@
     "jest": "27.5.1",
     "prettier": "2.8.7",
     "prisma": "4.13.0",
-    "run-script-webpack-plugin": "0.1.1",
+    "run-script-webpack-plugin": "0.2.0",
     "supertest": "6.3.3",
     "ts-jest": "27.1.4",
     "ts-loader": "9.4.2",
