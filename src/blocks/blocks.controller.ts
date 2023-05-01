@@ -15,6 +15,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiExcludeEndpoint, ApiOperation, ApiTags } from '@nestjs/swagger';
+import assert from 'assert';
 import { Response } from 'express';
 import { AssetDescriptionsService } from '../asset-descriptions/asset-descriptions.service';
 import { AssetsService } from '../assets/assets.service';
@@ -25,6 +26,7 @@ import { MS_PER_DAY } from '../common/constants';
 import { MetricsGranularity } from '../common/enums/metrics-granularity';
 import { List } from '../common/interfaces/list';
 import { PaginatedList } from '../common/interfaces/paginated-list';
+import { divide } from '../common/utils/bigint';
 import { serializedTransactionFromRecord } from '../transactions/utils/transaction-translator';
 import { BlocksService } from './blocks.service';
 import { BlockQueryDto } from './dto/block-query.dto';
@@ -33,6 +35,7 @@ import { BlocksQueryDto } from './dto/blocks-query.dto';
 import { DisconnectBlocksDto } from './dto/disconnect-blocks.dto';
 import { UpsertBlocksDto } from './dto/upsert-blocks.dto';
 import { SerializedBlock } from './interfaces/serialized-block';
+import { SerializedBlockHead } from './interfaces/serialized-block-head';
 import { SerializedBlockMetrics } from './interfaces/serialized-block-metrics';
 import { SerializedBlockWithTransactions } from './interfaces/serialized-block-with-transactions';
 import { SerializedBlocksStatus } from './interfaces/serialized-blocks-status';
@@ -103,8 +106,26 @@ export class BlocksController {
 
   @ApiOperation({ summary: 'Gets the head of the chain' })
   @Get('head')
-  async head(): Promise<SerializedBlock> {
-    return serializedBlockFromRecord(await this.blocksService.head());
+  async head(): Promise<SerializedBlockHead> {
+    const head = await this.blocksService.head();
+    const previous = await this.blocksService.find({
+      hash: head.previous_block_hash,
+    });
+
+    let hashRate = 0;
+    if (previous && previous.work !== null && head.work !== null) {
+      const workDifference =
+        BigInt(head.work.toNumber()) - BigInt(previous.work.toNumber());
+      const diffInMs = head.timestamp.getTime() - previous.timestamp.getTime();
+      hashRate = divide(workDifference, BigInt(diffInMs)) * 1000;
+    }
+
+    assert.ok(head.transactions[0]);
+    return {
+      ...serializedBlockFromRecord(head),
+      hash_rate: hashRate,
+      reward: Math.abs(head.transactions[0].fee).toString(),
+    };
   }
 
   @ApiOperation({

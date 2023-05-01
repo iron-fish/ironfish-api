@@ -22,9 +22,21 @@ export function serializeKyc(
   const maxAttempts =
     redemption.kyc_max_attempts ?? config.get<number>('KYC_MAX_ATTEMPTS');
 
-  const sentIron = redemption.sent_ore
-    ? Number(redemption.sent_ore) / ORE_TO_IRON
-    : null;
+  const pool_one_iron = redemption.pool_one
+    ? (Number(redemption.pool_one) * 1.0) / ORE_TO_IRON
+    : 0;
+
+  const pool_two_iron = redemption.pool_two
+    ? (Number(redemption.pool_two) * 1.0) / ORE_TO_IRON
+    : 0;
+
+  const pool_three_iron = redemption.pool_three
+    ? (Number(redemption.pool_three) * 1.0) / ORE_TO_IRON
+    : 0;
+
+  const pool_four_iron = redemption.pool_four
+    ? (Number(redemption.pool_four) * 1.0) / ORE_TO_IRON
+    : 0;
 
   return {
     redemption_id: redemption.id,
@@ -37,11 +49,15 @@ export function serializeKyc(
     jumio_workflow_execution_id: transaction.workflow_execution_id,
     jumio_web_href: transaction.web_href,
     transaction_hash: redemption.transaction_hash,
-    sent_iron: sentIron,
     can_attempt: canAttempt,
     can_attempt_reason: canAttemptReason,
     can_create: canCreate,
     can_create_reason: canCreateReason,
     help_url: helpUrl,
+    pool_one_iron,
+    pool_two_iron,
+    pool_three_iron,
+    pool_four_iron,
+    airdrop_transaction_hash: redemption.transaction_hash,
   };
 }

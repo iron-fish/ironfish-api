@@ -126,7 +126,7 @@ model Block {
   updated_at               DateTime           @default(now()) @updatedAt @db.Timestamp(6)
   hash                     String             @db.VarChar
   sequence                 Int
-  previous_block_hash      String?            @db.VarChar
+  previous_block_hash      String             @db.VarChar
   main                     Boolean
   network_version          Int
   transactions_count       Int
@@ -134,7 +134,8 @@ model Block {
   time_since_last_block_ms Int?
   graffiti                 String             @db.VarChar
   size                     Int?
-  difficulty               BigInt
+  difficulty               Decimal?
+  work                     Decimal?
   blocks_transactions      BlockTransaction[]
   event                    Event?
 
@@ -208,7 +209,8 @@ model BlockDaily {
   blocks_with_graffiti_count Int
   cumulative_unique_graffiti Int
   transactions_count         Int
-  average_difficulty_millis  BigInt
+  average_difficulty         Decimal
+  average_block_size         Decimal @default(0)
   chain_sequence             Int
 
   @@index([date], map: "index_blocks_daily_on_date")

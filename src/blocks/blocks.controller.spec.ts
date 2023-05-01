@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import { Block } from '@prisma/client';
+import { Block, Prisma } from '@prisma/client';
 import faker from 'faker';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
@@ -90,6 +90,7 @@ describe('BlocksController', () => {
           blocks.push({
             hash: uuid(),
             difficulty: faker.datatype.number(),
+            work: faker.datatype.number(),
             type: BlockOperation.CONNECTED,
             sequence: faker.datatype.number(),
             timestamp: new Date(),
@@ -132,6 +133,7 @@ describe('BlocksController', () => {
             {
               hash: uuid(),
               difficulty: faker.datatype.number(),
+              work: faker.datatype.number(),
               type: BlockOperation.CONNECTED,
               sequence: faker.datatype.number(),
               timestamp: new Date(),
@@ -184,6 +186,8 @@ describe('BlocksController', () => {
       expect(body).toMatchObject({
         id: expect.any(Number),
         main: true,
+        hash_rate: expect.any(Number),
+        reward: expect.any(String),
       });
     });
   });
@@ -723,7 +727,8 @@ describe('BlocksController', () => {
         const end = '2021-07-01T00:00:00.000Z';
         await blocksDailyService.upsert({
           averageBlockTimeMs: 0,
-          averageDifficultyMillis: 0,
+          averageDifficulty: new Prisma.Decimal(0),
+          averageBlockSize: new Prisma.Decimal(0),
           blocksCount: 0,
           blocksWithGraffitiCount: 0,
           chainSequence: 0,

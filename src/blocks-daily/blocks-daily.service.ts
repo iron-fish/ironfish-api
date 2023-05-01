@@ -26,7 +26,8 @@ export class BlocksDailyService {
     return this.prisma.blockDaily.upsert({
       create: {
         average_block_time_ms: options.averageBlockTimeMs,
-        average_difficulty_millis: options.averageDifficultyMillis,
+        average_difficulty: options.averageDifficulty,
+        average_block_size: options.averageBlockSize,
         blocks_count: options.blocksCount,
         blocks_with_graffiti_count: options.blocksWithGraffitiCount,
         chain_sequence: options.chainSequence,
@@ -37,7 +38,8 @@ export class BlocksDailyService {
       },
       update: {
         average_block_time_ms: options.averageBlockTimeMs,
-        average_difficulty_millis: options.averageDifficultyMillis,
+        average_difficulty: options.averageDifficulty,
+        average_block_size: options.averageBlockSize,
         blocks_count: options.blocksCount,
         blocks_with_graffiti_count: options.blocksWithGraffitiCount,
         chain_sequence: options.chainSequence,
@@ -57,8 +59,8 @@ export class BlocksDailyService {
         date: true,
       },
     });
-    // 2021 December 1 12 AM UTC
-    const defaultStart = new Date(Date.UTC(2021, 11, 1, 0, 0, 0));
+    // 2023 April 20 12 AM UTC
+    const defaultStart = new Date(Date.UTC(2023, 3, 20, 0, 0, 0));
     const latestDate = aggregate._max.date;
     if (!latestDate) {
       return defaultStart;

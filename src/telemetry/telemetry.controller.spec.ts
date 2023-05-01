@@ -40,7 +40,7 @@ function mockTelemetryPoints() {
     },
   ];
   const measurement = 'node_started';
-  const tags = [{ name: 'version', value: '0.1.24' }];
+  const tags = [{ name: 'version', value: '1.0.0' }];
   const timestamp = new Date();
 
   return [{ fields, measurement, tags, timestamp }];
@@ -274,7 +274,7 @@ describe('TelemetryController', () => {
 
           jest.spyOn(versionsService, 'getLatestAtDate').mockResolvedValue({
             id: 1,
-            version: '0.1.24',
+            version: '1.0.0',
             created_at: new Date(),
           });
 
@@ -381,7 +381,7 @@ describe('TelemetryController', () => {
 
           jest.spyOn(versionsService, 'getLatestAtDate').mockResolvedValue({
             id: 1,
-            version: '0.1.30',
+            version: '1.0.8',
             created_at: new Date(),
           });
 

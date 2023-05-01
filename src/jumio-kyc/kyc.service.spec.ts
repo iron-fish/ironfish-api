@@ -113,7 +113,9 @@ describe('KycService', () => {
         data: { pool1_points: 3 },
         where: { user_id: user.id },
       });
-
+      jest
+        .spyOn(redemptionService, 'currentDate')
+        .mockImplementationOnce(() => new Date(1678905869000));
       let { redemption, transaction } = await kycService.attempt(
         user,
         '',
@@ -152,6 +154,9 @@ describe('KycService', () => {
         data: { pool1_points: 3 },
         where: { user_id: user.id },
       });
+      jest
+        .spyOn(redemptionService, 'currentDate')
+        .mockImplementationOnce(() => new Date(1678905869000));
 
       let { redemption } = await kycService.attempt(user, '', '127.0.0.1');
       expect(redemption.kyc_status).toBe(KycStatus.IN_PROGRESS);
