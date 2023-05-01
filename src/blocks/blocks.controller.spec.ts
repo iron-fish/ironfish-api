@@ -188,6 +188,8 @@ describe('BlocksController', () => {
         main: true,
         hash_rate: expect.any(Number),
         reward: expect.any(String),
+        circulating_supply: expect.any(Number),
+        total_supply: expect.any(Number),
       });
     });
   });

@@ -9,7 +9,12 @@ import {
 import is from '@sindresorhus/is';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
-import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
+import {
+  DEFAULT_LIMIT,
+  GENESIS_SUPPLY_IN_IRON,
+  IRON_FISH_YEAR_IN_BLOCKS,
+  MAX_LIMIT,
+} from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
 import { getNextDate } from '../common/utils/date';
 import { standardizeHash } from '../common/utils/hash';
@@ -133,6 +138,24 @@ export class BlocksService {
     const transactions =
       await this.blocksTransactionsService.findTransactionsByBlock(block);
     return { ...block, transactions };
+  }
+
+  miningReward(sequence: number): number {
+    if (sequence <= 1) {
+      return 0;
+    }
+
+    const yearsAfterLaunch = Math.floor(
+      Number(sequence) / IRON_FISH_YEAR_IN_BLOCKS,
+    );
+    const annualReward =
+      (GENESIS_SUPPLY_IN_IRON / 4) * Math.E ** (-0.05 * yearsAfterLaunch);
+
+    const threshold = 0.125;
+    return (
+      threshold *
+      Math.round(annualReward / IRON_FISH_YEAR_IN_BLOCKS / threshold)
+    );
   }
 
   async list(options: ListBlocksOptions): Promise<{

@@ -206,6 +206,13 @@ describe('BlocksService', () => {
     });
   });
 
+  describe('miningReward', () => {
+    it('returns the correct mining reward', () => {
+      const reward = blocksService.miningReward(733106);
+      expect(reward).toBe(19);
+    });
+  });
+
   describe('find', () => {
     describe('with an id', () => {
       it('returns the block', async () => {
