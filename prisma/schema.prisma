@@ -355,6 +355,7 @@ model Asset {
   name                   String
   owner                  String
   supply                 BigInt
+  verified_at            DateTime?          @db.Timestamp(6)
   descriptions           AssetDescription[]
   created_transaction    Transaction        @relation(fields: [created_transaction_id], references: [id])
 

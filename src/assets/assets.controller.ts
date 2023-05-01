@@ -61,6 +61,7 @@ export class AssetsController {
       name: asset.name,
       owner: asset.owner,
       supply: asset.supply.toString(),
+      verified_at: asset.verified_at?.toISOString() ?? null,
     };
   }
 
@@ -102,6 +103,7 @@ export class AssetsController {
         name: asset.name,
         owner: asset.owner,
         supply: asset.supply.toString(),
+        verified_at: asset.verified_at?.toISOString() ?? null,
       });
     }
 

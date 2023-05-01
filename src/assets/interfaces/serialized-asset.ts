@@ -11,4 +11,5 @@ export interface SerializedAsset {
   name: string;
   owner: string;
   supply: string;
+  verified_at: string | null;
 }
