@@ -772,9 +772,9 @@
     lodash "4.17.21"
     uuid "9.0.0"
 
-"@nestjs/core@8.4.7":
-  version "8.4.7"
-  resolved "https://registry.npmjs.org/@nestjs/core/-/core-8.4.7.tgz"
+"@nestjs/core@9.0.5":
+  version "9.0.5"
+  resolved "https://registry.yarnpkg.com/@nestjs/core/-/core-9.0.5.tgz#b4cb8f8b0c1d234a840f06e265717d4a24f8d224"
   dependencies:
     "@nuxtjs/opencollective" "0.3.2"
     fast-safe-stringify "2.1.1"
