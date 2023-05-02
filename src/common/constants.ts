@@ -20,6 +20,10 @@ export const SEND_TRANSACTION_LIMIT_ORE = ORE_TO_IRON * 0.1; // Only transaction
 export const MAX_POINT_BLOCK_SEQUENCE = 252200; // When we increased the max points from 0.1 to a configuration
 export const ENABLE_DEPOSIT_BLOCK_SEQUENCE = 288_888; // When deposits should be turned off
 
+export const IRON_FISH_YEAR_IN_BLOCKS = (365 * 24 * 60 * 60) / 60;
+export const IRON_FISH_MONTH_IN_BLOCKS = IRON_FISH_YEAR_IN_BLOCKS / 12;
+export const GENESIS_SUPPLY_IN_IRON = 42000000;
+
 // Event categories
 export const WEEKLY_POINT_LIMITS_BY_EVENT_TYPE: Record<EventType, number> = {
   [EventType.BLOCK_MINED]: 1000,
