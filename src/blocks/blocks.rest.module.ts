@@ -6,7 +6,6 @@ import { AssetDescriptionsModule } from '../asset-descriptions/asset-description
 import { AssetsModule } from '../assets/assets.module';
 import { BlocksDailyModule } from '../blocks-daily/blocks-daily.module';
 import { BlocksTransactionsLoaderModule } from '../blocks-transactions-loader/blocks-transactions-loader.module';
-import { UsersModule } from '../users/users.module';
 import { BlocksController } from './blocks.controller';
 import { BlocksModule } from './blocks.module';
 
@@ -18,7 +17,6 @@ import { BlocksModule } from './blocks.module';
     BlocksDailyModule,
     BlocksModule,
     BlocksTransactionsLoaderModule,
-    UsersModule,
   ],
 })
 export class BlocksRestModule {}

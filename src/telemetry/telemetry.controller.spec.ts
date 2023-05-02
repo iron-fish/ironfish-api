@@ -2,18 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import faker from 'faker';
 import request from 'supertest';
-import { v4 as uuid } from 'uuid';
-import { ApiConfigService } from '../api-config/api-config.service';
-import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
-import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { InfluxDbService } from '../influxdb/influxdb.service';
-import { NodeUptimesService } from '../node-uptimes/node-uptimes.service';
-import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
-import { UsersService } from '../users/users.service';
-import { VersionsService } from '../versions/versions.service';
 import { BLOCK_PROPAGATION_INTERVAL } from './telemetry.controller';
 
 function mockTelemetryPoints() {
@@ -48,23 +39,11 @@ function mockTelemetryPoints() {
 
 describe('TelemetryController', () => {
   let app: INestApplication;
-  let config: ApiConfigService;
-  let graphileWorkerService: GraphileWorkerService;
   let influxDbService: InfluxDbService;
-  let nodeUptimesService: NodeUptimesService;
-  let prisma: PrismaService;
-  let usersService: UsersService;
-  let versionsService: VersionsService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
-    config = app.get(ApiConfigService);
-    graphileWorkerService = app.get(GraphileWorkerService);
     influxDbService = app.get(InfluxDbService);
-    nodeUptimesService = app.get(NodeUptimesService);
-    prisma = app.get(PrismaService);
-    usersService = app.get(UsersService);
-    versionsService = app.get(VersionsService);
     await app.init();
   });
 
@@ -260,176 +239,6 @@ describe('TelemetryController', () => {
         expect(writePoints).toHaveBeenCalledWith(points);
 
         writePoints.mockReset();
-      });
-
-      describe('when `ALLOW_NODE_UPTIME_POINTS` is true', () => {
-        it('updates the node uptime', async () => {
-          const writePoints = jest
-            .spyOn(influxDbService, 'writePoints')
-            .mockImplementation(jest.fn());
-
-          const nodeUptimeUpsert = jest
-            .spyOn(nodeUptimesService, 'addUptime')
-            .mockImplementationOnce(jest.fn());
-
-          jest.spyOn(versionsService, 'getLatestAtDate').mockResolvedValue({
-            id: 1,
-            version: '1.0.0',
-            created_at: new Date(),
-          });
-
-          const graffiti = uuid();
-          const user = await usersService.create({
-            email: faker.internet.email(),
-            graffiti,
-            countryCode: faker.address.countryCode(),
-          });
-
-          const points = mockTelemetryPoints();
-
-          await request(app.getHttpServer())
-            .post('/telemetry')
-            .send({ points, graffiti })
-            .expect(HttpStatus.CREATED);
-
-          expect(nodeUptimeUpsert).toHaveBeenCalledTimes(1);
-          expect(nodeUptimeUpsert).toHaveBeenCalledWith(user);
-
-          writePoints.mockRestore();
-        });
-
-        it('updates the node uptime if the api returns no version', async () => {
-          const writePoints = jest
-            .spyOn(influxDbService, 'writePoints')
-            .mockImplementation(jest.fn());
-
-          const nodeUptimeUpsert = jest
-            .spyOn(nodeUptimesService, 'addUptime')
-            .mockImplementationOnce(jest.fn());
-
-          const graffiti = uuid();
-          const user = await usersService.create({
-            email: faker.internet.email(),
-            graffiti,
-            countryCode: faker.address.countryCode(),
-          });
-
-          const points = mockTelemetryPoints();
-
-          await request(app.getHttpServer())
-            .post('/telemetry')
-            .send({ points, graffiti })
-            .expect(HttpStatus.CREATED);
-
-          expect(nodeUptimeUpsert).toHaveBeenCalledTimes(1);
-          expect(nodeUptimeUpsert).toHaveBeenCalledWith(user);
-
-          writePoints.mockRestore();
-        });
-
-        it('updates users points when user has logged enough hours', async () => {
-          const writePoints = jest
-            .spyOn(influxDbService, 'writePoints')
-            .mockImplementation(jest.fn());
-
-          const workerAddJob = jest
-            .spyOn(graphileWorkerService, 'addJob')
-            .mockImplementationOnce(jest.fn());
-
-          const oldCheckin = new Date();
-          oldCheckin.setHours(oldCheckin.getHours() - 2);
-
-          const user = await usersService.create({
-            email: faker.internet.email(),
-            graffiti: uuid(),
-            countryCode: faker.address.countryCode(),
-          });
-
-          await prisma.nodeUptime.create({
-            data: {
-              user_id: user.id,
-              total_hours: 12,
-              last_checked_in: oldCheckin,
-            },
-          });
-
-          const points = mockTelemetryPoints();
-
-          await request(app.getHttpServer())
-            .post('/telemetry')
-            .send({ points, graffiti: user.graffiti })
-            .expect(HttpStatus.CREATED);
-
-          expect(workerAddJob).toHaveBeenCalledTimes(1);
-          expect(workerAddJob).toHaveBeenCalledWith(
-            GraphileWorkerPattern.CREATE_NODE_UPTIME_EVENT,
-            { userId: user.id, occurredAt: expect.any(Date) },
-            expect.anything(),
-          );
-
-          writePoints.mockRestore();
-        });
-
-        it('does not update the node uptime if provided version is too old', async () => {
-          const writePoints = jest
-            .spyOn(influxDbService, 'writePoints')
-            .mockImplementation(jest.fn());
-
-          const nodeUptimeUpsert = jest
-            .spyOn(nodeUptimesService, 'addUptime')
-            .mockImplementationOnce(jest.fn());
-
-          jest.spyOn(versionsService, 'getLatestAtDate').mockResolvedValue({
-            id: 1,
-            version: '1.0.8',
-            created_at: new Date(),
-          });
-
-          const graffiti = uuid();
-          await usersService.create({
-            email: faker.internet.email(),
-            graffiti,
-            countryCode: faker.address.countryCode(),
-          });
-
-          const points = mockTelemetryPoints();
-
-          await request(app.getHttpServer())
-            .post('/telemetry')
-            .send({
-              points,
-              graffiti,
-            })
-            .expect(HttpStatus.CREATED);
-
-          expect(nodeUptimeUpsert).toHaveBeenCalledTimes(0);
-
-          writePoints.mockRestore();
-        });
-      });
-
-      describe('when `ALLOW_NODE_UPTIME_POINTS` is false', () => {
-        it('does not add any uptime', async () => {
-          jest.spyOn(config, 'get').mockImplementationOnce(() => false);
-
-          const nodeUptimeUpsert = jest
-            .spyOn(nodeUptimesService, 'addUptime')
-            .mockImplementationOnce(jest.fn());
-
-          const graffiti = uuid();
-          await usersService.create({
-            email: faker.internet.email(),
-            graffiti,
-            countryCode: faker.address.countryCode(),
-          });
-
-          await request(app.getHttpServer())
-            .post('/telemetry')
-            .send({ points: [], graffiti })
-            .expect(HttpStatus.CREATED);
-
-          expect(nodeUptimeUpsert).not.toHaveBeenCalled();
-        });
       });
     });
   });
