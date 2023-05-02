@@ -159,8 +159,9 @@ export class BlocksController {
     const yearLockAndYearUnlock = 72.5;
     if (monthsAfterLaunch >= 12) {
       circulatingSupply +=
-        (yearLockAndYearUnlock * GENESIS_SUPPLY_IN_IRON * monthsAfterLaunch) /
-        24;
+        Math.min(1, monthsAfterLaunch / 24) *
+        yearLockAndYearUnlock *
+        GENESIS_SUPPLY_IN_IRON;
     }
 
     // Subject to 6m lock and no unlock:
