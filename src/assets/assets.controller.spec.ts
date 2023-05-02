@@ -138,6 +138,7 @@ describe('AssetsController', () => {
           name: asset.name,
           owner: asset.owner,
           supply: asset.supply.toString(),
+          verified_at: null,
         });
       });
     });
@@ -227,6 +228,7 @@ describe('AssetsController', () => {
             name: secondAsset.name,
             owner: secondAsset.owner,
             supply: secondAsset.supply.toString(),
+            verified_at: null,
           },
           {
             object: 'asset',
@@ -238,6 +240,7 @@ describe('AssetsController', () => {
             name: asset.name,
             owner: asset.owner,
             supply: asset.supply.toString(),
+            verified_at: null,
           },
         ],
         metadata: {
