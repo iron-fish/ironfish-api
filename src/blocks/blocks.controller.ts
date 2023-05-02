@@ -146,7 +146,7 @@ export class BlocksController {
     // 18.00% - Foundation
     // 05.00% - IF Labs
     // 02.25% - Airdrop
-    const immediatelyUnlocked = 25.25;
+    const immediatelyUnlocked = 0.2525;
     let circulatingSupply = immediatelyUnlocked * GENESIS_SUPPLY_IN_IRON;
 
     // Subject to 1y lock and 1y unlock:
@@ -156,7 +156,7 @@ export class BlocksController {
     // 00.60% - Advisors
     // 37.40% - Team
     // 05.00% - Future Endowments
-    const yearLockAndYearUnlock = 72.5;
+    const yearLockAndYearUnlock = 0.725;
     if (monthsAfterLaunch >= 12) {
       circulatingSupply +=
         Math.min(1, monthsAfterLaunch / 24) *
@@ -166,7 +166,7 @@ export class BlocksController {
 
     // Subject to 6m lock and no unlock:
     // 02.25% - Future Airdrop
-    const sixMonthLock = 2.25;
+    const sixMonthLock = 0.0225;
     if (monthsAfterLaunch >= 6) {
       circulatingSupply += sixMonthLock * GENESIS_SUPPLY_IN_IRON;
     }
