@@ -145,9 +145,7 @@ export class BlocksService {
       return 0;
     }
 
-    const yearsAfterLaunch = Math.floor(
-      Number(sequence) / IRON_FISH_YEAR_IN_BLOCKS,
-    );
+    const yearsAfterLaunch = Math.floor(sequence / IRON_FISH_YEAR_IN_BLOCKS);
     const annualReward =
       (GENESIS_SUPPLY_IN_IRON / 4) * Math.E ** (-0.05 * yearsAfterLaunch);
 
