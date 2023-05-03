@@ -22,4 +22,11 @@ export class AssetsLoaderJobsController {
     await this.assetsLoader.loadDescriptions(main, transaction);
     return { requeue: false };
   }
+
+  @MessagePattern(GraphileWorkerPattern.REFRESH_NATIVE_ASSET_SUPPLY)
+  @UseFilters(new GraphileWorkerException())
+  async refreshNativeAsset(): Promise<GraphileWorkerHandlerResponse> {
+    await this.assetsLoader.refreshNativeAssetSupply();
+    return { requeue: false };
+  }
 }

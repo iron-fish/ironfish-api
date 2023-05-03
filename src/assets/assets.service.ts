@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
+import { DEFAULT_LIMIT, MAX_LIMIT, NATIVE_ASSET_ID } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
@@ -156,5 +156,16 @@ export class AssetsService {
       hasNext: nextRecords.length > 0,
       hasPrevious: previousRecords.length > 0,
     };
+  }
+
+  async updateNativeAssetSupply(supply: number): Promise<Asset> {
+    return this.prisma.asset.update({
+      data: {
+        supply,
+      },
+      where: {
+        identifier: NATIVE_ASSET_ID,
+      },
+    });
   }
 }

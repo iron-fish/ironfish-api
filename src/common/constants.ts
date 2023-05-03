@@ -3,6 +3,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { EventType } from '.prisma/client';
 
+export const NATIVE_ASSET_ID =
+  '51f33a2f14f92735e562dc658a5639279ddca3d5079a6d1242b2a588a9cbf44c';
+
 export const DAYS_IN_WEEK = 7;
 export const MS_PER_DAY = 1000 * 60 * 60 * 24;
 

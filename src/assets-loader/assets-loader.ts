@@ -5,6 +5,7 @@ import { Injectable } from '@nestjs/common';
 import { AssetDescriptionType, Transaction } from '@prisma/client';
 import { AssetDescriptionsService } from '../asset-descriptions/asset-descriptions.service';
 import { AssetsService } from '../assets/assets.service';
+import { BlocksService } from '../blocks/blocks.service';
 import { standardizeHash } from '../common/utils/hash';
 import { LoggerService } from '../logger/logger.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -19,6 +20,7 @@ export class AssetsLoader {
   constructor(
     private readonly assetsService: AssetsService,
     private readonly assetDescriptionsService: AssetDescriptionsService,
+    private readonly blocksService: BlocksService,
     private readonly logger: LoggerService,
     private readonly prisma: PrismaService,
     private readonly transactionsService: TransactionsService,
@@ -128,5 +130,13 @@ export class AssetsLoader {
       transaction,
       prisma,
     );
+  }
+
+  async refreshNativeAssetSupply(): Promise<void> {
+    const head = await this.blocksService.head();
+    const { total } = this.blocksService.totalAndCirculatingSupplies(
+      head.sequence,
+    );
+    await this.assetsService.updateNativeAssetSupply(total);
   }
 }

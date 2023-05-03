@@ -172,6 +172,12 @@ export class BlocksTransactionsLoader {
       },
     );
 
+    await this.graphileWorkerService.addJob(
+      GraphileWorkerPattern.REFRESH_NATIVE_ASSET_SUPPLY,
+      undefined,
+      { jobKey: 'refresh_native_asset' },
+    );
+
     return records;
   }
 }
