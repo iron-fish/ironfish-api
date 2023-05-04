@@ -11,12 +11,15 @@ import { v4 as uuid } from 'uuid';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
 import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
-import { JumioTransactionStandaloneSanction } from '../jumio-api/interfaces/jumio-transaction-retrieve';
+import { JumioTransactionRetrieveResponse } from '../jumio-api/interfaces/jumio-transaction-retrieve';
 import { JumioApiService } from '../jumio-api/jumio-api.service';
 import { JumioTransactionService } from '../jumio-transactions/jumio-transaction.service';
 import { MagicLinkService } from '../magic-link/magic-link.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { RedemptionService } from '../redemptions/redemption.service';
+import {
+  HELP_URLS,
+  RedemptionService,
+} from '../redemptions/redemption.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
 import { CALLBACK_FIXTURE } from './fixtures/callback';
@@ -25,15 +28,14 @@ import { WORKFLOW_CREATE_WATCHLIST_RESPONSE } from './fixtures/watchlist-create-
 import { WATCHLIST_PUT_RESPONSE } from './fixtures/watchlist-put-response';
 import { WATCHLIST_DATA_UPLOAD_RESPONSE } from './fixtures/watchlist-upload-response';
 import { WORKFLOW_RETRIEVE_FIXTURE } from './fixtures/workflow';
+import { WORKFLOW_EXPIRED } from './fixtures/workflow-expired';
 import { WORKFLOW_RETRIEVE_WATCHLIST } from './fixtures/workflow-watchlist';
 import { KycService } from './kyc.service';
-import { serializeKyc } from './utils/serialize-kyc';
 
 describe('KycController', () => {
   let app: INestApplication;
   let usersService: UsersService;
   let prisma: PrismaService;
-  let config: ApiConfigService;
   let magicLinkService: MagicLinkService;
   let kycService: KycService;
   let redemptionService: RedemptionService;
@@ -46,7 +48,6 @@ describe('KycController', () => {
   beforeAll(async () => {
     app = await bootstrapTestApp();
     prisma = app.get(PrismaService);
-    config = app.get(ApiConfigService);
     magicLinkService = app.get(MagicLinkService);
     usersService = app.get(UsersService);
     kycService = app.get(KycService);
@@ -93,41 +94,15 @@ describe('KycController', () => {
   };
 
   describe('POST /kyc', () => {
-    it('starts kyc, creates new redemption/jumio account/jumio transaction', async () => {
-      const user = await mockUser();
-
-      const { body } = await request(app.getHttpServer())
-        .post(`/kyc`)
-        .set('Authorization', 'did-token')
-        .send({ public_address: 'foo' })
-        .expect(HttpStatus.CREATED);
-
-      const redemption = await redemptionService.find(user);
-      const jumioTransaction = await jumioTransactionService.findLatestOrThrow(
-        user,
-      );
-
-      assert.ok(redemption);
-      expect(body).toMatchObject(
-        serializeKyc(
-          redemption,
-          jumioTransaction,
-          true,
-          '',
-          false,
-          'Redemption status is not TRY_AGAIN: IN_PROGRESS',
-          config,
-        ),
-      );
-    });
-
     it('banned user country gets error', async () => {
       const user = await mockUser('PRK');
-
+      jest
+        .spyOn(redemptionService, 'currentDate')
+        .mockImplementationOnce(() => new Date(1678905869000));
       await expect(
         kycService.attempt(user, 'foo', '127.0.0.1'),
       ).rejects.toThrow(
-        'The country associated with your account is banned: PRK',
+        'The country associated with your graffiti is banned: PRK',
       );
 
       await request(app.getHttpServer())
@@ -148,6 +123,9 @@ describe('KycController', () => {
 
     it('ip address is saved', async () => {
       const user = await mockUser();
+      jest
+        .spyOn(redemptionService, 'currentDate')
+        .mockImplementationOnce(() => new Date(1678905869000));
       await request(app.getHttpServer())
         .post(`/kyc`)
         .set('Authorization', 'did-token')
@@ -183,7 +161,9 @@ describe('KycController', () => {
   describe('POST /callback', () => {
     it('resolves 200 when transaction found/updated', async () => {
       const user = await mockUser();
-
+      jest
+        .spyOn(redemptionService, 'currentDate')
+        .mockImplementationOnce(() => new Date(1678905869000));
       // create user
       await request(app.getHttpServer())
         .post(`/kyc`)
@@ -227,7 +207,9 @@ describe('KycController', () => {
     describe('with an invalid signature', () => {
       it('returns a 403', async () => {
         const user = await mockUser();
-
+        jest
+          .spyOn(redemptionService, 'currentDate')
+          .mockImplementationOnce(() => new Date(1678905869000));
         await request(app.getHttpServer())
           .post(`/kyc`)
           .set('Authorization', 'did-token')
@@ -271,12 +253,13 @@ describe('KycController', () => {
       ])(
         'moves user to successful when requirements are met',
         async (
-          watchlistRetrieve: JumioTransactionStandaloneSanction,
+          watchlistRetrieve: JumioTransactionRetrieveResponse,
           expectedStatus: KycStatus,
         ) => {
           const user = await mockUser();
 
           let redemption = await redemptionService.create(user, 'foo', 'foo');
+
           const transaction = await jumioTransactionService.create(
             user,
             'fakeworkflow',
@@ -292,8 +275,7 @@ describe('KycController', () => {
           });
           jest
             .spyOn(jumioApiService, 'createAccountAndTransaction')
-            // eslint-disable-next-line
-          .mockResolvedValueOnce(WORKFLOW_CREATE_WATCHLIST_RESPONSE as any);
+            .mockResolvedValueOnce(WORKFLOW_CREATE_WATCHLIST_RESPONSE);
           jest
             .spyOn(jumioApiService, 'transactionStatus')
             .mockResolvedValueOnce(WORKFLOW_RETRIEVE_FIXTURE());
@@ -317,15 +299,11 @@ describe('KycController', () => {
 
           jest
             .spyOn(jumioApiService, 'transactionStatus')
-            // eslint-disable-next-line
-          .mockResolvedValueOnce(watchlistRetrieve as any);
+            .mockResolvedValueOnce(watchlistRetrieve);
           jest
             .spyOn(kycService, 'isSignatureValid')
             .mockImplementationOnce(() => true);
-          const statusMock = jest.spyOn(
-            redemptionService,
-            'calculateStandaloneWatchlistStatus',
-          );
+          const statusMock = jest.spyOn(redemptionService, 'calculateStatus');
           await request(app.getHttpServer())
             .post('/kyc/callback')
             .set('Authorization', 'did-token')
@@ -343,28 +321,65 @@ describe('KycController', () => {
   describe('GET /kyc', () => {
     it('retrieves kyc info when it exists', async () => {
       const user = await mockUser();
-      const { redemption, transaction } = await kycService.attempt(
-        user,
-        'foo',
-        '127.0.0.1',
-      );
+      jest
+        .spyOn(redemptionService, 'currentDate')
+        .mockImplementationOnce(() => new Date(1678905869000));
+      await kycService.attempt(user, 'foo', '127.0.0.1');
+      await prisma.redemption.update({
+        data: {
+          pool_one: 320000000,
+          pool_two: 200000000,
+          pool_three: 0,
+          pool_four: 0,
+        },
+        where: {
+          user_id: user.id,
+        },
+      });
 
       const { body } = await request(app.getHttpServer())
         .get(`/kyc`)
         .set('Authorization', 'did-token')
         .expect(HttpStatus.OK);
 
-      expect(body).toMatchObject(
-        serializeKyc(
-          redemption,
-          transaction,
-          true,
-          '',
-          false,
-          'Redemption status is not TRY_AGAIN: IN_PROGRESS',
-          config,
-        ),
+      expect(body).toMatchObject({
+        pool_one_iron: 3.2,
+        pool_two_iron: 2,
+        pool_three_iron: 0,
+        pool_four_iron: 0,
+      });
+    });
+
+    it('should get kyc info for expired workflow', async () => {
+      const user = await mockUser();
+      jest
+        .spyOn(redemptionService, 'currentDate')
+        .mockImplementationOnce(() => new Date(1678905869000));
+      const redemption = await redemptionService.create(user, 'foo', 'foo');
+      await redemptionService.update(redemption, {
+        kycStatus: KycStatus.TRY_AGAIN,
+        jumioAccountId: 'jumioaccountid',
+      });
+
+      const transaction = await jumioTransactionService.create(
+        user,
+        'fakeworkflow',
+        'http://fake.com',
       );
+      await jumioTransactionService.update(transaction, {
+        decisionStatus: DecisionStatus.NOT_EXECUTED,
+        lastWorkflowFetch: WORKFLOW_EXPIRED,
+      });
+
+      const { body } = await request(app.getHttpServer())
+        .get(`/kyc`)
+        .set('Authorization', 'did-token')
+        .expect(HttpStatus.OK);
+
+      expect(body).toMatchObject({
+        can_attempt: true,
+        help_url: HELP_URLS.EXPIRED,
+      });
     });
   });
 
@@ -379,28 +394,28 @@ describe('KycController', () => {
           {
             airdrop_completed_by: '2023-04-21T00:00:00.000Z',
             coins: 105000,
-            kyc_completed_by: '2023-04-14T00:00:00.000Z',
+            kyc_completed_by: '2023-04-15T00:00:00.000Z',
             name: 'pool_three',
             pool_name: 'Code Contributions Pool',
           },
           {
             airdrop_completed_by: '2023-04-21T00:00:00.000Z',
             coins: 420000,
-            kyc_completed_by: '2023-04-14T00:00:00.000Z',
+            kyc_completed_by: '2023-04-15T00:00:00.000Z',
             name: 'pool_one',
             pool_name: 'Phase 1 Pool',
           },
           {
             airdrop_completed_by: '2023-04-21T00:00:00.000Z',
             coins: 210000,
-            kyc_completed_by: '2023-04-14T00:00:00.000Z',
+            kyc_completed_by: '2023-04-15T00:00:00.000Z',
             name: 'pool_two',
             pool_name: 'Phase 2 Pool',
           },
           {
             airdrop_completed_by: '2023-04-21T00:00:00.000Z',
             coins: 210000,
-            kyc_completed_by: '2023-04-14T00:00:00.000Z',
+            kyc_completed_by: '2023-04-15T00:00:00.000Z',
             name: 'pool_four',
             pool_name: 'Phase 3 Pool',
           },

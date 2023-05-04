@@ -3,43 +3,41 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { DecisionStatus } from '@prisma/client';
 import {
+  ExtractionCheck,
   ImageCheck,
   JumioTransactionRetrieveResponse,
   LivenessCheck,
   WatchlistScreenCheck,
   WorkflowStatus,
 } from '../../jumio-api/interfaces/jumio-transaction-retrieve';
+import { EXTRACTION_CHECK_FIXTURE } from './extraction-check';
 import { IMAGE_CHECK_FIXTURE } from './image-check';
 import { LIVENESS_CHECK_FIXTURE } from './liveness-check';
 import { WATCHLIST_SCREEN_FIXTURE } from './watch-list';
 
 export type JumioWorkflowRetrieveParams = {
   workflowStatus?: WorkflowStatus;
-  idCountryCode?: string;
   workflowId?: string;
   accountId?: string;
-  firstName?: string;
-  lastName?: string;
   decisionStatus?: DecisionStatus;
   userId?: string;
   imageCheck?: ImageCheck;
   watchlistCheck?: WatchlistScreenCheck;
   livenessCheck?: LivenessCheck;
+  extractionCheck?: ExtractionCheck;
   riskScore?: number;
 };
 export const WORKFLOW_RETRIEVE_FIXTURE = ({
   workflowStatus = 'PROCESSED',
-  idCountryCode = 'CHL',
   decisionStatus = DecisionStatus.PASSED,
-  userId = '1',
-  imageCheck = IMAGE_CHECK_FIXTURE(),
-  watchlistCheck = WATCHLIST_SCREEN_FIXTURE(),
+  riskScore = 50,
   workflowId = 'eb776622-26a2-499b-b824-6449c92d1617',
   accountId = '684fcf21-bcf3-4916-b007-35dc70102f56',
-  firstName = 'Jason',
-  lastName = 'Spafford',
+  userId = '1',
+  extractionCheck = EXTRACTION_CHECK_FIXTURE(),
+  imageCheck = IMAGE_CHECK_FIXTURE(),
+  watchlistCheck = WATCHLIST_SCREEN_FIXTURE(),
   livenessCheck = LIVENESS_CHECK_FIXTURE(),
-  riskScore = 50,
 }: JumioWorkflowRetrieveParams = {}): JumioTransactionRetrieveResponse => {
   return {
     workflow: {
@@ -127,36 +125,7 @@ export const WORKFLOW_RETRIEVE_FIXTURE = ({
       href: 'https://retrieval.amer-1.jumio.ai/api/v1/accounts/fakeaccountid/workflow-executions/fakeworkflowid/steps',
     },
     capabilities: {
-      extraction: [
-        {
-          id: '40cb204c-f7ff-43e7-864b-064dcc8aba85',
-          credentials: [
-            {
-              id: 'fakecredentialsid',
-              category: 'ID',
-            },
-          ],
-          decision: {
-            type: 'PASSED',
-            details: {
-              label: 'OK',
-            },
-          },
-          data: {
-            type: 'ID_CARD',
-            subType: 'NATIONAL_ID',
-            issuingCountry: idCountryCode,
-            firstName: firstName,
-            lastName: lastName,
-            dateOfBirth: '1970-01-01',
-            expiryDate: '2050-01-01',
-            documentNumber: '1111111',
-            optionalMrzField1: 'Z11',
-            optionalMrzField2: '11111111',
-            currentAge: '70',
-          },
-        },
-      ],
+      extraction: [extractionCheck],
       similarity: [
         {
           id: '594b92df-ae55-4123-883e-ce2724bda94d',

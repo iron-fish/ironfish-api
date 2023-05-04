@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { INestApplication } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { BlocksService } from '../blocks/blocks.service';
 import { BlocksDailyService } from '../blocks-daily/blocks-daily.service';
 import { bootstrapTestApp } from '../test/test-app';
@@ -30,7 +31,8 @@ describe('BlocksDailyLoader', () => {
       const date = new Date();
       const mockMetrics = {
         averageBlockTimeMs: 0,
-        averageDifficultyMillis: 0,
+        averageDifficulty: new Prisma.Decimal(0),
+        averageBlockSize: new Prisma.Decimal(0),
         blocksCount: 0,
         blocksWithGraffitiCount: 0,
         chainSequence: 0,

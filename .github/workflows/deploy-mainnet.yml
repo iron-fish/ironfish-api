@@ -1,15 +1,15 @@
-name: PROD - Deploy Phase2 API
+name: MAINNET - Deploy API
 on: workflow_dispatch
 
 jobs:
   deploy:
-    name: Deploy Phase2 Production API
+    name: Promote Testnet API
     runs-on: ubuntu-latest
 
     steps:
-      - name: Promote Staging
+      - name: Promote Testnet
         uses: tiltshift/heroku-promote-app@v1
         with:
-          heroku_app_name: ${{ secrets.HEROKU_APP_NAME_STAGING_PHASE2 }}
+          heroku_app_name: ${{ secrets.HEROKU_APP_NAME_TESTNET }}
           heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
           heroku_email: ${{ secrets.HEROKU_EMAIL }}

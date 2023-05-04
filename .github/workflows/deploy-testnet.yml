@@ -1,19 +1,19 @@
-name: STAGING - Deploy Phase2 API
+name: TESTNET - Deploy API
 on:
   push:
     branches:
-      - phase2
+      - master
 
 jobs:
   deploy:
-    name: Deploy Phase2 Staging API
+    name: Deploy Testnet API
     runs-on: ubuntu-latest
 
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v2
-      - uses: akhileshns/heroku-deploy@v3.12.12
+      - uses: akhileshns/heroku-deploy@v3.12.13
         with:
-          heroku_app_name: ${{ secrets.HEROKU_APP_NAME_STAGING_PHASE2 }}
+          heroku_app_name: ${{ secrets.HEROKU_APP_NAME_TESTNET }}
           heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
           heroku_email: ${{ secrets.HEROKU_EMAIL }}

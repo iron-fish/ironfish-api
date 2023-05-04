@@ -3,13 +3,13 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 import {
-  JumioTransactionStandaloneSanction,
+  JumioTransactionRetrieveResponse,
   WatchlistScreeningLabels,
 } from '../../jumio-api/interfaces/jumio-transaction-retrieve';
 
 export const WORKFLOW_RETRIEVE_WATCHLIST = (
   watchlistLabel: WatchlistScreeningLabels,
-): JumioTransactionStandaloneSanction => {
+): JumioTransactionRetrieveResponse => {
   return {
     workflow: {
       id: 'b94de56f-75b7-4df2-9320-eebba497f138',

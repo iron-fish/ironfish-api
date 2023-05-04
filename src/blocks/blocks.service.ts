@@ -6,11 +6,15 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { Decimal } from '@prisma/client/runtime';
 import is from '@sindresorhus/is';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
-import { DEFAULT_LIMIT, MAX_LIMIT } from '../common/constants';
+import {
+  DEFAULT_LIMIT,
+  GENESIS_SUPPLY_IN_IRON,
+  IRON_FISH_YEAR_IN_BLOCKS,
+  MAX_LIMIT,
+} from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
 import { getNextDate } from '../common/utils/date';
 import { standardizeHash } from '../common/utils/hash';
@@ -50,6 +54,7 @@ export class BlocksService {
       type,
       size,
       timeSinceLastBlockMs,
+      work,
     }: UpsertBlockOptions,
   ): Promise<{
     block: Block;
@@ -76,7 +81,8 @@ export class BlocksService {
         network_version: networkVersion,
         previous_block_hash: previousBlockHash,
         size,
-        difficulty,
+        difficulty: difficulty.toString(),
+        work: work ? work.toString() : null,
         time_since_last_block_ms: timeSinceLastBlockMs,
       },
       update: {
@@ -87,7 +93,8 @@ export class BlocksService {
         transactions_count: transactionsCount,
         previous_block_hash: previousBlockHash,
         size,
-        difficulty,
+        difficulty: difficulty.toString(),
+        work: work ? work.toString() : null,
         time_since_last_block_ms: timeSinceLastBlockMs,
       },
       where: {
@@ -113,7 +120,7 @@ export class BlocksService {
     return { block, deleteBlockMinedOptions, upsertBlockMinedOptions };
   }
 
-  async head(): Promise<Block> {
+  async head(): Promise<Block & { transactions: Transaction[] }> {
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
     const block = await this.prisma.block.findFirst({
       orderBy: {
@@ -127,7 +134,26 @@ export class BlocksService {
     if (!block) {
       throw new NotFoundException();
     }
-    return block;
+
+    const transactions =
+      await this.blocksTransactionsService.findTransactionsByBlock(block);
+    return { ...block, transactions };
+  }
+
+  miningReward(sequence: number): number {
+    if (sequence <= 1) {
+      return 0;
+    }
+
+    const yearsAfterLaunch = Math.floor(sequence / IRON_FISH_YEAR_IN_BLOCKS);
+    const annualReward =
+      (GENESIS_SUPPLY_IN_IRON / 4) * Math.E ** (-0.05 * yearsAfterLaunch);
+
+    const threshold = 0.125;
+    return (
+      threshold *
+      Math.round(annualReward / IRON_FISH_YEAR_IN_BLOCKS / threshold)
+    );
   }
 
   async list(options: ListBlocksOptions): Promise<{
@@ -261,7 +287,8 @@ export class BlocksService {
     const dateMetricsResponse = await this.prisma.$queryRawUnsafe<
       {
         average_block_time_ms: number;
-        average_difficulty_millis: Decimal;
+        average_difficulty: Prisma.Decimal;
+        average_block_size: Prisma.Decimal;
         blocks_count: bigint;
         blocks_with_graffiti_count: bigint;
         chain_sequence: number;
@@ -272,7 +299,8 @@ export class BlocksService {
       `
       SELECT
         FLOOR(COALESCE(EXTRACT(EPOCH FROM MAX(timestamp) - MIN(timestamp)), 0) * 1000 / GREATEST(COUNT(*), 1)) AS average_block_time_ms,
-        COALESCE(FLOOR(AVG(difficulty) * 1000), 0) AS average_difficulty_millis,
+        COALESCE(AVG(difficulty), 0) AS average_difficulty,
+        COALESCE(AVG(size), 0) AS average_block_size,
         COUNT(*) AS blocks_count,
         COALESCE(SUM(CASE WHEN graffiti != '' THEN 1 ELSE 0 END), 0) AS blocks_with_graffiti_count,
         COALESCE(MAX(sequence), 0) AS chain_sequence,
@@ -325,8 +353,8 @@ export class BlocksService {
 
     return {
       averageBlockTimeMs: dateMetricsResponse[0].average_block_time_ms,
-      averageDifficultyMillis:
-        dateMetricsResponse[0].average_difficulty_millis.toNumber(),
+      averageDifficulty: dateMetricsResponse[0].average_difficulty,
+      averageBlockSize: dateMetricsResponse[0].average_block_size,
       blocksCount: Number(dateMetricsResponse[0].blocks_count),
       blocksWithGraffitiCount: Number(
         dateMetricsResponse[0].blocks_with_graffiti_count,

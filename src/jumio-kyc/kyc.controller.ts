@@ -27,6 +27,7 @@ import { IntIsSafeForPrismaPipe } from '../common/pipes/int-is-safe-for-prisma.p
 import { fetchIpAddressFromRequest } from '../common/utils/request';
 import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
 import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
+import { JumioTransactionRetrieveResponse } from '../jumio-api/interfaces/jumio-transaction-retrieve';
 import { JumioTransactionService } from '../jumio-transactions/jumio-transaction.service';
 import { RedemptionService } from '../redemptions/redemption.service';
 import { UsersService } from '../users/users.service';
@@ -70,8 +71,11 @@ export class KycController {
       fetchIpAddressFromRequest(req),
     );
 
-    const { eligible, reason: eligibleReason } =
-      await this.redemptionService.isEligible(user, redemption);
+    const {
+      eligible,
+      reason: eligibleReason,
+      helpUrl,
+    } = await this.redemptionService.isEligible(user, redemption);
 
     const { attemptable, reason: attemptableReason } =
       await this.redemptionService.canAttempt(redemption, user);
@@ -83,6 +87,7 @@ export class KycController {
       eligibleReason,
       attemptable,
       attemptableReason,
+      helpUrl,
       this.config,
     );
   }
@@ -126,16 +131,18 @@ export class KycController {
   > {
     const redemption = await this.redemptionService.find(user);
 
-    const { eligible, reason: eligibleReason } =
-      await this.redemptionService.isEligible(user, redemption);
+    const eligibility = await this.redemptionService.isEligible(
+      user,
+      redemption,
+    );
 
     const { attemptable, reason: attemptableReason } =
       await this.redemptionService.canAttempt(redemption, user);
 
     if (!redemption) {
       return {
-        can_attempt: eligible,
-        can_attempt_reason: eligibleReason,
+        can_attempt: eligibility.eligible,
+        can_attempt_reason: eligibility.reason,
         can_create: attemptable,
         can_create_reason: attemptableReason,
       };
@@ -144,13 +151,28 @@ export class KycController {
     const jumioTransaction =
       await this.jumioTransactionService.findLatestOrThrow(user);
 
+    // If we have a latest attempt, override with that reasons failure
+    if (jumioTransaction.last_workflow_fetch && !eligibility.reason) {
+      const status = await this.redemptionService.calculateStatus(
+        jumioTransaction.last_workflow_fetch as unknown as JumioTransactionRetrieveResponse,
+      );
+
+      if (status.failureMessage) {
+        eligibility.reason = status.failureMessage;
+      }
+      if (status.failureUrl) {
+        eligibility.helpUrl = status.failureUrl;
+      }
+    }
+
     return serializeKyc(
       redemption,
       jumioTransaction,
-      eligible,
-      eligibleReason,
+      eligibility.eligible,
+      eligibility.reason,
       attemptable,
       attemptableReason,
+      eligibility.helpUrl,
       this.config,
     );
   }
@@ -188,6 +210,16 @@ export class KycController {
 
   @ApiExcludeEndpoint()
   @UseGuards(ApiKeyGuard)
+  @Get('estimate/:user_id')
+  async estimate(
+    @Param('user_id', new IntIsSafeForPrismaPipe())
+    user_id: number,
+  ): Promise<{ pool1: number; pool2: number; pool3: number; pool4: number }> {
+    return this.kycService.estimate(user_id);
+  }
+
+  @ApiExcludeEndpoint()
+  @UseGuards(ApiKeyGuard)
   @Post('refresh/:user_id')
   async refreshUser(
     @Param('user_id', new IntIsSafeForPrismaPipe())
@@ -215,6 +247,16 @@ export class KycController {
     id: number,
   ): Promise<void> {
     await this.kycService.standaloneWatchlist(id);
+  }
+
+  @Get('/allocations')
+  @UseGuards(ApiKeyGuard)
+  async allocations(@Res() res: Response): Promise<void> {
+    await this.graphileWorkerService.addJob(
+      GraphileWorkerPattern.ALLOCATION_CREATION,
+    );
+
+    // Jumio requires a 200 explicitly
     res.status(HttpStatus.OK).send();
   }
 }

@@ -1,8 +1,57 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`MeController GET /me fails to get email returns the error 1`] = `
+Object {
+  "code": "email_error",
+  "message": "Error: Failed to get the email. Please try again.",
+}
+`;
+
+exports[`MeController GET /me fails to get email returns the error for jwt token 1`] = `
+Object {
+  "code": "JsonWebTokenError",
+  "message": "Error: Jwt token has error. invalid signature",
+}
+`;
+
+exports[`MeController GET /me fails to validate token email returns the error 1`] = `
+Object {
+  "code": "email_error",
+  "message": "Error: Failed to get the email. Please try again.",
+}
+`;
+
+exports[`MeController GET /me fails to validate token email returns the error for expired jwt token 1`] = `
+Object {
+  "code": "TokenExpiredError",
+  "message": "Error: Jwt token has error. jwt expired",
+}
+`;
+
+exports[`MeController GET /me fails to validate token email returns the error for jwt token 1`] = `
+Object {
+  "code": "JsonWebTokenError",
+  "message": "Error: Jwt token has error. invalid signature",
+}
+`;
+
+exports[`MeController GET /me with a invalid user returns the error 1`] = `
+Object {
+  "code": "user_not_found",
+  "message": "Error: No Iron Fish account exists for this email.",
+}
+`;
+
+exports[`MeController GET /me with a invalid user returns the error for jwt token 1`] = `
+Object {
+  "code": "user_not_found",
+  "message": "Error: No Iron Fish account exists for this email.",
+}
+`;
+
 exports[`MeController GET /me with no logged in user returns a 401 1`] = `
 Object {
-  "message": "Unauthorized",
-  "statusCode": 401,
+  "code": "JsonWebTokenError",
+  "message": "Error: Jwt token has error. jwt must be provided",
 }
 `;

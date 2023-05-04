@@ -8,6 +8,7 @@ export interface JumioCallbackData {
     id: string;
     href: string;
     status: 'PROCESSED' | 'SESSION_EXPIRED' | 'TOKEN_EXPIRED';
+    definitionKey: string;
   };
   account: {
     id: string;

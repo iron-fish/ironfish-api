@@ -2,20 +2,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { HttpStatus, INestApplication } from '@nestjs/common';
+import cookie from 'cookie';
 import faker from 'faker';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
+import { ApiConfigService } from '../api-config/api-config.service';
 import { MagicLinkService } from '../magic-link/magic-link.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
 
 describe('AuthController', () => {
   let app: INestApplication;
+  let config: ApiConfigService;
   let magicLinkService: MagicLinkService;
   let usersService: UsersService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
+    config = app.get(ApiConfigService);
     magicLinkService = app.get(MagicLinkService);
     usersService = app.get(UsersService);
     await app.init();
@@ -74,7 +79,7 @@ describe('AuthController', () => {
       });
     });
 
-    describe('with a valid token', () => {
+    describe('with a valid token header', () => {
       it('updates the last login for a user', async () => {
         const user = await usersService.create({
           email: faker.internet.email(),
@@ -92,6 +97,141 @@ describe('AuthController', () => {
           .set('Authorization', 'valid-token')
           .expect(HttpStatus.OK);
 
+        expect(updateLastLoginAt).toHaveBeenCalledTimes(1);
+      });
+    });
+  });
+
+  describe('POST /logout', () => {
+    describe('if there is no jwt', () => {
+      it('returns a 422', async () => {
+        await request(app.getHttpServer())
+          .post('/logout')
+          .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+      });
+    });
+
+    describe('with a jwt', () => {
+      it('clears the cookie', async () => {
+        const secret = config.get<string>('JWT_TOKEN_SECRET');
+        const options: SignOptions = {
+          algorithm: 'HS256',
+          expiresIn: '1d',
+        };
+
+        const token = jwt.sign(
+          { sub: 'fake@email.com', iat: Math.floor(Date.now() / 1000) },
+          secret,
+          options,
+        );
+
+        const response = await request(app.getHttpServer())
+          .post('/logout')
+          .set(
+            'Cookie',
+            cookie.serialize('ironfish_jwt', String(token), {
+              httpOnly: true,
+              maxAge: 60 * 60 * 24,
+            }),
+          )
+          .expect(HttpStatus.OK);
+
+        expect(response.get('Set-Cookie')[0]).toMatch('ironfish_jwt=;');
+      });
+    });
+  });
+
+  describe('GET /login', () => {
+    describe('with a missing user', () => {
+      it('redirects with an error toast', async () => {
+        const secret = config.get<string>('JWT_TOKEN_SECRET');
+        const options: SignOptions = {
+          algorithm: 'HS256',
+          expiresIn: '1d',
+        };
+
+        const token = jwt.sign(
+          { sub: 'fake@email.com', iat: Math.floor(Date.now() / 1000) },
+          secret,
+          options,
+        );
+
+        const { header } = await request(app.getHttpServer())
+          .get('/login')
+          .query({ token })
+          .expect(HttpStatus.FOUND);
+
+        expect(header.location).toBe(
+          `${config.get<string>('INCENTIVIZED_TESTNET_URL')}/login?toast=${btoa(
+            'User not found',
+          )}&persist=true`,
+        );
+      });
+    });
+
+    describe('with an expired jwt', () => {
+      it('redirects with an error toast', async () => {
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          countryCode: faker.address.countryCode('alpha-3'),
+        });
+
+        const secret = config.get<string>('JWT_TOKEN_SECRET');
+        const options: SignOptions = {
+          algorithm: 'HS256',
+          expiresIn: '0d',
+        };
+
+        const token = jwt.sign(
+          { sub: user.email, iat: Math.floor(Date.now() / 1000) },
+          secret,
+          options,
+        );
+
+        const { header } = await request(app.getHttpServer())
+          .get('/login')
+          .query({ token })
+          .expect(HttpStatus.FOUND);
+
+        expect(header.location).toBe(
+          `${config.get<string>('INCENTIVIZED_TESTNET_URL')}/login?toast=${btoa(
+            'jwt expired',
+          )}&persist=true`,
+        );
+      });
+    });
+
+    describe('with a valid jwt token query parameter', () => {
+      it('updates the last login for a user', async () => {
+        const user = await usersService.create({
+          email: faker.internet.email(),
+          graffiti: uuid(),
+          countryCode: faker.address.countryCode('alpha-3'),
+        });
+
+        const secret = config.get<string>('JWT_TOKEN_SECRET');
+        const options: SignOptions = {
+          algorithm: 'HS256',
+          expiresIn: '1d',
+        };
+
+        const token = jwt.sign(
+          { sub: user.email, iat: Math.floor(Date.now() / 1000) },
+          secret,
+          options,
+        );
+
+        const updateLastLoginAt = jest.spyOn(usersService, 'updateLastLoginAt');
+
+        const { header } = await request(app.getHttpServer())
+          .get('/login')
+          .query({ token })
+          .expect(HttpStatus.FOUND);
+
+        expect(header.location).toBe(
+          `${config.get<string>('INCENTIVIZED_TESTNET_URL')}/dashboard`,
+        );
         expect(updateLastLoginAt).toHaveBeenCalledTimes(1);
       });
     });

@@ -20,6 +20,10 @@ export const SEND_TRANSACTION_LIMIT_ORE = ORE_TO_IRON * 0.1; // Only transaction
 export const MAX_POINT_BLOCK_SEQUENCE = 252200; // When we increased the max points from 0.1 to a configuration
 export const ENABLE_DEPOSIT_BLOCK_SEQUENCE = 288_888; // When deposits should be turned off
 
+export const IRON_FISH_YEAR_IN_BLOCKS = (365 * 24 * 60 * 60) / 60;
+export const IRON_FISH_MONTH_IN_BLOCKS = IRON_FISH_YEAR_IN_BLOCKS / 12;
+export const GENESIS_SUPPLY_IN_IRON = 42000000;
+
 // Event categories
 export const WEEKLY_POINT_LIMITS_BY_EVENT_TYPE: Record<EventType, number> = {
   [EventType.BLOCK_MINED]: 1000,
@@ -59,36 +63,45 @@ export const POOL_4_CATEGORIES: Array<EventType> = [
 
 // 2023 Feb 26 12 AM UTC
 export const PHASE_3_END = new Date(Date.UTC(2023, 1, 26, 0, 0, 0));
+export const KYC_DEADLINE = new Date(Date.UTC(2023, 3, 15, 0, 0, 0));
+export const AIRDROP_DEADLINE = new Date(Date.UTC(2023, 3, 21, 0, 0, 0));
+
+export const POOL1_TOKENS = 420000;
+export const POOL2_TOKENS = 210000;
+export const POOL3_TOKENS = 105000;
+export const POOL4_TOKENS = 210000;
 
 export const AIRDROP_CONFIG = {
   data: [
     {
-      airdrop_completed_by: new Date(Date.UTC(2023, 3, 21, 0, 0, 0)),
-      coins: 105000,
-      kyc_completed_by: new Date(Date.UTC(2023, 3, 14, 0, 0, 0)),
+      airdrop_completed_by: AIRDROP_DEADLINE,
+      coins: POOL3_TOKENS,
+      kyc_completed_by: KYC_DEADLINE,
       name: 'pool_three',
       pool_name: 'Code Contributions Pool',
     },
     {
-      airdrop_completed_by: new Date(Date.UTC(2023, 3, 21, 0, 0, 0)),
-      coins: 420000,
-      kyc_completed_by: new Date(Date.UTC(2023, 3, 14, 0, 0, 0)),
+      airdrop_completed_by: AIRDROP_DEADLINE,
+      coins: POOL1_TOKENS,
+      kyc_completed_by: KYC_DEADLINE,
       name: 'pool_one',
       pool_name: 'Phase 1 Pool',
     },
     {
-      airdrop_completed_by: new Date(Date.UTC(2023, 3, 21, 0, 0, 0)),
-      coins: 210000,
-      kyc_completed_by: new Date(Date.UTC(2023, 3, 14, 0, 0, 0)),
+      airdrop_completed_by: AIRDROP_DEADLINE,
+      coins: POOL2_TOKENS,
+      kyc_completed_by: KYC_DEADLINE,
       name: 'pool_two',
       pool_name: 'Phase 2 Pool',
     },
     {
-      airdrop_completed_by: new Date(Date.UTC(2023, 3, 21, 0, 0, 0)),
-      coins: 210000,
-      kyc_completed_by: new Date(Date.UTC(2023, 3, 14, 0, 0, 0)),
+      airdrop_completed_by: AIRDROP_DEADLINE,
+      coins: POOL4_TOKENS,
+      kyc_completed_by: KYC_DEADLINE,
       name: 'pool_four',
       pool_name: 'Phase 3 Pool',
     },
   ],
 };
+
+export const AIRDROP_ORE_FEE = 10;

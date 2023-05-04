@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { INestApplication } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { getNextDate } from '../common/utils/date';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
@@ -28,7 +29,8 @@ describe('BlocksDailyService', () => {
       await prisma.blockDaily.create({
         data: {
           average_block_time_ms: 1,
-          average_difficulty_millis: 1000,
+          average_difficulty: 1000,
+          average_block_size: 1000,
           blocks_count: 1,
           blocks_with_graffiti_count: 1,
           chain_sequence: 1,
@@ -41,7 +43,8 @@ describe('BlocksDailyService', () => {
       await prisma.blockDaily.create({
         data: {
           average_block_time_ms: 1,
-          average_difficulty_millis: 1000,
+          average_difficulty: 1000,
+          average_block_size: 1000,
           blocks_count: 1,
           blocks_with_graffiti_count: 1,
           chain_sequence: 1,
@@ -54,7 +57,8 @@ describe('BlocksDailyService', () => {
       await prisma.blockDaily.create({
         data: {
           average_block_time_ms: 1,
-          average_difficulty_millis: 1000,
+          average_difficulty: 1000,
+          average_block_size: 1000,
           blocks_count: 1,
           blocks_with_graffiti_count: 1,
           chain_sequence: 1,
@@ -83,7 +87,8 @@ describe('BlocksDailyService', () => {
     it('upserts a BlockDaily record', async () => {
       const options = {
         averageBlockTimeMs: 0,
-        averageDifficultyMillis: 0,
+        averageDifficulty: new Prisma.Decimal(0),
+        averageBlockSize: new Prisma.Decimal(0),
         blocksCount: 0,
         blocksWithGraffitiCount: 0,
         chainSequence: 0,
@@ -97,7 +102,8 @@ describe('BlocksDailyService', () => {
       expect(blockDaily).toMatchObject({
         id: expect.any(Number),
         average_block_time_ms: options.averageBlockTimeMs,
-        average_difficulty_millis: BigInt(options.averageDifficultyMillis),
+        average_difficulty: new Prisma.Decimal(0),
+        average_block_size: new Prisma.Decimal(0),
         blocks_count: options.blocksCount,
         blocks_with_graffiti_count: options.blocksWithGraffitiCount,
         chain_sequence: options.chainSequence,
@@ -113,7 +119,8 @@ describe('BlocksDailyService', () => {
     it('returns the next date from the last daily snapshot', async () => {
       const options = {
         averageBlockTimeMs: 0,
-        averageDifficultyMillis: 0,
+        averageDifficulty: new Prisma.Decimal(0),
+        averageBlockSize: new Prisma.Decimal(0),
         blocksCount: 0,
         blocksWithGraffitiCount: 0,
         chainSequence: 0,

@@ -92,7 +92,8 @@ describe('AssetsController', () => {
         const { block } = await blocksService.upsert(prisma, {
           hash: uuid(),
           sequence: faker.datatype.number(),
-          difficulty: faker.datatype.number(),
+          difficulty: BigInt(faker.datatype.number()),
+          work: BigInt(faker.datatype.number()),
           timestamp: new Date(),
           transactionsCount: 1,
           type: BlockOperation.CONNECTED,
@@ -137,6 +138,7 @@ describe('AssetsController', () => {
           name: asset.name,
           owner: asset.owner,
           supply: asset.supply.toString(),
+          verified_at: null,
         });
       });
     });
@@ -147,7 +149,8 @@ describe('AssetsController', () => {
       const { block } = await blocksService.upsert(prisma, {
         hash: uuid(),
         sequence: faker.datatype.number(),
-        difficulty: faker.datatype.number(),
+        difficulty: BigInt(faker.datatype.number()),
+        work: BigInt(faker.datatype.number()),
         timestamp: new Date(),
         transactionsCount: 1,
         type: BlockOperation.CONNECTED,
@@ -225,6 +228,7 @@ describe('AssetsController', () => {
             name: secondAsset.name,
             owner: secondAsset.owner,
             supply: secondAsset.supply.toString(),
+            verified_at: null,
           },
           {
             object: 'asset',
@@ -236,6 +240,7 @@ describe('AssetsController', () => {
             name: asset.name,
             owner: asset.owner,
             supply: asset.supply.toString(),
+            verified_at: null,
           },
         ],
         metadata: {

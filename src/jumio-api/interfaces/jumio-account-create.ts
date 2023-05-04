@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 export interface JumioAccountCreateResponse {
+  timestamp: string;
   account: {
     id: string;
   };
@@ -13,6 +14,8 @@ export interface JumioAccountCreateResponse {
     id: string;
     credentials: {
       id: string;
+      category: string;
+      allowedChannels: string[];
       api: {
         token: string;
         parts: {

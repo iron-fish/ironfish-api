@@ -3,17 +3,24 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import {
   Controller,
+  Get,
   HttpStatus,
   Post,
+  Query,
   Req,
   Res,
   UnauthorizedException,
+  UnprocessableEntityException,
+  ValidationPipe,
 } from '@nestjs/common';
 import { ApiExcludeEndpoint } from '@nestjs/swagger';
-import { Request, Response } from 'express';
+import { CookieOptions, Request, Response } from 'express';
+import jwt from 'jsonwebtoken';
 import { ApiConfigService } from '../api-config/api-config.service';
+import { MS_PER_DAY } from '../common/constants';
 import { MagicLinkService } from '../magic-link/magic-link.service';
 import { UsersService } from '../users/users.service';
+import { LoginQueryDto } from './dto/login-query.dto';
 
 @Controller()
 export class AuthController {
@@ -53,5 +60,112 @@ export class AuthController {
     }
 
     res.sendStatus(HttpStatus.OK);
+  }
+
+  @ApiExcludeEndpoint()
+  @Post('logout')
+  logout(@Req() req: Request, @Res() res: Response): void {
+    if (!('ironfish_jwt' in req.cookies)) {
+      throw new UnprocessableEntityException('User is not logged in');
+    }
+
+    res.clearCookie('ironfish_jwt');
+    res.sendStatus(HttpStatus.OK);
+  }
+
+  @ApiExcludeEndpoint()
+  @Get('login')
+  async jwtLogin(
+    @Query(
+      new ValidationPipe({
+        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        transform: true,
+      }),
+    )
+    { token }: LoginQueryDto,
+    @Res() res: Response,
+  ): Promise<void> {
+    const redirectUrl = `${this.config.get<string>(
+      'INCENTIVIZED_TESTNET_URL',
+    )}/login`;
+
+    const dashboardUrl = `${this.config.get<string>(
+      'INCENTIVIZED_TESTNET_URL',
+    )}/dashboard`;
+
+    if (this.config.get<boolean>('DISABLE_LOGIN')) {
+      res.redirect(`${redirectUrl}?toast=${btoa('Login is disabled')}`);
+      return;
+    }
+
+    try {
+      const email = this.verifyEmailFromJwt(token);
+      const user = await this.usersService.findByEmail(email);
+      if (user) {
+        await this.usersService.updateLastLoginAt(user);
+      } else {
+        throw new UnauthorizedException('User not found');
+      }
+
+      this.setResponseHeaders(res, token);
+      res.redirect(dashboardUrl);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        res.redirect(
+          `${redirectUrl}?toast=${btoa(error.message)}&persist=true`,
+        );
+        return;
+      }
+
+      res.redirect(
+        `${redirectUrl}?toast=${btoa('Unknown error')}&persist=true`,
+      );
+    }
+  }
+
+  private verifyEmailFromJwt(token: string): string {
+    try {
+      const payload = jwt.verify(
+        token,
+        this.config.get<string>('JWT_TOKEN_SECRET'),
+      );
+
+      if (typeof payload === 'string') {
+        throw new UnprocessableEntityException('Invalid payload');
+      }
+
+      if (payload.sub === undefined) {
+        throw new UnprocessableEntityException('Invalid payload object');
+      }
+
+      return payload.sub;
+    } catch (err) {
+      if (err instanceof jwt.JsonWebTokenError) {
+        throw new UnprocessableEntityException({
+          code: err.name,
+          message: err.message,
+        });
+      }
+
+      throw new UnauthorizedException('Error verifying email');
+    }
+  }
+
+  private setResponseHeaders(res: Response, token: string): void {
+    const cookieOptions: CookieOptions = {
+      httpOnly: true,
+      maxAge: MS_PER_DAY,
+    };
+
+    if (!this.config.isLocal()) {
+      const host = new URL(this.config.get<string>('INCENTIVIZED_TESTNET_URL'))
+        .host;
+      cookieOptions.domain = `.${host.split('.').slice(-2).join('.')}`;
+
+      cookieOptions.sameSite = 'none';
+      cookieOptions.secure = true;
+    }
+
+    res.cookie('ironfish_jwt', token, cookieOptions);
   }
 }

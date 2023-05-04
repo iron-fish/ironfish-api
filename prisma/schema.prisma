@@ -72,16 +72,19 @@ model Redemption {
   user_id          Int       @unique
   kyc_attempts     Int       @default(0)
   kyc_max_attempts Int?
-  kyc_status  KycStatus
+  kyc_status       KycStatus
   jumio_account_id String?   @db.VarChar
   public_address   String    @db.VarChar
   hashed_ip_address String?  @db.VarChar
+  transaction_hash String?   @db.VarChar
+  sent_ore         BigInt?
   id_details       Json?
+  age              Int?
   failure_message  String?   @db.VarChar
-  pool1_ore        BigInt?
-  pool2_ore        BigInt?
-  pool3_ore        BigInt?
-  pool4_ore        BigInt?
+  pool_one         BigInt?
+  pool_two         BigInt?
+  pool_three       BigInt?
+  pool_four        BigInt?
   @@index([jumio_account_id], name: "index_redemption_jumio_account_id")
   @@index([user_id], name: "index_redemption_on_user_id")
   @@map("redemptions")
@@ -123,7 +126,7 @@ model Block {
   updated_at               DateTime           @default(now()) @updatedAt @db.Timestamp(6)
   hash                     String             @db.VarChar
   sequence                 Int
-  previous_block_hash      String?            @db.VarChar
+  previous_block_hash      String             @db.VarChar
   main                     Boolean
   network_version          Int
   transactions_count       Int
@@ -131,7 +134,8 @@ model Block {
   time_since_last_block_ms Int?
   graffiti                 String             @db.VarChar
   size                     Int?
-  difficulty               BigInt
+  difficulty               Decimal?
+  work                     Decimal?
   blocks_transactions      BlockTransaction[]
   event                    Event?
 
@@ -205,7 +209,8 @@ model BlockDaily {
   blocks_with_graffiti_count Int
   cumulative_unique_graffiti Int
   transactions_count         Int
-  average_difficulty_millis  BigInt
+  average_difficulty         Decimal
+  average_block_size         Decimal @default(0)
   chain_sequence             Int
 
   @@index([date], map: "index_blocks_daily_on_date")
@@ -350,6 +355,7 @@ model Asset {
   name                   String
   owner                  String
   supply                 BigInt
+  verified_at            DateTime?          @db.Timestamp(6)
   descriptions           AssetDescription[]
   created_transaction    Transaction        @relation(fields: [created_transaction_id], references: [id])
 

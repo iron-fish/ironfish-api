@@ -11,17 +11,28 @@ import { JumioTransaction, KycStatus, Redemption, User } from '@prisma/client';
 import assert from 'assert';
 import crypto from 'crypto';
 import { ApiConfigService } from '../api-config/api-config.service';
+import {
+  AIRDROP_CONFIG,
+  AIRDROP_ORE_FEE,
+  ORE_TO_IRON,
+  POOL1_TOKENS,
+  POOL2_TOKENS,
+  POOL3_TOKENS,
+  POOL4_TOKENS,
+} from '../common/constants';
 import { JumioApiService } from '../jumio-api/jumio-api.service';
 import { JumioTransactionService } from '../jumio-transactions/jumio-transaction.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedemptionService } from '../redemptions/redemption.service';
+import { UserPointsService } from '../user-points/user-points.service';
 import { UsersService } from '../users/users.service';
 import { JumioCallbackData } from './interfaces/jumio-callback-data';
+import { Pool } from './types/pools';
 
 export type IdDetails = {
-  id_issuing_country: string;
-  id_type: string;
-  id_subtype: string;
+  id_issuing_country?: string;
+  id_type?: string;
+  id_subtype?: string;
 };
 
 export type KycDetails = {
@@ -40,6 +51,7 @@ export class KycService {
     private readonly prisma: PrismaService,
     private readonly redemptionService: RedemptionService,
     private readonly usersService: UsersService,
+    private readonly userPointsService: UserPointsService,
   ) {}
 
   async attempt(
@@ -268,19 +280,18 @@ export class KycService {
       transaction.workflow_execution_id,
     );
 
-    const calculatedStatus =
-      status.workflow.definitionKey !== '10010'
-        ? await this.redemptionService.calculateStatus(status)
-        : this.redemptionService.calculateStandaloneWatchlistStatus(status);
+    const calculatedStatus = await this.redemptionService.calculateStatus(
+      status,
+    );
 
     // Has our user's KYC status changed
-    if (redemption.kyc_status !== calculatedStatus.status) {
-      redemption = await this.redemptionService.update(redemption, {
-        kycStatus: calculatedStatus.status,
-        failureMessage: calculatedStatus.failureMessage ?? undefined,
-        idDetails: calculatedStatus.idDetails,
-      });
-    }
+    redemption = await this.redemptionService.update(redemption, {
+      kycStatus: calculatedStatus.status,
+      failureMessage: calculatedStatus.failureMessage ?? undefined,
+      idDetails: calculatedStatus.idDetails,
+      age: calculatedStatus.age,
+    });
+
     await this.jumioTransactionService.update(transaction, {
       decisionStatus: status.decision.type,
       lastWorkflowFetch: status,
@@ -303,5 +314,60 @@ export class KycService {
       .toString('hex');
 
     return signature === expectedSignature;
+  }
+
+  async estimate(
+    userId: number,
+  ): Promise<{ pool1: number; pool2: number; pool3: number; pool4: number }> {
+    const user = await this.userPointsService.findOrThrow(userId);
+
+    const [pool1, pool2, pool3, pool4] = await Promise.all([
+      this.userPointsService.poolTotal('pool_one'),
+      this.userPointsService.poolTotal('pool_two'),
+      this.userPointsService.poolTotal('pool_three'),
+      this.userPointsService.poolTotal('pool_four'),
+    ]);
+
+    const getTokens = (points: number, total: number, pool: number) => {
+      const ratio = points / pool;
+      const ore = Math.floor(ratio * total);
+      const iron = ore / ORE_TO_IRON;
+      return iron;
+    };
+
+    return {
+      pool1: getTokens(user.pool1_points ?? 0, pool1, POOL1_TOKENS),
+      pool2: getTokens(user.pool2_points ?? 0, pool2, POOL2_TOKENS),
+      pool3: getTokens(user.pool3_points ?? 0, pool3, POOL3_TOKENS),
+      pool4: getTokens(user.pool4_points ?? 0, pool4, POOL4_TOKENS),
+    };
+  }
+
+  async allocate(pool: Pool, redemptions: Redemption[]): Promise<void> {
+    //pool_one -> pool1_points
+    const pointsColumn = this.userPointsService.poolToColumn(pool);
+    const airdropPool = AIRDROP_CONFIG.data.find((c) => c.name === pool);
+    assert.ok(airdropPool);
+    const poolOre = airdropPool.coins * ORE_TO_IRON;
+
+    const totalPoints = await this.userPointsService.poolTotal(pool);
+
+    // allocate
+    for (const redemption of redemptions) {
+      const userPoints = await this.userPointsService.findOrThrow(
+        redemption.user_id,
+      );
+      const userPoolPoints = userPoints[pointsColumn];
+      if (!userPoolPoints) {
+        await this.redemptionService.update(redemption, { [pool]: 0 });
+        continue;
+      }
+
+      const allocatedOre =
+        Math.floor((userPoolPoints / totalPoints) * poolOre) - AIRDROP_ORE_FEE;
+      await this.redemptionService.update(redemption, {
+        [pool]: allocatedOre < 0 ? 0 : allocatedOre,
+      });
+    }
   }
 }

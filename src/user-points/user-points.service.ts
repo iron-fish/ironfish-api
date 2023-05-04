@@ -2,12 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Pool, POOL1, POOL2, POOL3, POOL4 } from '../jumio-kyc/types/pools';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { RefreshPreviousPoolOptions } from './interfaces/refresh-previous-pool-options';
 import { UpsertUserPointsOptions } from './interfaces/upsert-user-points-options';
 import { EventType, Prisma, UserPoints } from '.prisma/client';
 
+type UserPointsColumn =
+  | 'pool1_points'
+  | 'pool2_points'
+  | 'pool3_points'
+  | 'pool4_points';
 @Injectable()
 export class UserPointsService {
   constructor(private readonly prisma: PrismaService) {}
@@ -29,6 +35,36 @@ export class UserPointsService {
     }
 
     return record;
+  }
+
+  async poolTotal(pool: Pool): Promise<number> {
+    const column = this.poolToColumn(pool);
+
+    const rows = await this.prisma.$queryRawUnsafe<{ points: number }[]>(
+      `select SUM(${column}) points from user_points
+      left join redemptions on redemptions.user_id = user_points.user_id
+      where redemptions.kyc_status = 'SUCCESS';`,
+    );
+    return Number(rows[0].points);
+  }
+
+  async findMany(where: Prisma.UserPointsWhereInput): Promise<UserPoints[]> {
+    return this.prisma.userPoints.findMany({
+      where,
+    });
+  }
+
+  poolToColumn(pool: Pool): UserPointsColumn {
+    switch (pool) {
+      case POOL1:
+        return 'pool1_points';
+      case POOL2:
+        return 'pool2_points';
+      case POOL3:
+        return 'pool3_points';
+      case POOL4:
+        return 'pool4_points';
+    }
   }
 
   async upsert(options: UpsertUserPointsOptions): Promise<UserPoints> {

@@ -15,16 +15,22 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiExcludeEndpoint, ApiOperation, ApiTags } from '@nestjs/swagger';
+import assert from 'assert';
 import { Response } from 'express';
 import { AssetDescriptionsService } from '../asset-descriptions/asset-descriptions.service';
 import { AssetsService } from '../assets/assets.service';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { BlocksDailyService } from '../blocks-daily/blocks-daily.service';
 import { BlocksTransactionsLoader } from '../blocks-transactions-loader/blocks-transactions-loader';
-import { MS_PER_DAY } from '../common/constants';
+import {
+  GENESIS_SUPPLY_IN_IRON,
+  IRON_FISH_MONTH_IN_BLOCKS,
+  MS_PER_DAY,
+} from '../common/constants';
 import { MetricsGranularity } from '../common/enums/metrics-granularity';
 import { List } from '../common/interfaces/list';
 import { PaginatedList } from '../common/interfaces/paginated-list';
+import { divide } from '../common/utils/bigint';
 import { serializedTransactionFromRecord } from '../transactions/utils/transaction-translator';
 import { BlocksService } from './blocks.service';
 import { BlockQueryDto } from './dto/block-query.dto';
@@ -33,6 +39,7 @@ import { BlocksQueryDto } from './dto/blocks-query.dto';
 import { DisconnectBlocksDto } from './dto/disconnect-blocks.dto';
 import { UpsertBlocksDto } from './dto/upsert-blocks.dto';
 import { SerializedBlock } from './interfaces/serialized-block';
+import { SerializedBlockHead } from './interfaces/serialized-block-head';
 import { SerializedBlockMetrics } from './interfaces/serialized-block-metrics';
 import { SerializedBlockWithTransactions } from './interfaces/serialized-block-with-transactions';
 import { SerializedBlocksStatus } from './interfaces/serialized-blocks-status';
@@ -103,8 +110,68 @@ export class BlocksController {
 
   @ApiOperation({ summary: 'Gets the head of the chain' })
   @Get('head')
-  async head(): Promise<SerializedBlock> {
-    return serializedBlockFromRecord(await this.blocksService.head());
+  async head(): Promise<SerializedBlockHead> {
+    const head = await this.blocksService.head();
+    const previous = await this.blocksService.find({
+      hash: head.previous_block_hash,
+    });
+
+    let hashRate = 0;
+    if (previous && previous.work !== null && head.work !== null) {
+      const workDifference =
+        BigInt(head.work.toNumber()) - BigInt(previous.work.toNumber());
+      const diffInMs = head.timestamp.getTime() - previous.timestamp.getTime();
+      hashRate = divide(workDifference, BigInt(diffInMs)) * 1000;
+    }
+
+    let miningRewards = 0;
+    for (let sequence = 2; sequence <= head.sequence; sequence++) {
+      miningRewards += this.blocksService.miningReward(sequence);
+    }
+
+    assert.ok(head.transactions[0]);
+    return {
+      ...serializedBlockFromRecord(head),
+      hash_rate: hashRate,
+      reward: Math.abs(head.transactions[0].fee).toString(),
+      circulating_supply: this.circulatingSupply(head.sequence) + miningRewards,
+      total_supply: GENESIS_SUPPLY_IN_IRON + miningRewards,
+    };
+  }
+
+  private circulatingSupply(sequence: number): number {
+    const monthsAfterLaunch = Math.floor(sequence / IRON_FISH_MONTH_IN_BLOCKS);
+
+    // Immediately available:
+    // 18.00% - Foundation
+    // 05.00% - IF Labs
+    // 02.25% - Airdrop
+    const immediatelyUnlocked = 0.2525;
+    let circulatingSupply = immediatelyUnlocked * GENESIS_SUPPLY_IN_IRON;
+
+    // Subject to 1y lock and 1y unlock:
+    // 05.10% - Preseed
+    // 09.90% - Seed
+    // 14.50% - Series A
+    // 00.60% - Advisors
+    // 37.40% - Team
+    // 05.00% - Future Endowments
+    const yearLockAndYearUnlock = 0.725;
+    if (monthsAfterLaunch >= 12) {
+      circulatingSupply +=
+        Math.min(1, monthsAfterLaunch / 24) *
+        yearLockAndYearUnlock *
+        GENESIS_SUPPLY_IN_IRON;
+    }
+
+    // Subject to 6m lock and no unlock:
+    // 02.25% - Future Airdrop
+    const sixMonthLock = 0.0225;
+    if (monthsAfterLaunch >= 6) {
+      circulatingSupply += sixMonthLock * GENESIS_SUPPLY_IN_IRON;
+    }
+
+    return circulatingSupply;
   }
 
   @ApiOperation({

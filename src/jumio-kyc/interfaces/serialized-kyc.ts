@@ -13,9 +13,16 @@ export interface SerializedKyc {
   jumio_account_id: string;
   jumio_workflow_execution_id: string;
   jumio_web_href: string;
+  transaction_hash: string | null;
   public_address: string;
   can_attempt: boolean;
   can_attempt_reason: string;
   can_create: boolean;
   can_create_reason: string;
+  help_url: string;
+  pool_one_iron: number;
+  pool_two_iron: number;
+  pool_three_iron: number;
+  pool_four_iron: number;
+  airdrop_transaction_hash: string | null;
 }

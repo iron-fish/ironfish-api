@@ -88,6 +88,8 @@ export class BlocksTransactionsLoader {
             timeSinceLastBlockMs,
             previousBlockHash: block.previous_block_hash,
             transactionsCount: block.transactions.length,
+            difficulty: BigInt(block.difficulty),
+            work: BigInt(block.work ?? 0),
           });
 
           if (deleteBlockMinedOptions) {

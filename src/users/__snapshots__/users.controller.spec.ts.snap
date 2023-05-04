@@ -113,6 +113,20 @@ Object {
 }
 `;
 
+exports[`UsersController POST /users/:id/token with invalid user id returns a 404 1`] = `
+Object {
+  "message": "Not Found",
+  "statusCode": 404,
+}
+`;
+
+exports[`UsersController POST /users/:id/token without api token returns a 401 1`] = `
+Object {
+  "message": "Unauthorized",
+  "statusCode": 401,
+}
+`;
+
 exports[`UsersController PUT /users/:id with a mismatch in id returns a 403 1`] = `
 Object {
   "message": "Forbidden",
@@ -122,7 +136,7 @@ Object {
 
 exports[`UsersController PUT /users/:id with no logged in user returns a 401 1`] = `
 Object {
-  "message": "Unauthorized",
-  "statusCode": 401,
+  "code": "JsonWebTokenError",
+  "message": "Error: Jwt token has error. jwt must be provided",
 }
 `;

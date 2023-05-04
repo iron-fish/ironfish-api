@@ -4,21 +4,25 @@
 import { INestApplication } from '@nestjs/common';
 import faker from 'faker';
 import { v4 as uuid } from 'uuid';
+import { POOL1, POOL2 } from '../jumio-kyc/types/pools';
+import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
 import { UpsertUserPointsOptions } from './interfaces/upsert-user-points-options';
 import { UserPointsService } from './user-points.service';
-import { EventType } from '.prisma/client';
+import { EventType, KycStatus } from '.prisma/client';
 
 describe('UserPointsService', () => {
   let app: INestApplication;
   let userPointsService: UserPointsService;
   let usersService: UsersService;
+  let prismaService: PrismaService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
     userPointsService = app.get(UserPointsService);
     usersService = app.get(UsersService);
+    prismaService = app.get(PrismaService);
     await app.init();
   });
 
@@ -41,6 +45,52 @@ describe('UserPointsService', () => {
 
     const points = await userPointsService.findOrThrow(user.id);
     expect(points.user_id).toBe(user.id);
+  });
+
+  it('should find get pool total', async () => {
+    const createUser = async (kycStatus: KycStatus) => {
+      const user = await usersService.create({
+        email: faker.internet.email(),
+        graffiti: uuid(),
+        countryCode: 'USA',
+      });
+      const redemption = await prismaService.redemption.create({
+        data: {
+          kyc_status: kycStatus,
+          user_id: user.id,
+          public_address: 'fakepublicaddress',
+        },
+      });
+      return [user, redemption] as const;
+    };
+    const [user] = await createUser(KycStatus.SUCCESS);
+    const [user2] = await createUser(KycStatus.SUCCESS);
+
+    await prismaService.userPoints.update({
+      data: {
+        pool1_points: 12,
+        pool2_points: 0,
+        pool3_points: 0,
+        pool4_points: 0,
+      },
+      where: { user_id: user.id },
+    });
+
+    await prismaService.userPoints.update({
+      data: {
+        pool1_points: 0,
+        pool2_points: 1,
+        pool3_points: 0,
+        pool4_points: 0,
+      },
+      where: { user_id: user2.id },
+    });
+
+    const pool1Points = await userPointsService.poolTotal(POOL1);
+    expect(pool1Points).toBe(12);
+
+    const pool2Points = await userPointsService.poolTotal(POOL2);
+    expect(pool2Points).toBe(1);
   });
 
   describe('upsert', () => {

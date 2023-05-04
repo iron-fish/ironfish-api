@@ -64,7 +64,8 @@ describe('AssetDescriptionsController', () => {
         const { block } = await blocksService.upsert(prisma, {
           hash: uuid(),
           sequence: faker.datatype.number(),
-          difficulty: faker.datatype.number(),
+          difficulty: BigInt(faker.datatype.number()),
+          work: BigInt(faker.datatype.number()),
           timestamp: new Date(),
           transactionsCount: 1,
           type: BlockOperation.CONNECTED,

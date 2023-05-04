@@ -4,6 +4,7 @@
 import { JumioTransaction, Redemption } from '@prisma/client';
 import assert from 'assert';
 import { ApiConfigService } from '../../api-config/api-config.service';
+import { ORE_TO_IRON } from '../../common/constants';
 import { SerializedKyc } from '../interfaces/serialized-kyc';
 
 export function serializeKyc(
@@ -13,12 +14,29 @@ export function serializeKyc(
   canAttemptReason: string,
   canCreate: boolean,
   canCreateReason: string,
+  helpUrl: string,
   config: ApiConfigService,
 ): SerializedKyc {
   assert.ok(redemption.jumio_account_id);
 
   const maxAttempts =
     redemption.kyc_max_attempts ?? config.get<number>('KYC_MAX_ATTEMPTS');
+
+  const pool_one_iron = redemption.pool_one
+    ? (Number(redemption.pool_one) * 1.0) / ORE_TO_IRON
+    : 0;
+
+  const pool_two_iron = redemption.pool_two
+    ? (Number(redemption.pool_two) * 1.0) / ORE_TO_IRON
+    : 0;
+
+  const pool_three_iron = redemption.pool_three
+    ? (Number(redemption.pool_three) * 1.0) / ORE_TO_IRON
+    : 0;
+
+  const pool_four_iron = redemption.pool_four
+    ? (Number(redemption.pool_four) * 1.0) / ORE_TO_IRON
+    : 0;
 
   return {
     redemption_id: redemption.id,
@@ -30,9 +48,16 @@ export function serializeKyc(
     public_address: redemption.public_address,
     jumio_workflow_execution_id: transaction.workflow_execution_id,
     jumio_web_href: transaction.web_href,
+    transaction_hash: redemption.transaction_hash,
     can_attempt: canAttempt,
     can_attempt_reason: canAttemptReason,
     can_create: canCreate,
     can_create_reason: canCreateReason,
+    help_url: helpUrl,
+    pool_one_iron,
+    pool_two_iron,
+    pool_three_iron,
+    pool_four_iron,
+    airdrop_transaction_hash: redemption.transaction_hash,
   };
 }

@@ -3,19 +3,25 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { INestApplication } from '@nestjs/common';
 import { DecisionStatus, KycStatus } from '@prisma/client';
-import assert from 'assert';
 import faker from 'faker';
 import { v4 as uuid } from 'uuid';
-import { AIRDROP_CONFIG } from '../common/constants';
 import { ImageChecksLabel } from '../jumio-api/interfaces/jumio-transaction-retrieve';
+import { EXTRACTION_CHECK_FIXTURE } from '../jumio-kyc/fixtures/extraction-check';
 import { IMAGE_CHECK_FIXTURE } from '../jumio-kyc/fixtures/image-check';
 import { LIVENESS_CHECK_FIXTURE } from '../jumio-kyc/fixtures/liveness-check';
 import { WATCHLIST_SCREEN_FIXTURE } from '../jumio-kyc/fixtures/watch-list';
 import { WORKFLOW_RETRIEVE_FIXTURE } from '../jumio-kyc/fixtures/workflow';
+import { WORKFLOW_EXPIRED } from '../jumio-kyc/fixtures/workflow-expired';
+import { WORKFLOW_SIMILARITY } from '../jumio-kyc/fixtures/workflow-similarity';
+import { WORKFLOW_UNSUPPORTED } from '../jumio-kyc/fixtures/workflow-unsupported';
+import { WORKFLOW_USABILITY_ERROR } from '../jumio-kyc/fixtures/workflow-usability-error';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UsersService } from '../users/users.service';
-import { RedemptionService } from './redemption.service';
+import { APPROVED_LIVENESS_FAILURE_FIXTURE } from './fixtures/approved-liveness-failure';
+import { APPROVED_LIVENESS_UNDETERMINED_FIXTURE } from './fixtures/approved-liveness-undertermined';
+import { APPROVED_REPEATED_FACE_FAILURE } from './fixtures/approved-repeated-face-failure';
+import { HELP_URLS, RedemptionService } from './redemption.service';
 
 describe('RedemptionServiceSpec', () => {
   let app: INestApplication;
@@ -42,11 +48,16 @@ describe('RedemptionServiceSpec', () => {
     });
 
     it('should return banned if user from PRK', async () => {
-      const fixture = WORKFLOW_RETRIEVE_FIXTURE({ idCountryCode: 'PRK' });
+      const fixture = WORKFLOW_RETRIEVE_FIXTURE({
+        extractionCheck: EXTRACTION_CHECK_FIXTURE({ idCountryCode: 'PRK' }),
+      });
+
       const status = await redemptionService.calculateStatus(fixture);
-      expect(status).toEqual({
+
+      expect(status).toMatchObject({
         status: KycStatus.FAILED,
-        failureMessage: 'Failure: Banned Country',
+        failureMessage: expect.stringContaining('banned PRK'),
+        failureUrl: HELP_URLS.BANNED_COUNTRY_ID,
         idDetails: [
           {
             id_issuing_country: 'PRK',
@@ -57,12 +68,63 @@ describe('RedemptionServiceSpec', () => {
       });
     });
 
+    it('should detect unsupported document', async () => {
+      const status = await redemptionService.calculateStatus(
+        WORKFLOW_UNSUPPORTED,
+      );
+
+      expect(status).toMatchObject({
+        status: KycStatus.TRY_AGAIN,
+        failureMessage: 'Your ID is not supported.',
+        failureUrl: HELP_URLS.DOC_UNSUPPORTED,
+        idDetails: undefined,
+        age: undefined,
+      });
+    });
+
+    it('should try again on expired workflow', async () => {
+      const status = await redemptionService.calculateStatus(WORKFLOW_EXPIRED);
+
+      expect(status).toMatchObject({
+        status: KycStatus.TRY_AGAIN,
+        failureMessage: 'Time limit of 15 minutes.',
+        failureUrl: HELP_URLS.EXPIRED,
+        idDetails: undefined,
+        age: undefined,
+      });
+    });
+
+    it('should try again on similarity', async () => {
+      const status = await redemptionService.calculateStatus(
+        WORKFLOW_SIMILARITY,
+      );
+
+      expect(status).toMatchObject({
+        status: KycStatus.SUCCESS,
+        failureMessage: null,
+        failureUrl: null,
+      });
+    });
+
+    it('should check usability label', async () => {
+      const status = await redemptionService.calculateStatus(
+        WORKFLOW_USABILITY_ERROR,
+      );
+
+      expect(status).toMatchObject({
+        status: KycStatus.TRY_AGAIN,
+        failureUrl: HELP_URLS.DOC_MISSING_SIGNATURE,
+      });
+    });
+
     it('should not ban with acceptable country', async () => {
       const fixture = WORKFLOW_RETRIEVE_FIXTURE();
       const status = await redemptionService.calculateStatus(fixture);
-      expect(status).toEqual({
+
+      expect(status).toMatchObject({
         status: KycStatus.SUCCESS,
         failureMessage: null,
+        failureUrl: null,
         idDetails: [
           {
             id_issuing_country: 'CHL',
@@ -103,57 +165,6 @@ describe('RedemptionServiceSpec', () => {
     });
   });
 
-  describe('userDeadline', () => {
-    it('should return pool2 date if user only has pool2', async () => {
-      const userPoints = await prismaService.userPoints.create({
-        data: {
-          user: {
-            create: {
-              email: faker.internet.email(),
-              graffiti: uuid(),
-              country_code: 'IDN',
-              enable_kyc: true,
-            },
-          },
-          pool2_points: 100,
-        },
-      });
-      const pool2 = AIRDROP_CONFIG.data.find((a) => a.name === 'pool_two');
-      assert.ok(pool2);
-      const calculatedDate = await redemptionService.userDeadline(
-        userPoints.user_id,
-      );
-      expect(calculatedDate).toEqual(pool2?.kyc_completed_by);
-    });
-    it('should return max date if user only has all pools', async () => {
-      const userPoints = await prismaService.userPoints.create({
-        data: {
-          user: {
-            create: {
-              email: faker.internet.email(),
-              graffiti: uuid(),
-              country_code: 'IDN',
-              enable_kyc: true,
-            },
-          },
-          pool1_points: 100,
-          pool2_points: 100,
-          pool3_points: 100,
-          pool4_points: 100,
-        },
-      });
-      const calculatedDate = await redemptionService.userDeadline(
-        userPoints.user_id,
-      );
-      const maxDate = new Date(
-        Math.max(
-          ...AIRDROP_CONFIG.data.map((p) => p.kyc_completed_by.getTime()),
-        ),
-      );
-      expect(calculatedDate).toEqual(maxDate);
-    });
-  });
-
   describe('isEligible', () => {
     it('should not be eligible if past kyc requirement date', async () => {
       const user = await usersService.create({
@@ -183,6 +194,38 @@ describe('RedemptionServiceSpec', () => {
       expect(eligiblity.eligible).toBe(false);
       expect(eligiblity.reason).toContain(
         'Your final deadline for kyc has passed',
+      );
+    });
+
+    it('should not be eligible with kyc banned country', async () => {
+      const user = await usersService.create({
+        email: faker.internet.email(),
+        graffiti: uuid(),
+        countryCode: 'IDN',
+        enable_kyc: true,
+      });
+      let redemption = await redemptionService.create(
+        user,
+        'fakepublicaddress',
+        '127.0.0.1',
+      );
+      redemption = await redemptionService.update(redemption, {
+        idDetails: [
+          { id_issuing_country: 'PRK', id_subtype: 'foo', id_type: 'bar' },
+        ],
+      });
+      await prismaService.userPoints.update({
+        data: {
+          pool2_points: 100,
+        },
+        where: {
+          user_id: user.id,
+        },
+      });
+      const eligiblity = await redemptionService.isEligible(user, redemption);
+      expect(eligiblity.eligible).toBe(false);
+      expect(eligiblity.reason).toBe(
+        'A country associated with your KYC attempt is banned: PRK',
       );
     });
 
@@ -279,7 +322,9 @@ describe('RedemptionServiceSpec', () => {
         user1Account2.id,
         repeatedFaces,
       );
-      expect(check).toContain('User with multiple accounts detected');
+      expect(check).toContain(
+        'You have already attempted KYC for another graffiti',
+      );
     });
 
     it('should allow submission of repeated face from same user', async () => {
@@ -341,21 +386,78 @@ describe('RedemptionServiceSpec', () => {
         imageCheck,
       });
       const labels = redemptionService.getTransactionLabels(fixture);
-      const acceptableFace = redemptionService.hasOnlyBenignWarnings(labels);
+      const acceptableFace =
+        redemptionService.hasOnlyBenignFaceWarnings(labels);
       expect(acceptableFace).toBe(true);
+    });
+
+    it('should allow submission of repeated face from same user with multiple kycs', async () => {
+      const status = await redemptionService.calculateStatus(
+        APPROVED_REPEATED_FACE_FAILURE,
+      );
+      expect(status).toMatchObject({
+        status: KycStatus.SUCCESS,
+        failureMessage: null,
+      });
     });
 
     it('should allow LIVENESS_UNDETERMINED warning for success if risk score acceptable', async () => {
       const fixture = WORKFLOW_RETRIEVE_FIXTURE({
-        decisionStatus: DecisionStatus.WARNING,
         imageCheck: IMAGE_CHECK_FIXTURE('OK'),
         livenessCheck: LIVENESS_CHECK_FIXTURE('LIVENESS_UNDETERMINED'),
-        riskScore: 49,
+        riskScore: 40,
       });
       const status = await redemptionService.calculateStatus(fixture);
       expect(status).toMatchObject({
         status: KycStatus.SUCCESS,
-        failureMessage: expect.stringContaining('Benign'),
+      });
+    });
+
+    it('should not allow minors to pass KYC', async () => {
+      const fixture = WORKFLOW_RETRIEVE_FIXTURE({
+        extractionCheck: EXTRACTION_CHECK_FIXTURE({ age: 10 }),
+      });
+
+      const status = await redemptionService.calculateStatus(fixture);
+
+      expect(status).toMatchObject({
+        status: KycStatus.TRY_AGAIN,
+        failureMessage: expect.stringContaining('10'),
+        failureUrl: HELP_URLS.MIN_AGE,
+      });
+    });
+
+    it('should allow adults to pass KYC', async () => {
+      const age = 18;
+      const fixture = WORKFLOW_RETRIEVE_FIXTURE({
+        extractionCheck: EXTRACTION_CHECK_FIXTURE({
+          age,
+        }),
+      });
+      const status = await redemptionService.calculateStatus(fixture);
+      expect(status).toMatchObject({
+        status: KycStatus.SUCCESS,
+        failureMessage: null,
+      });
+    });
+
+    it('should bypass age check if not present', async () => {
+      const extractionFixture = EXTRACTION_CHECK_FIXTURE();
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { currentAge, ...data } = extractionFixture.data;
+      const agelessFixture = {
+        ...extractionFixture,
+        data: data,
+      };
+
+      // remove the age from returned info
+      const fixture = WORKFLOW_RETRIEVE_FIXTURE({
+        extractionCheck: agelessFixture,
+      });
+      const status = await redemptionService.calculateStatus(fixture);
+      expect(status).toMatchObject({
+        status: KycStatus.SUCCESS,
+        failureMessage: null,
       });
     });
 
@@ -369,7 +471,8 @@ describe('RedemptionServiceSpec', () => {
       const status = await redemptionService.calculateStatus(fixture);
       expect(status).toMatchObject({
         status: KycStatus.TRY_AGAIN,
-        failureMessage: null,
+        failureMessage: expect.stringContaining('unknown'),
+        failureUrl: HELP_URLS.UNKNOWN,
       });
     });
   });
@@ -405,6 +508,21 @@ describe('RedemptionServiceSpec', () => {
           WATCHLIST_SCREEN_FIXTURE('OK', 0),
         ]),
       ).toBeNull();
+    });
+  });
+
+  describe('approve-list', () => {
+    it('should allow benign liveness failure', () => {
+      const matched = redemptionService.matchApprovedLabels(
+        APPROVED_LIVENESS_FAILURE_FIXTURE,
+      );
+      expect(matched).toBe(true);
+    });
+    it('should allow benign liveness undetermined', () => {
+      const matched = redemptionService.matchApprovedLabels(
+        APPROVED_LIVENESS_UNDETERMINED_FIXTURE,
+      );
+      expect(matched).toBe(true);
     });
   });
 });
