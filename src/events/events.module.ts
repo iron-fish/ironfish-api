@@ -11,7 +11,6 @@ import { LoggerModule } from '../logger/logger.module';
 import { MultiAssetHeadModule } from '../multi-asset-head/multi-asset-head.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { UserPointsModule } from '../user-points/user-points.module';
-import { UserRanksModule } from '../user-rank/user-ranks.module';
 import { UsersModule } from '../users/users.module';
 import { DepositsService } from './deposits.service';
 import { DepositsUpsertService } from './deposits.upsert.service';
@@ -38,7 +37,6 @@ import { MultiAssetUpsertService } from './multi-asset.upsert.service';
     PrismaModule,
     UserPointsModule,
     UsersModule,
-    UserRanksModule,
   ],
   providers: [
     EventsService,

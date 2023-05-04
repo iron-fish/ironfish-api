@@ -28,7 +28,7 @@ import { Secret, sign, SignOptions } from 'jsonwebtoken';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { MagicLinkGuard } from '../auth/guards/magic-link.guard';
-import { DEFAULT_LIMIT, MAX_LIMIT, MS_PER_DAY } from '../common/constants';
+import { MS_PER_DAY } from '../common/constants';
 import { Context } from '../common/decorators/context';
 import { MetricsGranularity } from '../common/enums/metrics-granularity';
 import { MetricsPool } from '../common/enums/metrics-pool';
@@ -41,7 +41,6 @@ import { SerializedEventMetrics } from '../events/interfaces/serialized-event-me
 import { NodeUptimesService } from '../node-uptimes/node-uptimes.service';
 import { RecaptchaVerificationService } from '../recaptcha-verification/recaptcha-verification.service';
 import { UserPointsService } from '../user-points/user-points.service';
-import { UserRanksService } from '../user-rank/user-ranks.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserMetricsQueryDto } from './dto/user-metrics-query.dto';
@@ -66,7 +65,6 @@ export class UsersController {
     private readonly eventsService: EventsService,
     private readonly nodeUptimeService: NodeUptimesService,
     private readonly userPointsService: UserPointsService,
-    private readonly userRankService: UserRanksService,
     private readonly usersService: UsersService,
     private readonly usersUpdater: UsersUpdater,
     private readonly recaptchaVerificationService: RecaptchaVerificationService,
@@ -133,17 +131,6 @@ export class UsersController {
 
       eventMetrics =
         this.eventsService.getLifetimeEventMetricsForUser(userPoints);
-
-      pools = {
-        main: await this.eventsService.getLifetimeEventsMetricsForUser(
-          user,
-          EventType.POOL4,
-        ),
-        code: await this.eventsService.getLifetimeEventsMetricsForUser(
-          user,
-          EventType.PULL_REQUEST_MERGED,
-        ),
-      };
 
       poolPoints = {
         pool_one: userPoints.pool1_points ?? 0,
@@ -248,37 +235,8 @@ export class UsersController {
         transform: true,
       }),
     )
-    {
-      after,
-      before,
-      limit,
-      order_by: orderBy,
-      country_code: countryCode,
-      event_type: eventType,
-      search,
-    }: UsersQueryDto,
+    { after, before, limit, country_code: countryCode, search }: UsersQueryDto,
   ): Promise<PaginatedList<SerializedUser | SerializedUserWithRank>> {
-    if (orderBy !== undefined) {
-      const { data, hasNext, hasPrevious } =
-        await this.userRankService.listWithRank({
-          after,
-          before,
-          limit: Math.min(MAX_LIMIT, limit || DEFAULT_LIMIT),
-          search,
-          countryCode,
-          eventType,
-        });
-
-      return {
-        object: 'list',
-        data,
-        metadata: {
-          has_next: hasNext,
-          has_previous: hasPrevious,
-        },
-      };
-    }
-
     const {
       data: records,
       hasNext,
