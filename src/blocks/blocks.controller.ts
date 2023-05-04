@@ -22,11 +22,7 @@ import { AssetsService } from '../assets/assets.service';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { BlocksDailyService } from '../blocks-daily/blocks-daily.service';
 import { BlocksTransactionsLoader } from '../blocks-transactions-loader/blocks-transactions-loader';
-import {
-  GENESIS_SUPPLY_IN_IRON,
-  IRON_FISH_MONTH_IN_BLOCKS,
-  MS_PER_DAY,
-} from '../common/constants';
+import { MS_PER_DAY } from '../common/constants';
 import { MetricsGranularity } from '../common/enums/metrics-granularity';
 import { List } from '../common/interfaces/list';
 import { PaginatedList } from '../common/interfaces/paginated-list';
@@ -124,54 +120,17 @@ export class BlocksController {
       hashRate = divide(workDifference, BigInt(diffInMs)) * 1000;
     }
 
-    let miningRewards = 0;
-    for (let sequence = 2; sequence <= head.sequence; sequence++) {
-      miningRewards += this.blocksService.miningReward(sequence);
-    }
+    const { circulating, total } =
+      this.blocksService.totalAndCirculatingSupplies(head.sequence);
 
     assert.ok(head.transactions[0]);
     return {
       ...serializedBlockFromRecord(head),
       hash_rate: hashRate,
       reward: Math.abs(head.transactions[0].fee).toString(),
-      circulating_supply: this.circulatingSupply(head.sequence) + miningRewards,
-      total_supply: GENESIS_SUPPLY_IN_IRON + miningRewards,
+      circulating_supply: circulating,
+      total_supply: total,
     };
-  }
-
-  private circulatingSupply(sequence: number): number {
-    const monthsAfterLaunch = Math.floor(sequence / IRON_FISH_MONTH_IN_BLOCKS);
-
-    // Immediately available:
-    // 18.00% - Foundation
-    // 05.00% - IF Labs
-    // 02.25% - Airdrop
-    const immediatelyUnlocked = 0.2525;
-    let circulatingSupply = immediatelyUnlocked * GENESIS_SUPPLY_IN_IRON;
-
-    // Subject to 1y lock and 1y unlock:
-    // 05.10% - Preseed
-    // 09.90% - Seed
-    // 14.50% - Series A
-    // 00.60% - Advisors
-    // 37.40% - Team
-    // 05.00% - Future Endowments
-    const yearLockAndYearUnlock = 0.725;
-    if (monthsAfterLaunch >= 12) {
-      circulatingSupply +=
-        Math.min(1, monthsAfterLaunch / 24) *
-        yearLockAndYearUnlock *
-        GENESIS_SUPPLY_IN_IRON;
-    }
-
-    // Subject to 6m lock and no unlock:
-    // 02.25% - Future Airdrop
-    const sixMonthLock = 0.0225;
-    if (monthsAfterLaunch >= 6) {
-      circulatingSupply += sixMonthLock * GENESIS_SUPPLY_IN_IRON;
-    }
-
-    return circulatingSupply;
   }
 
   @ApiOperation({

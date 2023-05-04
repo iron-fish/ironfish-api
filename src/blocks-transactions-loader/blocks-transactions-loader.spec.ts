@@ -160,7 +160,7 @@ describe('BlocksTransactionsLoader', () => {
           ],
         });
 
-        expect(addJob).toHaveBeenCalledTimes(2);
+        expect(addJob).toHaveBeenCalledTimes(3);
         expect(addJob).toHaveBeenCalledWith(
           GraphileWorkerPattern.DELETE_BLOCK_MINED_EVENT,
           {
@@ -194,7 +194,7 @@ describe('BlocksTransactionsLoader', () => {
           ],
         });
 
-        expect(addJob).toHaveBeenCalledTimes(2);
+        expect(addJob).toHaveBeenCalledTimes(3);
         expect(addJob).toHaveBeenCalledWith(
           GraphileWorkerPattern.UPSERT_BLOCK_MINED_EVENT,
           {
@@ -205,7 +205,7 @@ describe('BlocksTransactionsLoader', () => {
         );
       });
 
-      it('queues a job to sync a daily snapshot', async () => {
+      it('queues jobs to sync a daily snapshot and update the native asset', async () => {
         await blocksTransactionsLoader.createMany({
           blocks: [
             {
@@ -223,12 +223,17 @@ describe('BlocksTransactionsLoader', () => {
           ],
         });
 
-        expect(addJob).toHaveBeenCalledTimes(1);
+        expect(addJob).toHaveBeenCalledTimes(2);
         expect(addJob).toHaveBeenCalledWith(
           GraphileWorkerPattern.SYNC_BLOCKS_DAILY,
           {
             date: expect.any(Date),
           },
+        );
+        expect(addJob).toHaveBeenCalledWith(
+          GraphileWorkerPattern.REFRESH_NATIVE_ASSET_SUPPLY,
+          undefined,
+          expect.anything(),
         );
       });
     });

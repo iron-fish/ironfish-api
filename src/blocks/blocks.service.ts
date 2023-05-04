@@ -12,6 +12,7 @@ import { BlocksTransactionsService } from '../blocks-transactions/blocks-transac
 import {
   DEFAULT_LIMIT,
   GENESIS_SUPPLY_IN_IRON,
+  IRON_FISH_MONTH_IN_BLOCKS,
   IRON_FISH_YEAR_IN_BLOCKS,
   MAX_LIMIT,
 } from '../common/constants';
@@ -154,6 +155,56 @@ export class BlocksService {
       threshold *
       Math.round(annualReward / IRON_FISH_YEAR_IN_BLOCKS / threshold)
     );
+  }
+
+  totalAndCirculatingSupplies(head: number): {
+    circulating: number;
+    total: number;
+  } {
+    let miningRewards = 0;
+    for (let sequence = 2; sequence <= head; sequence++) {
+      miningRewards += this.miningReward(sequence);
+    }
+
+    return {
+      circulating: this.circulatingSupply(head) + miningRewards,
+      total: GENESIS_SUPPLY_IN_IRON + miningRewards,
+    };
+  }
+
+  private circulatingSupply(sequence: number): number {
+    const monthsAfterLaunch = Math.floor(sequence / IRON_FISH_MONTH_IN_BLOCKS);
+
+    // Immediately available:
+    // 18.00% - Foundation
+    // 05.00% - IF Labs
+    // 02.25% - Airdrop
+    const immediatelyUnlocked = 0.2525;
+    let circulatingSupply = immediatelyUnlocked * GENESIS_SUPPLY_IN_IRON;
+
+    // Subject to 1y lock and 1y unlock:
+    // 05.10% - Preseed
+    // 09.90% - Seed
+    // 14.50% - Series A
+    // 00.60% - Advisors
+    // 37.40% - Team
+    // 05.00% - Future Endowments
+    const yearLockAndYearUnlock = 0.725;
+    if (monthsAfterLaunch >= 12) {
+      circulatingSupply +=
+        Math.min(1, monthsAfterLaunch / 24) *
+        yearLockAndYearUnlock *
+        GENESIS_SUPPLY_IN_IRON;
+    }
+
+    // Subject to 6m lock and no unlock:
+    // 02.25% - Future Airdrop
+    const sixMonthLock = 0.0225;
+    if (monthsAfterLaunch >= 6) {
+      circulatingSupply += sixMonthLock * GENESIS_SUPPLY_IN_IRON;
+    }
+
+    return circulatingSupply;
   }
 
   async list(options: ListBlocksOptions): Promise<{
