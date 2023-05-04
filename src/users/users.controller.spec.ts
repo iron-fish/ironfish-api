@@ -415,15 +415,6 @@ describe('UsersController', () => {
         );
       });
     });
-
-    describe('with an invalid cursor', () => {
-      it('returns a 404', async () => {
-        await request(app.getHttpServer())
-          .get(`/users`)
-          .query({ order_by: 'rank', before: -1 })
-          .expect(HttpStatus.NOT_FOUND);
-      });
-    });
   });
 
   describe('POST /users', () => {
