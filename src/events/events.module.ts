@@ -4,7 +4,6 @@
 import { Module } from '@nestjs/common';
 import { ApiConfigModule } from '../api-config/api-config.module';
 import { BlocksModule } from '../blocks/blocks.module';
-import { DepositHeadsModule } from '../deposit-heads/deposit-heads.module';
 import { GraphileWorkerModule } from '../graphile-worker/graphile-worker.module';
 import { InfluxDbModule } from '../influxdb/influxdb.module';
 import { LoggerModule } from '../logger/logger.module';
@@ -12,24 +11,15 @@ import { MultiAssetHeadModule } from '../multi-asset-head/multi-asset-head.modul
 import { PrismaModule } from '../prisma/prisma.module';
 import { UserPointsModule } from '../user-points/user-points.module';
 import { UsersModule } from '../users/users.module';
-import { DepositsService } from './deposits.service';
-import { DepositsUpsertService } from './deposits.upsert.service';
 import { EventsService } from './events.service';
 import { MultiAssetService } from './multi-asset.service';
 import { MultiAssetUpsertService } from './multi-asset.upsert.service';
 
 @Module({
-  exports: [
-    EventsService,
-    DepositsService,
-    DepositsUpsertService,
-    MultiAssetService,
-    MultiAssetUpsertService,
-  ],
+  exports: [EventsService, MultiAssetService, MultiAssetUpsertService],
   imports: [
     ApiConfigModule,
     BlocksModule,
-    DepositHeadsModule,
     MultiAssetHeadModule,
     GraphileWorkerModule,
     InfluxDbModule,
@@ -38,12 +28,6 @@ import { MultiAssetUpsertService } from './multi-asset.upsert.service';
     UserPointsModule,
     UsersModule,
   ],
-  providers: [
-    EventsService,
-    DepositsService,
-    DepositsUpsertService,
-    MultiAssetUpsertService,
-    MultiAssetService,
-  ],
+  providers: [EventsService, MultiAssetUpsertService, MultiAssetService],
 })
 export class EventsModule {}
