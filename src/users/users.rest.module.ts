@@ -4,12 +4,11 @@
 import { Module } from '@nestjs/common';
 import { ApiConfigModule } from '../api-config/api-config.module';
 import { EventsModule } from '../events/events.module';
-import { UserPointsModule } from '../user-points/user-points.module';
 import { UsersController } from './users.controller';
 import { UsersModule } from './users.module';
 
 @Module({
   controllers: [UsersController],
-  imports: [ApiConfigModule, EventsModule, UserPointsModule, UsersModule],
+  imports: [ApiConfigModule, EventsModule, UsersModule],
 })
 export class UsersRestModule {}

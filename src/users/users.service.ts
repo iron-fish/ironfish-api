@@ -12,7 +12,6 @@ import { SortOrder } from '../common/enums/sort-order';
 import { standardizeEmail } from '../common/utils/email';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
-import { UserPointsService } from '../user-points/user-points.service';
 import { CreateUserOptions } from './interfaces/create-user-options';
 import { ListUsersOptions } from './interfaces/list-users-options';
 import { UpdateUserOptions } from './interfaces/update-user-options';
@@ -20,10 +19,7 @@ import { Prisma, User } from '.prisma/client';
 
 @Injectable()
 export class UsersService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly userPointsService: UserPointsService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async find(id: number): Promise<User | null> {
     return this.prisma.user.findUnique({
@@ -159,12 +155,6 @@ export class UsersService {
           enable_kyc,
         },
       });
-
-      await this.userPointsService.upsertWithClient(
-        { userId: user.id },
-        prisma,
-      );
-
       return user;
     });
   }
