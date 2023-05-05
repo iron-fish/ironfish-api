@@ -6,13 +6,12 @@ import { ApiConfigModule } from '../api-config/api-config.module';
 import { GraphileWorkerModule } from '../graphile-worker/graphile-worker.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { UsersModule } from '../users/users.module';
-import { DepositsController } from './deposits.controller';
 import { EventsController } from './events.controller';
 import { EventsModule } from './events.module';
 import { MultiAssetController } from './multi-asset.controller';
 
 @Module({
-  controllers: [EventsController, DepositsController, MultiAssetController],
+  controllers: [EventsController, MultiAssetController],
   imports: [
     EventsModule,
     UsersModule,
