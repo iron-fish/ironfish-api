@@ -25,8 +25,6 @@ import { EventsJobsModule } from './events/events.jobs.module';
 import { EventsRestModule } from './events/events.rest.module';
 import { FaucetTransactionsRestModule } from './faucet-transactions/faucet-transactions.rest.module';
 import { HealthRestModule } from './health/health.rest.module';
-import { KycJobsModule } from './jumio-kyc/kyc.jobs.module';
-import { KycRestModule } from './jumio-kyc/kyc.rest.module';
 import { LoggerModule } from './logger/logger.module';
 import { MetricsRestModule } from './metrics/metrics.rest.module';
 import { TelemetryRestModule } from './telemetry/telemetry.rest.module';
@@ -39,7 +37,6 @@ import { VersionsRestModule } from './versions/versions.rest.module';
 export const JOBS_MODULES = [
   AssetsLoaderJobsModule,
   BlocksDailyJobsModule,
-  KycJobsModule,
   EventsJobsModule,
   UserPointsJobsModule,
 ];
@@ -54,7 +51,6 @@ export const REST_MODULES = [
   FaucetTransactionsRestModule,
   HealthRestModule,
   MetricsRestModule,
-  KycRestModule,
   TelemetryRestModule,
   TransactionsRestModule,
   UserPointsRestModule,

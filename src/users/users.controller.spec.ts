@@ -9,7 +9,6 @@ import { v4 as uuid } from 'uuid';
 import { MetricsGranularity } from '../common/enums/metrics-granularity';
 import { standardizeEmail } from '../common/utils/email';
 import { MagicLinkService } from '../magic-link/magic-link.service';
-import { RecaptchaVerificationService } from '../recaptcha-verification/recaptcha-verification.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UpsertUserPointsOptions } from '../user-points/interfaces/upsert-user-points-options';
 import { UserPointsService } from '../user-points/user-points.service';
@@ -21,13 +20,11 @@ describe('UsersController', () => {
   let app: INestApplication;
   let magicLinkService: MagicLinkService;
   let usersService: UsersService;
-  let recaptchaVerificationService: RecaptchaVerificationService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
     magicLinkService = app.get(MagicLinkService);
     usersService = app.get(UsersService);
-    recaptchaVerificationService = app.get(RecaptchaVerificationService);
 
     await app.init();
   });
@@ -459,9 +456,6 @@ describe('UsersController', () => {
     describe('with valid arguments', () => {
       it('creates a user', async () => {
         const email = faker.internet.email().toUpperCase();
-        const recaptchaVerification = jest
-          .spyOn(recaptchaVerificationService, 'verify')
-          .mockImplementation(() => Promise.resolve(true));
 
         const graffiti = uuid();
         const discord = faker.internet.userName();
@@ -477,65 +471,12 @@ describe('UsersController', () => {
           })
           .expect(HttpStatus.CREATED);
 
-        expect(recaptchaVerification).toHaveBeenCalledTimes(1);
         expect(body).toMatchObject({
           id: expect.any(Number),
           email: standardizeEmail(email),
           created_at: expect.any(String),
           graffiti,
           discord,
-        });
-      });
-
-      describe('recaptcha verification failure', () => {
-        afterEach(() => {
-          jest.clearAllMocks();
-        });
-
-        it('returns 422 on missing recaptcha token', async () => {
-          const email = faker.internet.email().toUpperCase();
-          const recaptchaVerification = jest.spyOn(
-            recaptchaVerificationService,
-            'verify',
-          );
-
-          const graffiti = uuid();
-          const discord = faker.internet.userName();
-          await request(app.getHttpServer())
-            .post(`/users`)
-            .set('Authorization', `Bearer ${API_KEY}`)
-            .send({
-              email,
-              graffiti,
-              discord,
-              country_code: faker.address.countryCode('alpha-3'),
-            })
-            .expect(HttpStatus.UNPROCESSABLE_ENTITY);
-
-          expect(recaptchaVerification).toHaveBeenCalledTimes(1);
-        });
-
-        it('returns 422 on failed verification', async () => {
-          const email = faker.internet.email().toUpperCase();
-          const recaptchaVerification = jest
-            .spyOn(recaptchaVerificationService, 'verify')
-            .mockImplementation(() => Promise.resolve(false));
-
-          const graffiti = uuid();
-          const discord = faker.internet.userName();
-          await request(app.getHttpServer())
-            .post(`/users`)
-            .set('Authorization', `Bearer ${API_KEY}`)
-            .send({
-              email,
-              graffiti,
-              discord,
-              country_code: faker.address.countryCode('alpha-3'),
-              recaptcha: 'token',
-            })
-            .expect(HttpStatus.UNPROCESSABLE_ENTITY);
-
-          expect(recaptchaVerification).toHaveBeenCalledTimes(1);
         });
       });
     });

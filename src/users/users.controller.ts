@@ -12,7 +12,6 @@ import {
   Post,
   Put,
   Query,
-  Req,
   UnprocessableEntityException,
   UseGuards,
   ValidationPipe,
@@ -23,7 +22,6 @@ import {
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
-import { Request } from 'express';
 import { Secret, sign, SignOptions } from 'jsonwebtoken';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
@@ -35,10 +33,8 @@ import { MetricsPool } from '../common/enums/metrics-pool';
 import { MagicLinkContext } from '../common/interfaces/magic-link-context';
 import { PaginatedList } from '../common/interfaces/paginated-list';
 import { IntIsSafeForPrismaPipe } from '../common/pipes/int-is-safe-for-prisma.pipe';
-import { fetchIpAddressFromRequest } from '../common/utils/request';
 import { EventsService } from '../events/events.service';
 import { SerializedEventMetrics } from '../events/interfaces/serialized-event-metrics';
-import { RecaptchaVerificationService } from '../recaptcha-verification/recaptcha-verification.service';
 import { UserPointsService } from '../user-points/user-points.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -65,7 +61,6 @@ export class UsersController {
     private readonly userPointsService: UserPointsService,
     private readonly usersService: UsersService,
     private readonly usersUpdater: UsersUpdater,
-    private readonly recaptchaVerificationService: RecaptchaVerificationService,
   ) {}
 
   @ApiOperation({ summary: `Gets a specific User by 'graffiti'` })
@@ -265,25 +260,10 @@ export class UsersController {
       }),
     )
     dto: CreateUserDto,
-    @Req() request: Request,
   ): Promise<User> {
     if (!this.config.get<string>('ENABLE_SIGNUP')) {
       throw new HttpException(
         'Signup has been disabled',
-        HttpStatus.UNPROCESSABLE_ENTITY,
-      );
-    }
-
-    const remoteIp = fetchIpAddressFromRequest(request);
-    const isRecaptchaValid = await this.recaptchaVerificationService.verify(
-      dto.recaptcha,
-      remoteIp,
-      'signup',
-    );
-
-    if (!isRecaptchaValid) {
-      throw new HttpException(
-        'Failed to sign up',
         HttpStatus.UNPROCESSABLE_ENTITY,
       );
     }
