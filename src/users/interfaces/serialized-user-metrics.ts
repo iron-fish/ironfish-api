@@ -24,10 +24,6 @@ export interface SerializedUserMetrics {
     main: SerializedEventMetrics;
     code: SerializedEventMetrics;
   };
-  node_uptime?: {
-    total_hours: number;
-    last_checked_in: string | null;
-  };
   pool_points?: {
     pool_one: number;
     pool_two: number;

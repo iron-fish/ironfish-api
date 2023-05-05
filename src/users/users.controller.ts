@@ -35,7 +35,6 @@ import { PaginatedList } from '../common/interfaces/paginated-list';
 import { IntIsSafeForPrismaPipe } from '../common/pipes/int-is-safe-for-prisma.pipe';
 import { EventsService } from '../events/events.service';
 import { SerializedEventMetrics } from '../events/interfaces/serialized-event-metrics';
-import { NodeUptimesService } from '../node-uptimes/node-uptimes.service';
 import { UserPointsService } from '../user-points/user-points.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -59,7 +58,6 @@ export class UsersController {
   constructor(
     private readonly config: ApiConfigService,
     private readonly eventsService: EventsService,
-    private readonly nodeUptimeService: NodeUptimesService,
     private readonly userPointsService: UserPointsService,
     private readonly usersService: UsersService,
     private readonly usersUpdater: UsersUpdater,
@@ -118,7 +116,6 @@ export class UsersController {
     let points: number;
     let pools: Record<MetricsPool, SerializedEventMetrics> | undefined;
     let poolPoints;
-    let nodeUptime: SerializedUserMetrics['node_uptime'];
 
     if (query.granularity === MetricsGranularity.LIFETIME) {
       const userPoints = await this.userPointsService.findOrThrow(user.id);
@@ -132,12 +129,6 @@ export class UsersController {
         pool_two: userPoints.pool2_points ?? 0,
         pool_three: userPoints.pool3_points ?? 0,
         pool_four: userPoints.pool4_points,
-      };
-
-      const uptime = await this.nodeUptimeService.get(user);
-      nodeUptime = {
-        total_hours: uptime?.total_hours ?? 0,
-        last_checked_in: uptime?.last_checked_in?.toISOString() ?? null,
       };
     } else {
       if (query.start === undefined || query.end === undefined) {
@@ -159,7 +150,6 @@ export class UsersController {
       granularity: query.granularity,
       points,
       pools,
-      node_uptime: nodeUptime,
       pool_points: poolPoints,
       metrics: {
         blocks_mined: eventMetrics[EventType.BLOCK_MINED],
