@@ -29,7 +29,6 @@ import { KycJobsModule } from './jumio-kyc/kyc.jobs.module';
 import { KycRestModule } from './jumio-kyc/kyc.rest.module';
 import { LoggerModule } from './logger/logger.module';
 import { MetricsRestModule } from './metrics/metrics.rest.module';
-import { NodeUptimesJobsModule } from './node-uptimes/node-uptimes.jobs.module';
 import { TelemetryRestModule } from './telemetry/telemetry.rest.module';
 import { TransactionsRestModule } from './transactions/transactions.rest.module';
 import { UserPointsJobsModule } from './user-points/user-points.jobs.module';
@@ -42,7 +41,6 @@ export const JOBS_MODULES = [
   BlocksDailyJobsModule,
   KycJobsModule,
   EventsJobsModule,
-  NodeUptimesJobsModule,
   UserPointsJobsModule,
 ];
 
