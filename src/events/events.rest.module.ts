@@ -8,10 +8,9 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { UsersModule } from '../users/users.module';
 import { EventsController } from './events.controller';
 import { EventsModule } from './events.module';
-import { MultiAssetController } from './multi-asset.controller';
 
 @Module({
-  controllers: [EventsController, MultiAssetController],
+  controllers: [EventsController],
   imports: [
     EventsModule,
     UsersModule,

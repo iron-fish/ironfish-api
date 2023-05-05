@@ -7,20 +7,16 @@ import { BlocksModule } from '../blocks/blocks.module';
 import { GraphileWorkerModule } from '../graphile-worker/graphile-worker.module';
 import { InfluxDbModule } from '../influxdb/influxdb.module';
 import { LoggerModule } from '../logger/logger.module';
-import { MultiAssetHeadModule } from '../multi-asset-head/multi-asset-head.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { UserPointsModule } from '../user-points/user-points.module';
 import { UsersModule } from '../users/users.module';
 import { EventsService } from './events.service';
-import { MultiAssetService } from './multi-asset.service';
-import { MultiAssetUpsertService } from './multi-asset.upsert.service';
 
 @Module({
-  exports: [EventsService, MultiAssetService, MultiAssetUpsertService],
+  exports: [EventsService],
   imports: [
     ApiConfigModule,
     BlocksModule,
-    MultiAssetHeadModule,
     GraphileWorkerModule,
     InfluxDbModule,
     LoggerModule,
@@ -28,6 +24,6 @@ import { MultiAssetUpsertService } from './multi-asset.upsert.service';
     UserPointsModule,
     UsersModule,
   ],
-  providers: [EventsService, MultiAssetUpsertService, MultiAssetService],
+  providers: [EventsService],
 })
 export class EventsModule {}
