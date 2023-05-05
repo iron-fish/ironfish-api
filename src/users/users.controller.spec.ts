@@ -8,15 +8,11 @@ import request from 'supertest';
 import { v4 as uuid } from 'uuid';
 import { MetricsGranularity } from '../common/enums/metrics-granularity';
 import { standardizeEmail } from '../common/utils/email';
-import { EventsJobsController } from '../events/events.jobs.controller';
-import { EventsService } from '../events/events.service';
 import { MagicLinkService } from '../magic-link/magic-link.service';
 import { RecaptchaVerificationService } from '../recaptcha-verification/recaptcha-verification.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UpsertUserPointsOptions } from '../user-points/interfaces/upsert-user-points-options';
-import { UserPointsJobsController } from '../user-points/user-points.jobs.controller';
 import { UserPointsService } from '../user-points/user-points.service';
-import { UserRanksService } from '../user-rank/user-ranks.service';
 import { UsersService } from './users.service';
 
 const API_KEY = 'test';
@@ -25,22 +21,12 @@ describe('UsersController', () => {
   let app: INestApplication;
   let magicLinkService: MagicLinkService;
   let usersService: UsersService;
-  let eventsService: EventsService;
-  let eventsJobsController: EventsJobsController;
-  let userPointsJobsController: UserPointsJobsController;
-  let userRankService: UserRanksService;
-  let userPointsService: UserPointsService;
   let recaptchaVerificationService: RecaptchaVerificationService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
     magicLinkService = app.get(MagicLinkService);
     usersService = app.get(UsersService);
-    eventsService = app.get(EventsService);
-    eventsJobsController = app.get(EventsJobsController);
-    userPointsJobsController = app.get(UserPointsJobsController);
-    userPointsService = app.get(UserPointsService);
-    userRankService = app.get(UserRanksService);
     recaptchaVerificationService = app.get(RecaptchaVerificationService);
 
     await app.init();
@@ -305,144 +291,6 @@ describe('UsersController', () => {
       });
     });
 
-    describe('with a valid lifetime request', () => {
-      it('returns the lifetime metrics for the user', async () => {
-        const user = await usersService.create({
-          email: faker.internet.email(),
-          graffiti: uuid(),
-          countryCode: faker.address.countryCode('alpha-3'),
-        });
-
-        await eventsService.create({
-          userId: user.id,
-          type: EventType.BUG_CAUGHT,
-          points: 100,
-        });
-
-        await eventsService.create({
-          userId: user.id,
-          type: EventType.PULL_REQUEST_MERGED,
-          points: 500,
-        });
-
-        await eventsJobsController.updateLatestPoints({
-          userId: user.id,
-          type: EventType.PULL_REQUEST_MERGED,
-        });
-        await eventsJobsController.updateLatestPoints({
-          userId: user.id,
-          type: EventType.BUG_CAUGHT,
-        });
-        // refresh points
-        await userPointsJobsController.refreshPool4Points({
-          userId: user.id,
-          endDate: new Date(2024, 3, 1),
-        });
-        await userRankService.updateRanks();
-
-        const userPoints = await userPointsService.findOrThrow(user.id);
-        await userPointsService.upsertPreviousPools(userPoints, {
-          pool1: 10,
-          pool2: 20,
-          pool3: 30,
-        });
-
-        const { body } = await request(app.getHttpServer())
-          .get(`/users/${user.id}/metrics`)
-          .query({
-            granularity: MetricsGranularity.LIFETIME,
-          });
-
-        expect(body).toMatchObject({
-          user_id: user.id,
-          granularity: MetricsGranularity.LIFETIME,
-          points: expect.any(Number),
-          node_uptime: {
-            total_hours: 0,
-            last_checked_in: null,
-          },
-          pools: {
-            main: {
-              rank: expect.any(Number),
-              count: expect.any(Number),
-              points: 100,
-            },
-            code: {
-              rank: expect.any(Number),
-              count: expect.any(Number),
-              points: 500,
-            },
-          },
-          pool_points: {
-            pool_one: 10,
-            pool_two: 20,
-            pool_three: 30,
-            pool_four: 100,
-          },
-          metrics: {
-            blocks_mined: {
-              count: 0,
-              points: 0,
-            },
-            bugs_caught: {
-              count: 1,
-              points: 100,
-            },
-            community_contributions: {
-              count: 0,
-              points: 0,
-            },
-            pull_requests_merged: {
-              count: 1,
-              points: 500,
-            },
-            social_media_contributions: {
-              count: 0,
-              points: 0,
-            },
-            node_uptime: {
-              count: 0,
-              points: 0,
-            },
-            send_transaction: {
-              count: 0,
-              points: 0,
-            },
-          },
-        });
-      });
-      it('returns null for user without any points', async () => {
-        const user = await usersService.create({
-          email: faker.internet.email(),
-          graffiti: uuid(),
-          countryCode: faker.address.countryCode('alpha-3'),
-        });
-        const { body } = await request(app.getHttpServer())
-          .get(`/users/${user.id}/metrics`)
-          .query({
-            granularity: MetricsGranularity.LIFETIME,
-          });
-
-        expect(body).toMatchObject({
-          user_id: user.id,
-          granularity: MetricsGranularity.LIFETIME,
-          points: 0,
-          pools: {
-            main: {
-              rank: null,
-              count: null,
-              points: null,
-            },
-            code: {
-              rank: null,
-              count: null,
-              points: null,
-            },
-          },
-        });
-      });
-    });
-
     describe('with a valid total request', () => {
       it('returns the total metrics for the user in the given range', async () => {
         const user = await usersService.create({
@@ -540,25 +388,6 @@ describe('UsersController', () => {
       });
     });
 
-    describe('with `order_by` provided', () => {
-      it('returns ranks with the users (and no country_code provided)', async () => {
-        await userRankService.updateRanks();
-        const { body } = await request(app.getHttpServer())
-          .get(`/users`)
-          .query({ order_by: 'rank' })
-          .expect(HttpStatus.OK);
-
-        const { data } = body;
-        expect((data as unknown[]).length).toBeGreaterThan(0);
-        expect((data as unknown[])[0]).toMatchObject({
-          id: expect.any(Number),
-          graffiti: expect.any(String),
-          rank: expect.any(Number),
-          created_at: expect.any(String),
-        });
-      });
-    });
-
     describe('with `country_code` provided', () => {
       it('allows filtering by country_code', async () => {
         const someplace = await getLocation();
@@ -584,15 +413,6 @@ describe('UsersController', () => {
         (data as Record<string, unknown>[]).map(({ country_code }) =>
           expect(country_code).toEqual(someplace),
         );
-      });
-    });
-
-    describe('with an invalid cursor', () => {
-      it('returns a 404', async () => {
-        await request(app.getHttpServer())
-          .get(`/users`)
-          .query({ order_by: 'rank', before: -1 })
-          .expect(HttpStatus.NOT_FOUND);
       });
     });
   });

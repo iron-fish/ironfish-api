@@ -22,7 +22,6 @@ import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { RefreshPool4Options } from '../user-points/interfaces/refresh-pool-4-options';
 import { UserPointsService } from '../user-points/user-points.service';
-import { UserRanksService } from '../user-rank/user-ranks.service';
 import { DepositsService } from './deposits.service';
 import { CreateEventOptions } from './interfaces/create-event-options';
 import { EventWithMetadata } from './interfaces/event-with-metadata';
@@ -48,7 +47,6 @@ export class EventsService {
     private readonly config: ApiConfigService,
     private readonly prisma: PrismaService,
     private readonly userPointsService: UserPointsService,
-    private readonly userRankService: UserRanksService,
     private readonly depositsService: DepositsService,
     private readonly multiAssetService: MultiAssetService,
     private readonly graphileWorkerService: GraphileWorkerService,
@@ -732,22 +730,6 @@ export class EventsService {
     await this.addUpdateLatestPointsJob(event.user_id, event.type);
 
     return record;
-  }
-
-  async getLifetimeEventsMetricsForUser(
-    user: User,
-    events: EventType,
-  ): Promise<SerializedEventMetrics> {
-    const rank = await this.userRankService.getLifetimeEventsRankForUser(
-      user.id,
-      events,
-    );
-
-    return {
-      rank: rank.rank,
-      points: rank.points,
-      count: rank.count,
-    };
   }
 
   async createNodeUptimeEventWithClient(
