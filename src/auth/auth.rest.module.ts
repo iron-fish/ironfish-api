@@ -3,12 +3,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Module } from '@nestjs/common';
 import { ApiConfigModule } from '../api-config/api-config.module';
-import { MagicLinkModule } from '../magic-link/magic-link.module';
 import { UsersModule } from '../users/users.module';
-import { AuthController } from './auth.controller';
 
 @Module({
-  controllers: [AuthController],
-  imports: [ApiConfigModule, MagicLinkModule, UsersModule],
+  imports: [ApiConfigModule, UsersModule],
 })
 export class AuthRestModule {}

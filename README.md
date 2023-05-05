@@ -28,7 +28,6 @@ You'll need a `.env` file with the following keys:
 * `INFLUXDB_ORG`
 * `INFLUXDB_URL`
 * `IRONFISH_API_KEY`
-* `MAGIC_SECRET_KEY`
 * `MAX_DEPOSIT_SIZE`
 * `MIN_DEPOSIT_SIZE`
 * `NETWORK_VERSION`

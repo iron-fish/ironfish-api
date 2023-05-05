@@ -8,7 +8,6 @@ import request from 'supertest';
 import { v4 as uuid } from 'uuid';
 import { MetricsGranularity } from '../common/enums/metrics-granularity';
 import { standardizeEmail } from '../common/utils/email';
-import { MagicLinkService } from '../magic-link/magic-link.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { UpsertUserPointsOptions } from '../user-points/interfaces/upsert-user-points-options';
 import { UserPointsService } from '../user-points/user-points.service';
@@ -18,12 +17,10 @@ const API_KEY = 'test';
 
 describe('UsersController', () => {
   let app: INestApplication;
-  let magicLinkService: MagicLinkService;
   let usersService: UsersService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
-    magicLinkService = app.get(MagicLinkService);
     usersService = app.get(UsersService);
 
     await app.init();
@@ -477,66 +474,6 @@ describe('UsersController', () => {
           created_at: expect.any(String),
           graffiti,
           discord,
-        });
-      });
-    });
-  });
-
-  describe('PUT /users/:id', () => {
-    describe('with no logged in user', () => {
-      it('returns a 401', async () => {
-        const { body } = await request(app.getHttpServer())
-          .put('/users/0')
-          .expect(HttpStatus.UNAUTHORIZED);
-
-        expect(body).toMatchSnapshot();
-      });
-    });
-
-    describe('with a mismatch in id', () => {
-      it('returns a 403', async () => {
-        const user = await usersService.create({
-          email: faker.internet.email(),
-          graffiti: uuid(),
-          countryCode: faker.address.countryCode('alpha-3'),
-        });
-
-        jest
-          .spyOn(magicLinkService, 'getEmailFromHeader')
-          .mockImplementationOnce(() => Promise.resolve(user.email));
-
-        const { body } = await request(app.getHttpServer())
-          .put('/users/0')
-          .set('Authorization', 'token')
-          .send({ discord: 'foo' })
-          .expect(HttpStatus.FORBIDDEN);
-
-        expect(body).toMatchSnapshot();
-      });
-    });
-
-    describe('with a valid payload', () => {
-      it('updates the user', async () => {
-        const user = await usersService.create({
-          email: faker.internet.email(),
-          graffiti: uuid(),
-          countryCode: faker.address.countryCode('alpha-3'),
-        });
-
-        jest
-          .spyOn(magicLinkService, 'getEmailFromHeader')
-          .mockImplementationOnce(() => Promise.resolve(user.email));
-
-        const options = { discord: uuid() };
-        const { body } = await request(app.getHttpServer())
-          .put(`/users/${user.id}`)
-          .set('Authorization', 'token')
-          .send(options)
-          .expect(HttpStatus.OK);
-
-        expect(body).toMatchObject({
-          id: user.id,
-          discord: options.discord,
         });
       });
     });

@@ -96,7 +96,6 @@ export const REST_MODULES = [
         JUMIO_URL: joi.string().required(),
         JUMIO_WORKFLOW_DEFINITION: joi.number().required(),
         KYC_MAX_ATTEMPTS: joi.number().required(),
-        MAGIC_SECRET_KEY: joi.string().required(),
         JWT_TOKEN_SECRET: joi.string().required(),
         NETWORK_VERSION: joi.number().required(),
         NODE_ENV: joi.string().required(),
