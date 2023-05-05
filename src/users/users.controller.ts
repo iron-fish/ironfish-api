@@ -4,13 +4,11 @@
 import {
   Body,
   Controller,
-  ForbiddenException,
   Get,
   HttpException,
   HttpStatus,
   Param,
   Post,
-  Put,
   Query,
   UnprocessableEntityException,
   UseGuards,
@@ -25,19 +23,15 @@ import {
 import { Secret, sign, SignOptions } from 'jsonwebtoken';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
-import { MagicLinkGuard } from '../auth/guards/magic-link.guard';
 import { MS_PER_DAY } from '../common/constants';
-import { Context } from '../common/decorators/context';
 import { MetricsGranularity } from '../common/enums/metrics-granularity';
 import { MetricsPool } from '../common/enums/metrics-pool';
-import { MagicLinkContext } from '../common/interfaces/magic-link-context';
 import { PaginatedList } from '../common/interfaces/paginated-list';
 import { IntIsSafeForPrismaPipe } from '../common/pipes/int-is-safe-for-prisma.pipe';
 import { EventsService } from '../events/events.service';
 import { SerializedEventMetrics } from '../events/interfaces/serialized-event-metrics';
 import { UserPointsService } from '../user-points/user-points.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { UserMetricsQueryDto } from './dto/user-metrics-query.dto';
 import { UserQueryDto } from './dto/user-query.dto';
 import { UsersQueryDto } from './dto/users-query.dto';
@@ -46,7 +40,6 @@ import { SerializedUserLoginUrl } from './interfaces/serialized-user-login-url';
 import { SerializedUserMetrics } from './interfaces/serialized-user-metrics';
 import { SerializedUserWithRank } from './interfaces/serialized-user-with-rank';
 import { UsersService } from './users.service';
-import { UsersUpdater } from './users-updater';
 import { serializedUserFromRecord } from './utils/user-translator';
 import { EventType, User } from '.prisma/client';
 
@@ -60,7 +53,6 @@ export class UsersController {
     private readonly eventsService: EventsService,
     private readonly userPointsService: UserPointsService,
     private readonly usersService: UsersService,
-    private readonly usersUpdater: UsersUpdater,
   ) {}
 
   @ApiOperation({ summary: `Gets a specific User by 'graffiti'` })
@@ -275,36 +267,6 @@ export class UsersController {
       discord: dto.discord,
       telegram: dto.telegram,
       github: dto.github,
-    });
-  }
-
-  @ApiExcludeEndpoint()
-  @Put(':id')
-  @UseGuards(MagicLinkGuard)
-  async update(
-    @Context() { user }: MagicLinkContext,
-    @Param('id', new IntIsSafeForPrismaPipe())
-    id: number,
-    @Body(
-      new ValidationPipe({
-        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-        transform: true,
-      }),
-    )
-    dto: UpdateUserDto,
-  ): Promise<User> {
-    if (id !== user.id) {
-      throw new ForbiddenException();
-    }
-
-    if (!this.config.get<boolean>('ENABLE_USER_UPDATING')) {
-      return user;
-    }
-
-    return this.usersUpdater.update(user, {
-      discord: dto.discord,
-      github: dto.github,
-      telegram: dto.telegram,
     });
   }
 
