@@ -20,8 +20,6 @@ import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-
 import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
-import { RefreshPool4Options } from '../user-points/interfaces/refresh-pool-4-options';
-import { UserPointsService } from '../user-points/user-points.service';
 import { CreateEventOptions } from './interfaces/create-event-options';
 import { EventWithMetadata } from './interfaces/event-with-metadata';
 import { ListEventsOptions } from './interfaces/list-events-options';
@@ -44,7 +42,6 @@ export class EventsService {
     private readonly blocksService: BlocksService,
     private readonly config: ApiConfigService,
     private readonly prisma: PrismaService,
-    private readonly userPointsService: UserPointsService,
     private readonly graphileWorkerService: GraphileWorkerService,
   ) {}
 
@@ -615,50 +612,6 @@ export class EventsService {
         queueName: `update_latest_points_${queueNumber}`,
       },
     );
-  }
-
-  async updateLatestPoints(userId: number, type: EventType): Promise<void> {
-    const [counts] = await this.prisma.readClient.$queryRawUnsafe<
-      {
-        count: bigint;
-        points: bigint;
-        total_points: bigint;
-        last_occurred_at: Date;
-      }[]
-    >(
-      `SELECT
-        SUM(points) AS total_points,
-        SUM(CASE WHEN type = $1::event_type THEN points END) points,
-        COUNT(CASE WHEN type = $1::event_type THEN 1 END) AS count,
-        MAX(CASE WHEN type = $1::event_type THEN occurred_at END) AS last_occurred_at
-      FROM events
-      WHERE user_id=$2;`,
-      EventType[type as keyof typeof EventType],
-      userId,
-    );
-
-    await this.userPointsService.upsert({
-      userId,
-      totalPoints: Number(counts.total_points),
-      points: {
-        [type]: {
-          points: Number(counts.points),
-          count: Number(counts.count),
-          latestOccurredAt: counts.last_occurred_at,
-        },
-      },
-    });
-
-    if (POOL_4_CATEGORIES.includes(type)) {
-      await this.graphileWorkerService.addJob<RefreshPool4Options>(
-        GraphileWorkerPattern.REFRESH_POOL_4_POINTS,
-        { userId },
-        {
-          jobKey: `refresh_pool_4:${userId}`,
-          queueName: `refresh_pool4`,
-        },
-      );
-    }
   }
 
   async upsertBlockMined(block: Block, user: User): Promise<Event | null> {

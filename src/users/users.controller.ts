@@ -4,46 +4,23 @@
 import {
   Body,
   Controller,
-  Get,
   HttpException,
   HttpStatus,
   Param,
   Post,
-  Query,
-  UnprocessableEntityException,
   UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
-import {
-  ApiExcludeEndpoint,
-  ApiOperation,
-  ApiParam,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiExcludeEndpoint, ApiTags } from '@nestjs/swagger';
 import { Secret, sign, SignOptions } from 'jsonwebtoken';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
-import { MS_PER_DAY } from '../common/constants';
-import { MetricsGranularity } from '../common/enums/metrics-granularity';
-import { MetricsPool } from '../common/enums/metrics-pool';
-import { PaginatedList } from '../common/interfaces/paginated-list';
 import { IntIsSafeForPrismaPipe } from '../common/pipes/int-is-safe-for-prisma.pipe';
 import { EventsService } from '../events/events.service';
-import { SerializedEventMetrics } from '../events/interfaces/serialized-event-metrics';
-import { UserPointsService } from '../user-points/user-points.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UserMetricsQueryDto } from './dto/user-metrics-query.dto';
-import { UserQueryDto } from './dto/user-query.dto';
-import { UsersQueryDto } from './dto/users-query.dto';
-import { SerializedUser } from './interfaces/serialized-user';
 import { SerializedUserLoginUrl } from './interfaces/serialized-user-login-url';
-import { SerializedUserMetrics } from './interfaces/serialized-user-metrics';
-import { SerializedUserWithRank } from './interfaces/serialized-user-with-rank';
 import { UsersService } from './users.service';
-import { serializedUserFromRecord } from './utils/user-translator';
-import { EventType, User } from '.prisma/client';
-
-const MAX_SUPPORTED_TIME_RANGE_IN_DAYS = 30;
+import { User } from '.prisma/client';
 
 @ApiTags('Users')
 @Controller('users')
@@ -51,196 +28,8 @@ export class UsersController {
   constructor(
     private readonly config: ApiConfigService,
     private readonly eventsService: EventsService,
-    private readonly userPointsService: UserPointsService,
     private readonly usersService: UsersService,
   ) {}
-
-  @ApiOperation({ summary: `Gets a specific User by 'graffiti'` })
-  @Get('find')
-  async find(
-    @Query(
-      new ValidationPipe({
-        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-        transform: true,
-      }),
-    )
-    { graffiti }: UserQueryDto,
-  ): Promise<SerializedUser> {
-    const user = await this.usersService.findByGraffitiOrThrow(graffiti);
-    const userPoints = await this.userPointsService.findOrThrow(user.id);
-    return serializedUserFromRecord(user, userPoints);
-  }
-
-  @ApiOperation({ summary: 'Gets a specific User' })
-  @ApiParam({ description: 'Unique User identifier', name: 'id' })
-  @Get(':id')
-  async get(
-    @Param('id', new IntIsSafeForPrismaPipe())
-    id: number,
-  ): Promise<SerializedUser> {
-    const user = await this.usersService.findOrThrow(id);
-    const userPoints = await this.userPointsService.findOrThrow(user.id);
-    return serializedUserFromRecord(user, userPoints);
-  }
-
-  @ApiOperation({ summary: 'Gets metrics for a specific User' })
-  @ApiParam({ description: 'Unique User identifier', name: 'id' })
-  @Get(':id/metrics')
-  async metrics(
-    @Param('id', new IntIsSafeForPrismaPipe())
-    id: number,
-    @Query(
-      new ValidationPipe({
-        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-        transform: true,
-      }),
-    )
-    query: UserMetricsQueryDto,
-  ): Promise<SerializedUserMetrics> {
-    const { isValid, error } = this.isValidMetricsQuery(query);
-    if (!isValid) {
-      throw new UnprocessableEntityException(error);
-    }
-
-    const user = await this.usersService.findOrThrow(id);
-
-    let eventMetrics: Record<EventType, SerializedEventMetrics>;
-    let points: number;
-    let pools: Record<MetricsPool, SerializedEventMetrics> | undefined;
-    let poolPoints;
-
-    if (query.granularity === MetricsGranularity.LIFETIME) {
-      const userPoints = await this.userPointsService.findOrThrow(user.id);
-      points = userPoints.total_points;
-
-      eventMetrics =
-        this.eventsService.getLifetimeEventMetricsForUser(userPoints);
-
-      poolPoints = {
-        pool_one: userPoints.pool1_points ?? 0,
-        pool_two: userPoints.pool2_points ?? 0,
-        pool_three: userPoints.pool3_points ?? 0,
-        pool_four: userPoints.pool4_points,
-      };
-    } else {
-      if (query.start === undefined || query.end === undefined) {
-        throw new UnprocessableEntityException(
-          'Must provide time range for "TOTAL" requests',
-        );
-      }
-
-      ({ eventMetrics, points } =
-        await this.eventsService.getTotalEventMetricsAndPointsForUser(
-          user,
-          query.start,
-          query.end,
-        ));
-    }
-
-    return {
-      user_id: id,
-      granularity: query.granularity,
-      points,
-      pools,
-      pool_points: poolPoints,
-      metrics: {
-        blocks_mined: eventMetrics[EventType.BLOCK_MINED],
-        bugs_caught: eventMetrics[EventType.BUG_CAUGHT],
-        community_contributions: eventMetrics[EventType.COMMUNITY_CONTRIBUTION],
-        pull_requests_merged: eventMetrics[EventType.PULL_REQUEST_MERGED],
-        social_media_contributions:
-          eventMetrics[EventType.SOCIAL_MEDIA_PROMOTION],
-        node_uptime: eventMetrics[EventType.NODE_UPTIME],
-        send_transaction: eventMetrics[EventType.SEND_TRANSACTION],
-        multi_asset_burn: eventMetrics[EventType.MULTI_ASSET_BURN],
-        multi_asset_mint: eventMetrics[EventType.MULTI_ASSET_MINT],
-        multi_asset_transfer: eventMetrics[EventType.MULTI_ASSET_TRANSFER],
-      },
-    };
-  }
-
-  private isValidMetricsQuery({
-    start,
-    end,
-    granularity,
-  }: UserMetricsQueryDto): {
-    isValid: boolean;
-    error?: string;
-  } {
-    if (
-      granularity !== MetricsGranularity.LIFETIME &&
-      granularity !== MetricsGranularity.TOTAL
-    ) {
-      return {
-        isValid: false,
-        error: '"granularity" must be "lifetime" or "total"',
-      };
-    }
-
-    if (start !== undefined && end !== undefined) {
-      if (granularity === MetricsGranularity.LIFETIME) {
-        return {
-          isValid: false,
-          error: 'Cannot provide time range for "LIFETIME" requests',
-        };
-      }
-      if (start >= end) {
-        return {
-          isValid: false,
-          error: '"start" must be stricly less than "end"',
-        };
-      }
-
-      const diffInMs = end.getTime() - start.getTime();
-      const diffInDays = diffInMs / MS_PER_DAY;
-      if (diffInDays > MAX_SUPPORTED_TIME_RANGE_IN_DAYS) {
-        return {
-          isValid: false,
-          error: 'Time range too long',
-        };
-      }
-    }
-    return { isValid: true };
-  }
-
-  @ApiOperation({ summary: 'Returns a paginated list of users' })
-  @Get()
-  async list(
-    @Query(
-      new ValidationPipe({
-        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-        transform: true,
-      }),
-    )
-    { after, before, limit, country_code: countryCode, search }: UsersQueryDto,
-  ): Promise<PaginatedList<SerializedUser | SerializedUserWithRank>> {
-    const {
-      data: records,
-      hasNext,
-      hasPrevious,
-    } = await this.usersService.list({
-      after,
-      before,
-      limit,
-      search,
-      countryCode,
-    });
-
-    const data = [];
-    for (const record of records) {
-      const userPoints = await this.userPointsService.findOrThrow(record.id);
-      data.push(serializedUserFromRecord(record, userPoints));
-    }
-
-    return {
-      object: 'list',
-      data: data,
-      metadata: {
-        has_next: hasNext,
-        has_previous: hasPrevious,
-      },
-    };
-  }
 
   @ApiExcludeEndpoint()
   @Post()

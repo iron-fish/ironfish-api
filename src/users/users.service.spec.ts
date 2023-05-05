@@ -13,19 +13,16 @@ import { v4 as uuid } from 'uuid';
 import { standardizeEmail } from '../common/utils/email';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
-import { UserPointsService } from '../user-points/user-points.service';
 import { UsersService } from './users.service';
 
 describe('UsersService', () => {
   let app: INestApplication;
   let usersService: UsersService;
   let prisma: PrismaService;
-  let userPointsService: UserPointsService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
     prisma = app.get(PrismaService);
-    userPointsService = app.get(UserPointsService);
     usersService = app.get(UsersService);
     await app.init();
   });
@@ -237,40 +234,6 @@ describe('UsersService', () => {
             countryCode: faker.address.countryCode('alpha-3'),
           }),
         ).rejects.toThrow(UnprocessableEntityException);
-      });
-    });
-
-    describe('with a new graffiti and email', () => {
-      it('creates a new record', async () => {
-        const email = faker.internet.email();
-        const graffiti = uuid();
-        const user = await usersService.create({
-          email,
-          graffiti,
-          countryCode: faker.address.countryCode('alpha-3'),
-        });
-
-        expect(user).toMatchObject({
-          id: expect.any(Number),
-          email: standardizeEmail(email),
-          graffiti,
-        });
-      });
-
-      it('creates a new user points record', async () => {
-        const email = faker.internet.email();
-        const graffiti = uuid();
-        const upsertPoints = jest.spyOn(userPointsService, 'upsertWithClient');
-
-        const user = await usersService.create({
-          email,
-          graffiti,
-          countryCode: faker.address.countryCode('alpha-3'),
-        });
-
-        expect(upsertPoints).toHaveBeenCalledTimes(1);
-        assert.ok(upsertPoints.mock.calls);
-        expect(upsertPoints.mock.calls[0][0].userId).toBe(user.id);
       });
     });
   });
