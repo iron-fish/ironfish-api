@@ -12,7 +12,6 @@ import { ApiConfigService } from '../api-config/api-config.service';
 import { standardizeHash } from '../common/utils/hash';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
-import { UsersService } from '../users/users.service';
 import { BlocksService } from './blocks.service';
 import { BlockOperation } from './enums/block-operation';
 import { Block, Prisma, Transaction } from '.prisma/client';
@@ -22,14 +21,12 @@ describe('BlocksService', () => {
   let blocksService: BlocksService;
   let config: ApiConfigService;
   let prisma: PrismaService;
-  let usersService: UsersService;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
     blocksService = app.get(BlocksService);
     config = app.get(ApiConfigService);
     prisma = app.get(PrismaService);
-    usersService = app.get(UsersService);
     await app.init();
   });
 
@@ -52,7 +49,7 @@ describe('BlocksService', () => {
         size: faker.datatype.number(),
       };
 
-      const { block } = await blocksService.upsert(prisma, options);
+      const block = await blocksService.upsert(prisma, options);
       expect(block).toMatchObject({
         id: expect.any(Number),
         hash: options.hash,
@@ -65,57 +62,6 @@ describe('BlocksService', () => {
         graffiti: options.graffiti,
         previous_block_hash: options.previousBlockHash,
         size: options.size,
-      });
-    });
-
-    it('does not return a payload if a graffiti does not exist', async () => {
-      const options = {
-        hash: uuid(),
-        sequence: faker.datatype.number(),
-        difficulty: BigInt(faker.datatype.number()),
-        work: BigInt(faker.datatype.number()),
-        timestamp: new Date(),
-        transactionsCount: 1,
-        type: BlockOperation.CONNECTED,
-        graffiti: uuid(),
-        previousBlockHash: uuid(),
-        size: faker.datatype.number(),
-      };
-
-      const { upsertBlockMinedOptions } = await blocksService.upsert(
-        prisma,
-        options,
-      );
-      expect(upsertBlockMinedOptions).toBeUndefined();
-    });
-
-    it('returns a payload for block mined event with a valid graffiti', async () => {
-      const graffiti = uuid();
-      const user = await usersService.create({
-        email: faker.internet.email(),
-        graffiti,
-        countryCode: faker.address.countryCode('alpha-3'),
-      });
-      const options = {
-        hash: uuid(),
-        sequence: faker.datatype.number(),
-        difficulty: BigInt(faker.datatype.number()),
-        work: BigInt(faker.datatype.number()),
-        timestamp: new Date(),
-        transactionsCount: 1,
-        type: BlockOperation.CONNECTED,
-        graffiti,
-        previousBlockHash: uuid(),
-        size: faker.datatype.number(),
-      };
-
-      const { block, upsertBlockMinedOptions } = await blocksService.upsert(
-        prisma,
-        options,
-      );
-      expect(upsertBlockMinedOptions).toEqual({
-        block_id: block.id,
-        user_id: user.id,
       });
     });
 
@@ -149,42 +95,6 @@ describe('BlocksService', () => {
         previous_block_hash: standardizeHash(previousBlockHash),
       });
     });
-
-    describe('if CHECK_USER_CREATED_AT is disabled', () => {
-      it('upserts records with timestamps before created_at', async () => {
-        const graffiti = uuid();
-        const user = await usersService.create({
-          email: faker.internet.email(),
-          graffiti,
-          countryCode: faker.address.countryCode('alpha-3'),
-        });
-        const options = {
-          hash: uuid(),
-          sequence: faker.datatype.number(),
-          difficulty: BigInt(faker.datatype.number()),
-          work: BigInt(faker.datatype.number()),
-          timestamp: new Date('2000-01-01T00:00:00Z'),
-          transactionsCount: 1,
-          type: BlockOperation.CONNECTED,
-          graffiti,
-          previousBlockHash: uuid(),
-          size: faker.datatype.number(),
-        };
-
-        jest
-          .spyOn(config, 'get')
-          .mockImplementationOnce(() => 0)
-          .mockImplementationOnce(() => false);
-        const { block, upsertBlockMinedOptions } = await blocksService.upsert(
-          prisma,
-          options,
-        );
-        expect(upsertBlockMinedOptions).toEqual({
-          block_id: block.id,
-          user_id: user.id,
-        });
-      });
-    });
   });
 
   describe('head', () => {
@@ -216,7 +126,7 @@ describe('BlocksService', () => {
   describe('find', () => {
     describe('with an id', () => {
       it('returns the block', async () => {
-        const { block } = await blocksService.upsert(prisma, {
+        const block = await blocksService.upsert(prisma, {
           hash: uuid(),
           sequence: faker.datatype.number(),
           difficulty: BigInt(faker.datatype.number()),
@@ -236,7 +146,7 @@ describe('BlocksService', () => {
     describe('with a valid hash', () => {
       it('returns the block with the correct hash', async () => {
         const testBlockHash = uuid();
-        const { block } = await blocksService.upsert(prisma, {
+        const block = await blocksService.upsert(prisma, {
           hash: testBlockHash,
           sequence: faker.datatype.number(),
           difficulty: BigInt(faker.datatype.number()),
@@ -254,7 +164,7 @@ describe('BlocksService', () => {
 
       it('returns the block regardless of hash cases', async () => {
         const testBlockHash = faker.random.alpha({ count: 10, upcase: true });
-        const { block } = await blocksService.upsert(prisma, {
+        const block = await blocksService.upsert(prisma, {
           hash: testBlockHash,
           sequence: faker.datatype.number(),
           difficulty: BigInt(faker.datatype.number()),
@@ -280,7 +190,7 @@ describe('BlocksService', () => {
     describe('with a valid sequence index', () => {
       it('returns the block with the correct sequence index', async () => {
         const testBlockSequence = faker.datatype.number();
-        const { block } = await blocksService.upsert(prisma, {
+        const block = await blocksService.upsert(prisma, {
           hash: uuid(),
           sequence: testBlockSequence,
           difficulty: BigInt(faker.datatype.number()),

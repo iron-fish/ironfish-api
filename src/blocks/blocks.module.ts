@@ -5,17 +5,11 @@ import { Module } from '@nestjs/common';
 import { ApiConfigModule } from '../api-config/api-config.module';
 import { BlocksTransactionsModule } from '../blocks-transactions/blocks-transactions.module';
 import { PrismaModule } from '../prisma/prisma.module';
-import { UsersModule } from '../users/users.module';
 import { BlocksService } from './blocks.service';
 
 @Module({
   exports: [BlocksService],
-  imports: [
-    ApiConfigModule,
-    BlocksTransactionsModule,
-    PrismaModule,
-    UsersModule,
-  ],
+  imports: [ApiConfigModule, BlocksTransactionsModule, PrismaModule],
   providers: [BlocksService],
 })
 export class BlocksModule {}
