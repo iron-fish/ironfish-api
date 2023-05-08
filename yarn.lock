@@ -1371,17 +1371,17 @@
     "@webassemblyjs/ast" "1.11.5"
     "@xtuc/long" "4.2.2"
 
-"@webpack-cli/configtest@^2.0.1":
-  version "2.0.1"
-  resolved "https://registry.npmjs.org/@webpack-cli/configtest/-/configtest-2.0.1.tgz"
+"@webpack-cli/configtest@^2.1.0":
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/@webpack-cli/configtest/-/configtest-2.1.0.tgz#b59b33377b1b896a9a7357cfc643b39c1524b1e6"
 
 "@webpack-cli/info@^2.0.1":
   version "2.0.1"
   resolved "https://registry.npmjs.org/@webpack-cli/info/-/info-2.0.1.tgz"
 
-"@webpack-cli/serve@^2.0.2":
-  version "2.0.2"
-  resolved "https://registry.yarnpkg.com/@webpack-cli/serve/-/serve-2.0.2.tgz#10aa290e44a182c02e173a89452781b1acbc86d9"
+"@webpack-cli/serve@^2.0.3":
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/@webpack-cli/serve/-/serve-2.0.3.tgz#c00c48d19340224242842e38b8f7b76c308bbd3f"
 
 "@xtuc/ieee754@^1.2.0":
   version "1.2.0"
@@ -5066,14 +5066,14 @@ webidl-conversions@^6.1.0:
   version "6.1.0"
   resolved "https://registry.npmjs.org/webidl-conversions/-/webidl-conversions-6.1.0.tgz"
 
-webpack-cli@5.0.2:
-  version "5.0.2"
-  resolved "https://registry.yarnpkg.com/webpack-cli/-/webpack-cli-5.0.2.tgz#2954c10ecb61c5d4dad6f68ee2d77f051741946c"
+webpack-cli@5.1.0:
+  version "5.1.0"
+  resolved "https://registry.yarnpkg.com/webpack-cli/-/webpack-cli-5.1.0.tgz#abc4b1f44b50250f2632d8b8b536cfe2f6257891"
   dependencies:
     "@discoveryjs/json-ext" "^0.5.0"
-    "@webpack-cli/configtest" "^2.0.1"
+    "@webpack-cli/configtest" "^2.1.0"
     "@webpack-cli/info" "^2.0.1"
-    "@webpack-cli/serve" "^2.0.2"
+    "@webpack-cli/serve" "^2.0.3"
     colorette "^2.0.14"
     commander "^10.0.1"
     cross-spawn "^7.0.3"
