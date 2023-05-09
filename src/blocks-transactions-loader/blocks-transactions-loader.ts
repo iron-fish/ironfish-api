@@ -11,7 +11,6 @@ import { BlockOperation } from '../blocks/enums/block-operation';
 import { BlocksDailyService } from '../blocks-daily/blocks-daily.service';
 import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
 import { standardizeHash } from '../common/utils/hash';
-import { EventsService } from '../events/events.service';
 import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
 import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -27,7 +26,6 @@ export class BlocksTransactionsLoader {
     private readonly graphileWorkerService: GraphileWorkerService,
     private readonly prisma: PrismaService,
     private readonly transactionsService: TransactionsService,
-    private readonly eventsService: EventsService,
   ) {}
 
   async createMany({
@@ -40,15 +38,7 @@ export class BlocksTransactionsLoader {
 
     const records: (Block & { transactions: Transaction[] })[] = [];
 
-    let updateMinedBlockEvents = false;
-
     for (const block of blocks) {
-      if (!updateMinedBlockEvents) {
-        updateMinedBlockEvents = this.eventsService.blockMinedEnabled(
-          block.sequence,
-        );
-      }
-
       let timeSinceLastBlockMs: number | undefined = undefined;
       if (block.previous_block_hash !== undefined) {
         const seenPreviousBlock = previousHashes.get(block.previous_block_hash);

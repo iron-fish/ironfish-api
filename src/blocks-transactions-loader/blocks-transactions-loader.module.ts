@@ -6,7 +6,6 @@ import { ApiConfigModule } from '../api-config/api-config.module';
 import { BlocksModule } from '../blocks/blocks.module';
 import { BlocksDailyModule } from '../blocks-daily/blocks-daily.module';
 import { BlocksTransactionsModule } from '../blocks-transactions/blocks-transactions.module';
-import { EventsModule } from '../events/events.module';
 import { GraphileWorkerModule } from '../graphile-worker/graphile-worker.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { TransactionsModule } from '../transactions/transactions.module';
@@ -22,7 +21,6 @@ import { BlocksTransactionsLoader } from './blocks-transactions-loader';
     GraphileWorkerModule,
     PrismaModule,
     TransactionsModule,
-    EventsModule,
   ],
   providers: [BlocksTransactionsLoader],
 })
