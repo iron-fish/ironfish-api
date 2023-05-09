@@ -2781,9 +2781,9 @@ grapheme-splitter@^1.0.4:
   version "1.0.4"
   resolved "https://registry.npmjs.org/grapheme-splitter/-/grapheme-splitter-1.0.4.tgz"
 
-graphile-worker@0.14.0-alpha.0:
-  version "0.14.0-alpha.0"
-  resolved "https://registry.npmjs.org/graphile-worker/-/graphile-worker-0.14.0-alpha.0.tgz"
+graphile-worker@0.14.0-rc.0:
+  version "0.14.0-rc.0"
+  resolved "https://registry.yarnpkg.com/graphile-worker/-/graphile-worker-0.14.0-rc.0.tgz#422f0c832e9e97b6467b5cc7d1f80685500537f9"
   dependencies:
     "@graphile/logger" "^0.2.0"
     "@types/debug" "^4.1.2"
