@@ -6,10 +6,10 @@ import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { BlockOperation } from '../blocks/enums/block-operation';
 import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
-import { bootstrapTestApp } from '../test/test-app';
-import { BlocksTransactionsLoader } from './blocks-transactions-loader';
 import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
 import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
+import { bootstrapTestApp } from '../test/test-app';
+import { BlocksTransactionsLoader } from './blocks-transactions-loader';
 
 describe('BlocksTransactionsLoader', () => {
   let app: INestApplication;
