@@ -4,7 +4,6 @@
 import { INestApplication } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
-import cookieParser from 'cookie-parser';
 import { json } from 'express';
 import joi from 'joi';
 import { ApiConfigService } from '../api-config/api-config.service';
@@ -48,6 +47,5 @@ export async function bootstrapTestApp(): Promise<INestApplication> {
   const app = module.createNestApplication();
   app.use(json({ limit: '10mb' }));
   const config = app.get(ApiConfigService);
-  app.use(cookieParser(config.get('JWT_TOKEN_SECRET')));
   return app;
 }
