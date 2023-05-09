@@ -6,10 +6,10 @@ import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { BlockOperation } from '../blocks/enums/block-operation';
 import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
-import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
-import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { BlocksTransactionsLoader } from './blocks-transactions-loader';
+import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
+import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 
 describe('BlocksTransactionsLoader', () => {
   let app: INestApplication;
@@ -23,7 +23,6 @@ describe('BlocksTransactionsLoader', () => {
     app = await bootstrapTestApp();
     blocksTransactionsLoader = app.get(BlocksTransactionsLoader);
     blocksTransactionsService = app.get(BlocksTransactionsService);
-    graphileWorkerService = app.get(GraphileWorkerService);
     await app.init();
   });
 
@@ -34,11 +33,7 @@ describe('BlocksTransactionsLoader', () => {
   beforeEach(() => {
     addJob = jest
       .spyOn(graphileWorkerService, 'addJob')
-      .mockImplementation(jest.fn());
-  });
-
-  afterEach(() => {
-    jest.clearAllMocks();
+      .mockImplementationOnce(jest.fn());
   });
 
   describe('createMany', () => {
