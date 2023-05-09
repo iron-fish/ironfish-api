@@ -8,7 +8,6 @@ import { GraphileWorkerModule } from '../graphile-worker/graphile-worker.module'
 import { InfluxDbModule } from '../influxdb/influxdb.module';
 import { LoggerModule } from '../logger/logger.module';
 import { PrismaModule } from '../prisma/prisma.module';
-import { UsersModule } from '../users/users.module';
 import { EventsService } from './events.service';
 
 @Module({
@@ -20,7 +19,6 @@ import { EventsService } from './events.service';
     InfluxDbModule,
     LoggerModule,
     PrismaModule,
-    UsersModule,
   ],
   providers: [EventsService],
 })

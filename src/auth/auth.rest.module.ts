@@ -3,9 +3,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Module } from '@nestjs/common';
 import { ApiConfigModule } from '../api-config/api-config.module';
-import { UsersModule } from '../users/users.module';
 
 @Module({
-  imports: [ApiConfigModule, UsersModule],
+  imports: [ApiConfigModule],
 })
 export class AuthRestModule {}

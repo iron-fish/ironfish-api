@@ -6,28 +6,3 @@ Object {
   "statusCode": 401,
 }
 `;
-
-exports[`EventsController POST /events with a missing api key returns a 401 1`] = `
-Object {
-  "message": "Unauthorized",
-  "statusCode": 401,
-}
-`;
-
-exports[`EventsController POST /events with a missing user id returns a 404 1`] = `
-Object {
-  "message": "Not Found",
-  "statusCode": 404,
-}
-`;
-
-exports[`EventsController POST /events with missing arguments returns a 422 1`] = `
-Object {
-  "error": "Unprocessable Entity",
-  "message": Array [
-    "graffiti must be a string",
-    "type must be a valid enum value",
-  ],
-  "statusCode": 422,
-}
-`;

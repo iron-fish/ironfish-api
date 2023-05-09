@@ -21,7 +21,6 @@ import { BlocksDailyRestModule } from './blocks-daily/blocks-daily.rest.module';
 import { ContextMiddleware } from './common/middlewares/context.middleware';
 import { RequireSslMiddleware } from './common/middlewares/require-ssl.middleware';
 import { DatadogModule } from './datadog/datadog.module';
-import { EventsJobsModule } from './events/events.jobs.module';
 import { EventsRestModule } from './events/events.rest.module';
 import { FaucetTransactionsRestModule } from './faucet-transactions/faucet-transactions.rest.module';
 import { HealthRestModule } from './health/health.rest.module';
@@ -29,14 +28,9 @@ import { LoggerModule } from './logger/logger.module';
 import { MetricsRestModule } from './metrics/metrics.rest.module';
 import { TelemetryRestModule } from './telemetry/telemetry.rest.module';
 import { TransactionsRestModule } from './transactions/transactions.rest.module';
-import { UsersRestModule } from './users/users.rest.module';
 import { VersionsRestModule } from './versions/versions.rest.module';
 
-export const JOBS_MODULES = [
-  AssetsLoaderJobsModule,
-  BlocksDailyJobsModule,
-  EventsJobsModule,
-];
+export const JOBS_MODULES = [AssetsLoaderJobsModule, BlocksDailyJobsModule];
 
 export const REST_MODULES = [
   AssetDescriptionsRestModule,
@@ -50,7 +44,6 @@ export const REST_MODULES = [
   MetricsRestModule,
   TelemetryRestModule,
   TransactionsRestModule,
-  UsersRestModule,
   VersionsRestModule,
 ];
 

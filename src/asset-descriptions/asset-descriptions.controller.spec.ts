@@ -61,7 +61,7 @@ describe('AssetDescriptionsController', () => {
 
     describe('with a valid identifier', () => {
       it('returns the asset descriptions', async () => {
-        const { block } = await blocksService.upsert(prisma, {
+        const block = await blocksService.upsert(prisma, {
           hash: uuid(),
           sequence: faker.datatype.number(),
           difficulty: BigInt(faker.datatype.number()),

@@ -20,11 +20,8 @@ import { SortOrder } from '../common/enums/sort-order';
 import { getNextDate } from '../common/utils/date';
 import { standardizeHash } from '../common/utils/hash';
 import { assertValueIsSafeForPrisma } from '../common/utils/prisma';
-import { DeleteBlockMinedEventOptions } from '../events/interfaces/delete-block-mined-event-options';
-import { UpsertBlockMinedEventOptions } from '../events/interfaces/upsert-block-mined-event-options';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
-import { UsersService } from '../users/users.service';
 import { BlockOperation } from './enums/block-operation';
 import { BlocksDateMetrics } from './interfaces/blocks-date-metrics';
 import { BlocksStatus } from './interfaces/blocks-status';
@@ -39,7 +36,6 @@ export class BlocksService {
     private readonly blocksTransactionsService: BlocksTransactionsService,
     private readonly config: ApiConfigService,
     private readonly prisma: PrismaService,
-    private readonly usersService: UsersService,
   ) {}
 
   async upsert(
@@ -57,21 +53,15 @@ export class BlocksService {
       timeSinceLastBlockMs,
       work,
     }: UpsertBlockOptions,
-  ): Promise<{
-    block: Block;
-    deleteBlockMinedOptions?: DeleteBlockMinedEventOptions;
-    upsertBlockMinedOptions?: UpsertBlockMinedEventOptions;
-  }> {
+  ): Promise<Block> {
     const main = type === BlockOperation.CONNECTED;
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
-    let deleteBlockMinedOptions;
-    let upsertBlockMinedOptions;
     hash = standardizeHash(hash);
     previousBlockHash = previousBlockHash
       ? standardizeHash(previousBlockHash)
       : previousBlockHash;
 
-    const block = await prisma.block.upsert({
+    return prisma.block.upsert({
       create: {
         hash,
         sequence,
@@ -105,20 +95,6 @@ export class BlocksService {
         },
       },
     });
-
-    const user = await this.usersService.findByGraffiti(graffiti, prisma);
-    const checkUserCreatedAt = this.config.get<boolean>(
-      'CHECK_USER_CREATED_AT',
-    );
-    if (user && (!checkUserCreatedAt || timestamp > user.created_at)) {
-      if (main) {
-        upsertBlockMinedOptions = { block_id: block.id, user_id: user.id };
-      } else {
-        deleteBlockMinedOptions = { block_id: block.id };
-      }
-    }
-
-    return { block, deleteBlockMinedOptions, upsertBlockMinedOptions };
   }
 
   async head(): Promise<Block & { transactions: Transaction[] }> {

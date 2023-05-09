@@ -2,29 +2,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import {
-  Body,
   Controller,
   Delete,
   Get,
   HttpCode,
   HttpStatus,
   Param,
-  Post,
   Query,
-  Res,
   UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiExcludeEndpoint, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Response } from 'express';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { PaginatedList } from '../common/interfaces/paginated-list';
 import { IntIsSafeForPrismaPipe } from '../common/pipes/int-is-safe-for-prisma.pipe';
 import { EventsService } from '../events/events.service';
-import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
 import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
-import { UsersService } from '../users/users.service';
-import { CreateEventDto } from './dto/create-event.dto';
 import { EventsQueryDto } from './dto/events-query.dto';
 import { SerializedEvent } from './interfaces/serialized-event';
 import { serializedEventFromRecordWithMetadata } from './utils/event-translator';
@@ -35,7 +28,6 @@ export class EventsController {
   constructor(
     private readonly eventsService: EventsService,
     private readonly graphileWorkerService: GraphileWorkerService,
-    private readonly usersService: UsersService,
   ) {}
 
   @ApiOperation({ summary: 'Returns a paginated list of events' })
@@ -63,34 +55,6 @@ export class EventsController {
         has_previous: hasPrevious,
       },
     };
-  }
-
-  @ApiExcludeEndpoint()
-  @Post()
-  @UseGuards(ApiKeyGuard)
-  async create(
-    @Body(
-      new ValidationPipe({
-        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-        transform: true,
-      }),
-    )
-    { graffiti, points, type, occurred_at: occurredAt, url }: CreateEventDto,
-    @Res() res: Response,
-  ): Promise<void> {
-    const user = await this.usersService.findByGraffitiOrThrow(graffiti);
-
-    await this.graphileWorkerService.addJob(
-      GraphileWorkerPattern.CREATE_EVENT,
-      {
-        type,
-        points,
-        occurredAt,
-        userId: user.id,
-        url,
-      },
-    );
-    res.sendStatus(HttpStatus.ACCEPTED);
   }
 
   @Delete(':id')

@@ -6,42 +6,23 @@ import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { BlockOperation } from '../blocks/enums/block-operation';
 import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
-import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
-import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { bootstrapTestApp } from '../test/test-app';
-import { UsersService } from '../users/users.service';
 import { BlocksTransactionsLoader } from './blocks-transactions-loader';
 
 describe('BlocksTransactionsLoader', () => {
   let app: INestApplication;
   let blocksTransactionsLoader: BlocksTransactionsLoader;
   let blocksTransactionsService: BlocksTransactionsService;
-  let graphileWorkerService: GraphileWorkerService;
-  let usersService: UsersService;
-
-  let addJob: jest.SpyInstance;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
     blocksTransactionsLoader = app.get(BlocksTransactionsLoader);
     blocksTransactionsService = app.get(BlocksTransactionsService);
-    graphileWorkerService = app.get(GraphileWorkerService);
-    usersService = app.get(UsersService);
     await app.init();
   });
 
   afterAll(async () => {
     await app.close();
-  });
-
-  beforeEach(() => {
-    addJob = jest
-      .spyOn(graphileWorkerService, 'addJob')
-      .mockImplementation(jest.fn());
-  });
-
-  afterEach(() => {
-    jest.clearAllMocks();
   });
 
   describe('createMany', () => {
@@ -132,109 +113,6 @@ describe('BlocksTransactionsLoader', () => {
       expect(blockTransaction).toMatchObject({
         block_id: blocks[0].id,
         transaction_id: blocks[0].transactions[0].id,
-      });
-    });
-
-    describe('when the blocks are associated with a registered user', () => {
-      it('queues delete jobs for disconnected blocks', async () => {
-        const graffiti = uuid();
-        const user = await usersService.create({
-          email: faker.internet.email(),
-          graffiti,
-          countryCode: faker.address.countryCode('alpha-3'),
-        });
-        const blocks = await blocksTransactionsLoader.createMany({
-          blocks: [
-            {
-              hash: uuid(),
-              sequence: faker.datatype.number(),
-              difficulty: faker.datatype.number(),
-              work: faker.datatype.number(),
-              timestamp: new Date(),
-              type: BlockOperation.DISCONNECTED,
-              graffiti: user.graffiti,
-              previous_block_hash: uuid(),
-              size: faker.datatype.number(),
-              transactions: [],
-            },
-          ],
-        });
-
-        expect(addJob).toHaveBeenCalledTimes(3);
-        expect(addJob).toHaveBeenCalledWith(
-          GraphileWorkerPattern.DELETE_BLOCK_MINED_EVENT,
-          {
-            block_id: blocks[0].id,
-          },
-          expect.anything(),
-        );
-      });
-
-      it('queues upsert jobs for disconnected blocks', async () => {
-        const graffiti = uuid();
-        const user = await usersService.create({
-          email: faker.internet.email(),
-          graffiti,
-          countryCode: faker.address.countryCode('alpha-3'),
-        });
-        const blocks = await blocksTransactionsLoader.createMany({
-          blocks: [
-            {
-              hash: uuid(),
-              sequence: faker.datatype.number(),
-              difficulty: faker.datatype.number(),
-              work: faker.datatype.number(),
-              timestamp: new Date(),
-              type: BlockOperation.CONNECTED,
-              graffiti,
-              previous_block_hash: uuid(),
-              size: faker.datatype.number(),
-              transactions: [],
-            },
-          ],
-        });
-
-        expect(addJob).toHaveBeenCalledTimes(3);
-        expect(addJob).toHaveBeenCalledWith(
-          GraphileWorkerPattern.UPSERT_BLOCK_MINED_EVENT,
-          {
-            block_id: blocks[0].id,
-            user_id: user.id,
-          },
-          expect.anything(),
-        );
-      });
-
-      it('queues jobs to sync a daily snapshot and update the native asset', async () => {
-        await blocksTransactionsLoader.createMany({
-          blocks: [
-            {
-              hash: uuid(),
-              sequence: faker.datatype.number(),
-              difficulty: faker.datatype.number(),
-              work: faker.datatype.number(),
-              timestamp: new Date(),
-              type: BlockOperation.CONNECTED,
-              graffiti: uuid(),
-              previous_block_hash: uuid(),
-              size: faker.datatype.number(),
-              transactions: [],
-            },
-          ],
-        });
-
-        expect(addJob).toHaveBeenCalledTimes(2);
-        expect(addJob).toHaveBeenCalledWith(
-          GraphileWorkerPattern.SYNC_BLOCKS_DAILY,
-          {
-            date: expect.any(Date),
-          },
-        );
-        expect(addJob).toHaveBeenCalledWith(
-          GraphileWorkerPattern.REFRESH_NATIVE_ASSET_SUPPLY,
-          undefined,
-          expect.anything(),
-        );
       });
     });
   });
