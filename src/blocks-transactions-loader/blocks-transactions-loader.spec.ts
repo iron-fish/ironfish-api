@@ -37,6 +37,10 @@ describe('BlocksTransactionsLoader', () => {
       .mockImplementationOnce(jest.fn());
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   describe('createMany', () => {
     it('stores a Block, Transaction, and BlockTransaction record', async () => {
       const blockHash1 = uuid();
