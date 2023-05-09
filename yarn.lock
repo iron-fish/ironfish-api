@@ -4751,9 +4751,9 @@ swagger-ui-dist@>=4.11.0:
   version "4.11.1"
   resolved "https://registry.npmjs.org/swagger-ui-dist/-/swagger-ui-dist-4.11.1.tgz"
 
-swagger-ui-express@4.6.2:
-  version "4.6.2"
-  resolved "https://registry.npmjs.org/swagger-ui-express/-/swagger-ui-express-4.6.2.tgz"
+swagger-ui-express@4.6.3:
+  version "4.6.3"
+  resolved "https://registry.yarnpkg.com/swagger-ui-express/-/swagger-ui-express-4.6.3.tgz#870d0892654fe80e6970a2d680e22521acd2dc19"
   dependencies:
     swagger-ui-dist ">=4.11.0"
 
