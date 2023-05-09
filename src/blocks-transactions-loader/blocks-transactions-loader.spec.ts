@@ -23,6 +23,7 @@ describe('BlocksTransactionsLoader', () => {
     app = await bootstrapTestApp();
     blocksTransactionsLoader = app.get(BlocksTransactionsLoader);
     blocksTransactionsService = app.get(BlocksTransactionsService);
+    graphileWorkerService = app.get(GraphileWorkerService);
     await app.init();
   });
 
