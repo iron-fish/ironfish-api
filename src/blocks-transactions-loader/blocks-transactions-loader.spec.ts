@@ -6,6 +6,8 @@ import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import { BlockOperation } from '../blocks/enums/block-operation';
 import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
+import { GraphileWorkerPattern } from '../graphile-worker/enums/graphile-worker-pattern';
+import { GraphileWorkerService } from '../graphile-worker/graphile-worker.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { BlocksTransactionsLoader } from './blocks-transactions-loader';
 
@@ -13,16 +15,30 @@ describe('BlocksTransactionsLoader', () => {
   let app: INestApplication;
   let blocksTransactionsLoader: BlocksTransactionsLoader;
   let blocksTransactionsService: BlocksTransactionsService;
+  let graphileWorkerService: GraphileWorkerService;
+
+  let addJob: jest.SpyInstance;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
     blocksTransactionsLoader = app.get(BlocksTransactionsLoader);
     blocksTransactionsService = app.get(BlocksTransactionsService);
+    graphileWorkerService = app.get(GraphileWorkerService);
     await app.init();
   });
 
   afterAll(async () => {
     await app.close();
+  });
+
+  beforeEach(() => {
+    addJob = jest
+      .spyOn(graphileWorkerService, 'addJob')
+      .mockImplementationOnce(jest.fn());
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   describe('createMany', () => {
@@ -114,6 +130,38 @@ describe('BlocksTransactionsLoader', () => {
         block_id: blocks[0].id,
         transaction_id: blocks[0].transactions[0].id,
       });
+    });
+
+    it('queues jobs to sync a daily snapshot and update the native asset', async () => {
+      await blocksTransactionsLoader.createMany({
+        blocks: [
+          {
+            hash: uuid(),
+            sequence: faker.datatype.number(),
+            difficulty: faker.datatype.number(),
+            work: faker.datatype.number(),
+            timestamp: new Date(),
+            type: BlockOperation.CONNECTED,
+            graffiti: uuid(),
+            previous_block_hash: uuid(),
+            size: faker.datatype.number(),
+            transactions: [],
+          },
+        ],
+      });
+
+      expect(addJob).toHaveBeenCalledTimes(2);
+      expect(addJob).toHaveBeenCalledWith(
+        GraphileWorkerPattern.SYNC_BLOCKS_DAILY,
+        {
+          date: expect.any(Date),
+        },
+      );
+      expect(addJob).toHaveBeenCalledWith(
+        GraphileWorkerPattern.REFRESH_NATIVE_ASSET_SUPPLY,
+        undefined,
+        expect.anything(),
+      );
     });
   });
 });

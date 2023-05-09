@@ -14,11 +14,9 @@ import { AssetDescriptionsRestModule } from './asset-descriptions/asset-descript
 import { AssetsRestModule } from './assets/assets.rest.module';
 import { AssetsLoaderJobsModule } from './assets-loader/assets-loader.jobs.module';
 import { AuthModule } from './auth/auth.module';
-import { AuthRestModule } from './auth/auth.rest.module';
 import { BlocksRestModule } from './blocks/blocks.rest.module';
 import { BlocksDailyJobsModule } from './blocks-daily/blocks-daily.jobs.module';
 import { BlocksDailyRestModule } from './blocks-daily/blocks-daily.rest.module';
-import { ContextMiddleware } from './common/middlewares/context.middleware';
 import { RequireSslMiddleware } from './common/middlewares/require-ssl.middleware';
 import { DatadogModule } from './datadog/datadog.module';
 import { FaucetTransactionsRestModule } from './faucet-transactions/faucet-transactions.rest.module';
@@ -33,7 +31,6 @@ export const JOBS_MODULES = [AssetsLoaderJobsModule, BlocksDailyJobsModule];
 export const REST_MODULES = [
   AssetDescriptionsRestModule,
   AssetsRestModule,
-  AuthRestModule,
   BlocksDailyRestModule,
   BlocksRestModule,
   FaucetTransactionsRestModule,
@@ -78,7 +75,7 @@ export const REST_MODULES = [
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
     consumer
-      .apply(RequireSslMiddleware, ContextMiddleware)
+      .apply(RequireSslMiddleware)
       .forRoutes({ path: '*', method: RequestMethod.ALL });
   }
 }
