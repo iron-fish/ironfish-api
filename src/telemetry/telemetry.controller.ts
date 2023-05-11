@@ -102,22 +102,24 @@ export class TelemetryController {
     )
     { points }: WriteTelemetryPointsDto,
   ): void {
-    const { options, nodeVersion } = this.processPoints(points);
+    const { options, nodeVersion, agent } = this.processPoints(points);
     const ipAddress = fetchIpAddressFromRequest(request);
 
     if (options.length) {
       this.influxDbService.writePoints(options);
     }
 
-    this.submitIpWithoutNodeFieldsToTelemetry(nodeVersion, ipAddress);
+    this.submitIpWithoutNodeFieldsToTelemetry(nodeVersion, agent, ipAddress);
   }
 
   private processPoints(points: WriteTelemetryPointDto[]): {
     nodeVersion: string | null;
+    agent: string | null;
     options: CreatePointOptions[];
   } {
     const options = [];
     let nodeVersion: string | null = null;
+    let agent: string | null = null;
 
     for (const point of points) {
       const version = point.tags.find((tag) => tag.name === 'version');
@@ -127,6 +129,10 @@ export class TelemetryController {
         nodeVersion = version.value;
       }
 
+      const tagRuntime = point.tags.find((tag) => tag.name === 'agent');
+      if (tagRuntime) {
+        agent = tagRuntime.value;
+      }
       const filters = TELEMETRY_WHITELIST.get(point.measurement);
       if (filters === undefined) {
         continue;
@@ -159,6 +165,7 @@ export class TelemetryController {
 
     return {
       nodeVersion,
+      agent,
       options,
     };
   }
@@ -173,6 +180,7 @@ export class TelemetryController {
 
   private submitIpWithoutNodeFieldsToTelemetry(
     nodeVersion: string | null,
+    agent: string | null,
     ipAddress: string,
   ): void {
     if (nodeVersion) {
@@ -190,6 +198,10 @@ export class TelemetryController {
             {
               name: 'version',
               value: nodeVersion,
+            },
+            {
+              name: 'agent',
+              value: agent || 'unknown',
             },
           ],
           timestamp: new Date(),
