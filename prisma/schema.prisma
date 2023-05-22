@@ -8,118 +8,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Event {
-  id             Int         @id @default(autoincrement())
-  created_at     DateTime    @default(now()) @db.Timestamp(6)
-  updated_at     DateTime    @default(now()) @updatedAt @db.Timestamp(6)
-  type           EventType
-  occurred_at    DateTime    @db.Timestamp(6)
-  points         Int
-  user_id        Int
-  week           Int?
-  deposit_id     Int?        @unique(map: "uq_events_on_deposit_id")
-  block_id       Int?        @unique(map: "uq_events_on_block_id")
-  deposit        Deposit?    @relation(fields: [deposit_id], references: [id])
-  block          Block?      @relation(fields: [block_id], references: [id])
-  user           User        @relation(fields: [user_id], references: [id])
-  url            String?     @db.VarChar
-  multi_asset_id Int?        @unique(map: "uq_events_on_multi_asset_id")
-  MultiAsset     MultiAsset? @relation(fields: [multi_asset_id], references: [id])
-
-  // below unique was created manually in the 20221123000635_unique_weekly_multi_asset_events
-  // currently unique not null isn't supported in prisma: https://github.com/prisma/prisma/issues/3387
-  // leaving the line below will cause yarn db:migrate to try adding new migration everytime
-  // @@unique([user_id, type, week], name: "uq_multi_asset_on_user_id_type_week", map: "uq_multi_asset_on_user_id_type_week")
-
-  @@index([deposit_id], name: "index_events_on_deposit_id")
-  @@index([multi_asset_id], name: "index_events_on_multi_asset_id")
-  @@index([block_id], name: "index_events_on_block_id")
-  @@index([user_id], name: "index_events_on_user_id")
-  @@map("events")
-}
-
-model User {
-  id                  Int               @id @default(autoincrement())
-  created_at          DateTime          @default(now()) @db.Timestamp(6)
-  updated_at          DateTime          @default(now()) @updatedAt @db.Timestamp(6)
-  email               String            @unique(map: "uq_users_on_email") @db.VarChar
-  graffiti            String            @unique(map: "uq_users_on_graffiti") @db.VarChar
-  country_code        String            @db.VarChar
-  email_notifications Boolean           @default(false)
-  last_login_at       DateTime?         @db.Timestamp(6)
-  discord             String?           @db.VarChar
-  telegram            String?           @db.VarChar
-  github              String?           @db.VarChar
-  hashed_ip_address   String?           @db.VarChar
-  ineligible_reason   String?           @db.VarChar
-  events              Event[]
-  redemption          Redemption?
-  jumio_transactions  JumioTransaction[]
-  node_uptime         NodeUptime?
-  points              UserPoints?
-  enable_kyc          Boolean           @default(false)
-
-  @@index([email], name: "index_users_on_email")
-  @@index([graffiti], name: "index_users_on_graffiti")
-  @@map("users")
-}
-
-model Redemption {
-  id               Int       @id @default(autoincrement())
-  created_at       DateTime  @default(now()) @db.Timestamp(6)
-  updated_at       DateTime  @default(now()) @updatedAt @db.Timestamp(6)
-  user             User      @relation(fields: [user_id], references: [id])
-  user_id          Int       @unique
-  kyc_attempts     Int       @default(0)
-  kyc_max_attempts Int?
-  kyc_status       KycStatus
-  jumio_account_id String?   @db.VarChar
-  public_address   String    @db.VarChar
-  hashed_ip_address String?  @db.VarChar
-  transaction_hash String?   @db.VarChar
-  sent_ore         BigInt?
-  id_details       Json?
-  age              Int?
-  failure_message  String?   @db.VarChar
-  pool_one         BigInt?
-  pool_two         BigInt?
-  pool_three       BigInt?
-  pool_four        BigInt?
-  @@index([jumio_account_id], name: "index_redemption_jumio_account_id")
-  @@index([user_id], name: "index_redemption_on_user_id")
-  @@map("redemptions")
-}
-
-model JumioTransaction {
-  id                    Int      @id @default(autoincrement())
-  created_at            DateTime @default(now()) @db.Timestamp(6)
-  updated_at            DateTime @default(now()) @updatedAt @db.Timestamp(6)
-  user                  User     @relation(fields: [user_id], references: [id])
-  user_id               Int
-  decision_status       DecisionStatus
-  last_workflow_fetch   Json?
-  last_callback         Json?
-  last_callback_at      DateTime? @db.Timestamp(6)
-  workflow_execution_id String   @db.VarChar
-  web_href              String   @db.VarChar
-  failure_message       String?  @db.VarChar
-
-  @@index([workflow_execution_id], name: "index_jumio_transactions_on_jumio_workflow_execution_id")
-  @@index([user_id], name: "index_jumio_transactions_on_user_id")
-  @@map("jumio_transactions")
-}
-
-model NodeUptime {
-  id              Int      @id @default(autoincrement())
-  user            User     @relation(fields: [user_id], references: [id])
-  user_id         Int      @unique
-  total_hours     Int      @default(0)
-  last_checked_in DateTime @default(now()) @db.Timestamp(6)
-
-  @@index([user_id], name: "index_node_uptime_on_user_id")
-  @@map("node_uptimes")
-}
-
 model Block {
   id                       Int                @id @default(autoincrement())
   created_at               DateTime           @default(now()) @db.Timestamp(6)
@@ -131,18 +19,17 @@ model Block {
   network_version          Int
   transactions_count       Int
   timestamp                DateTime           @db.Timestamp(6)
-  time_since_last_block_ms Int?
   graffiti                 String             @db.VarChar
   size                     Int?
   difficulty               Decimal?
+  time_since_last_block_ms Int?
   work                     Decimal?
   blocks_transactions      BlockTransaction[]
-  event                    Event?
 
   @@unique([hash, network_version], name: "uq_blocks_on_hash_and_network_version", map: "uq_blocks_on_hash_and_network_version")
-  @@index([hash], name: "index_blocks_on_hash")
-  @@index([hash, network_version], name: "index_blocks_on_hash_and_network_version")
-  @@index([sequence, network_version], name: "index_blocks_on_sequence_and_network_version")
+  @@index([hash], map: "index_blocks_on_hash")
+  @@index([hash, network_version], map: "index_blocks_on_hash_and_network_version")
+  @@index([sequence, network_version], map: "index_blocks_on_sequence_and_network_version")
   @@map("blocks")
 }
 
@@ -161,21 +48,21 @@ model Transaction {
   blocks_transactions BlockTransaction[]
 
   @@unique([hash, network_version], name: "uq_transactions_on_hash_and_network_version", map: "uq_transactions_on_hash_and_network_version")
-  @@index([hash], name: "index_transactions_on_hash")
-  @@index([hash, network_version], name: "index_transactions_on_hash_and_network_version")
+  @@index([hash], map: "index_transactions_on_hash")
+  @@index([hash, network_version], map: "index_transactions_on_hash_and_network_version")
   @@map("transactions")
 }
 
 model BlockTransaction {
-  block          Block       @relation(fields: [block_id], references: [id])
   block_id       Int
-  transaction    Transaction @relation(fields: [transaction_id], references: [id])
   transaction_id Int
   index          Int?
+  block          Block       @relation(fields: [block_id], references: [id])
+  transaction    Transaction @relation(fields: [transaction_id], references: [id])
 
   @@id([block_id, transaction_id])
-  @@index([block_id], name: "index_blocks_transactions_on_block_id")
-  @@index([transaction_id], name: "index_blocks_transactions_on_transaction_id")
+  @@index([block_id], map: "index_blocks_transactions_on_block_id")
+  @@index([transaction_id], map: "index_blocks_transactions_on_transaction_id")
   @@map("blocks_transactions")
 }
 
@@ -203,15 +90,15 @@ model BlockDaily {
   created_at                 DateTime @default(now()) @db.Timestamp(6)
   updated_at                 DateTime @default(now()) @updatedAt @db.Timestamp(6)
   date                       DateTime @unique(map: "uq_blocks_daily_on_date") @db.Timestamp(6)
-  unique_graffiti_count      Int
   average_block_time_ms      Int
   blocks_count               Int
   blocks_with_graffiti_count Int
   cumulative_unique_graffiti Int
   transactions_count         Int
-  average_difficulty         Decimal
-  average_block_size         Decimal @default(0)
   chain_sequence             Int
+  unique_graffiti_count      Int
+  average_difficulty         Decimal
+  average_block_size         Decimal  @default(0)
 
   @@index([date], map: "index_blocks_daily_on_date")
   @@map("blocks_daily")
@@ -223,126 +110,6 @@ model Version {
   version    String   @db.VarChar
 
   @@map("versions")
-}
-
-enum EventType {
-  BLOCK_MINED
-  BUG_CAUGHT
-  COMMUNITY_CONTRIBUTION
-  PULL_REQUEST_MERGED
-  SOCIAL_MEDIA_PROMOTION
-  NODE_UPTIME
-  SEND_TRANSACTION
-  MULTI_ASSET_TRANSFER
-  MULTI_ASSET_BURN
-  MULTI_ASSET_MINT
-  POOL4
-
-  @@map("event_type")
-}
-
-model UserPoints {
-  id                                      Int       @id @default(autoincrement())
-  created_at                              DateTime  @default(now()) @db.Timestamp(6)
-  updated_at                              DateTime  @default(now()) @updatedAt @db.Timestamp(6)
-  user_id                                 Int       @unique
-  total_points                            Int       @default(0)
-  block_mined_points                      Int       @default(0)
-  block_mined_count                       Int       @default(0)
-  block_mined_last_occurred_at            DateTime? @db.Timestamp(6)
-  bug_caught_points                       Int       @default(0)
-  bug_caught_count                        Int       @default(0)
-  bug_caught_last_occurred_at             DateTime? @db.Timestamp(6)
-  community_contribution_points           Int       @default(0)
-  community_contribution_count            Int       @default(0)
-  community_contribution_last_occurred_at DateTime? @db.Timestamp(6)
-  pull_request_merged_points              Int       @default(0)
-  pull_request_merged_count               Int       @default(0)
-  pull_request_merged_last_occurred_at    DateTime? @db.Timestamp(6)
-  social_media_promotion_points           Int       @default(0)
-  social_media_promotion_count            Int       @default(0)
-  social_media_promotion_last_occurred_at DateTime? @db.Timestamp(6)
-  node_uptime_points                      Int       @default(0)
-  node_uptime_count                       Int       @default(0)
-  node_uptime_last_occurred_at            DateTime? @db.Timestamp(6)
-  send_transaction_points                 Int       @default(0)
-  send_transaction_count                  Int       @default(0)
-  send_transaction_last_occurred_at       DateTime? @db.Timestamp(6)
-  multi_asset_mint_points                 Int       @default(0)
-  multi_asset_mint_count                  Int       @default(0)
-  multi_asset_mint_last_occurred_at       DateTime? @db.Timestamp(6)
-  multi_asset_burn_points                 Int       @default(0)
-  multi_asset_burn_count                  Int       @default(0)
-  multi_asset_burn_last_occurred_at       DateTime? @db.Timestamp(6)
-  multi_asset_transfer_points             Int       @default(0)
-  multi_asset_transfer_count              Int       @default(0)
-  multi_asset_transfer_last_occurred_at   DateTime? @db.Timestamp(6)
-  pool1_points                            Int?      
-  pool2_points                            Int?      
-  pool3_points                            Int?      
-  pool4_points                            Int       @default(0)
-  pool4_count                             Int       @default(0)
-  pool4_last_occurred_at                  DateTime? @db.Timestamp(6)
-  user                                    User      @relation(fields: [user_id], references: [id])
-
-  @@index([user_id], map: "index_user_points_on_user_id")
-  @@index([block_mined_points], map: "index_user_points_on_block_mined")
-  @@index([bug_caught_points], map: "index_user_points_on_bug_caught")
-  @@index([community_contribution_points], map: "index_user_points_on_community_contribution")
-  @@index([pull_request_merged_points], map: "index_user_points_on_pull_request_merged")
-  @@index([social_media_promotion_points], map: "index_user_points_on_social_media_promotion")
-  @@index([node_uptime_points], map: "index_user_points_on_node_uptime")
-  @@index([send_transaction_points], map: "index_user_points_on_send_transaction")
-  @@map("user_points")
-}
-
-model Deposit {
-  id               Int      @id @default(autoincrement())
-  created_at       DateTime @default(now()) @db.Timestamp(6)
-  updated_at       DateTime @default(now()) @updatedAt @db.Timestamp(6)
-  transaction_hash String   @db.VarChar
-  block_hash       String   @db.VarChar
-  graffiti         String   @db.VarChar
-  block_sequence   Int
-  network_version  Int
-  main             Boolean
-  amount           Float
-  event            Event?
-
-  @@unique([transaction_hash, graffiti], name: "uq_deposits_on_transaction_hash_and_graffiti", map: "uq_deposits_on_transaction_hash_and_graffiti")
-  @@index([block_hash, network_version], name: "index_deposits_on_block_hash_and_network_version")
-  @@map("deposits")
-}
-
-model DepositHead {
-  id         Int    @id
-  block_hash String @db.VarChar
-
-  @@map("deposit_head")
-}
-
-model MultiAsset {
-  id               Int       @id @default(autoincrement())
-  created_at       DateTime  @default(now()) @db.Timestamp(6)
-  updated_at       DateTime  @default(now()) @updatedAt @db.Timestamp(6)
-  transaction_hash String    @db.VarChar
-  block_hash       String    @db.VarChar
-  asset_name       String    @db.VarChar
-  type             EventType
-  block_sequence   Int
-  network_version  Int
-  main             Boolean
-  event            Event?
-
-  @@unique([transaction_hash, asset_name, type], name: "uq_multi_asset_on_transaction_hash_asset_name_type", map: "uq_multi_asset_on_transaction_hash_asset_name_type")
-  @@map("multi_asset")
-}
-
-model MultiAssetHead {
-  id         Int    @id
-  block_hash String @db.VarChar
-
-  @@map("multi_asset_head")
 }
 
 model Asset {
@@ -384,42 +151,4 @@ enum AssetDescriptionType {
   MINT
 
   @@map("asset_description_type")
-}
-
-enum DecisionStatus {
-  NOT_EXECUTED
-  PASSED
-  REJECTED
-  WARNING
-}
-
-enum DecisionLabel {
-  TECHNICAL_ERROR
-  NOT_UPLOADED
-  OK
-  BAD_QUALITY
-  BLURRED1
-  BAD_QUALITY_IMAGE1
-  PART_OF_DOCUMENT_MISSING1
-  PART_OF_DOCUMENT_HIDDEN1
-  DAMAGED_DOCUMENT1
-  GLARE1
-  MISSING_MANDATORY_DATAPOINTS1
-  BLACK_WHITE
-  MISSING_PAGE
-  MISSING_SIGNATURE
-  NOT_A_DOCUMENT
-  PHOTOCOPY
-  LIVENESS_UNDETERMINED
-  UNSUPPORTED_COUNTRY
-  UNSUPPORTED_DOCUMENT_TYPE
-}
-
-enum KycStatus {
-  IN_PROGRESS
-  WAITING_FOR_CALLBACK
-  TRY_AGAIN
-  FAILED
-  SUBMITTED
-  SUCCESS
 }
