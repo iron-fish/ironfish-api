@@ -2797,9 +2797,9 @@ has@^1.0.3:
   dependencies:
     function-bind "^1.1.1"
 
-helmet@6.1.5:
-  version "6.1.5"
-  resolved "https://registry.yarnpkg.com/helmet/-/helmet-6.1.5.tgz#2153387f6d73cce6efdfd85d3a65417cfb7db80c"
+helmet@7.0.0:
+  version "7.0.0"
+  resolved "https://registry.yarnpkg.com/helmet/-/helmet-7.0.0.tgz#ac3011ba82fa2467f58075afa58a49427ba6212d"
 
 hexoid@^1.0.0:
   version "1.0.0"
