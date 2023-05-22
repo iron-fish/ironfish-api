@@ -755,9 +755,9 @@
     tslib "2.4.0"
     uuid "8.3.2"
 
-"@nestjs/config@2.3.1":
-  version "2.3.1"
-  resolved "https://registry.npmjs.org/@nestjs/config/-/config-2.3.1.tgz"
+"@nestjs/config@2.3.2":
+  version "2.3.2"
+  resolved "https://registry.yarnpkg.com/@nestjs/config/-/config-2.3.2.tgz#6c5b1d2c87f39d3ceab2ab3fb3a8ef518bccc0fa"
   dependencies:
     dotenv "16.0.3"
     dotenv-expand "10.0.0"
