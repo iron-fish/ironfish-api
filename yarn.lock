@@ -438,21 +438,22 @@
   dependencies:
     node-gyp-build "^4.5.0"
 
-"@datadog/native-iast-taint-tracking@^1.4.0":
-  version "1.4.0"
-  resolved "https://registry.yarnpkg.com/@datadog/native-iast-taint-tracking/-/native-iast-taint-tracking-1.4.0.tgz#95c6574469cd6b9b58734a910f5d91d7a7587c48"
+"@datadog/native-iast-taint-tracking@^1.4.1":
+  version "1.4.1"
+  resolved "https://registry.yarnpkg.com/@datadog/native-iast-taint-tracking/-/native-iast-taint-tracking-1.4.1.tgz#e84198607230e0193d0d88f06c1f56d5938daf9e"
   dependencies:
     node-gyp-build "^3.9.0"
 
-"@datadog/native-metrics@^1.6.0":
-  version "1.6.0"
-  resolved "https://registry.yarnpkg.com/@datadog/native-metrics/-/native-metrics-1.6.0.tgz#1c7958964460149911f6964c32b1a8692ee3ce8f"
+"@datadog/native-metrics@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@datadog/native-metrics/-/native-metrics-2.0.0.tgz#65bf03313ee419956361e097551db36173e85712"
   dependencies:
+    node-addon-api "^6.1.0"
     node-gyp-build "^3.9.0"
 
-"@datadog/pprof@^2.2.0":
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/@datadog/pprof/-/pprof-2.2.0.tgz#f21e69d9eace2ca0598d4d22665f90514ce67afd"
+"@datadog/pprof@^2.2.1":
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/@datadog/pprof/-/pprof-2.2.1.tgz#405e39f354beeb0f53ffa248e03ea64b2e8d5549"
   dependencies:
     delay "^5.0.0"
     node-gyp-build "^3.9.0"
@@ -1979,15 +1980,15 @@ data-urls@^2.0.0:
     whatwg-mimetype "^2.3.0"
     whatwg-url "^8.0.0"
 
-dd-trace@3.20.0:
-  version "3.20.0"
-  resolved "https://registry.yarnpkg.com/dd-trace/-/dd-trace-3.20.0.tgz#de26a47400fe0e4b4098d5af8b35f3823887eec4"
+dd-trace@4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/dd-trace/-/dd-trace-4.0.0.tgz#c8093c4833f460c99e3995a15632de924eabd73a"
   dependencies:
     "@datadog/native-appsec" "^3.1.0"
     "@datadog/native-iast-rewriter" "2.0.1"
-    "@datadog/native-iast-taint-tracking" "^1.4.0"
-    "@datadog/native-metrics" "^1.6.0"
-    "@datadog/pprof" "^2.2.0"
+    "@datadog/native-iast-taint-tracking" "^1.4.1"
+    "@datadog/native-metrics" "^2.0.0"
+    "@datadog/pprof" "^2.2.1"
     "@datadog/sketches-js" "^2.1.0"
     crypto-randomuuid "^1.0.0"
     diagnostics_channel "^1.1.0"
@@ -3858,6 +3859,10 @@ next-tick@~1.0.0:
 node-abort-controller@^3.0.1:
   version "3.0.1"
   resolved "https://registry.npmjs.org/node-abort-controller/-/node-abort-controller-3.0.1.tgz"
+
+node-addon-api@^6.1.0:
+  version "6.1.0"
+  resolved "https://registry.yarnpkg.com/node-addon-api/-/node-addon-api-6.1.0.tgz#ac8470034e58e67d0c6f1204a18ae6995d9c0d76"
 
 node-fetch@^2.6.1:
   version "2.6.7"
