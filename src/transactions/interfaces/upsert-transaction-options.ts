@@ -8,7 +8,6 @@ export interface UpsertTransactionOptions {
   size: number;
   notes: Note[];
   spends: Spend[];
-  serialized?: string;
 }
 
 interface Note {

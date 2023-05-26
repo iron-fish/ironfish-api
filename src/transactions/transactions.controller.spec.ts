@@ -399,7 +399,6 @@ describe('TransactionsController', () => {
         spends: [{ nullifier: uuid() }],
         mints: [],
         burns: [],
-        serialized: faker.datatype.string(),
       };
 
       const transaction2 = {
@@ -411,7 +410,6 @@ describe('TransactionsController', () => {
         spends: [{ nullifier: uuid() }],
         mints: [],
         burns: [],
-        serialized: faker.datatype.string(),
       };
 
       const API_KEY = 'test';

@@ -44,7 +44,6 @@ model Transaction {
   notes               Json
   spends              Json
   network_version     Int
-  serialized          String?
   asset_descriptions  AssetDescription[]
   created_assets      Asset[]
   blocks_transactions BlockTransaction[]
