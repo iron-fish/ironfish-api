@@ -80,6 +80,7 @@ const TELEMETRY_WHITELIST = new Map<string, true | Array<string>>([
   ],
   ['transaction_propagation', true],
   ['forks_count', true],
+  ['chain_database_size', true],
   ['fee_rate_estimate', true],
 ]);
 
