@@ -394,20 +394,24 @@ describe('TransactionsController', () => {
         hash: uuid(),
         fee: faker.datatype.number(),
         size: faker.datatype.number(),
+        expiration: faker.datatype.number(),
         notes: [{ commitment: uuid() }],
         spends: [{ nullifier: uuid() }],
         mints: [],
         burns: [],
+        serialized: faker.datatype.string(),
       };
 
       const transaction2 = {
         hash: uuid(),
         fee: faker.datatype.number(),
+        expiration: faker.datatype.number(),
         size: faker.datatype.number(),
         notes: [{ commitment: uuid() }],
         spends: [{ nullifier: uuid() }],
         mints: [],
         burns: [],
+        serialized: faker.datatype.string(),
       };
 
       const API_KEY = 'test';
@@ -425,6 +429,7 @@ describe('TransactionsController', () => {
       expect(body1.notes).toStrictEqual(transaction1.notes);
       expect(body1.spends).toStrictEqual(transaction1.spends);
       expect(body1.hash).toStrictEqual(transaction1.hash);
+      expect(body1.expiration).toStrictEqual(transaction1.expiration);
 
       const { body: body2 } = await request(app.getHttpServer())
         .get('/transactions/find')
@@ -434,6 +439,54 @@ describe('TransactionsController', () => {
       expect(body2.notes).toStrictEqual(transaction2.notes);
       expect(body2.spends).toStrictEqual(transaction2.spends);
       expect(body2.hash).toStrictEqual(transaction2.hash);
+      expect(body2.expiration).toStrictEqual(transaction2.expiration);
     });
+  });
+
+  it('uploads bulk transactions without expiration or serialized', async () => {
+    const transaction1 = {
+      hash: uuid(),
+      fee: faker.datatype.number(),
+      size: faker.datatype.number(),
+      notes: [{ commitment: uuid() }],
+      spends: [{ nullifier: uuid() }],
+      mints: [],
+      burns: [],
+    };
+
+    const transaction2 = {
+      hash: uuid(),
+      fee: faker.datatype.number(),
+      size: faker.datatype.number(),
+      notes: [{ commitment: uuid() }],
+      spends: [{ nullifier: uuid() }],
+      mints: [],
+      burns: [],
+    };
+
+    const API_KEY = 'test';
+    await request(app.getHttpServer())
+      .post('/transactions')
+      .set('Authorization', `Bearer ${API_KEY}`)
+      .send({ transactions: [transaction1, transaction2] })
+      .expect(HttpStatus.CREATED);
+
+    const { body: body1 } = await request(app.getHttpServer())
+      .get('/transactions/find')
+      .query({ hash: transaction1.hash })
+      .expect(HttpStatus.OK);
+
+    expect(body1.notes).toStrictEqual(transaction1.notes);
+    expect(body1.spends).toStrictEqual(transaction1.spends);
+    expect(body1.hash).toStrictEqual(transaction1.hash);
+
+    const { body: body2 } = await request(app.getHttpServer())
+      .get('/transactions/find')
+      .query({ hash: transaction2.hash })
+      .expect(HttpStatus.OK);
+
+    expect(body2.notes).toStrictEqual(transaction2.notes);
+    expect(body2.spends).toStrictEqual(transaction2.spends);
+    expect(body2.hash).toStrictEqual(transaction2.hash);
   });
 });

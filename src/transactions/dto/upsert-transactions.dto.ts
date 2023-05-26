@@ -8,6 +8,7 @@ import {
   ArrayMinSize,
   IsArray,
   IsInt,
+  IsOptional,
   IsString,
   Max,
   ValidateNested,
@@ -31,6 +32,12 @@ export class TransactionDto {
   @Type(() => Number)
   readonly size!: number;
 
+  @Max(Number.MAX_SAFE_INTEGER)
+  @IsInt()
+  @Type(() => Number)
+  @IsOptional()
+  readonly expiration?: number;
+
   @IsArray()
   @ValidateNested({ each: true })
   readonly notes!: NoteDto[];
@@ -46,6 +53,10 @@ export class TransactionDto {
   @IsArray()
   @ValidateNested({ each: true })
   readonly burns!: BurnDto[];
+
+  @IsString()
+  @IsOptional()
+  readonly serialized?: string;
 }
 
 export class UpsertTransactionsDto {
