@@ -39,6 +39,7 @@ model Transaction {
   updated_at          DateTime           @default(now()) @updatedAt @db.Timestamp(6)
   hash                String             @db.VarChar
   fee                 Float
+  expiration          Int?
   size                Int
   notes               Json
   spends              Json
