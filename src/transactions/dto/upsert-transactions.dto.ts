@@ -53,10 +53,6 @@ export class TransactionDto {
   @IsArray()
   @ValidateNested({ each: true })
   readonly burns!: BurnDto[];
-
-  @IsString()
-  @IsOptional()
-  readonly serialized?: string;
 }
 
 export class UpsertTransactionsDto {
