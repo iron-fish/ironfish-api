@@ -42,7 +42,7 @@ describe('SupplyController', () => {
       };
       await blocksService.upsert(prisma, options);
 
-      const { text } = await request(app.getHttpServer())
+      const { body } = await request(app.getHttpServer())
         .get('/supply/circulating')
         .expect(HttpStatus.OK);
 
@@ -51,7 +51,7 @@ describe('SupplyController', () => {
         head.sequence,
       );
 
-      expect(text).toBe(circulating.toString());
+      expect(body).toBe(circulating);
     });
   });
 
@@ -71,7 +71,7 @@ describe('SupplyController', () => {
       };
       await blocksService.upsert(prisma, options);
 
-      const { text } = await request(app.getHttpServer())
+      const { body } = await request(app.getHttpServer())
         .get('/supply/total')
         .expect(HttpStatus.OK);
 
@@ -80,7 +80,7 @@ describe('SupplyController', () => {
         head.sequence,
       );
 
-      expect(text).toBe(total.toString());
+      expect(body).toBe(total);
     });
   });
 });
