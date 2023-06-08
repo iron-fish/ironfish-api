@@ -26,6 +26,7 @@ export function serializedTransactionFromRecord(
     id: transaction.id,
     hash: transaction.hash,
     fee: transaction.fee.toString(),
+    ...(transaction.expiration ? { expiration: transaction.expiration } : {}),
     size: transaction.size,
     notes: transaction.notes,
     spends: transaction.spends,
@@ -39,24 +40,14 @@ export function serializedTransactionFromRecordWithBlocks(
   transaction: Transaction & { blocks: Block[] },
   assetDescriptions: { asset: Asset; assetDescription: AssetDescription }[],
 ): SerializedTransactionWithBlocks {
-  const blocks = transaction.blocks.map((block) =>
-    serializedBlockFromRecord(block),
-  );
-  const { mints, burns } = mintsAndBurnsFromAssetDescriptions(
+  const serializedTransaction = serializedTransactionFromRecord(
     transaction,
     assetDescriptions,
   );
+
   return {
-    id: transaction.id,
-    hash: transaction.hash,
-    fee: transaction.fee.toString(),
-    size: transaction.size,
-    notes: transaction.notes,
-    spends: transaction.spends,
-    object: 'transaction',
-    blocks,
-    mints,
-    burns,
+    ...serializedTransaction,
+    blocks: transaction.blocks.map((block) => serializedBlockFromRecord(block)),
   };
 }
 

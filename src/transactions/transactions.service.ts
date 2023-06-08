@@ -35,6 +35,7 @@ export class TransactionsService {
         hash: standardizeHash(tx.hash),
         network_version: networkVersion,
         fee: tx.fee,
+        expiration: tx.expiration,
         size: tx.size,
         notes: classToPlain(tx.notes),
         spends: classToPlain(tx.spends),

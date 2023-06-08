@@ -4,6 +4,7 @@
 export interface UpsertTransactionOptions {
   hash: string;
   fee: number;
+  expiration?: number;
   size: number;
   notes: Note[];
   spends: Spend[];

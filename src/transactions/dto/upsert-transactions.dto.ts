@@ -8,6 +8,7 @@ import {
   ArrayMinSize,
   IsArray,
   IsInt,
+  IsOptional,
   IsString,
   Max,
   ValidateNested,
@@ -30,6 +31,12 @@ export class TransactionDto {
   @IsInt()
   @Type(() => Number)
   readonly size!: number;
+
+  @Max(Number.MAX_SAFE_INTEGER)
+  @IsInt()
+  @Type(() => Number)
+  @IsOptional()
+  readonly expiration?: number;
 
   @IsArray()
   @ValidateNested({ each: true })
