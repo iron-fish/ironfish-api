@@ -426,9 +426,9 @@
   version "0.2.3"
   resolved "https://registry.npmjs.org/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz"
 
-"@datadog/native-appsec@^3.1.0":
-  version "3.1.0"
-  resolved "https://registry.yarnpkg.com/@datadog/native-appsec/-/native-appsec-3.1.0.tgz#967145398dbbc8e13b8e2baa76e0a55f0a1569ff"
+"@datadog/native-appsec@^3.2.0":
+  version "3.2.0"
+  resolved "https://registry.yarnpkg.com/@datadog/native-appsec/-/native-appsec-3.2.0.tgz#ddeca06cbaba9c6905903d09d18013f81eedc8c3"
   dependencies:
     node-gyp-build "^3.9.0"
 
@@ -1980,11 +1980,11 @@ data-urls@^2.0.0:
     whatwg-mimetype "^2.3.0"
     whatwg-url "^8.0.0"
 
-dd-trace@4.0.0:
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/dd-trace/-/dd-trace-4.0.0.tgz#c8093c4833f460c99e3995a15632de924eabd73a"
+dd-trace@4.1.1:
+  version "4.1.1"
+  resolved "https://registry.yarnpkg.com/dd-trace/-/dd-trace-4.1.1.tgz#cd0c083f6dc6c01810d0378e58ef33a6c57169f9"
   dependencies:
-    "@datadog/native-appsec" "^3.1.0"
+    "@datadog/native-appsec" "^3.2.0"
     "@datadog/native-iast-rewriter" "2.0.1"
     "@datadog/native-iast-taint-tracking" "^1.4.1"
     "@datadog/native-metrics" "^2.0.0"
