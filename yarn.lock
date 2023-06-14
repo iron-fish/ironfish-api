@@ -1130,9 +1130,9 @@
   dependencies:
     "@types/superagent" "*"
 
-"@types/uuid@9.0.0":
-  version "9.0.0"
-  resolved "https://registry.npmjs.org/@types/uuid/-/uuid-9.0.0.tgz"
+"@types/uuid@9.0.2":
+  version "9.0.2"
+  resolved "https://registry.yarnpkg.com/@types/uuid/-/uuid-9.0.2.tgz#ede1d1b1e451548d44919dc226253e32a6952c4b"
 
 "@types/yargs-parser@*":
   version "20.2.1"
