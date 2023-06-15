@@ -10,6 +10,7 @@
 * Run `yarn build` to build things locally
 * Run `yarn db:client:generate` to generate the Prisma client
 * Run `yarn db:migrate` to create a migration
+* (Optional) Run `yarn db:seed:testing` to load some sample data into the database
 
 ## Environment
 
