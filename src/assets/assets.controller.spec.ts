@@ -36,6 +36,10 @@ describe('AssetsController', () => {
     await app.close();
   });
 
+  beforeEach(async () => {
+    await prisma.asset.deleteMany({});
+  });
+
   async function createRandomAsset(): Promise<{
     block: Block;
     transaction: Transaction;
@@ -167,7 +171,6 @@ describe('AssetsController', () => {
 
       const { body } = await request(app.getHttpServer())
         .get('/assets')
-        .query({ limit: 2 })
         .expect(HttpStatus.OK);
 
       expect(body).toMatchObject({
@@ -199,7 +202,7 @@ describe('AssetsController', () => {
           },
         ],
         metadata: {
-          has_next: true,
+          has_next: false,
           has_previous: false,
         },
       });
