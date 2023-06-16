@@ -5,4 +5,5 @@ import { PaginationOptions } from '../../common/interfaces/pagination-options';
 
 export interface ListAssetsOptions extends PaginationOptions {
   search?: string;
+  verified?: boolean;
 }

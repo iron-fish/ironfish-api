@@ -103,13 +103,20 @@ export class AssetsService {
     const orderBy = { id: SortOrder.DESC };
     const skip = cursor ? 1 : 0;
 
-    let where: Prisma.AssetWhereInput = {};
+    const where: Prisma.AssetWhereInput = {};
     if (options.search) {
-      where = {
-        name: {
-          contains: options.search,
-        },
+      where.name = {
+        contains: options.search,
       };
+    }
+    if (options.verified !== undefined) {
+      if (options.verified) {
+        where.verified_at = {
+          not: null,
+        };
+      } else {
+        where.verified_at = null;
+      }
     }
 
     const data = await this.prisma.readClient.asset.findMany({

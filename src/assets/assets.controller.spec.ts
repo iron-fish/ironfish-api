@@ -85,6 +85,17 @@ describe('AssetsController', () => {
     return { block: block, transaction: transaction, asset: asset };
   }
 
+  async function verifyAsset(asset: Asset): Promise<Asset> {
+    return prisma.asset.update({
+      data: {
+        verified_at: new Date(),
+      },
+      where: {
+        id: asset.id,
+      },
+    });
+  }
+
   describe('GET /assets/find', () => {
     describe('with an invalid query', () => {
       it('returns a 422', async () => {
@@ -161,13 +172,15 @@ describe('AssetsController', () => {
   });
 
   describe('GET /assets', () => {
-    it('returns the assets', async () => {
+    it('returns all assets', async () => {
       const { block, transaction, asset } = await createRandomAsset();
       const {
         block: secondBlock,
         transaction: secondTransaction,
         asset: secondAsset,
       } = await createRandomAsset();
+
+      const verifiedAsset = await verifyAsset(asset);
 
       const { body } = await request(app.getHttpServer())
         .get('/assets')
@@ -198,13 +211,100 @@ describe('AssetsController', () => {
             name: asset.name,
             owner: asset.owner,
             supply: asset.supply.toString(),
-            verified_at: null,
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            verified_at: verifiedAsset.verified_at!.toISOString(),
           },
         ],
         metadata: {
           has_next: false,
           has_previous: false,
         },
+      });
+    });
+
+    describe('with verified=true', () => {
+      it('returns only verified assets', async () => {
+        const { block, transaction, asset } = await createRandomAsset();
+        const {
+          block: _secondBlock,
+          transaction: _secondTransaction,
+          asset: _secondAsset,
+        } = await createRandomAsset();
+
+        const verifiedAsset = await verifyAsset(asset);
+
+        const { body } = await request(app.getHttpServer())
+          .get('/assets')
+          .query({ verified: true })
+          .expect(HttpStatus.OK);
+
+        expect(body).toMatchObject({
+          object: 'list',
+          data: [
+            {
+              object: 'asset',
+              created_transaction_hash: transaction.hash,
+              created_transaction_timestamp: block.timestamp.toISOString(),
+              id: asset.id,
+              identifier: asset.identifier,
+              metadata: asset.metadata,
+              name: asset.name,
+              owner: asset.owner,
+              supply: asset.supply.toString(),
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+              verified_at: verifiedAsset.verified_at!.toISOString(),
+            },
+          ],
+          metadata: {
+            has_next: false,
+            has_previous: false,
+          },
+        });
+      });
+    });
+
+    describe('with verified=false', () => {
+      it('returns only unverified assets', async () => {
+        const {
+          block: _block,
+          transaction: _transaction,
+          asset,
+        } = await createRandomAsset();
+        const {
+          block: secondBlock,
+          transaction: secondTransaction,
+          asset: secondAsset,
+        } = await createRandomAsset();
+
+        await verifyAsset(asset);
+
+        const { body } = await request(app.getHttpServer())
+          .get('/assets')
+          .query({ verified: false })
+          .expect(HttpStatus.OK);
+
+        expect(body).toMatchObject({
+          object: 'list',
+          data: [
+            {
+              object: 'asset',
+              created_transaction_hash: secondTransaction.hash,
+              created_transaction_timestamp:
+                secondBlock.timestamp.toISOString(),
+              id: secondAsset.id,
+              identifier: secondAsset.identifier,
+              metadata: secondAsset.metadata,
+              name: secondAsset.name,
+              owner: secondAsset.owner,
+              supply: secondAsset.supply.toString(),
+              verified_at: null,
+            },
+          ],
+          metadata: {
+            has_next: false,
+            has_previous: false,
+          },
+        });
       });
     });
   });
