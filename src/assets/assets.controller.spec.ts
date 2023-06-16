@@ -12,6 +12,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { TransactionsService } from '../transactions/transactions.service';
 import { AssetsService } from './assets.service';
+import { Asset, Block, Transaction } from '.prisma/client';
 
 describe('AssetsController', () => {
   let app: INestApplication;
@@ -34,6 +35,51 @@ describe('AssetsController', () => {
   afterAll(async () => {
     await app.close();
   });
+
+  async function createRandomAsset(): Promise<{
+    block: Block;
+    transaction: Transaction;
+    asset: Asset;
+  }> {
+    const block = await blocksService.upsert(prisma, {
+      hash: uuid(),
+      sequence: faker.datatype.number(),
+      difficulty: BigInt(faker.datatype.number()),
+      work: BigInt(faker.datatype.number()),
+      timestamp: new Date(),
+      transactionsCount: 1,
+      type: BlockOperation.CONNECTED,
+      graffiti: uuid(),
+      previousBlockHash: uuid(),
+      size: faker.datatype.number(),
+    });
+
+    const transaction = (
+      await transactionsService.createMany([
+        {
+          fee: 0,
+          hash: uuid(),
+          notes: [],
+          size: 0,
+          spends: [],
+        },
+      ])
+    )[0];
+    await blocksTransactionsService.upsert(prisma, block, transaction, 0);
+
+    const asset = await assetsService.upsert(
+      {
+        identifier: uuid(),
+        metadata: uuid(),
+        name: uuid(),
+        owner: uuid(),
+      },
+      transaction,
+      prisma,
+    );
+
+    return { block: block, transaction: transaction, asset: asset };
+  }
 
   describe('GET /assets/find', () => {
     describe('with an invalid query', () => {
@@ -89,41 +135,7 @@ describe('AssetsController', () => {
 
     describe('with a valid identifier', () => {
       it('returns the asset', async () => {
-        const block = await blocksService.upsert(prisma, {
-          hash: uuid(),
-          sequence: faker.datatype.number(),
-          difficulty: BigInt(faker.datatype.number()),
-          work: BigInt(faker.datatype.number()),
-          timestamp: new Date(),
-          transactionsCount: 1,
-          type: BlockOperation.CONNECTED,
-          graffiti: uuid(),
-          previousBlockHash: uuid(),
-          size: faker.datatype.number(),
-        });
-        const transaction = (
-          await transactionsService.createMany([
-            {
-              fee: 0,
-              hash: uuid(),
-              notes: [],
-              size: 0,
-              spends: [],
-            },
-          ])
-        )[0];
-        await blocksTransactionsService.upsert(prisma, block, transaction, 0);
-
-        const asset = await assetsService.upsert(
-          {
-            identifier: uuid(),
-            metadata: uuid(),
-            name: uuid(),
-            owner: uuid(),
-          },
-          transaction,
-          prisma,
-        );
+        const { block, transaction, asset } = await createRandomAsset();
 
         const { body } = await request(app.getHttpServer())
           .get('/assets/find')
@@ -146,69 +158,12 @@ describe('AssetsController', () => {
 
   describe('GET /assets', () => {
     it('returns the assets', async () => {
-      const block = await blocksService.upsert(prisma, {
-        hash: uuid(),
-        sequence: faker.datatype.number(),
-        difficulty: BigInt(faker.datatype.number()),
-        work: BigInt(faker.datatype.number()),
-        timestamp: new Date(),
-        transactionsCount: 1,
-        type: BlockOperation.CONNECTED,
-        graffiti: uuid(),
-        previousBlockHash: uuid(),
-        size: faker.datatype.number(),
-      });
-      const transaction = (
-        await transactionsService.createMany([
-          {
-            fee: 0,
-            hash: uuid(),
-            notes: [],
-            size: 0,
-            spends: [],
-          },
-        ])
-      )[0];
-      await blocksTransactionsService.upsert(prisma, block, transaction, 0);
-
-      const asset = await assetsService.upsert(
-        {
-          identifier: uuid(),
-          metadata: uuid(),
-          name: uuid(),
-          owner: uuid(),
-        },
-        transaction,
-        prisma,
-      );
-
-      const secondTransaction = (
-        await transactionsService.createMany([
-          {
-            fee: 0,
-            hash: 'foo',
-            notes: [],
-            size: 0,
-            spends: [],
-          },
-        ])
-      )[0];
-      await blocksTransactionsService.upsert(
-        prisma,
-        block,
-        secondTransaction,
-        1,
-      );
-      const secondAsset = await assetsService.upsert(
-        {
-          identifier: uuid(),
-          metadata: uuid(),
-          name: uuid(),
-          owner: uuid(),
-        },
-        secondTransaction,
-        prisma,
-      );
+      const { block, transaction, asset } = await createRandomAsset();
+      const {
+        block: secondBlock,
+        transaction: secondTransaction,
+        asset: secondAsset,
+      } = await createRandomAsset();
 
       const { body } = await request(app.getHttpServer())
         .get('/assets')
@@ -221,7 +176,7 @@ describe('AssetsController', () => {
           {
             object: 'asset',
             created_transaction_hash: secondTransaction.hash,
-            created_transaction_timestamp: block.timestamp.toISOString(),
+            created_transaction_timestamp: secondBlock.timestamp.toISOString(),
             id: secondAsset.id,
             identifier: secondAsset.identifier,
             metadata: secondAsset.metadata,
