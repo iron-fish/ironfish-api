@@ -4,6 +4,7 @@
 import {
   Controller,
   Get,
+  Header,
   HttpStatus,
   NotFoundException,
   Query,
@@ -67,6 +68,7 @@ export class AssetsController {
 
   @ApiOperation({ summary: 'Lists assets' })
   @Get()
+  @Header('Cache-Control', 's-maxage=60, stale-if-error=60')
   async list(
     @Query(
       new ValidationPipe({
