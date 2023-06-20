@@ -38,10 +38,7 @@ async function bootstrap(): Promise<void> {
   const config = app.get(ApiConfigService);
   const logger = app.get(LoggerService);
 
-  const defaultOrigins = [
-    config.get<string>('BLOCK_EXPLORER_URL'),
-    config.get<string>('INCENTIVIZED_TESTNET_URL'),
-  ];
+  const defaultOrigins = [config.get<string>('BLOCK_EXPLORER_URL')];
   const enabledOrigins = config.isStaging()
     ? [
         ...defaultOrigins,
