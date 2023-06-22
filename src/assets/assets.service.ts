@@ -175,4 +175,13 @@ export class AssetsService {
       },
     });
   }
+
+  async lastUpdate(): Promise<Date | null> {
+    const aggregations = await this.prisma.asset.aggregate({
+      _max: {
+        updated_at: true,
+      },
+    });
+    return aggregations._max.updated_at;
+  }
 }
