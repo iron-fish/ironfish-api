@@ -8,11 +8,14 @@ import {
   HttpStatus,
   NotFoundException,
   Query,
+  Req,
+  Res,
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Request, Response } from 'express';
 import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
-import { PaginatedList } from '../common/interfaces/paginated-list';
+import { handleIfModifiedSince } from '../common/utils/request';
 import { TransactionsService } from '../transactions/transactions.service';
 import { AssetsService } from './assets.service';
 import { AssetQueryDto } from './dto/asset-query-dto';
@@ -77,7 +80,14 @@ export class AssetsController {
       }),
     )
     dto: AssetsQueryDto,
-  ): Promise<PaginatedList<SerializedAsset>> {
+    @Req() req: Request,
+    @Res() res: Response,
+  ): Promise<void> {
+    const lastUpdate = await this.assetsService.lastUpdate();
+    if (lastUpdate) {
+      handleIfModifiedSince(lastUpdate, req, res);
+    }
+
     const { data, hasNext, hasPrevious } = await this.assetsService.list(dto);
 
     const serializedData: SerializedAsset[] = [];
@@ -109,13 +119,13 @@ export class AssetsController {
       });
     }
 
-    return {
+    res.json({
       object: 'list',
       data: serializedData,
       metadata: {
         has_next: hasNext,
         has_previous: hasPrevious,
       },
-    };
+    });
   }
 }

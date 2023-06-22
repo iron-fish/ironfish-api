@@ -26,6 +26,10 @@ describe('AssetsService', () => {
     await app.close();
   });
 
+  beforeEach(async () => {
+    await prisma.asset.deleteMany({});
+  });
+
   describe('findOrThrow', () => {
     describe('with a missing identifier', () => {
       it('throws a NotFoundException', async () => {
@@ -216,7 +220,64 @@ describe('AssetsService', () => {
         ])
       )[0];
 
-      const asset = await assetsService.upsert(
+      const _firstAsset = await assetsService.upsert(
+        {
+          identifier: uuid(),
+          metadata: uuid(),
+          name: uuid(),
+          owner: uuid(),
+        },
+        transaction,
+        prisma,
+      );
+      const secondAsset = await assetsService.upsert(
+        {
+          identifier: uuid(),
+          metadata: uuid(),
+          name: uuid(),
+          owner: uuid(),
+        },
+        transaction,
+        prisma,
+      );
+      const thirdAsset = await assetsService.upsert(
+        {
+          identifier: uuid(),
+          metadata: uuid(),
+          name: uuid(),
+          owner: uuid(),
+        },
+        transaction,
+        prisma,
+      );
+
+      expect(await assetsService.list({ limit: 2 })).toEqual({
+        data: [thirdAsset, secondAsset],
+        hasNext: true,
+        hasPrevious: false,
+      });
+    });
+  });
+
+  describe('lastUpdate', () => {
+    it('returns `null` if there are no records', async () => {
+      expect(await assetsService.lastUpdate()).toBeNull();
+    });
+
+    it('returns the maximum of `updated_at`', async () => {
+      const transaction = (
+        await transactionsService.createMany([
+          {
+            fee: 0,
+            hash: uuid(),
+            notes: [],
+            size: 0,
+            spends: [],
+          },
+        ])
+      )[0];
+
+      const firstAsset = await assetsService.upsert(
         {
           identifier: uuid(),
           metadata: uuid(),
@@ -237,11 +298,31 @@ describe('AssetsService', () => {
         prisma,
       );
 
-      expect(await assetsService.list({ limit: 2 })).toEqual({
-        data: [secondAsset, asset],
-        hasNext: true,
-        hasPrevious: false,
+      expect(secondAsset.updated_at.valueOf()).toBeGreaterThan(
+        firstAsset.updated_at.valueOf(),
+      );
+      expect(await assetsService.lastUpdate()).toStrictEqual(
+        secondAsset.updated_at,
+      );
+
+      const updatedAsset = await prisma.asset.update({
+        where: {
+          id: firstAsset.id,
+        },
+        data: {
+          name: uuid(),
+        },
       });
+
+      expect(updatedAsset.updated_at.valueOf()).toBeGreaterThan(
+        firstAsset.updated_at.valueOf(),
+      );
+      expect(updatedAsset.updated_at.valueOf()).toBeGreaterThan(
+        secondAsset.updated_at.valueOf(),
+      );
+      expect(await assetsService.lastUpdate()).toStrictEqual(
+        updatedAsset.updated_at,
+      );
     });
   });
 });

@@ -222,6 +222,119 @@ describe('AssetsController', () => {
       });
     });
 
+    it('sets Last-Modified', async () => {
+      const {
+        block: _block,
+        transaction: _transaction,
+        asset,
+      } = await createRandomAsset();
+      const lastModified = asset.updated_at.toUTCString();
+      await request(app.getHttpServer())
+        .get('/assets')
+        .expect(HttpStatus.OK)
+        .expect('Last-Modified', lastModified);
+    });
+
+    it('returns 304 when If-Modified-Since matches Last-Modified', async () => {
+      const {
+        block: _block,
+        transaction: _transaction,
+        asset,
+      } = await createRandomAsset();
+      const lastModified = asset.updated_at.toUTCString();
+      const { text } = await request(app.getHttpServer())
+        .get('/assets')
+        .set('If-Modified-Since', lastModified)
+        .expect(HttpStatus.NOT_MODIFIED)
+        .expect('Last-Modified', lastModified);
+      expect(text).toBeFalsy();
+    });
+
+    it('returns 304 when If-Modified-Since is after Last-Modified', async () => {
+      const {
+        block: _block,
+        transaction: _transaction,
+        asset,
+      } = await createRandomAsset();
+      const lastModified = asset.updated_at.toUTCString();
+      const oneMinuteAfterLastModified = new Date(
+        asset.updated_at.valueOf() + 60_000,
+      ).toUTCString();
+      const { text } = await request(app.getHttpServer())
+        .get('/assets')
+        .set('If-Modified-Since', oneMinuteAfterLastModified)
+        .expect(HttpStatus.NOT_MODIFIED)
+        .expect('Last-Modified', lastModified);
+      expect(text).toBeFalsy();
+    });
+
+    it('returns 200 when If-Modified-Since is before Last-Modified', async () => {
+      const { block, transaction, asset } = await createRandomAsset();
+      const lastModified = asset.updated_at.toUTCString();
+      const oneMinuteBeforeLastModified = new Date(
+        asset.updated_at.valueOf() - 60_000,
+      ).toUTCString();
+      const { body } = await request(app.getHttpServer())
+        .get('/assets')
+        .set('If-Modified-Since', oneMinuteBeforeLastModified)
+        .expect(HttpStatus.OK)
+        .expect('Last-Modified', lastModified);
+
+      expect(body).toMatchObject({
+        object: 'list',
+        data: [
+          {
+            object: 'asset',
+            created_transaction_hash: transaction.hash,
+            created_transaction_timestamp: block.timestamp.toISOString(),
+            id: asset.id,
+            identifier: asset.identifier,
+            metadata: asset.metadata,
+            name: asset.name,
+            owner: asset.owner,
+            supply: asset.supply.toString(),
+            verified_at: null,
+          },
+        ],
+        metadata: {
+          has_next: false,
+          has_previous: false,
+        },
+      });
+    });
+
+    it('returns 200 when If-Modified-Since is an invalid date', async () => {
+      const { block, transaction, asset } = await createRandomAsset();
+      const lastModified = asset.updated_at.toUTCString();
+      const { body } = await request(app.getHttpServer())
+        .get('/assets')
+        .set('If-Modified-Since', 'not a valid date')
+        .expect(HttpStatus.OK)
+        .expect('Last-Modified', lastModified);
+
+      expect(body).toMatchObject({
+        object: 'list',
+        data: [
+          {
+            object: 'asset',
+            created_transaction_hash: transaction.hash,
+            created_transaction_timestamp: block.timestamp.toISOString(),
+            id: asset.id,
+            identifier: asset.identifier,
+            metadata: asset.metadata,
+            name: asset.name,
+            owner: asset.owner,
+            supply: asset.supply.toString(),
+            verified_at: null,
+          },
+        ],
+        metadata: {
+          has_next: false,
+          has_previous: false,
+        },
+      });
+    });
+
     describe('with verified=true', () => {
       it('returns only verified assets', async () => {
         const { block, transaction, asset } = await createRandomAsset();
