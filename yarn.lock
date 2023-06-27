@@ -438,9 +438,9 @@
   dependencies:
     node-gyp-build "^4.5.0"
 
-"@datadog/native-iast-taint-tracking@^1.4.1":
-  version "1.4.1"
-  resolved "https://registry.yarnpkg.com/@datadog/native-iast-taint-tracking/-/native-iast-taint-tracking-1.4.1.tgz#e84198607230e0193d0d88f06c1f56d5938daf9e"
+"@datadog/native-iast-taint-tracking@^1.5.0":
+  version "1.5.0"
+  resolved "https://registry.yarnpkg.com/@datadog/native-iast-taint-tracking/-/native-iast-taint-tracking-1.5.0.tgz#1a55eca6692079ac6167696682acb972aa0b0181"
   dependencies:
     node-gyp-build "^3.9.0"
 
@@ -451,15 +451,15 @@
     node-addon-api "^6.1.0"
     node-gyp-build "^3.9.0"
 
-"@datadog/pprof@^2.2.1":
-  version "2.2.1"
-  resolved "https://registry.yarnpkg.com/@datadog/pprof/-/pprof-2.2.1.tgz#405e39f354beeb0f53ffa248e03ea64b2e8d5549"
+"@datadog/pprof@2.2.3":
+  version "2.2.3"
+  resolved "https://registry.yarnpkg.com/@datadog/pprof/-/pprof-2.2.3.tgz#a22ca30e386f5aa8559f4b2e297b76c80551c26d"
   dependencies:
     delay "^5.0.0"
     node-gyp-build "^3.9.0"
     p-limit "^3.1.0"
     pify "^5.0.0"
-    pprof-format "^2.0.6"
+    pprof-format "^2.0.7"
     source-map "^0.7.3"
     split "^1.0.1"
 
@@ -840,6 +840,20 @@
     chalk "^4.1.0"
     consola "^2.15.0"
     node-fetch "^2.6.1"
+
+"@opentelemetry/api@^1.0.0":
+  version "1.4.1"
+  resolved "https://registry.yarnpkg.com/@opentelemetry/api/-/api-1.4.1.tgz#ff22eb2e5d476fbc2450a196e40dd243cc20c28f"
+
+"@opentelemetry/core@^1.14.0":
+  version "1.14.0"
+  resolved "https://registry.yarnpkg.com/@opentelemetry/core/-/core-1.14.0.tgz#64e876b29cb736c984d54164cd47433f513eafd3"
+  dependencies:
+    "@opentelemetry/semantic-conventions" "1.14.0"
+
+"@opentelemetry/semantic-conventions@1.14.0":
+  version "1.14.0"
+  resolved "https://registry.yarnpkg.com/@opentelemetry/semantic-conventions/-/semantic-conventions-1.14.0.tgz#6a729b7f372ce30f77a3f217c09bc216f863fccb"
 
 "@prisma/client@4.15.0":
   version "4.15.0"
@@ -1980,16 +1994,18 @@ data-urls@^2.0.0:
     whatwg-mimetype "^2.3.0"
     whatwg-url "^8.0.0"
 
-dd-trace@4.1.1:
-  version "4.1.1"
-  resolved "https://registry.yarnpkg.com/dd-trace/-/dd-trace-4.1.1.tgz#cd0c083f6dc6c01810d0378e58ef33a6c57169f9"
+dd-trace@4.3.0:
+  version "4.3.0"
+  resolved "https://registry.yarnpkg.com/dd-trace/-/dd-trace-4.3.0.tgz#d245e8b030d999076d1e270ddbe4d669cefb2477"
   dependencies:
     "@datadog/native-appsec" "^3.2.0"
     "@datadog/native-iast-rewriter" "2.0.1"
-    "@datadog/native-iast-taint-tracking" "^1.4.1"
+    "@datadog/native-iast-taint-tracking" "^1.5.0"
     "@datadog/native-metrics" "^2.0.0"
-    "@datadog/pprof" "^2.2.1"
+    "@datadog/pprof" "2.2.3"
     "@datadog/sketches-js" "^2.1.0"
+    "@opentelemetry/api" "^1.0.0"
+    "@opentelemetry/core" "^1.14.0"
     crypto-randomuuid "^1.0.0"
     diagnostics_channel "^1.1.0"
     ignore "^5.2.0"
@@ -4201,9 +4217,9 @@ postgres-interval@^1.1.0:
   dependencies:
     xtend "^4.0.0"
 
-pprof-format@^2.0.6:
+pprof-format@^2.0.7:
   version "2.0.7"
-  resolved "https://registry.npmjs.org/pprof-format/-/pprof-format-2.0.7.tgz"
+  resolved "https://registry.yarnpkg.com/pprof-format/-/pprof-format-2.0.7.tgz#526e4361f8b37d16b2ec4bb0696b5292de5046a4"
 
 prelude-ls@^1.2.1:
   version "1.2.1"
