@@ -82,6 +82,7 @@ const TELEMETRY_WHITELIST = new Map<string, true | Array<string>>([
   ['forks_count', true],
   ['chain_db', true],
   ['fee_rate_estimate', true],
+  ['chain_reorg', true],
 ]);
 
 @Controller('telemetry')
