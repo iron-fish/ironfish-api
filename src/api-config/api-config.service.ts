@@ -39,14 +39,4 @@ export class ApiConfigService {
   get dbPoolUrl(): string {
     return `${this.get<string>('DATABASE_CONNECTION_POOL_URL')}?pgbouncer=true`;
   }
-
-  get readDbPoolUrl(): string {
-    const readDbPoolUrl = this.config.get<string>(
-      'DATABASE_READ_CONNECTION_POOL_URL',
-    );
-    if (!readDbPoolUrl) {
-      return this.dbPoolUrl;
-    }
-    return `${readDbPoolUrl}?pgbouncer=true`;
-  }
 }
