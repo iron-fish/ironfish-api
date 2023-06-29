@@ -10,7 +10,6 @@ export class PrismaService
   extends PrismaClient
   implements OnModuleInit, OnModuleDestroy
 {
-
   constructor(readonly config: ApiConfigService) {
     super({
       datasources: {
