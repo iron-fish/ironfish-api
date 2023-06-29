@@ -151,14 +151,14 @@ export class FaucetTransactionsService {
   }
 
   async getGlobalStatus(): Promise<FaucetTransactionsStatus> {
-    const pending = await this.prisma.readClient.faucetTransaction.count({
+    const pending = await this.prisma.faucetTransaction.count({
       where: {
         started_at: null,
         completed_at: null,
       },
     });
 
-    const running = await this.prisma.readClient.faucetTransaction.count({
+    const running = await this.prisma.faucetTransaction.count({
       where: {
         started_at: {
           not: null,
@@ -167,7 +167,7 @@ export class FaucetTransactionsService {
       },
     });
 
-    const completed = await this.prisma.readClient.faucetTransaction.count({
+    const completed = await this.prisma.faucetTransaction.count({
       where: {
         completed_at: {
           not: null,

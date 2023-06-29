@@ -39,10 +39,7 @@ export class AssetDescriptionsService {
   async findByTransaction(
     transaction: Transaction,
   ): Promise<AssetDescription[]> {
-    return this.findByTransactionWithClient(
-      transaction,
-      this.prisma.readClient,
-    );
+    return this.findByTransactionWithClient(transaction, this.prisma);
   }
 
   async findByTransactionWithClient(

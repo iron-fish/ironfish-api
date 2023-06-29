@@ -15,7 +15,7 @@ export class AssetsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findOrThrow(id: number): Promise<Asset> {
-    return this.findOrThrowWithClient(id, this.prisma.readClient);
+    return this.findOrThrowWithClient(id, this.prisma);
   }
 
   async findOrThrowWithClient(
@@ -119,7 +119,7 @@ export class AssetsService {
       }
     }
 
-    const data = await this.prisma.readClient.asset.findMany({
+    const data = await this.prisma.asset.findMany({
       cursor,
       orderBy,
       skip,
@@ -145,14 +145,14 @@ export class AssetsService {
         hasPrevious: false,
       };
     }
-    const nextRecords = await this.prisma.readClient.asset.findMany({
+    const nextRecords = await this.prisma.asset.findMany({
       where,
       orderBy,
       cursor: { id: data[length - 1].id },
       skip: 1,
       take: 1,
     });
-    const previousRecords = await this.prisma.readClient.asset.findMany({
+    const previousRecords = await this.prisma.asset.findMany({
       where,
       orderBy,
       cursor: { id: data[0].id },
