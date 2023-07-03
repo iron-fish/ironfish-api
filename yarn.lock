@@ -1994,9 +1994,9 @@ data-urls@^2.0.0:
     whatwg-mimetype "^2.3.0"
     whatwg-url "^8.0.0"
 
-dd-trace@4.3.0:
-  version "4.3.0"
-  resolved "https://registry.yarnpkg.com/dd-trace/-/dd-trace-4.3.0.tgz#d245e8b030d999076d1e270ddbe4d669cefb2477"
+dd-trace@4.4.0:
+  version "4.4.0"
+  resolved "https://registry.yarnpkg.com/dd-trace/-/dd-trace-4.4.0.tgz#590f75e7069c3427ba3ce84b63ead2964c1deb3b"
   dependencies:
     "@datadog/native-appsec" "^3.2.0"
     "@datadog/native-iast-rewriter" "2.0.1"
