@@ -787,9 +787,9 @@
     iterare "1.2.1"
     tslib "2.4.0"
 
-"@nestjs/passport@9.0.3":
-  version "9.0.3"
-  resolved "https://registry.npmjs.org/@nestjs/passport/-/passport-9.0.3.tgz"
+"@nestjs/passport@10.0.0":
+  version "10.0.0"
+  resolved "https://registry.yarnpkg.com/@nestjs/passport/-/passport-10.0.0.tgz#92d36d4b8796b373da3f4d1a055db03cb246b127"
 
 "@nestjs/platform-express@8.4.7":
   version "8.4.7"
