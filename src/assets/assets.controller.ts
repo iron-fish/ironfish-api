@@ -71,7 +71,7 @@ export class AssetsController {
 
   @ApiOperation({ summary: 'Lists assets' })
   @Get()
-  @Header('Cache-Control', 'public, max-age=60, s-maxage=60, stale-if-error=60')
+  @Header('Cache-Control', 's-maxage=60, stale-if-error=60')
   async list(
     @Query(
       new ValidationPipe({
