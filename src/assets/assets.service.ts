@@ -7,7 +7,7 @@ import { SortOrder } from '../common/enums/sort-order';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { CreateAssetOptions } from './interfaces/create-asset-options';
-import { ListAssetsOptions } from './interfaces/list-assets-optionts';
+import { ListAssetsOptions } from './interfaces/list-assets-options';
 import { Asset, Prisma, Transaction } from '.prisma/client';
 
 @Injectable()
