@@ -421,4 +421,139 @@ describe('AssetsController', () => {
       });
     });
   });
+
+  describe('GET /assets/verified', () => {
+    it('returns the IDs of all verified assets', async () => {
+      const {
+        block: _block,
+        transaction: _transaction,
+        asset,
+      } = await createRandomAsset();
+      const {
+        block: _secondBlock,
+        transaction: _secondTransaction,
+        asset: _secondAsset,
+      } = await createRandomAsset();
+      const {
+        block: _thirdBlock,
+        transaction: _thirdTransaction,
+        asset: thirdAsset,
+      } = await createRandomAsset();
+
+      await verifyAsset(asset);
+      await verifyAsset(thirdAsset);
+
+      const { body } = await request(app.getHttpServer())
+        .get('/assets/verified')
+        .expect(HttpStatus.OK);
+
+      expect(body).toMatchObject({
+        assets: [
+          {
+            identifier: asset.identifier,
+          },
+          {
+            identifier: thirdAsset.identifier,
+          },
+        ],
+      });
+    });
+
+    it('sets Last-Modified', async () => {
+      const {
+        block: _block,
+        transaction: _transaction,
+        asset,
+      } = await createRandomAsset();
+      const lastModified = asset.updated_at.toUTCString();
+      await request(app.getHttpServer())
+        .get('/assets/verified')
+        .expect(HttpStatus.OK)
+        .expect('Last-Modified', lastModified);
+    });
+
+    it('returns 304 when If-Modified-Since matches Last-Modified', async () => {
+      const {
+        block: _block,
+        transaction: _transaction,
+        asset,
+      } = await createRandomAsset();
+      const lastModified = asset.updated_at.toUTCString();
+      const { text } = await request(app.getHttpServer())
+        .get('/assets/verified')
+        .set('If-Modified-Since', lastModified)
+        .expect(HttpStatus.NOT_MODIFIED)
+        .expect('Last-Modified', lastModified);
+      expect(text).toBeFalsy();
+    });
+
+    it('returns 304 when If-Modified-Since is after Last-Modified', async () => {
+      const {
+        block: _block,
+        transaction: _transaction,
+        asset,
+      } = await createRandomAsset();
+      const lastModified = asset.updated_at.toUTCString();
+      const oneMinuteAfterLastModified = new Date(
+        asset.updated_at.valueOf() + 60_000,
+      ).toUTCString();
+      const { text } = await request(app.getHttpServer())
+        .get('/assets/verified')
+        .set('If-Modified-Since', oneMinuteAfterLastModified)
+        .expect(HttpStatus.NOT_MODIFIED)
+        .expect('Last-Modified', lastModified);
+      expect(text).toBeFalsy();
+    });
+
+    it('returns 200 when If-Modified-Since is before Last-Modified', async () => {
+      const {
+        block: _block,
+        transaction: _transaction,
+        asset,
+      } = await createRandomAsset();
+      await verifyAsset(asset);
+
+      const lastModified = asset.updated_at.toUTCString();
+      const oneMinuteBeforeLastModified = new Date(
+        asset.updated_at.valueOf() - 60_000,
+      ).toUTCString();
+      const { body } = await request(app.getHttpServer())
+        .get('/assets/verified')
+        .set('If-Modified-Since', oneMinuteBeforeLastModified)
+        .expect(HttpStatus.OK)
+        .expect('Last-Modified', lastModified);
+
+      expect(body).toMatchObject({
+        assets: [
+          {
+            identifier: asset.identifier,
+          },
+        ],
+      });
+    });
+
+    it('returns 200 when If-Modified-Since is an invalid date', async () => {
+      const {
+        block: _block,
+        transaction: _transaction,
+        asset,
+      } = await createRandomAsset();
+      await verifyAsset(asset);
+
+      const lastModified = asset.updated_at.toUTCString();
+      const { body } = await request(app.getHttpServer())
+        .get('/assets/verified')
+        .set('If-Modified-Since', 'not a valid date')
+        .expect(HttpStatus.OK)
+        .expect('Last-Modified', lastModified);
+
+      expect(body).toMatchObject({
+        assets: [
+          {
+            identifier: asset.identifier,
+          },
+        ],
+      });
+    });
+  });
 });

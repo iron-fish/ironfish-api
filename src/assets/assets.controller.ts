@@ -128,4 +128,18 @@ export class AssetsController {
       },
     });
   }
+
+  @ApiOperation({ summary: 'Lists identifiers or verified assets' })
+  @Get('verified')
+  @Header('Cache-Control', 's-maxage=60, stale-if-error=60')
+  async verified(@Req() req: Request, @Res() res: Response): Promise<void> {
+    const lastUpdate = await this.assetsService.lastUpdate();
+    if (lastUpdate) {
+      handleIfModifiedSince(lastUpdate, req, res);
+    }
+
+    const assets = await this.assetsService.listIdentifiers({ verified: true });
+
+    res.json({ assets });
+  }
 }

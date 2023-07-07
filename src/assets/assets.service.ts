@@ -7,6 +7,7 @@ import { SortOrder } from '../common/enums/sort-order';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { CreateAssetOptions } from './interfaces/create-asset-options';
+import { ListAssetIdsOptions } from './interfaces/list-asset-ids-options';
 import { ListAssetsOptions } from './interfaces/list-assets-options';
 import { Asset, Prisma, Transaction } from '.prisma/client';
 
@@ -163,6 +164,28 @@ export class AssetsService {
       hasNext: nextRecords.length > 0,
       hasPrevious: previousRecords.length > 0,
     };
+  }
+
+  listIdentifiers(options: ListAssetIdsOptions): Promise<Partial<Asset>[]> {
+    const orderBy = { id: SortOrder.ASC };
+    const select = { identifier: true };
+
+    const where: Prisma.AssetWhereInput = {};
+    if (options.verified !== undefined) {
+      if (options.verified) {
+        where.verified_at = {
+          not: null,
+        };
+      } else {
+        where.verified_at = null;
+      }
+    }
+
+    return this.prisma.readClient.asset.findMany({
+      orderBy,
+      where,
+      select,
+    });
   }
 
   async updateNativeAssetSupply(supply: number): Promise<Asset> {
