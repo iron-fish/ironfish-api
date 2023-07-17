@@ -455,17 +455,15 @@
     node-addon-api "^6.1.0"
     node-gyp-build "^3.9.0"
 
-"@datadog/pprof@2.2.3":
-  version "2.2.3"
-  resolved "https://registry.yarnpkg.com/@datadog/pprof/-/pprof-2.2.3.tgz#a22ca30e386f5aa8559f4b2e297b76c80551c26d"
+"@datadog/pprof@3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@datadog/pprof/-/pprof-3.0.0.tgz#b5e6df853589512ceb470c44cfc50cbe2ebfa5ab"
   dependencies:
     delay "^5.0.0"
-    node-gyp-build "^3.9.0"
+    node-gyp-build "<4.0"
     p-limit "^3.1.0"
-    pify "^5.0.0"
     pprof-format "^2.0.7"
-    source-map "^0.7.3"
-    split "^1.0.1"
+    source-map "^0.7.4"
 
 "@datadog/sketches-js@^2.1.0":
   version "2.1.0"
@@ -1972,15 +1970,15 @@ data-urls@^2.0.0:
     whatwg-mimetype "^2.3.0"
     whatwg-url "^8.0.0"
 
-dd-trace@4.4.0:
-  version "4.4.0"
-  resolved "https://registry.yarnpkg.com/dd-trace/-/dd-trace-4.4.0.tgz#590f75e7069c3427ba3ce84b63ead2964c1deb3b"
+dd-trace@4.7.0:
+  version "4.7.0"
+  resolved "https://registry.yarnpkg.com/dd-trace/-/dd-trace-4.7.0.tgz#9b1ff3388b464db18ba3836ceb86a614505ad45b"
   dependencies:
     "@datadog/native-appsec" "^3.2.0"
     "@datadog/native-iast-rewriter" "2.0.1"
     "@datadog/native-iast-taint-tracking" "^1.5.0"
     "@datadog/native-metrics" "^2.0.0"
-    "@datadog/pprof" "2.2.3"
+    "@datadog/pprof" "3.0.0"
     "@datadog/sketches-js" "^2.1.0"
     "@opentelemetry/api" "^1.0.0"
     "@opentelemetry/core" "^1.14.0"
@@ -1988,6 +1986,7 @@ dd-trace@4.4.0:
     diagnostics_channel "^1.1.0"
     ignore "^5.2.0"
     import-in-the-middle "^1.3.5"
+    int64-buffer "^0.1.9"
     ipaddr.js "^2.0.1"
     istanbul-lib-coverage "3.2.0"
     koalas "^1.0.2"
@@ -1999,10 +1998,11 @@ dd-trace@4.4.0:
     lru-cache "^7.14.0"
     methods "^1.1.2"
     module-details-from-path "^1.0.3"
+    msgpack-lite "^0.1.26"
     node-abort-controller "^3.0.1"
     opentracing ">=0.12.1"
     path-to-regexp "^0.1.2"
-    protobufjs "^7.1.2"
+    protobufjs "^7.2.4"
     retry "^0.10.1"
     semver "^7.3.8"
 
@@ -2391,6 +2391,10 @@ event-emitter@^0.3.5:
   dependencies:
     d "1"
     es5-ext "~0.10.14"
+
+event-lite@^0.1.1:
+  version "0.1.3"
+  resolved "https://registry.yarnpkg.com/event-lite/-/event-lite-0.1.3.tgz#3dfe01144e808ac46448f0c19b4ab68e403a901d"
 
 event-target-shim@^5.0.0:
   version "5.0.1"
@@ -2853,6 +2857,10 @@ iconv-lite@0.4.24:
   dependencies:
     safer-buffer ">= 2.1.2 < 3"
 
+ieee754@^1.1.8:
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/ieee754/-/ieee754-1.2.1.tgz#8eb7a10a63fff25d15a57b001586d177d1b0d352"
+
 ignore@^5.2.0:
   version "5.2.0"
   resolved "https://registry.npmjs.org/ignore/-/ignore-5.2.0.tgz"
@@ -2891,6 +2899,10 @@ inflight@^1.0.4:
 inherits@2, inherits@2.0.4, inherits@^2.0.3, inherits@~2.0.3:
   version "2.0.4"
   resolved "https://registry.npmjs.org/inherits/-/inherits-2.0.4.tgz"
+
+int64-buffer@^0.1.9:
+  version "0.1.10"
+  resolved "https://registry.yarnpkg.com/int64-buffer/-/int64-buffer-0.1.10.tgz#277b228a87d95ad777d07c13832022406a473423"
 
 internal-slot@^1.0.3:
   version "1.0.3"
@@ -3064,7 +3076,7 @@ is-weakref@^1.0.1:
   dependencies:
     call-bind "^1.0.0"
 
-isarray@~1.0.0:
+isarray@^1.0.0, isarray@~1.0.0:
   version "1.0.0"
   resolved "https://registry.npmjs.org/isarray/-/isarray-1.0.0.tgz"
 
@@ -3813,6 +3825,15 @@ ms@2.1.3, ms@^2.1.1:
   version "2.1.3"
   resolved "https://registry.npmjs.org/ms/-/ms-2.1.3.tgz"
 
+msgpack-lite@^0.1.26:
+  version "0.1.26"
+  resolved "https://registry.yarnpkg.com/msgpack-lite/-/msgpack-lite-0.1.26.tgz#dd3c50b26f059f25e7edee3644418358e2a9ad89"
+  dependencies:
+    event-lite "^0.1.1"
+    ieee754 "^1.1.8"
+    int64-buffer "^0.1.9"
+    isarray "^1.0.0"
+
 multer@1.4.4-lts.1:
   version "1.4.4-lts.1"
   resolved "https://registry.npmjs.org/multer/-/multer-1.4.4-lts.1.tgz"
@@ -3863,7 +3884,7 @@ node-fetch@^2.6.1:
   dependencies:
     whatwg-url "^5.0.0"
 
-node-gyp-build@^3.9.0:
+node-gyp-build@<4.0, node-gyp-build@^3.9.0:
   version "3.9.0"
   resolved "https://registry.npmjs.org/node-gyp-build/-/node-gyp-build-3.9.0.tgz"
 
@@ -4132,10 +4153,6 @@ picomatch@^2.3.1:
   version "2.3.1"
   resolved "https://registry.npmjs.org/picomatch/-/picomatch-2.3.1.tgz"
 
-pify@^5.0.0:
-  version "5.0.0"
-  resolved "https://registry.npmjs.org/pify/-/pify-5.0.0.tgz"
-
 pino-abstract-transport@v1.0.0:
   version "1.0.0"
   resolved "https://registry.npmjs.org/pino-abstract-transport/-/pino-abstract-transport-1.0.0.tgz"
@@ -4242,7 +4259,7 @@ prompts@^2.0.1:
     kleur "^3.0.3"
     sisteransi "^1.0.5"
 
-protobufjs@^7.1.2:
+protobufjs@^7.2.4:
   version "7.2.4"
   resolved "https://registry.yarnpkg.com/protobufjs/-/protobufjs-7.2.4.tgz#3fc1ec0cdc89dd91aef9ba6037ba07408485c3ae"
   dependencies:
@@ -4572,6 +4589,10 @@ source-map@^0.7.3:
   version "0.7.3"
   resolved "https://registry.npmjs.org/source-map/-/source-map-0.7.3.tgz"
 
+source-map@^0.7.4:
+  version "0.7.4"
+  resolved "https://registry.yarnpkg.com/source-map/-/source-map-0.7.4.tgz#a9bbe705c9d8846f4e08ff6765acf0f1b0898656"
+
 split2@^3.1.1:
   version "3.2.2"
   resolved "https://registry.npmjs.org/split2/-/split2-3.2.2.tgz"
@@ -4581,12 +4602,6 @@ split2@^3.1.1:
 split2@^4.0.0:
   version "4.1.0"
   resolved "https://registry.npmjs.org/split2/-/split2-4.1.0.tgz"
-
-split@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.npmjs.org/split/-/split-1.0.1.tgz"
-  dependencies:
-    through "2"
 
 sprintf-js@~1.0.2:
   version "1.0.3"
@@ -4791,10 +4806,6 @@ thread-stream@^2.0.0:
 throat@^6.0.1:
   version "6.0.1"
   resolved "https://registry.npmjs.org/throat/-/throat-6.0.1.tgz"
-
-through@2:
-  version "2.3.8"
-  resolved "https://registry.npmjs.org/through/-/through-2.3.8.tgz"
 
 tmpl@1.0.x:
   version "1.0.5"
