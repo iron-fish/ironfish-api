@@ -442,7 +442,7 @@
   dependencies:
     node-gyp-build "^4.5.0"
 
-"@datadog/native-iast-taint-tracking@^1.5.0":
+"@datadog/native-iast-taint-tracking@1.5.0":
   version "1.5.0"
   resolved "https://registry.yarnpkg.com/@datadog/native-iast-taint-tracking/-/native-iast-taint-tracking-1.5.0.tgz#1a55eca6692079ac6167696682acb972aa0b0181"
   dependencies:
@@ -455,9 +455,9 @@
     node-addon-api "^6.1.0"
     node-gyp-build "^3.9.0"
 
-"@datadog/pprof@3.0.0":
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/@datadog/pprof/-/pprof-3.0.0.tgz#b5e6df853589512ceb470c44cfc50cbe2ebfa5ab"
+"@datadog/pprof@3.1.0":
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/@datadog/pprof/-/pprof-3.1.0.tgz#d58aac33985dbb71f77d85a41023a35f1ad55290"
   dependencies:
     delay "^5.0.0"
     node-gyp-build "<4.0"
@@ -1966,15 +1966,15 @@ data-urls@^2.0.0:
     whatwg-mimetype "^2.3.0"
     whatwg-url "^8.0.0"
 
-dd-trace@4.7.0:
-  version "4.7.0"
-  resolved "https://registry.yarnpkg.com/dd-trace/-/dd-trace-4.7.0.tgz#9b1ff3388b464db18ba3836ceb86a614505ad45b"
+dd-trace@4.8.1:
+  version "4.8.1"
+  resolved "https://registry.yarnpkg.com/dd-trace/-/dd-trace-4.8.1.tgz#e019cfd0401373b935560b145b3281f1aadf5cfe"
   dependencies:
     "@datadog/native-appsec" "^3.2.0"
     "@datadog/native-iast-rewriter" "2.0.1"
-    "@datadog/native-iast-taint-tracking" "^1.5.0"
+    "@datadog/native-iast-taint-tracking" "1.5.0"
     "@datadog/native-metrics" "^2.0.0"
-    "@datadog/pprof" "3.0.0"
+    "@datadog/pprof" "3.1.0"
     "@datadog/sketches-js" "^2.1.0"
     "@opentelemetry/api" "^1.0.0"
     "@opentelemetry/core" "^1.14.0"
