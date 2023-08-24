@@ -38,16 +38,31 @@ describe('InfluxDbService', () => {
   });
 
   describe('writePoint', () => {
-    it('writes the data to InfluxDB', () => {
+    it('skip the data if bucket and network id mismatch', () => {
       const options: CreatePointOptions = {
         fields: [{ name: 'memory', type: 'float', value: 1 }],
         measurement: 'node',
-        tags: [{ name: 'user_agent', value: '0.0.0' }],
+        tags: [{ name: 'networkId', value: '1' }],
         timestamp: new Date(),
       };
       influxDbService.writePoints([options]);
 
-      expect(writePoints).toHaveBeenCalled();
+      expect(writePoints).toHaveBeenCalledTimes(0);
+    });
+
+    it('writes the data to InfluxDB', () => {
+      const options: CreatePointOptions = {
+        fields: [{ name: 'memory', type: 'float', value: 1 }],
+        measurement: 'node',
+        tags: [
+          { name: 'user_agent', value: '0.0.0' },
+          { name: 'networkId', value: '0' },
+        ],
+        timestamp: new Date(),
+      };
+      influxDbService.writePoints([options]);
+
+      expect(writePoints).toHaveBeenCalledTimes(1);
     });
   });
 });

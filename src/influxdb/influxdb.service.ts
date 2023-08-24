@@ -9,6 +9,7 @@ import { CreatePointOptions } from './interfaces/create-point-options';
 @Injectable()
 export class InfluxDbService implements OnModuleDestroy {
   private writeClient: WriteApi;
+  private networkId = '0';
 
   constructor(private readonly config: ApiConfigService) {
     const client = new InfluxDB({
@@ -20,6 +21,11 @@ export class InfluxDbService implements OnModuleDestroy {
       config.get<string>('INFLUXDB_BUCKET'),
       'ms',
     );
+    if (
+      config.get<string>('INFLUXDB_BUCKET') === 'ironfish-telemetry-mainnet'
+    ) {
+      this.networkId = '1';
+    }
   }
 
   writePoints(options: CreatePointOptions[]): void {
@@ -43,6 +49,9 @@ export class InfluxDbService implements OnModuleDestroy {
       }
 
       for (const tag of tags) {
+        if (tag.name === 'networkId' && tag.value !== this.networkId) {
+          return;
+        }
         point.tag(tag.name, tag.value);
       }
 
