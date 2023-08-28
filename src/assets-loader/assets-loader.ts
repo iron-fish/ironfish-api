@@ -54,6 +54,7 @@ export class AssetsLoader {
           identifier: mint.id,
           metadata: mint.metadata,
           name: mint.name,
+          creator: mint.creator,
           owner: mint.owner,
         },
         transaction,
