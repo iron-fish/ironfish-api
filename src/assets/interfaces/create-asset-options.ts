@@ -6,4 +6,5 @@ export interface CreateAssetOptions {
   metadata: string;
   name: string;
   owner: string;
+  creator: string;
 }

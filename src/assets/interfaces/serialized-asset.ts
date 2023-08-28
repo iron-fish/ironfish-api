@@ -12,6 +12,7 @@ export interface SerializedAsset {
   identifier: string;
   metadata: string;
   name: string;
+  creator: string;
   owner: string;
   supply: string;
   verified_metadata: SerializedVerifiedAssetMetadata | null;

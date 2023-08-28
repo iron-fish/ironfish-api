@@ -85,6 +85,7 @@ export class AssetsService {
         identifier: options.identifier,
         metadata: options.metadata,
         name: options.name,
+        creator: options.creator,
         owner: options.owner,
         supply: BigInt(0),
         created_transaction_id: transaction.id,
