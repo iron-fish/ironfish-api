@@ -1006,9 +1006,9 @@
     "@types/connect" "*"
     "@types/node" "*"
 
-"@types/compression@1.7.2":
-  version "1.7.2"
-  resolved "https://registry.npmjs.org/@types/compression/-/compression-1.7.2.tgz"
+"@types/compression@1.7.3":
+  version "1.7.3"
+  resolved "https://registry.yarnpkg.com/@types/compression/-/compression-1.7.3.tgz#2dd34648fc3b71c95aacd63b3098b2192da33929"
   dependencies:
     "@types/express" "*"
 
