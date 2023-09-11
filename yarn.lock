@@ -775,11 +775,11 @@
     tslib "2.4.0"
     uuid "8.3.2"
 
-"@nestjs/config@3.0.0":
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/@nestjs/config/-/config-3.0.0.tgz#154ddbaf2b97201a94a3c84757c352c405718cb4"
+"@nestjs/config@3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@nestjs/config/-/config-3.0.1.tgz#3f2d6e012ec48ff51c5b2125999ba95617ac6d03"
   dependencies:
-    dotenv "16.1.4"
+    dotenv "16.3.1"
     dotenv-expand "10.0.0"
     lodash "4.17.21"
     uuid "9.0.0"
@@ -2133,10 +2133,6 @@ dotenv-cli@7.3.0:
 dotenv-expand@10.0.0, dotenv-expand@^10.0.0:
   version "10.0.0"
   resolved "https://registry.npmjs.org/dotenv-expand/-/dotenv-expand-10.0.0.tgz"
-
-dotenv@16.1.4:
-  version "16.1.4"
-  resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-16.1.4.tgz#67ac1a10cd9c25f5ba604e4e08bc77c0ebe0ca8c"
 
 dotenv@16.3.1, dotenv@^16.3.0:
   version "16.3.1"
