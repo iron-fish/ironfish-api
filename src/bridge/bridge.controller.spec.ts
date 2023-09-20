@@ -2,33 +2,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import faker from 'faker';
 import request from 'supertest';
-import { v4 as uuid } from 'uuid';
-import { BlocksService } from '../blocks/blocks.service';
-import { BlockOperation } from '../blocks/enums/block-operation';
-import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
+import { ApiConfigService } from '../api-config/api-config.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
-import { TransactionsService } from '../transactions/transactions.service';
-import { AssetsService } from './bridge.service';
-import { Asset, Block, Transaction } from '.prisma/client';
 
 describe('AssetsController', () => {
   let app: INestApplication;
-  let assetsService: AssetsService;
-  let blocksService: BlocksService;
-  let blocksTransactionsService: BlocksTransactionsService;
   let prisma: PrismaService;
-  let transactionsService: TransactionsService;
+  let config: ApiConfigService;
+  let API_KEY: string;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
-    assetsService = app.get(AssetsService);
-    blocksService = app.get(BlocksService);
-    blocksTransactionsService = app.get(BlocksTransactionsService);
     prisma = app.get(PrismaService);
-    transactionsService = app.get(TransactionsService);
+    config = app.get(ApiConfigService);
+
+    API_KEY = config.get<string>('IRONFISH_API_KEY');
+
     await app.init();
   });
 
@@ -37,522 +28,52 @@ describe('AssetsController', () => {
   });
 
   beforeEach(async () => {
-    await prisma.asset.deleteMany({});
+    await prisma.ethBridgeAddresses.deleteMany({});
   });
 
-  async function createRandomAsset(): Promise<{
-    block: Block;
-    transaction: Transaction;
-    asset: Asset;
-  }> {
-    const block = await blocksService.upsert(prisma, {
-      hash: uuid(),
-      sequence: faker.datatype.number(),
-      difficulty: BigInt(faker.datatype.number()),
-      work: BigInt(faker.datatype.number()),
-      timestamp: new Date(),
-      transactionsCount: 1,
-      type: BlockOperation.CONNECTED,
-      graffiti: uuid(),
-      previousBlockHash: uuid(),
-      size: faker.datatype.number(),
-    });
-
-    const transaction = (
-      await transactionsService.createMany([
-        {
-          fee: 0,
-          hash: uuid(),
-          notes: [],
-          size: 0,
-          spends: [],
-        },
-      ])
-    )[0];
-    await blocksTransactionsService.upsert(prisma, block, transaction, 0);
-
-    const asset = await assetsService.upsert(
-      {
-        identifier: uuid(),
-        metadata: uuid(),
-        name: uuid(),
-        owner: uuid(),
-      },
-      transaction,
-      prisma,
-    );
-
-    return { block: block, transaction: transaction, asset: asset };
-  }
-
-  async function verifyAsset(asset: Asset): Promise<Asset> {
-    return prisma.asset.update({
-      data: {
-        verified_at: new Date(),
-      },
-      where: {
-        id: asset.id,
-      },
-    });
-  }
-
-  describe('GET /assets/find', () => {
-    describe('with an invalid query', () => {
-      it('returns a 422', async () => {
-        const { body } = await request(app.getHttpServer())
-          .get('/assets/find')
-          .expect(HttpStatus.UNPROCESSABLE_ENTITY);
-
-        expect(body).toMatchSnapshot();
-      });
-    });
-
-    describe('with a missing record', () => {
+  describe('POST /bridge/create', () => {
+    describe('creates entries that are not present and retrieves those that are', () => {
       it('returns a 404', async () => {
-        await request(app.getHttpServer())
-          .get('/assets/find')
-          .query({ id: 'asdf' })
-          .expect(HttpStatus.NOT_FOUND);
+        const foo = await prisma.ethBridgeAddresses.create({
+          data: { address: 'foo' },
+        });
+        const { body } = await request(app.getHttpServer())
+          .post('/bridge/create')
+          .set('Authorization', `Bearer ${API_KEY}`)
+          .send({ addresses: ['foo', 'bar', 'baz'] })
+          .expect(HttpStatus.CREATED);
+
+        expect(body).toMatchObject({
+          foo: foo.id,
+          bar: expect.any(Number),
+          baz: expect.any(Number),
+        });
+        const count = await prisma.ethBridgeAddresses.count();
+        expect(count).toBe(3);
       });
     });
-
-    describe('when the asset has not been added to a block', () => {
+  });
+  describe('POST /bridge/retrieve', () => {
+    describe('retrieves ids for entries that are present, null for absent', () => {
       it('returns a 404', async () => {
-        const transaction = (
-          await transactionsService.createMany([
-            {
-              fee: 0,
-              hash: uuid(),
-              notes: [],
-              size: 0,
-              spends: [],
-            },
-          ])
-        )[0];
-
-        const asset = await assetsService.upsert(
-          {
-            identifier: uuid(),
-            metadata: uuid(),
-            name: uuid(),
-            owner: uuid(),
-          },
-          transaction,
-          prisma,
-        );
-
-        await request(app.getHttpServer())
-          .get('/assets/find')
-          .query({ id: asset.identifier })
-          .expect(HttpStatus.NOT_FOUND);
-      });
-    });
-
-    describe('with a valid identifier', () => {
-      it('returns the asset', async () => {
-        const { block, transaction, asset } = await createRandomAsset();
-
+        const unsavedId = 1234567;
+        const foo = await prisma.ethBridgeAddresses.create({
+          data: { address: 'foo' },
+        });
+        const bar = await prisma.ethBridgeAddresses.create({
+          data: { address: 'bar' },
+        });
         const { body } = await request(app.getHttpServer())
-          .get('/assets/find')
-          .query({ id: asset.identifier })
+          .get('/bridge/retrieve')
+          .set('Authorization', `Bearer ${API_KEY}`)
+          .send({ ids: [foo.id, bar.id, unsavedId] })
           .expect(HttpStatus.OK);
 
         expect(body).toMatchObject({
-          created_transaction_hash: transaction.hash,
-          created_transaction_timestamp: block.timestamp.toISOString(),
-          identifier: asset.identifier,
-          metadata: asset.metadata,
-          name: asset.name,
-          owner: asset.owner,
-          supply: asset.supply.toString(),
-          verified_at: null,
+          [foo.id]: foo.address,
+          [bar.id]: bar.address,
+          [unsavedId]: null,
         });
-      });
-    });
-  });
-
-  describe('GET /assets', () => {
-    it('returns all assets', async () => {
-      const { block, transaction, asset } = await createRandomAsset();
-      const {
-        block: secondBlock,
-        transaction: secondTransaction,
-        asset: secondAsset,
-      } = await createRandomAsset();
-
-      const verifiedAsset = await verifyAsset(asset);
-
-      const { body } = await request(app.getHttpServer())
-        .get('/assets')
-        .expect(HttpStatus.OK);
-
-      expect(body).toMatchObject({
-        object: 'list',
-        data: [
-          {
-            object: 'asset',
-            created_transaction_hash: secondTransaction.hash,
-            created_transaction_timestamp: secondBlock.timestamp.toISOString(),
-            id: secondAsset.id,
-            identifier: secondAsset.identifier,
-            metadata: secondAsset.metadata,
-            name: secondAsset.name,
-            owner: secondAsset.owner,
-            supply: secondAsset.supply.toString(),
-            verified_at: null,
-          },
-          {
-            object: 'asset',
-            created_transaction_hash: transaction.hash,
-            created_transaction_timestamp: block.timestamp.toISOString(),
-            id: asset.id,
-            identifier: asset.identifier,
-            metadata: asset.metadata,
-            name: asset.name,
-            owner: asset.owner,
-            supply: asset.supply.toString(),
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            verified_at: verifiedAsset.verified_at!.toISOString(),
-          },
-        ],
-        metadata: {
-          has_next: false,
-          has_previous: false,
-        },
-      });
-    });
-
-    it('sets Last-Modified', async () => {
-      const {
-        block: _block,
-        transaction: _transaction,
-        asset,
-      } = await createRandomAsset();
-      const lastModified = asset.updated_at.toUTCString();
-      await request(app.getHttpServer())
-        .get('/assets')
-        .expect(HttpStatus.OK)
-        .expect('Last-Modified', lastModified);
-    });
-
-    it('returns 304 when If-Modified-Since matches Last-Modified', async () => {
-      const {
-        block: _block,
-        transaction: _transaction,
-        asset,
-      } = await createRandomAsset();
-      const lastModified = asset.updated_at.toUTCString();
-      const { text } = await request(app.getHttpServer())
-        .get('/assets')
-        .set('If-Modified-Since', lastModified)
-        .expect(HttpStatus.NOT_MODIFIED)
-        .expect('Last-Modified', lastModified);
-      expect(text).toBeFalsy();
-    });
-
-    it('returns 304 when If-Modified-Since is after Last-Modified', async () => {
-      const {
-        block: _block,
-        transaction: _transaction,
-        asset,
-      } = await createRandomAsset();
-      const lastModified = asset.updated_at.toUTCString();
-      const oneMinuteAfterLastModified = new Date(
-        asset.updated_at.valueOf() + 60_000,
-      ).toUTCString();
-      const { text } = await request(app.getHttpServer())
-        .get('/assets')
-        .set('If-Modified-Since', oneMinuteAfterLastModified)
-        .expect(HttpStatus.NOT_MODIFIED)
-        .expect('Last-Modified', lastModified);
-      expect(text).toBeFalsy();
-    });
-
-    it('returns 200 when If-Modified-Since is before Last-Modified', async () => {
-      const { block, transaction, asset } = await createRandomAsset();
-      const lastModified = asset.updated_at.toUTCString();
-      const oneMinuteBeforeLastModified = new Date(
-        asset.updated_at.valueOf() - 60_000,
-      ).toUTCString();
-      const { body } = await request(app.getHttpServer())
-        .get('/assets')
-        .set('If-Modified-Since', oneMinuteBeforeLastModified)
-        .expect(HttpStatus.OK)
-        .expect('Last-Modified', lastModified);
-
-      expect(body).toMatchObject({
-        object: 'list',
-        data: [
-          {
-            object: 'asset',
-            created_transaction_hash: transaction.hash,
-            created_transaction_timestamp: block.timestamp.toISOString(),
-            id: asset.id,
-            identifier: asset.identifier,
-            metadata: asset.metadata,
-            name: asset.name,
-            owner: asset.owner,
-            supply: asset.supply.toString(),
-            verified_at: null,
-          },
-        ],
-        metadata: {
-          has_next: false,
-          has_previous: false,
-        },
-      });
-    });
-
-    it('returns 200 when If-Modified-Since is an invalid date', async () => {
-      const { block, transaction, asset } = await createRandomAsset();
-      const lastModified = asset.updated_at.toUTCString();
-      const { body } = await request(app.getHttpServer())
-        .get('/assets')
-        .set('If-Modified-Since', 'not a valid date')
-        .expect(HttpStatus.OK)
-        .expect('Last-Modified', lastModified);
-
-      expect(body).toMatchObject({
-        object: 'list',
-        data: [
-          {
-            object: 'asset',
-            created_transaction_hash: transaction.hash,
-            created_transaction_timestamp: block.timestamp.toISOString(),
-            id: asset.id,
-            identifier: asset.identifier,
-            metadata: asset.metadata,
-            name: asset.name,
-            owner: asset.owner,
-            supply: asset.supply.toString(),
-            verified_at: null,
-          },
-        ],
-        metadata: {
-          has_next: false,
-          has_previous: false,
-        },
-      });
-    });
-
-    describe('with verified=true', () => {
-      it('returns only verified assets', async () => {
-        const { block, transaction, asset } = await createRandomAsset();
-        const {
-          block: _secondBlock,
-          transaction: _secondTransaction,
-          asset: _secondAsset,
-        } = await createRandomAsset();
-
-        const verifiedAsset = await verifyAsset(asset);
-
-        const { body } = await request(app.getHttpServer())
-          .get('/assets')
-          .query({ verified: true })
-          .expect(HttpStatus.OK);
-
-        expect(body).toMatchObject({
-          object: 'list',
-          data: [
-            {
-              object: 'asset',
-              created_transaction_hash: transaction.hash,
-              created_transaction_timestamp: block.timestamp.toISOString(),
-              id: asset.id,
-              identifier: asset.identifier,
-              metadata: asset.metadata,
-              name: asset.name,
-              owner: asset.owner,
-              supply: asset.supply.toString(),
-              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-              verified_at: verifiedAsset.verified_at!.toISOString(),
-            },
-          ],
-          metadata: {
-            has_next: false,
-            has_previous: false,
-          },
-        });
-      });
-    });
-
-    describe('with verified=false', () => {
-      it('returns only unverified assets', async () => {
-        const {
-          block: _block,
-          transaction: _transaction,
-          asset,
-        } = await createRandomAsset();
-        const {
-          block: secondBlock,
-          transaction: secondTransaction,
-          asset: secondAsset,
-        } = await createRandomAsset();
-
-        await verifyAsset(asset);
-
-        const { body } = await request(app.getHttpServer())
-          .get('/assets')
-          .query({ verified: false })
-          .expect(HttpStatus.OK);
-
-        expect(body).toMatchObject({
-          object: 'list',
-          data: [
-            {
-              object: 'asset',
-              created_transaction_hash: secondTransaction.hash,
-              created_transaction_timestamp:
-                secondBlock.timestamp.toISOString(),
-              id: secondAsset.id,
-              identifier: secondAsset.identifier,
-              metadata: secondAsset.metadata,
-              name: secondAsset.name,
-              owner: secondAsset.owner,
-              supply: secondAsset.supply.toString(),
-              verified_at: null,
-            },
-          ],
-          metadata: {
-            has_next: false,
-            has_previous: false,
-          },
-        });
-      });
-    });
-  });
-
-  describe('GET /assets/verified', () => {
-    it('returns the IDs of all verified assets', async () => {
-      const {
-        block: _block,
-        transaction: _transaction,
-        asset,
-      } = await createRandomAsset();
-      const {
-        block: _secondBlock,
-        transaction: _secondTransaction,
-        asset: _secondAsset,
-      } = await createRandomAsset();
-      const {
-        block: _thirdBlock,
-        transaction: _thirdTransaction,
-        asset: thirdAsset,
-      } = await createRandomAsset();
-
-      await verifyAsset(asset);
-      await verifyAsset(thirdAsset);
-
-      const { body } = await request(app.getHttpServer())
-        .get('/assets/verified')
-        .expect(HttpStatus.OK);
-
-      expect(body).toMatchObject({
-        assets: [
-          {
-            identifier: asset.identifier,
-          },
-          {
-            identifier: thirdAsset.identifier,
-          },
-        ],
-      });
-    });
-
-    it('sets Last-Modified', async () => {
-      const {
-        block: _block,
-        transaction: _transaction,
-        asset,
-      } = await createRandomAsset();
-      const lastModified = asset.updated_at.toUTCString();
-      await request(app.getHttpServer())
-        .get('/assets/verified')
-        .expect(HttpStatus.OK)
-        .expect('Last-Modified', lastModified);
-    });
-
-    it('returns 304 when If-Modified-Since matches Last-Modified', async () => {
-      const {
-        block: _block,
-        transaction: _transaction,
-        asset,
-      } = await createRandomAsset();
-      const lastModified = asset.updated_at.toUTCString();
-      const { text } = await request(app.getHttpServer())
-        .get('/assets/verified')
-        .set('If-Modified-Since', lastModified)
-        .expect(HttpStatus.NOT_MODIFIED)
-        .expect('Last-Modified', lastModified);
-      expect(text).toBeFalsy();
-    });
-
-    it('returns 304 when If-Modified-Since is after Last-Modified', async () => {
-      const {
-        block: _block,
-        transaction: _transaction,
-        asset,
-      } = await createRandomAsset();
-      const lastModified = asset.updated_at.toUTCString();
-      const oneMinuteAfterLastModified = new Date(
-        asset.updated_at.valueOf() + 60_000,
-      ).toUTCString();
-      const { text } = await request(app.getHttpServer())
-        .get('/assets/verified')
-        .set('If-Modified-Since', oneMinuteAfterLastModified)
-        .expect(HttpStatus.NOT_MODIFIED)
-        .expect('Last-Modified', lastModified);
-      expect(text).toBeFalsy();
-    });
-
-    it('returns 200 when If-Modified-Since is before Last-Modified', async () => {
-      const {
-        block: _block,
-        transaction: _transaction,
-        asset,
-      } = await createRandomAsset();
-      await verifyAsset(asset);
-
-      const lastModified = asset.updated_at.toUTCString();
-      const oneMinuteBeforeLastModified = new Date(
-        asset.updated_at.valueOf() - 60_000,
-      ).toUTCString();
-      const { body } = await request(app.getHttpServer())
-        .get('/assets/verified')
-        .set('If-Modified-Since', oneMinuteBeforeLastModified)
-        .expect(HttpStatus.OK)
-        .expect('Last-Modified', lastModified);
-
-      expect(body).toMatchObject({
-        assets: [
-          {
-            identifier: asset.identifier,
-          },
-        ],
-      });
-    });
-
-    it('returns 200 when If-Modified-Since is an invalid date', async () => {
-      const {
-        block: _block,
-        transaction: _transaction,
-        asset,
-      } = await createRandomAsset();
-      await verifyAsset(asset);
-
-      const lastModified = asset.updated_at.toUTCString();
-      const { body } = await request(app.getHttpServer())
-        .get('/assets/verified')
-        .set('If-Modified-Since', 'not a valid date')
-        .expect(HttpStatus.OK)
-        .expect('Last-Modified', lastModified);
-
-      expect(body).toMatchObject({
-        assets: [
-          {
-            identifier: asset.identifier,
-          },
-        ],
       });
     });
   });

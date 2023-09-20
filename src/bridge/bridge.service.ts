@@ -9,7 +9,7 @@ import { PrismaService } from '../prisma/prisma.service';
 export class BridgeService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findByIds(ids: [number]): Promise<EthBridgeAddresses[]> {
+  async findByIds(ids: number[]): Promise<EthBridgeAddresses[]> {
     return this.prisma.ethBridgeAddresses.findMany({
       where: {
         id: {
@@ -19,7 +19,7 @@ export class BridgeService {
     });
   }
 
-  async getOrCreateIds(addresses: [string]): Promise<EthBridgeAddresses[]> {
+  async getOrCreateIds(addresses: string[]): Promise<EthBridgeAddresses[]> {
     const results = [];
 
     for (const address of addresses) {

@@ -2,10 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import {
+  Body,
   Controller,
+  Get,
   HttpStatus,
   Post,
-  Query,
   UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
@@ -21,15 +22,15 @@ export class BridgeController {
 
   @ApiOperation({ summary: 'Gets eth addresses by ids' })
   @UseGuards(ApiKeyGuard)
-  @Post('retrieve')
+  @Get('retrieve')
   async retrieve(
-    @Query(
+    @Body(
       new ValidationPipe({
         errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
         transform: true,
       }),
     )
-    ids: [number],
+    { ids }: { ids: number[] },
   ): Promise<IdRetrievalDTO> {
     const addresses = await this.bridgeService.findByIds(ids);
     const map: { [key: number]: string | null } = {};
@@ -43,13 +44,13 @@ export class BridgeController {
   @UseGuards(ApiKeyGuard)
   @Post('create')
   async create(
-    @Query(
+    @Body(
       new ValidationPipe({
         errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
         transform: true,
       }),
     )
-    addresses: [string],
+    { addresses }: { addresses: string[] },
   ): Promise<AddressCreationDTO> {
     const response: AddressCreationDTO = {};
     const ethAddresses = await this.bridgeService.getOrCreateIds(addresses);

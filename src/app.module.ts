@@ -17,6 +17,7 @@ import { AuthModule } from './auth/auth.module';
 import { BlocksRestModule } from './blocks/blocks.rest.module';
 import { BlocksDailyJobsModule } from './blocks-daily/blocks-daily.jobs.module';
 import { BlocksDailyRestModule } from './blocks-daily/blocks-daily.rest.module';
+import { BridgeRestModule } from './bridge/bridge.rest.module';
 import { RequireSslMiddleware } from './common/middlewares/require-ssl.middleware';
 import { DatadogModule } from './datadog/datadog.module';
 import { FaucetTransactionsRestModule } from './faucet-transactions/faucet-transactions.rest.module';
@@ -34,6 +35,7 @@ export const REST_MODULES = [
   AssetsRestModule,
   BlocksDailyRestModule,
   BlocksRestModule,
+  BridgeRestModule,
   FaucetTransactionsRestModule,
   HealthRestModule,
   SupplyRestModule,
