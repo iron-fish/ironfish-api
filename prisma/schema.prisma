@@ -150,6 +150,10 @@ model AssetDescription {
 enum AssetDescriptionType {
   BURN
   MINT
-
   @@map("asset_description_type")
+}
+
+model EthBridgeAddresses {
+  id        Int      @id @default(autoincrement())
+  address   String   @db.VarChar @unique
 }
