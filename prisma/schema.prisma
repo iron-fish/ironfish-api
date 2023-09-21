@@ -157,3 +157,7 @@ model EthBridgeAddresses {
   id        Int      @id @default(autoincrement())
   address   String   @db.VarChar @unique
 }
+
+model EthBridgeHead {
+  hash      String   @db.VarChar @unique
+}

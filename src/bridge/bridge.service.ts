@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable } from '@nestjs/common';
-import { EthBridgeAddresses } from '@prisma/client';
+import { EthBridgeAddresses, EthBridgeHead } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -32,5 +32,16 @@ export class BridgeService {
     }
 
     return results;
+  }
+
+  async updateHead(hash: string): Promise<EthBridgeHead> {
+    await this.prisma.ethBridgeHead.deleteMany();
+    return this.prisma.ethBridgeHead.create({
+      data: { hash },
+    });
+  }
+
+  async getHead(): Promise<EthBridgeHead | null> {
+    return this.prisma.ethBridgeHead.findFirst();
   }
 }

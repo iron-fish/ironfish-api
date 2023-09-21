@@ -5,3 +5,7 @@
 export type IdRetrievalDTO = { [key: number]: string | null };
 
 export type AddressCreationDTO = { [key: string]: number };
+
+export type HeadHash = { hash: string };
+
+export type OptionalHeadHash = { hash: string | null };

@@ -13,7 +13,12 @@ import {
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { BridgeService } from './bridge.service';
-import { AddressCreationDTO, IdRetrievalDTO } from './dto';
+import {
+  AddressCreationDTO,
+  HeadHash,
+  IdRetrievalDTO,
+  OptionalHeadHash,
+} from './dto';
 
 @ApiTags('Bridge')
 @Controller('bridge')
@@ -58,5 +63,30 @@ export class BridgeController {
       response[a.address] = a.id;
     }
     return response;
+  }
+
+  @ApiOperation({ summary: 'Update current processing head for bridge' })
+  @UseGuards(ApiKeyGuard)
+  @Post('head')
+  async postHead(
+    @Body(
+      new ValidationPipe({
+        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        transform: true,
+      }),
+    )
+    { head }: { head: string },
+  ): Promise<HeadHash> {
+    const returnedHead = await this.bridgeService.updateHead(head);
+    return { hash: returnedHead.hash };
+  }
+
+  @ApiOperation({ summary: 'Current processing head for bridge' })
+  @UseGuards(ApiKeyGuard)
+  @Get('head')
+  async getHead(): Promise<OptionalHeadHash> {
+    const ethBridgeHead = await this.bridgeService.getHead();
+    const head = ethBridgeHead ? ethBridgeHead.hash : null;
+    return { hash: head };
   }
 }

@@ -33,7 +33,7 @@ describe('AssetsController', () => {
 
   describe('POST /bridge/create', () => {
     describe('creates entries that are not present and retrieves those that are', () => {
-      it('returns a 404', async () => {
+      it('is successful', async () => {
         const foo = await prisma.ethBridgeAddresses.create({
           data: { address: 'foo' },
         });
@@ -53,9 +53,10 @@ describe('AssetsController', () => {
       });
     });
   });
+
   describe('POST /bridge/retrieve', () => {
     describe('retrieves ids for entries that are present, null for absent', () => {
-      it('returns a 404', async () => {
+      it('is successful', async () => {
         const unsavedId = 1234567;
         const foo = await prisma.ethBridgeAddresses.create({
           data: { address: 'foo' },
@@ -74,6 +75,38 @@ describe('AssetsController', () => {
           [bar.id]: bar.address,
           [unsavedId]: null,
         });
+      });
+    });
+  });
+
+  describe('POST /bridge/head', () => {
+    describe('updates or creates head for tracking sync progress', () => {
+      it('creates then updates head', async () => {
+        await request(app.getHttpServer())
+          .post('/bridge/head')
+          .set('Authorization', `Bearer ${API_KEY}`)
+          .send({ head: 'fakehash1' })
+          .expect(HttpStatus.CREATED);
+
+        const { body } = await request(app.getHttpServer())
+          .post('/bridge/head')
+          .set('Authorization', `Bearer ${API_KEY}`)
+          .send({ head: 'fakehash2' })
+          .expect(HttpStatus.CREATED);
+
+        expect(body).toEqual({
+          hash: 'fakehash2',
+        });
+
+        const count = await prisma.ethBridgeHead.count();
+        expect(count).toBe(1);
+
+        const { body: getBody } = await request(app.getHttpServer())
+          .get('/bridge/head')
+          .set('Authorization', `Bearer ${API_KEY}`)
+          .expect(HttpStatus.OK);
+
+        expect(getBody.hash).toBe('fakehash2');
       });
     });
   });
