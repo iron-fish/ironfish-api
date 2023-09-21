@@ -14,9 +14,10 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { BridgeService } from './bridge.service';
 import {
-  AddressCreationDTO,
+  BridgeCreateDTO,
+  BridgeDataDTO,
+  BridgeRetrieveDTO,
   HeadHash,
-  IdRetrievalDTO,
   OptionalHeadHash,
 } from './dto';
 
@@ -25,7 +26,7 @@ import {
 export class BridgeController {
   constructor(private readonly bridgeService: BridgeService) {}
 
-  @ApiOperation({ summary: 'Gets eth addresses by ids' })
+  @ApiOperation({ summary: 'Gets bridge requests by ids' })
   @UseGuards(ApiKeyGuard)
   @Get('retrieve')
   async retrieve(
@@ -36,11 +37,11 @@ export class BridgeController {
       }),
     )
     { ids }: { ids: number[] },
-  ): Promise<IdRetrievalDTO> {
-    const addresses = await this.bridgeService.findByIds(ids);
-    const map: { [key: number]: string | null } = {};
+  ): Promise<BridgeRetrieveDTO> {
+    const requests = await this.bridgeService.findByIds(ids);
+    const map: BridgeRetrieveDTO = {};
     for (const id of ids) {
-      map[id] = addresses.find((r) => r.id === id)?.address ?? null;
+      map[id] = requests.find((r) => r.id === id) ?? null;
     }
     return map;
   }
@@ -55,10 +56,10 @@ export class BridgeController {
         transform: true,
       }),
     )
-    { addresses }: { addresses: string[] },
-  ): Promise<AddressCreationDTO> {
-    const response: AddressCreationDTO = {};
-    const ethAddresses = await this.bridgeService.getOrCreateIds(addresses);
+    { requests }: { requests: BridgeDataDTO[] },
+  ): Promise<BridgeCreateDTO> {
+    const response: BridgeCreateDTO = {};
+    const ethAddresses = await this.bridgeService.createRequests(requests);
     for (const a of ethAddresses) {
       response[a.address] = a.id;
     }

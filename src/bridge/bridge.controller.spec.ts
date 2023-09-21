@@ -2,10 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { HttpStatus, INestApplication } from '@nestjs/common';
+import { BridgeRequestStatus, BridgeRequestType } from '@prisma/client';
+import assert from 'assert';
 import request from 'supertest';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
+import { BridgeDataDTO } from './dto';
 
 describe('AssetsController', () => {
   let app: INestApplication;
@@ -28,51 +31,75 @@ describe('AssetsController', () => {
   });
 
   beforeEach(async () => {
-    await prisma.ethBridgeAddresses.deleteMany({});
+    await prisma.bridgeRequest.deleteMany({});
   });
 
   describe('POST /bridge/create', () => {
-    describe('creates entries that are not present and retrieves those that are', () => {
-      it('is successful', async () => {
-        const foo = await prisma.ethBridgeAddresses.create({
-          data: { address: 'foo' },
-        });
+    describe('when data is posted to endpoint', () => {
+      it('is successful creates record and returns fk', async () => {
+        const address = '11111111111111111111111111';
+        const data: BridgeDataDTO = {
+          address,
+          asset:
+            '51f33a2f14f92735e562dc658a5639279ddca3d5079a6d1242b2a588a9cbf44c',
+          transaction:
+            '00000000000000021a63de16fea25d79f66f092862a893274690000000000000',
+          status: 'PENDING',
+          type: BridgeRequestType.IRONFISH_TO_ETH,
+        };
         const { body } = await request(app.getHttpServer())
           .post('/bridge/create')
           .set('Authorization', `Bearer ${API_KEY}`)
-          .send({ addresses: ['foo', 'bar', 'baz'] })
+          .send({ requests: [data] })
           .expect(HttpStatus.CREATED);
 
-        expect(body).toMatchObject({
-          foo: foo.id,
-          bar: expect.any(Number),
-          baz: expect.any(Number),
+        const entry = await prisma.bridgeRequest.findFirst({
+          where: { address: { equals: address } },
         });
-        const count = await prisma.ethBridgeAddresses.count();
-        expect(count).toBe(3);
+        assert.ok(entry);
+
+        expect(body).toMatchObject({
+          [address]: entry.id,
+        });
       });
     });
   });
 
   describe('POST /bridge/retrieve', () => {
-    describe('retrieves ids for entries that are present, null for absent', () => {
-      it('is successful', async () => {
+    describe('when data is requested by id', () => {
+      it('is successfully returns if fk is in db, null if not', async () => {
         const unsavedId = 1234567;
-        const foo = await prisma.ethBridgeAddresses.create({
-          data: { address: 'foo' },
-        });
-        const bar = await prisma.ethBridgeAddresses.create({
-          data: { address: 'bar' },
+        const address =
+          '2222222222222222222222222222222222222222222222222222222222222222222222222222222222222';
+        const status = BridgeRequestStatus.PENDING;
+        const type = BridgeRequestType.ETH_TO_IRONFISH;
+        const transaction =
+          '00000000000000021a63de16fea25d79f66f092862a8932746903e01ecbd6820';
+        const asset =
+          '51f33a2f14f92735e562dc658a5639279ddca3d5079a6d1242b2a588a9cbf44c';
+        const foo = await prisma.bridgeRequest.create({
+          data: {
+            address,
+            type,
+            status,
+            asset,
+            transaction,
+          },
         });
         const { body } = await request(app.getHttpServer())
           .get('/bridge/retrieve')
           .set('Authorization', `Bearer ${API_KEY}`)
-          .send({ ids: [foo.id, bar.id, unsavedId] })
+          .send({ ids: [foo.id, unsavedId] })
           .expect(HttpStatus.OK);
 
         expect(body).toMatchObject({
-          [foo.id]: foo.address,
-          [bar.id]: bar.address,
+          [foo.id]: {
+            address,
+            type,
+            status,
+            asset,
+            transaction,
+          },
           [unsavedId]: null,
         });
       });
@@ -98,7 +125,7 @@ describe('AssetsController', () => {
           hash: 'fakehash2',
         });
 
-        const count = await prisma.ethBridgeHead.count();
+        const count = await prisma.bridgeHead.count();
         expect(count).toBe(1);
 
         const { body: getBody } = await request(app.getHttpServer())

@@ -2,15 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable } from '@nestjs/common';
-import { EthBridgeAddresses, EthBridgeHead } from '@prisma/client';
+import { BridgeHead, BridgeRequest } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { BridgeDataDTO } from './dto';
 
 @Injectable()
 export class BridgeService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findByIds(ids: number[]): Promise<EthBridgeAddresses[]> {
-    return this.prisma.ethBridgeAddresses.findMany({
+  async findByIds(ids: number[]): Promise<BridgeRequest[]> {
+    return this.prisma.bridgeRequest.findMany({
       where: {
         id: {
           in: ids,
@@ -19,14 +20,14 @@ export class BridgeService {
     });
   }
 
-  async getOrCreateIds(addresses: string[]): Promise<EthBridgeAddresses[]> {
+  async createRequests(requests: BridgeDataDTO[]): Promise<BridgeRequest[]> {
     const results = [];
 
-    for (const address of addresses) {
-      const result = await this.prisma.ethBridgeAddresses.upsert({
-        where: { address },
-        update: {},
-        create: { address },
+    for (const request of requests) {
+      const result = await this.prisma.bridgeRequest.create({
+        data: {
+          ...request,
+        },
       });
       results.push(result);
     }
@@ -34,14 +35,14 @@ export class BridgeService {
     return results;
   }
 
-  async updateHead(hash: string): Promise<EthBridgeHead> {
-    await this.prisma.ethBridgeHead.deleteMany();
-    return this.prisma.ethBridgeHead.create({
+  async updateHead(hash: string): Promise<BridgeHead> {
+    await this.prisma.bridgeHead.deleteMany();
+    return this.prisma.bridgeHead.create({
       data: { hash },
     });
   }
 
-  async getHead(): Promise<EthBridgeHead | null> {
-    return this.prisma.ethBridgeHead.findFirst();
+  async getHead(): Promise<BridgeHead | null> {
+    return this.prisma.bridgeHead.findFirst();
   }
 }

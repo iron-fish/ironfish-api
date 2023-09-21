@@ -153,11 +153,31 @@ enum AssetDescriptionType {
   @@map("asset_description_type")
 }
 
-model EthBridgeAddresses {
-  id        Int      @id @default(autoincrement())
-  address   String   @db.VarChar @unique
+model BridgeRequest {
+  id             Int                  @id @default(autoincrement())
+  address        String               @db.VarChar
+  asset          String               
+  transaction    String
+  type           BridgeRequestType
+  status         BridgeRequestStatus
+
+  @@index([address], map: "index_bridge_request_on_address")
+
 }
 
-model EthBridgeHead {
+enum BridgeRequestType {
+  IRONFISH_TO_ETH
+  ETH_TO_IRONFISH
+  @@map("bridge_request_type")
+}
+
+enum BridgeRequestStatus {
+  PENDING
+  CONFIRMED
+  FAILED
+  @@map("bridge_request_status")
+}
+
+model BridgeHead {
   hash      String   @db.VarChar @unique
 }
