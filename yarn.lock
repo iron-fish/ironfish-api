@@ -1114,9 +1114,9 @@
   version "4.0.0"
   resolved "https://registry.npmjs.org/@types/parse-json/-/parse-json-4.0.0.tgz"
 
-"@types/passport@1.0.12":
-  version "1.0.12"
-  resolved "https://registry.npmjs.org/@types/passport/-/passport-1.0.12.tgz"
+"@types/passport@1.0.13":
+  version "1.0.13"
+  resolved "https://registry.yarnpkg.com/@types/passport/-/passport-1.0.13.tgz#0ca6a316dce33abe0f5bab8b02319b824fc5b4c4"
   dependencies:
     "@types/express" "*"
 
