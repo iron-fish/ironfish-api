@@ -215,6 +215,40 @@ describe('BlocksController', () => {
         .expect(HttpStatus.UNAUTHORIZED);
     });
 
+    it('throw error when graffiti is not formatted correctly', async () => {
+      // graffiti is not hex
+      await request(app.getHttpServer())
+        .post('/blocks/update_graffiti')
+        .set('Authorization', `Bearer ${API_KEY}`)
+        .send({
+          hash: 'hash',
+          graffiti:
+            'a1b3e4f2c8d0b7e9a1b3e4f2c8d0b7e9a1b3e4f2c8d0b7e9a1b3e4f2c8d0SSSS',
+        })
+        .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+
+      // graffiti is not 64 characters long
+      await request(app.getHttpServer())
+        .post('/blocks/update_graffiti')
+        .set('Authorization', `Bearer ${API_KEY}`)
+        .send({
+          hash: 'hash',
+          graffiti: 'a1b3e4f2c8d0b7e9a1b3e4f2c8d0b7e9a1b3e4f2c',
+        })
+        .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+
+      // graffiti is not 64 characters long
+      await request(app.getHttpServer())
+        .post('/blocks/update_graffiti')
+        .set('Authorization', `Bearer ${API_KEY}`)
+        .send({
+          hash: 'hash',
+          graffiti:
+            'a1b3e4f2c8d0b7e9a1b3e4f2c8d0b7e9a1b3e4f2ca1b3e4f2c8d0b7e9a1b3e4f2c8d0b7e9a1b3e4f2ca1b3e4f2c8d0b7e9a1b3e4f2c8d0b7e9a1b3e4f2c',
+        })
+        .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+    });
+
     it('returns information about the main chain', async () => {
       const updateGraffiti = jest
         .spyOn(blocksService, 'updateGraffiti')
@@ -247,15 +281,16 @@ describe('BlocksController', () => {
       await request(app.getHttpServer())
         .post('/blocks/update_graffiti')
         .set('Authorization', `Bearer ${API_KEY}`)
-        .send({ hash: 'hash', graffiti: 'graffiti' })
+        .send({
+          hash: 'hash',
+          graffiti:
+            'a1b3e4f2c8d0b7e9a1b3e4f2c8d0b7e9a1b3e4f2c8d0b7e9a1b3e4f2c8d0b7e9',
+        })
         .expect(HttpStatus.CREATED);
 
       expect(updateGraffiti).toHaveBeenCalledWith(
-        {
-          graffiti: 'graffiti',
-          hash: 'hash',
-        },
-        undefined,
+        'hash',
+        'a1b3e4f2c8d0b7e9a1b3e4f2c8d0b7e9a1b3e4f2c8d0b7e9a1b3e4f2c8d0b7e9',
       );
     });
   });

@@ -33,6 +33,7 @@ import { BlockQueryDto } from './dto/block-query.dto';
 import { BlocksMetricsQueryDto } from './dto/blocks-metrics-query.dto';
 import { BlocksQueryDto } from './dto/blocks-query.dto';
 import { DisconnectBlocksDto } from './dto/disconnect-blocks.dto';
+import { UpdateGraffitiDto } from './dto/update-graffiti';
 import { UpsertBlocksDto } from './dto/upsert-blocks.dto';
 import { SerializedBlock } from './interfaces/serialized-block';
 import { SerializedBlockHead } from './interfaces/serialized-block-head';
@@ -70,12 +71,11 @@ export class BlocksController {
         transform: true,
       }),
     )
-    hash: string,
-    graffiti: string,
+    updateGraffitiDto: UpdateGraffitiDto,
   ): Promise<SerializedBlock> {
     const block: Block = await this.blocksService.updateGraffiti(
-      hash,
-      graffiti,
+      updateGraffitiDto.hash,
+      updateGraffitiDto.graffiti,
     );
     return serializedBlockFromRecord(block);
   }
@@ -207,6 +207,9 @@ export class BlocksController {
     });
 
     const data = [];
+
+    console.log('=========blocks');
+    console.log(blocks);
     for (const block of blocks) {
       if ('transactions' in block) {
         const serializedTransactions = [];
