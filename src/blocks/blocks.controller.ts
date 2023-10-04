@@ -207,9 +207,6 @@ export class BlocksController {
     });
 
     const data = [];
-
-    console.log('=========blocks');
-    console.log(blocks);
     for (const block of blocks) {
       if ('transactions' in block) {
         const serializedTransactions = [];
