@@ -33,6 +33,7 @@ import { BlockQueryDto } from './dto/block-query.dto';
 import { BlocksMetricsQueryDto } from './dto/blocks-metrics-query.dto';
 import { BlocksQueryDto } from './dto/blocks-query.dto';
 import { DisconnectBlocksDto } from './dto/disconnect-blocks.dto';
+import { UpdateGraffitiDto } from './dto/update-graffiti';
 import { UpsertBlocksDto } from './dto/upsert-blocks.dto';
 import { SerializedBlock } from './interfaces/serialized-block';
 import { SerializedBlockHead } from './interfaces/serialized-block-head';
@@ -45,7 +46,7 @@ import {
 } from './utils/block-translator';
 import { serializedBlockMetricsFromRecord } from './utils/blocks-metrics-translator';
 import { serializedBlocksStatusFromRecord } from './utils/blocks-status-translator';
-import { Asset, AssetDescription, Transaction } from '.prisma/client';
+import { Asset, AssetDescription, Block, Transaction } from '.prisma/client';
 
 const MAX_SUPPORTED_TIME_RANGE_IN_DAYS = 90;
 
@@ -59,6 +60,25 @@ export class BlocksController {
     private readonly blocksService: BlocksService,
     private readonly blocksTransactionsLoader: BlocksTransactionsLoader,
   ) {}
+
+  @ApiExcludeEndpoint()
+  @Post('update_graffiti')
+  @UseGuards(ApiKeyGuard)
+  async updateGraffiti(
+    @Body(
+      new ValidationPipe({
+        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        transform: true,
+      }),
+    )
+    updateGraffitiDto: UpdateGraffitiDto,
+  ): Promise<SerializedBlock> {
+    const block: Block = await this.blocksService.updateGraffiti(
+      updateGraffitiDto.hash,
+      updateGraffitiDto.graffiti,
+    );
+    return serializedBlockFromRecord(block);
+  }
 
   @ApiExcludeEndpoint()
   @Post()
