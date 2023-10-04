@@ -208,6 +208,58 @@ describe('BlocksController', () => {
     });
   });
 
+  describe('POST /blocks/update_graffiti', () => {
+    it('throws unauthorized error when no api key is provided', async () => {
+      await request(app.getHttpServer())
+        .post('/blocks/update_graffiti')
+        .expect(HttpStatus.UNAUTHORIZED);
+    });
+
+    it('returns information about the main chain', async () => {
+      const updateGraffiti = jest
+        .spyOn(blocksService, 'updateGraffiti')
+        .mockImplementationOnce(
+          jest.fn(async (hash: string, graffiti: string) => {
+            const block: Block = {
+              id: faker.datatype.number(),
+              created_at: new Date(),
+              updated_at: new Date(),
+              main: true,
+              network_version: 0,
+              time_since_last_block_ms: faker.datatype.number(),
+              hash: hash,
+              difficulty: null,
+              work: null,
+              sequence: faker.datatype.number(),
+              timestamp: new Date(),
+              transactions_count: 0,
+              graffiti: graffiti,
+              previous_block_hash: uuid(),
+              size: faker.datatype.number({ min: 1 }),
+            };
+
+            await Promise.resolve(block);
+
+            return block;
+          }),
+        );
+
+      await request(app.getHttpServer())
+        .post('/blocks/update_graffiti')
+        .set('Authorization', `Bearer ${API_KEY}`)
+        .send({ hash: 'hash', graffiti: 'graffiti' })
+        .expect(HttpStatus.CREATED);
+
+      expect(updateGraffiti).toHaveBeenCalledWith(
+        {
+          graffiti: 'graffiti',
+          hash: 'hash',
+        },
+        undefined,
+      );
+    });
+  });
+
   describe('GET /blocks', () => {
     describe('with no query parameters', () => {
       it('returns a list of blocks in descending order', async () => {
