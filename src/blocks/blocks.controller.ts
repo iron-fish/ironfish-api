@@ -45,7 +45,7 @@ import {
 } from './utils/block-translator';
 import { serializedBlockMetricsFromRecord } from './utils/blocks-metrics-translator';
 import { serializedBlocksStatusFromRecord } from './utils/blocks-status-translator';
-import { Asset, AssetDescription, Transaction } from '.prisma/client';
+import { Asset, AssetDescription, Block, Transaction } from '.prisma/client';
 
 const MAX_SUPPORTED_TIME_RANGE_IN_DAYS = 90;
 
@@ -59,6 +59,26 @@ export class BlocksController {
     private readonly blocksService: BlocksService,
     private readonly blocksTransactionsLoader: BlocksTransactionsLoader,
   ) {}
+
+  @ApiExcludeEndpoint()
+  @Post('update_graffiti')
+  @UseGuards(ApiKeyGuard)
+  async updateGraffiti(
+    @Body(
+      new ValidationPipe({
+        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        transform: true,
+      }),
+    )
+    hash: string,
+    graffiti: string,
+  ): Promise<SerializedBlock> {
+    const block: Block = await this.blocksService.updateGraffiti(
+      hash,
+      graffiti,
+    );
+    return serializedBlockFromRecord(block);
+  }
 
   @ApiExcludeEndpoint()
   @Post()

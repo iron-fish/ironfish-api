@@ -116,6 +116,46 @@ describe('BlocksService', () => {
     });
   });
 
+  describe('updateGraffiti', () => {
+    it('block not found', async () => {
+      const graffiti =
+        'a1b3e4f2c8d0b7e9a1b3e4f2c8d0b7e9a1b3e4f2c8d0b7e9a1b3e4f2c8d0b7e9';
+      const hash = uuid();
+
+      await expect(
+        blocksService.updateGraffiti(hash, graffiti),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('update graffiti', async () => {
+      const block = await blocksService.upsert(prisma, {
+        hash: uuid(),
+        sequence: faker.datatype.number(),
+        difficulty: BigInt(faker.datatype.number()),
+        work: BigInt(faker.datatype.number()),
+        timestamp: new Date(),
+        transactionsCount: 1,
+        type: BlockOperation.CONNECTED,
+        graffiti: uuid(),
+        previousBlockHash: uuid(),
+        size: faker.datatype.number(),
+      });
+
+      const record = await blocksService.find(block.id);
+      expect(record).toMatchObject(block);
+
+      await blocksService.updateGraffiti(block.hash, 'testGraffiti');
+
+      const updatedRecord = await blocksService.find(block.id);
+
+      expect(updatedRecord).toMatchObject({
+        ...block,
+        updated_at: updatedRecord?.updated_at,
+        graffiti: 'testGraffiti',
+      });
+    });
+  });
+
   describe('miningReward', () => {
     it('returns the correct mining reward', () => {
       const reward = blocksService.miningReward(733106);

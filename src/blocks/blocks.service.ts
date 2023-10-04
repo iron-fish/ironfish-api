@@ -117,6 +117,29 @@ export class BlocksService {
     return { ...block, transactions };
   }
 
+  async updateGraffiti(hash: string, graffiti: string): Promise<Block> {
+    const networkVersion = this.config.get<number>('NETWORK_VERSION');
+    const block = await this.prisma.readClient.block.findFirst({
+      where: {
+        hash: standardizeHash(hash),
+        network_version: networkVersion,
+      },
+    });
+
+    if (!block) {
+      throw new NotFoundException();
+    }
+
+    return await this.prisma.block.update({
+      data: {
+        graffiti,
+      },
+      where: {
+        id: block.id,
+      },
+    });
+  }
+
   miningReward(sequence: number): number {
     if (sequence <= 1) {
       return 0;
