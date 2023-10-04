@@ -48,8 +48,8 @@ describe('VersionsService', () => {
 
     describe('with multiple records', () => {
       it('returns the latest version', async () => {
-        const latestVersion = await versionsService.create('0.1.21');
-        await versionsService.create('0.1.20');
+        await versionsService.create('0.1.21');
+        const latestVersion = await versionsService.create('0.1.20');
 
         const version = await versionsService.getLatest();
         expect(version).toMatchObject(latestVersion);

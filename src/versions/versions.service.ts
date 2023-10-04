@@ -21,10 +21,17 @@ export class VersionsService {
     });
   }
 
+  /**
+   * We don't order by version because when comparing 1.9.0 to 1.10.0, 1.9.0 is greater than 1.10.0.
+   * Instead, we order by created_at, which is a timestamp. The assumption is that the latest version
+   * will always be the latest created.
+   *
+   * @returns The latest version, or null if there are no versions
+   */
   async getLatest(): Promise<Version | null> {
     return this.prisma.version.findFirst({
       orderBy: {
-        version: 'desc',
+        created_at: 'desc',
       },
     });
   }
