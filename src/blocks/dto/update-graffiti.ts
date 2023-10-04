@@ -28,7 +28,7 @@ export class UpdateGraffitiDto {
   @MaxLength(64, {
     message: 'must be exactly 64 characters in length',
   })
-  @Matches(/^[0-9A-Fa-f]+$/g, {
+  @Matches(/^[0-9A-Fa-f]+$/, {
     message: 'must be 64 length hex string',
   })
   readonly graffiti!: string;
