@@ -23,10 +23,10 @@ export class UpdateGraffitiDto {
     message: '"graffiti" of the block',
   })
   @MinLength(64, {
-    message: 'must be 64 length hex string',
+    message: 'must be exactly 64 characters in length',
   })
   @MaxLength(64, {
-    message: 'must be 64 length hex string',
+    message: 'must be exactly 64 characters in length',
   })
   @Matches(/^[0-9A-Fa-f]+$/g, {
     message: 'must be 64 length hex string',
