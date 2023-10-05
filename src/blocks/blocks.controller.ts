@@ -29,11 +29,12 @@ import { PaginatedList } from '../common/interfaces/paginated-list';
 import { divide } from '../common/utils/bigint';
 import { serializedTransactionFromRecord } from '../transactions/utils/transaction-translator';
 import { BlocksService } from './blocks.service';
+import { BatchUpdateGraffitiDto } from './dto/batch-update-graffiti.dto';
 import { BlockQueryDto } from './dto/block-query.dto';
 import { BlocksMetricsQueryDto } from './dto/blocks-metrics-query.dto';
 import { BlocksQueryDto } from './dto/blocks-query.dto';
 import { DisconnectBlocksDto } from './dto/disconnect-blocks.dto';
-import { UpdateGraffitiDto } from './dto/update-graffiti';
+import { UpdateGraffitiDto } from './dto/update-graffiti.dto';
 import { UpsertBlocksDto } from './dto/upsert-blocks.dto';
 import { SerializedBlock } from './interfaces/serialized-block';
 import { SerializedBlockHead } from './interfaces/serialized-block-head';
@@ -78,6 +79,28 @@ export class BlocksController {
       updateGraffitiDto.graffiti,
     );
     return serializedBlockFromRecord(block);
+  }
+
+  @ApiExcludeEndpoint()
+  @Post('batch_update_graffiti')
+  @UseGuards(ApiKeyGuard)
+  async batchUpdateGraffiti(
+    @Body(
+      new ValidationPipe({
+        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        transform: true,
+      }),
+    )
+    batchUpdateGraffitiDto: BatchUpdateGraffitiDto,
+  ): Promise<List<SerializedBlock>> {
+    const blocks = await this.blocksService.batchUpdateGrafitti(
+      batchUpdateGraffitiDto,
+    );
+
+    return {
+      object: 'list',
+      data: blocks.map(serializedBlockFromRecord),
+    };
   }
 
   @ApiExcludeEndpoint()

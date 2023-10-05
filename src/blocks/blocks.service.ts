@@ -22,6 +22,7 @@ import { standardizeHash } from '../common/utils/hash';
 import { assertValueIsSafeForPrisma } from '../common/utils/prisma';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
+import { BatchUpdateGraffitiDto } from './dto/batch-update-graffiti.dto';
 import { BlockOperation } from './enums/block-operation';
 import { BlocksDateMetrics } from './interfaces/blocks-date-metrics';
 import { BlocksStatus } from './interfaces/blocks-status';
@@ -115,6 +116,48 @@ export class BlocksService {
     const transactions =
       await this.blocksTransactionsService.findTransactionsByBlock(block);
     return { ...block, transactions };
+  }
+
+  async batchUpdateGrafitti(input: BatchUpdateGraffitiDto): Promise<Block[]> {
+    console.log(input);
+    console.log(input.updates);
+    const networkVersion = this.config.get<number>('NETWORK_VERSION');
+
+    const blocks = await this.prisma.block.findMany({
+      where: {
+        hash: {
+          in: input.updates.map((update) => standardizeHash(update.hash)),
+        },
+        network_version: networkVersion,
+      },
+    });
+
+    const hashGraffitiMap = new Map<string, string>();
+    input.updates.forEach((update) => {
+      hashGraffitiMap.set(update.hash, update.graffiti);
+    });
+
+    blocks.map((block) => {
+      const graffiti = hashGraffitiMap.get(block.hash);
+      if (graffiti) {
+        block.graffiti = graffiti;
+      }
+    });
+
+    await this.prisma.$transaction([
+      ...blocks.map((block) =>
+        this.prisma.block.update({
+          data: {
+            graffiti: block.graffiti,
+          },
+          where: {
+            id: block.id,
+          },
+        }),
+      ),
+    ]);
+
+    return blocks;
   }
 
   async updateGraffiti(hash: string, graffiti: string): Promise<Block> {
