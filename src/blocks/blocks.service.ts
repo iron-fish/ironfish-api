@@ -119,8 +119,6 @@ export class BlocksService {
   }
 
   async batchUpdateGrafitti(input: BatchUpdateGraffitiDto): Promise<Block[]> {
-    console.log(input);
-    console.log(input.updates);
     const networkVersion = this.config.get<number>('NETWORK_VERSION');
 
     const blocks = await this.prisma.block.findMany({
