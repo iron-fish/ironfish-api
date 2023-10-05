@@ -130,6 +130,10 @@ export class BlocksService {
       },
     });
 
+    if (blocks.length !== input.updates.length) {
+      throw new NotFoundException();
+    }
+
     const hashGraffitiMap = new Map<string, string>();
     input.updates.forEach((update) => {
       hashGraffitiMap.set(update.hash, update.graffiti);
