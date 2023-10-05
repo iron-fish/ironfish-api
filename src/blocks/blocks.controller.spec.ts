@@ -210,7 +210,7 @@ describe('BlocksController', () => {
   });
 
   describe('POST /blocks/batch_update_graffiti', () => {
-    it('throws unauthorized error when no api key is provided', async () => {
+    it('throws error when too many update block objects provided', async () => {
       const blockUpdate = {
         hash: 'hash',
         graffiti:
