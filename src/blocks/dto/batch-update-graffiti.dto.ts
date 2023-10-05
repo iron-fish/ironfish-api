@@ -15,7 +15,7 @@ export class BatchUpdateGraffitiDto {
   @IsArray()
   @ApiProperty({ description: 'hash + graffiti array' })
   @ArrayMinSize(1)
-  @ArrayMaxSize(3000)
+  @ArrayMaxSize(200)
   @ValidateNested({ each: true })
   @Type(() => UpdateGraffitiDto)
   readonly updates!: UpdateGraffitiDto[];

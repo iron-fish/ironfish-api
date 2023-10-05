@@ -211,6 +211,24 @@ describe('BlocksController', () => {
 
   describe('POST /blocks/batch_update_graffiti', () => {
     it('throws unauthorized error when no api key is provided', async () => {
+      const blockUpdate = {
+        hash: 'hash',
+        graffiti:
+          '676d702f202020202020202020202036356264346432632d6433373237383130',
+      };
+      // array with 201 elements
+      const updates = new Array(201).fill(blockUpdate);
+
+      await request(app.getHttpServer())
+        .post('/blocks/batch_update_graffiti')
+        .set('Authorization', `Bearer ${API_KEY}`)
+        .send({
+          updates,
+        })
+        .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+    });
+
+    it('throws error when too many update objects', async () => {
       await request(app.getHttpServer())
         .post('/blocks/batch_update_graffiti')
         .expect(HttpStatus.UNAUTHORIZED);
