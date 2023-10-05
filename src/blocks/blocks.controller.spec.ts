@@ -12,6 +12,7 @@ import { GraphileWorkerService } from '../graphile-worker/graphile-worker.servic
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { BlocksService } from './blocks.service';
+import { BatchUpdateGraffitiDto } from './dto/batch-update-graffiti.dto';
 import { UpsertBlocksDto } from './dto/upsert-blocks.dto';
 import { BlockOperation } from './enums/block-operation';
 import { SerializedBlockWithTransactions } from './interfaces/serialized-block-with-transactions';
@@ -208,6 +209,155 @@ describe('BlocksController', () => {
     });
   });
 
+  describe('POST /blocks/batch_update_graffiti', () => {
+    it('throws error when too many update block objects provided', async () => {
+      const blockUpdate = {
+        hash: 'hash',
+        graffiti:
+          '676d702f202020202020202020202036356264346432632d6433373237383130',
+      };
+      // array with 201 elements
+      const updates = new Array(201).fill(blockUpdate);
+
+      await request(app.getHttpServer())
+        .post('/blocks/batch_update_graffiti')
+        .set('Authorization', `Bearer ${API_KEY}`)
+        .send({
+          updates,
+        })
+        .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+    });
+
+    it('throws error when too many update objects', async () => {
+      await request(app.getHttpServer())
+        .post('/blocks/batch_update_graffiti')
+        .expect(HttpStatus.UNAUTHORIZED);
+    });
+
+    it('throw error when graffiti is not formatted correctly', async () => {
+      // graffiti is not a list
+      await request(app.getHttpServer())
+        .post('/blocks/batch_update_graffiti')
+        .set('Authorization', `Bearer ${API_KEY}`)
+        .send({
+          hash: 'hash',
+          graffiti:
+            '676d702f202020202020202020202036356264346432632d6433373237383130',
+        })
+        .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+
+      await request(app.getHttpServer())
+        .post('/blocks/batch_update_graffiti')
+        .set('Authorization', `Bearer ${API_KEY}`)
+        .send([
+          {
+            hash: 'hash',
+            graffiti:
+              'a1b3e4f2c8d0b7e9a1b3e4f2c8d0b7e9a1b3e4f2c8d0b7e9a1b3e4f2c8d0SSSS',
+          },
+        ])
+        .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+
+      await request(app.getHttpServer())
+        .post('/blocks/batch_update_graffiti')
+        .set('Authorization', `Bearer ${API_KEY}`)
+        .send({
+          updates: [
+            {
+              hash: 'hash',
+              graffiti:
+                'a1b3e4f2c8d0b7e9a1b3e4f2c8d0b7e9a1b3e4f2c8d0b7e9a1b3e4f2c8d0SSSS',
+            },
+          ],
+        })
+        .expect(HttpStatus.UNPROCESSABLE_ENTITY);
+    });
+
+    it('returns the block graffiti', async () => {
+      const updateGraffiti = jest
+        .spyOn(blocksService, 'batchUpdateGrafitti')
+        .mockImplementationOnce(
+          jest.fn(async (input: BatchUpdateGraffitiDto) => {
+            const updates = input.updates;
+
+            const block1: Block = {
+              id: faker.datatype.number(),
+              created_at: new Date(),
+              updated_at: new Date(),
+              main: true,
+              network_version: 0,
+              time_since_last_block_ms: faker.datatype.number(),
+              hash: updates[0].hash,
+              difficulty: null,
+              work: null,
+              sequence: faker.datatype.number(),
+              timestamp: new Date(),
+              transactions_count: 0,
+              graffiti: updates[0].graffiti,
+              previous_block_hash: uuid(),
+              size: faker.datatype.number({ min: 1 }),
+            };
+
+            const block2: Block = {
+              id: faker.datatype.number(),
+              created_at: new Date(),
+              updated_at: new Date(),
+              main: true,
+              network_version: 0,
+              time_since_last_block_ms: faker.datatype.number(),
+              hash: updates[1].hash,
+              difficulty: null,
+              work: null,
+              sequence: faker.datatype.number(),
+              timestamp: new Date(),
+              transactions_count: 0,
+              graffiti: updates[1].graffiti,
+              previous_block_hash: uuid(),
+              size: faker.datatype.number({ min: 1 }),
+            };
+
+            await Promise.resolve([block1, block2]);
+
+            return [block1, block2];
+          }),
+        );
+
+      await request(app.getHttpServer())
+        .post('/blocks/batch_update_graffiti')
+        .set('Authorization', `Bearer ${API_KEY}`)
+        .send({
+          updates: [
+            {
+              hash: 'hash1',
+              graffiti:
+                'a1b3e4f2c8d0b7e9a1b3e4f2c8d0b7e9a1b3e4f2c8d0b7e9a1b3e4f2c8d0b7e9',
+            },
+            {
+              hash: 'hash2',
+              graffiti:
+                'a1b3e4f2c8d0b7e9a1b3e4f2c8d0b7e9a1b3e4f2c8d0b7e9a1b3e4f2c8d0b7e0',
+            },
+          ],
+        })
+        .expect(HttpStatus.CREATED);
+
+      expect(updateGraffiti).toHaveBeenCalledWith({
+        updates: [
+          {
+            hash: 'hash1',
+            graffiti:
+              'a1b3e4f2c8d0b7e9a1b3e4f2c8d0b7e9a1b3e4f2c8d0b7e9a1b3e4f2c8d0b7e9',
+          },
+          {
+            hash: 'hash2',
+            graffiti:
+              'a1b3e4f2c8d0b7e9a1b3e4f2c8d0b7e9a1b3e4f2c8d0b7e9a1b3e4f2c8d0b7e0',
+          },
+        ],
+      });
+    });
+  });
+
   describe('POST /blocks/update_graffiti', () => {
     it('throws unauthorized error when no api key is provided', async () => {
       await request(app.getHttpServer())
@@ -249,7 +399,7 @@ describe('BlocksController', () => {
         .expect(HttpStatus.UNPROCESSABLE_ENTITY);
     });
 
-    it('returns information about the main chain', async () => {
+    it('returns the block graffiti', async () => {
       const updateGraffiti = jest
         .spyOn(blocksService, 'updateGraffiti')
         .mockImplementationOnce(
