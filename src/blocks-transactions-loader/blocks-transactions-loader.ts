@@ -62,14 +62,6 @@ export class BlocksTransactionsLoader {
 
       await this.prisma.$transaction(
         async (prisma) => {
-          console.log({
-            ...block,
-            timeSinceLastBlockMs,
-            previousBlockHash: block.previous_block_hash,
-            transactionsCount: block.transactions.length,
-            difficulty: BigInt(block.difficulty),
-            work: BigInt(block.work ?? 0),
-          });
           const createdBlock = await this.blocksService.upsert(prisma, {
             ...block,
             timeSinceLastBlockMs,
