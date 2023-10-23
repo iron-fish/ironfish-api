@@ -1162,9 +1162,9 @@
     "@types/cookiejar" "*"
     "@types/node" "*"
 
-"@types/supertest@2.0.12":
-  version "2.0.12"
-  resolved "https://registry.npmjs.org/@types/supertest/-/supertest-2.0.12.tgz"
+"@types/supertest@2.0.15":
+  version "2.0.15"
+  resolved "https://registry.yarnpkg.com/@types/supertest/-/supertest-2.0.15.tgz#3d032865048c84c6a3bbbf1f949145b917d2ff65"
   dependencies:
     "@types/superagent" "*"
 
