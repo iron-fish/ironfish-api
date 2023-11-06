@@ -904,15 +904,15 @@
   version "1.14.0"
   resolved "https://registry.yarnpkg.com/@opentelemetry/semantic-conventions/-/semantic-conventions-1.14.0.tgz#6a729b7f372ce30f77a3f217c09bc216f863fccb"
 
-"@prisma/client@4.15.0":
-  version "4.15.0"
-  resolved "https://registry.yarnpkg.com/@prisma/client/-/client-4.15.0.tgz#f52ec6ca6fbde37395a54b0a9e5da603a9de15f3"
+"@prisma/client@5.5.2":
+  version "5.5.2"
+  resolved "https://registry.yarnpkg.com/@prisma/client/-/client-5.5.2.tgz#ce6389e7ad9e9cf0fc2a7c6a0032ad2e12a9fd61"
   dependencies:
-    "@prisma/engines-version" "4.15.0-28.8fbc245156db7124f997f4cecdd8d1219e360944"
+    "@prisma/engines-version" "5.5.1-1.aebc046ce8b88ebbcb45efe31cbe7d06fd6abc0a"
 
-"@prisma/engines-version@4.15.0-28.8fbc245156db7124f997f4cecdd8d1219e360944":
-  version "4.15.0-28.8fbc245156db7124f997f4cecdd8d1219e360944"
-  resolved "https://registry.yarnpkg.com/@prisma/engines-version/-/engines-version-4.15.0-28.8fbc245156db7124f997f4cecdd8d1219e360944.tgz#8d880becf996cffe08c78ad5afab6bc06090c990"
+"@prisma/engines-version@5.5.1-1.aebc046ce8b88ebbcb45efe31cbe7d06fd6abc0a":
+  version "5.5.1-1.aebc046ce8b88ebbcb45efe31cbe7d06fd6abc0a"
+  resolved "https://registry.yarnpkg.com/@prisma/engines-version/-/engines-version-5.5.1-1.aebc046ce8b88ebbcb45efe31cbe7d06fd6abc0a.tgz#35cd59ed65ee1f9e333f4865ec86a4432c4d0a9c"
 
 "@prisma/engines@5.3.1":
   version "5.3.1"
