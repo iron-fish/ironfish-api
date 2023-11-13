@@ -1197,9 +1197,9 @@
   dependencies:
     "@types/superagent" "*"
 
-"@types/uuid@9.0.4":
-  version "9.0.4"
-  resolved "https://registry.yarnpkg.com/@types/uuid/-/uuid-9.0.4.tgz#e884a59338da907bda8d2ed03e01c5c49d036f1c"
+"@types/uuid@9.0.7":
+  version "9.0.7"
+  resolved "https://registry.yarnpkg.com/@types/uuid/-/uuid-9.0.7.tgz#b14cebc75455eeeb160d5fe23c2fcc0c64f724d8"
 
 "@types/yargs-parser@*":
   version "20.2.1"
