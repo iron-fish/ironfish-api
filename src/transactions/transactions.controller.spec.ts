@@ -413,6 +413,7 @@ describe('TransactionsController', () => {
         spends: [{ nullifier: uuid() }],
         mints: [],
         burns: [],
+        serialized: 'serialized',
       };
 
       const API_KEY = 'test';
@@ -432,6 +433,7 @@ describe('TransactionsController', () => {
       expect(body1.spends).toStrictEqual(transaction1.spends);
       expect(body1.hash).toStrictEqual(transaction1.hash);
       expect(body1.expiration).toStrictEqual(transaction1.expiration);
+      expect(body1.serialized).toBeNull();
 
       const { body: body2 } = await request(app.getHttpServer())
         .get('/transactions/find')
@@ -443,6 +445,7 @@ describe('TransactionsController', () => {
       expect(body2.spends).toStrictEqual(transaction2.spends);
       expect(body2.hash).toStrictEqual(transaction2.hash);
       expect(body2.expiration).toStrictEqual(transaction2.expiration);
+      expect(body2.serialized).toBe('serialized');
     });
   });
 
