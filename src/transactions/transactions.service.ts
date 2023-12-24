@@ -39,6 +39,7 @@ export class TransactionsService {
         size: tx.size,
         notes: classToPlain(tx.notes),
         spends: classToPlain(tx.spends),
+        serialized: tx.serialized ?? null,
       })),
       skipDuplicates: true,
     });
