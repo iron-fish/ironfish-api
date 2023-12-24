@@ -12,6 +12,7 @@ export interface SerializedTransaction {
   size: number;
   notes: JsonValue;
   spends: JsonValue;
+  serialized: string | null;
   mints: SerializedAssetDescription[];
   burns: SerializedAssetDescription[];
   object: 'transaction';

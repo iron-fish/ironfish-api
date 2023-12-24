@@ -65,6 +65,8 @@ describe('TransactionsController', () => {
               size: faker.datatype.number(),
               notes,
               spends,
+              serialized:
+                'U3dh76O7TMnEb+KPrRghTyz4G3lHV/BWfogtW59oUSFKACk56Jl3eMY9Ky9c5uc2nBhePgCo0hIM+ednqYAjoA',
             },
           });
 
@@ -85,6 +87,7 @@ describe('TransactionsController', () => {
             hash: testTransactionHash,
             fee: expect.any(String),
             size: expect.any(Number),
+            serialized: transaction.serialized,
             notes,
             spends,
           });
