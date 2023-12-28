@@ -30,6 +30,7 @@ export function serializedTransactionFromRecord(
     size: transaction.size,
     notes: transaction.notes,
     spends: transaction.spends,
+    serialized: transaction.serialized,
     mints,
     burns,
     object: 'transaction',
