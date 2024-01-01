@@ -2324,9 +2324,9 @@ eslint-plugin-header@3.1.1:
   version "3.1.1"
   resolved "https://registry.npmjs.org/eslint-plugin-header/-/eslint-plugin-header-3.1.1.tgz"
 
-eslint-plugin-jest@27.4.3:
-  version "27.4.3"
-  resolved "https://registry.yarnpkg.com/eslint-plugin-jest/-/eslint-plugin-jest-27.4.3.tgz#7b2330a9e1819b66d06e66b45dfa8e8ef0c23f79"
+eslint-plugin-jest@27.6.1:
+  version "27.6.1"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-jest/-/eslint-plugin-jest-27.6.1.tgz#5e43b07f3ca48d72e4b4fa243531e5153d9ca1dc"
   dependencies:
     "@typescript-eslint/utils" "^5.10.0"
 
