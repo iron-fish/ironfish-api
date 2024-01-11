@@ -40,6 +40,7 @@ model Transaction {
   hash                String             @db.VarChar
   fee                 Float
   expiration          Int?
+  seen_sequence       Int?
   size                Int
   notes               Json
   spends              Json

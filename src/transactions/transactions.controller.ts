@@ -16,6 +16,7 @@ import { ApiExcludeEndpoint, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AssetDescriptionsService } from '../asset-descriptions/asset-descriptions.service';
 import { AssetsService } from '../assets/assets.service';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
+import { BlocksService } from '../blocks/blocks.service';
 import { List } from '../common/interfaces/list';
 import { TransactionQueryDto } from './dto/transaction-query.dto';
 import { TransactionsQueryDto } from './dto/transactions-query.dto';
@@ -36,6 +37,7 @@ export class TransactionsController {
     private readonly assetDescriptionsService: AssetDescriptionsService,
     private readonly assetsService: AssetsService,
     private readonly transactionsService: TransactionsService,
+    private readonly blocksService: BlocksService,
   ) {}
 
   @ApiOperation({ summary: `Gets a specific transaction by 'hash'` })
@@ -85,9 +87,14 @@ export class TransactionsController {
     )
     upsertTransactionsDto: UpsertTransactionsDto,
   ): Promise<List<SerializedTransaction>> {
-    const transactions = await this.transactionsService.createMany(
-      upsertTransactionsDto.transactions,
-    );
+    const head = await this.blocksService.head();
+
+    const create = upsertTransactionsDto.transactions.map((transaction) => ({
+      ...transaction,
+      seen_sequence: head.sequence,
+    }));
+
+    const transactions = await this.transactionsService.createMany(create);
 
     const data = [];
     for (const transaction of transactions) {

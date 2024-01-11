@@ -36,6 +36,7 @@ export class TransactionsService {
         network_version: networkVersion,
         fee: tx.fee,
         expiration: tx.expiration,
+        seen_sequence: tx.seen_sequence,
         size: tx.size,
         notes: classToPlain(tx.notes),
         spends: classToPlain(tx.spends),
