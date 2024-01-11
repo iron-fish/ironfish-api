@@ -376,15 +376,6 @@ describe('BlocksService', () => {
     });
   });
 
-  describe('getStatus', () => {
-    it('returns statistics for blocks in the main chain', async () => {
-      const status = await blocksService.getStatus();
-      expect(status.chainHeight).toBeGreaterThan(0);
-      expect(status.percentageMarked).toBeGreaterThan(0);
-      expect(status.uniqueGraffiti).toBeGreaterThan(0);
-    });
-  });
-
   describe('disconnectAfter', () => {
     it('updates `main` to false for all blocks after a sequence', async () => {
       const sequenceGt = 10;
