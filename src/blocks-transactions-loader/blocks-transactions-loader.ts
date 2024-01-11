@@ -71,12 +71,15 @@ export class BlocksTransactionsLoader {
             work: BigInt(block.work ?? 0),
           });
 
+          // attach the block sequence to each transaction
+          const create = block.transactions.map((transaction) => ({
+            ...transaction,
+            seen_sequence: block.sequence,
+          }));
+
           // Create new Transaction records
           const transactions =
-            await this.transactionsService.createManyWithClient(
-              prisma,
-              block.transactions,
-            );
+            await this.transactionsService.createManyWithClient(prisma, create);
 
           // Get the index of the each transaction in the block
           const indexedTransactions = block.transactions.map((dto, index) => {

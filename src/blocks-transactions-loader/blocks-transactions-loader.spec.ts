@@ -120,6 +120,7 @@ describe('BlocksTransactionsLoader', () => {
         size: transaction.size,
         notes: transaction.notes,
         spends: transaction.spends,
+        seen_sequence: blocks[0].sequence,
       });
 
       const blockTransaction = await blocksTransactionsService.find(
