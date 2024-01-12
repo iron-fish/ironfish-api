@@ -22,6 +22,10 @@ export class TransactionDto {
   @IsString()
   readonly hash!: string;
 
+  @IsString()
+  @IsOptional()
+  readonly serialized?: string;
+
   @Max(Number.MAX_SAFE_INTEGER)
   @IsInt()
   @Type(() => Number)
