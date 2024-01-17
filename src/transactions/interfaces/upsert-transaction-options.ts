@@ -4,6 +4,7 @@
 export interface UpsertTransactionOptions {
   hash: string;
   fee: number;
+  serialized?: string;
   expiration?: number;
   seen_sequence?: number;
   size: number;
