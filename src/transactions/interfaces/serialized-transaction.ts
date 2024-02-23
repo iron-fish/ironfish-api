@@ -9,6 +9,7 @@ export interface SerializedTransaction {
   hash: string;
   fee: string;
   expiration?: number;
+  seen_sequence: number | null;
   size: number;
   notes: JsonValue;
   spends: JsonValue;
