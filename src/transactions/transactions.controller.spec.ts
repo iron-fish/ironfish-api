@@ -427,6 +427,7 @@ describe('TransactionsController', () => {
         .query({ hash: transaction1.hash })
         .expect(HttpStatus.OK);
 
+      expect(body1.seen_sequence).toEqual(expect.any(Number));
       expect(body1.notes).toStrictEqual(transaction1.notes);
       expect(body1.spends).toStrictEqual(transaction1.spends);
       expect(body1.hash).toStrictEqual(transaction1.hash);
@@ -437,6 +438,7 @@ describe('TransactionsController', () => {
         .query({ hash: transaction2.hash })
         .expect(HttpStatus.OK);
 
+      expect(body2.seen_sequence).toEqual(expect.any(Number));
       expect(body2.notes).toStrictEqual(transaction2.notes);
       expect(body2.spends).toStrictEqual(transaction2.spends);
       expect(body2.hash).toStrictEqual(transaction2.hash);
