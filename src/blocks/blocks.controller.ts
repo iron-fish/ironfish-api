@@ -38,13 +38,11 @@ import { SerializedBlock } from './interfaces/serialized-block';
 import { SerializedBlockHead } from './interfaces/serialized-block-head';
 import { SerializedBlockMetrics } from './interfaces/serialized-block-metrics';
 import { SerializedBlockWithTransactions } from './interfaces/serialized-block-with-transactions';
-import { SerializedBlocksStatus } from './interfaces/serialized-blocks-status';
 import {
   serializedBlockFromRecord,
   serializedBlockFromRecordWithTransactions,
 } from './utils/block-translator';
 import { serializedBlockMetricsFromRecord } from './utils/blocks-metrics-translator';
-import { serializedBlocksStatusFromRecord } from './utils/blocks-status-translator';
 import { Asset, AssetDescription, Transaction } from '.prisma/client';
 
 const MAX_SUPPORTED_TIME_RANGE_IN_DAYS = 90;
@@ -220,13 +218,6 @@ export class BlocksController {
         has_previous: hasPrevious,
       },
     };
-  }
-
-  @ApiOperation({ summary: 'Returns the global status of the chain' })
-  @Get('status')
-  async status(): Promise<SerializedBlocksStatus> {
-    const blocksStatus = await this.blocksService.getStatus();
-    return serializedBlocksStatusFromRecord(blocksStatus);
   }
 
   @ApiOperation({ summary: `Gets a specific block by 'hash' or 'sequence'` })
