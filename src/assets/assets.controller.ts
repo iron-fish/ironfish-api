@@ -2,24 +2,32 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import {
+  Body,
   Controller,
   Get,
   Header,
   HttpStatus,
   NotFoundException,
+  Post,
   Query,
   Req,
   Res,
+  UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiExcludeEndpoint, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
+import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
 import { handleIfModifiedSince } from '../common/utils/request';
 import { TransactionsService } from '../transactions/transactions.service';
 import { AssetsService } from './assets.service';
 import { AssetQueryDto } from './dto/asset-query-dto';
 import { AssetsQueryDto } from './dto/assets-query.dto';
+import {
+  UpdateVerifiedAssetsDto,
+  VerifiedAssetMetadataDto,
+} from './dto/update-verified-assets-dto';
 import { SerializedAsset } from './interfaces/serialized-asset';
 
 @ApiTags('Assets')
@@ -141,5 +149,31 @@ export class AssetsController {
     const assets = await this.assetsService.listIdentifiers({ verified: true });
 
     res.json({ assets });
+  }
+
+  @ApiExcludeEndpoint()
+  @Post('update-verified')
+  @UseGuards(ApiKeyGuard)
+  async update_verified(
+    @Body(
+      new ValidationPipe({
+        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        transform: true,
+      }),
+    )
+    dto: UpdateVerifiedAssetsDto,
+    @Res() res: Response,
+  ): Promise<void> {
+    const missing: VerifiedAssetMetadataDto[] = [];
+    for (const asset of dto.assets) {
+      const result = await this.assetsService.updateVerified(asset);
+      if (result === null) {
+        missing.push(asset);
+      }
+    }
+
+    await this.assetsService.deleteUnverified(dto.assets);
+
+    res.status(HttpStatus.OK).json({ missing });
   }
 }
