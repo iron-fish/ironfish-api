@@ -2,10 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { VerifiedAssetMetadata } from '@prisma/client';
 import { DEFAULT_LIMIT, MAX_LIMIT, NATIVE_ASSET_ID } from '../common/constants';
 import { SortOrder } from '../common/enums/sort-order';
 import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
+import { VerifiedAssetMetadataDto } from './dto/update-verified-assets-dto';
 import { CreateAssetOptions } from './interfaces/create-asset-options';
 import { ListAssetIdsOptions } from './interfaces/list-asset-ids-options';
 import { ListAssetsOptions } from './interfaces/list-assets-options';
@@ -206,5 +208,50 @@ export class AssetsService {
       },
     });
     return aggregations._max.updated_at;
+  }
+
+  async updateVerified(
+    options: VerifiedAssetMetadataDto,
+  ): Promise<VerifiedAssetMetadata | null> {
+    try {
+      const record = await this.prisma.verifiedAssetMetadata.upsert({
+        create: {
+          identifier: options.identifier,
+          symbol: options.symbol,
+          decimals: options.decimals,
+          logo_uri: options.logoURI,
+          website: options.website,
+        },
+        update: {
+          symbol: options.symbol,
+          decimals: options.decimals,
+          logo_uri: options.logoURI,
+          website: options.website,
+        },
+        where: {
+          identifier: options.identifier,
+        },
+      });
+      return record;
+    } catch (e) {
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === 'P2003'
+      ) {
+        return null;
+      } else {
+        throw e;
+      }
+    }
+  }
+
+  async deleteUnverified(assets: VerifiedAssetMetadataDto[]): Promise<void> {
+    await this.prisma.verifiedAssetMetadata.deleteMany({
+      where: {
+        identifier: {
+          notIn: assets.map((asset) => asset.identifier),
+        },
+      },
+    });
   }
 }

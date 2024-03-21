@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { HttpStatus, INestApplication } from '@nestjs/common';
+import { VerifiedAssetMetadata } from '@prisma/client';
 import faker from 'faker';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
@@ -12,7 +13,10 @@ import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { TransactionsService } from '../transactions/transactions.service';
 import { AssetsService } from './assets.service';
+import { VerifiedAssetMetadataDto } from './dto/update-verified-assets-dto';
 import { Asset, Block, Transaction } from '.prisma/client';
+
+const API_KEY = 'test';
 
 describe('AssetsController', () => {
   let app: INestApplication;
@@ -94,6 +98,37 @@ describe('AssetsController', () => {
         id: asset.id,
       },
     });
+  }
+
+  function createRandomVerifiedMetadata(
+    identifier: string,
+  ): VerifiedAssetMetadataDto {
+    return {
+      identifier,
+      symbol: uuid(),
+      decimals: Math.floor(Math.random() * 10),
+      logoURI: uuid(),
+      website: uuid(),
+    };
+  }
+
+  /*
+   * Convert a verified asset metadata request object to its database form
+   */
+  function expectedDatabaseMetadata(
+    metadata: VerifiedAssetMetadataDto,
+    created_at?: Date,
+    updated_at?: Date,
+  ): VerifiedAssetMetadata {
+    return {
+      identifier: metadata.identifier,
+      symbol: metadata.symbol,
+      decimals: metadata.decimals === undefined ? null : metadata.decimals,
+      logo_uri: metadata.logoURI === undefined ? null : metadata.logoURI,
+      website: metadata.website === undefined ? null : metadata.website,
+      created_at: created_at || expect.any(Date),
+      updated_at: updated_at || expect.any(Date),
+    };
   }
 
   describe('GET /assets/find', () => {
@@ -554,6 +589,179 @@ describe('AssetsController', () => {
           },
         ],
       });
+    });
+  });
+
+  describe('POST /assets/verified', () => {
+    it('adds metadata for all assets that exist', async () => {
+      const { asset: asset1 } = await createRandomAsset();
+      const { asset: asset2 } = await createRandomAsset();
+
+      const verifiedMetadataJSON = {
+        schemaVersion: 2,
+        assets: [
+          createRandomVerifiedMetadata(asset1.identifier),
+          createRandomVerifiedMetadata(asset2.identifier),
+        ],
+      };
+
+      const { body } = await request(app.getHttpServer())
+        .post('/assets/verified')
+        .set('Authorization', `Bearer ${API_KEY}`)
+        .send(verifiedMetadataJSON);
+
+      expect(body).toMatchObject({ missing: [] });
+
+      const allMetadata = await prisma.verifiedAssetMetadata.findMany({});
+      expect(allMetadata.sort()).toEqual(
+        verifiedMetadataJSON.assets
+          .map((asset) => expectedDatabaseMetadata(asset))
+          .sort(),
+      );
+    });
+
+    it('updates metadata for assets that already have metadata', async () => {
+      const { asset } = await createRandomAsset();
+
+      const verifiedMetadataJSON1 = {
+        schemaVersion: 2,
+        assets: [createRandomVerifiedMetadata(asset.identifier)],
+      };
+
+      const { body: body1 } = await request(app.getHttpServer())
+        .post('/assets/verified')
+        .set('Authorization', `Bearer ${API_KEY}`)
+        .send(verifiedMetadataJSON1);
+
+      expect(body1).toMatchObject({ missing: [] });
+
+      await expect(prisma.verifiedAssetMetadata.findMany({})).resolves.toEqual(
+        verifiedMetadataJSON1.assets.map((asset) =>
+          expectedDatabaseMetadata(asset),
+        ),
+      );
+
+      const verifiedMetadataJSON2 = {
+        schemaVersion: 2,
+        assets: [createRandomVerifiedMetadata(asset.identifier)],
+      };
+
+      const { body: body2 } = await request(app.getHttpServer())
+        .post('/assets/verified')
+        .set('Authorization', `Bearer ${API_KEY}`)
+        .send(verifiedMetadataJSON2);
+
+      expect(body2).toMatchObject({ missing: [] });
+
+      await expect(prisma.verifiedAssetMetadata.findMany({})).resolves.toEqual(
+        verifiedMetadataJSON2.assets.map((asset) =>
+          expectedDatabaseMetadata(asset),
+        ),
+      );
+    });
+
+    it('only updates metadata for assets that exist and returns those not found', async () => {
+      const { asset } = await createRandomAsset();
+
+      const verifiedMetadataJSON = {
+        schemaVersion: 2,
+        assets: [
+          createRandomVerifiedMetadata(asset.identifier),
+          createRandomVerifiedMetadata(uuid()),
+        ],
+      };
+
+      const { body } = await request(app.getHttpServer())
+        .post('/assets/verified')
+        .set('Authorization', `Bearer ${API_KEY}`)
+        .send(verifiedMetadataJSON);
+
+      expect(body).toMatchObject({
+        missing: [verifiedMetadataJSON.assets[1]],
+      });
+
+      await expect(prisma.verifiedAssetMetadata.findMany({})).resolves.toEqual([
+        expectedDatabaseMetadata(verifiedMetadataJSON.assets[0]),
+      ]);
+    });
+
+    it('deletes metadata items that are not in the list', async () => {
+      const { asset: asset1 } = await createRandomAsset();
+      const { asset: asset2 } = await createRandomAsset();
+
+      const verifiedMetadataJSON1 = {
+        schemaVersion: 2,
+        assets: [
+          createRandomVerifiedMetadata(asset1.identifier),
+          createRandomVerifiedMetadata(asset2.identifier),
+        ],
+      };
+
+      await request(app.getHttpServer())
+        .post('/assets/verified')
+        .set('Authorization', `Bearer ${API_KEY}`)
+        .send(verifiedMetadataJSON1);
+
+      const allMetadata1 = await prisma.verifiedAssetMetadata.findMany({});
+      expect(allMetadata1.sort()).toEqual(
+        verifiedMetadataJSON1.assets
+          .map((asset) => expectedDatabaseMetadata(asset))
+          .sort(),
+      );
+
+      const verifiedMetadataJSON2 = {
+        schemaVersion: 2,
+        assets: [createRandomVerifiedMetadata(asset1.identifier)],
+      };
+
+      await request(app.getHttpServer())
+        .post('/assets/verified')
+        .set('Authorization', `Bearer ${API_KEY}`)
+        .send(verifiedMetadataJSON2);
+
+      const allMetadata2 = await prisma.verifiedAssetMetadata.findMany({});
+      expect(allMetadata2.sort()).toEqual(
+        verifiedMetadataJSON2.assets
+          .map((asset) => expectedDatabaseMetadata(asset))
+          .sort(),
+      );
+
+      // Both assets should still be in the database
+      await expect(
+        prisma.asset.findMany({
+          where: { identifier: asset1.identifier },
+        }),
+      ).resolves.toHaveLength(1);
+
+      await expect(
+        prisma.asset.findMany({
+          where: { identifier: asset2.identifier },
+        }),
+      ).resolves.toHaveLength(1);
+    });
+
+    it('deletes metadata if the asset is deleted', async () => {
+      const { asset } = await createRandomAsset();
+
+      const verifiedMetadataJSON = {
+        schemaVersion: 2,
+        assets: [createRandomVerifiedMetadata(asset.identifier)],
+      };
+
+      await request(app.getHttpServer())
+        .post('/assets/verified')
+        .set('Authorization', `Bearer ${API_KEY}`)
+        .send(verifiedMetadataJSON);
+
+      await expect(
+        prisma.verifiedAssetMetadata.findMany({}),
+      ).resolves.toHaveLength(1);
+
+      await prisma.asset.delete({ where: { id: asset.id } });
+
+      await expect(
+        prisma.verifiedAssetMetadata.findMany({}),
+      ).resolves.toHaveLength(0);
     });
   });
 });
