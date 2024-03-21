@@ -579,7 +579,7 @@ describe('AssetsController', () => {
       const { body } = await request(app.getHttpServer())
         .post('/assets/update-verified')
         .set('Authorization', `Bearer ${API_KEY}`)
-        .send({ version: 2, assets: verifiedMetadata });
+        .send({ schemaVersion: 2, assets: verifiedMetadata });
 
       expect(body).toMatchObject({ missing: [] });
 
@@ -613,7 +613,7 @@ describe('AssetsController', () => {
         .post('/assets/update-verified')
         .set('Authorization', `Bearer ${API_KEY}`)
         .send({
-          version: 2,
+          schemaVersion: 2,
           assets: [assetMetadata1],
         });
 
@@ -642,7 +642,7 @@ describe('AssetsController', () => {
       const { body: body2 } = await request(app.getHttpServer())
         .post('/assets/update-verified')
         .set('Authorization', `Bearer ${API_KEY}`)
-        .send({ version: 2, assets: [assetMetadata2] });
+        .send({ schemaVersion: 2, assets: [assetMetadata2] });
 
       expect(body2).toMatchObject({ missing: [] });
 
@@ -686,7 +686,7 @@ describe('AssetsController', () => {
       const { body } = await request(app.getHttpServer())
         .post('/assets/update-verified')
         .set('Authorization', `Bearer ${API_KEY}`)
-        .send({ version: 2, assets });
+        .send({ schemaVersion: 2, assets });
 
       expect(body).toMatchObject({
         missing: [assets[1]],
@@ -711,7 +711,7 @@ describe('AssetsController', () => {
       await request(app.getHttpServer())
         .post('/assets/update-verified')
         .set('Authorization', `Bearer ${API_KEY}`)
-        .send({ version: 2, assets: [metadata] });
+        .send({ schemaVersion: 2, assets: [metadata] });
 
       await expect(prisma.verifiedAssetMetadata.findMany({})).resolves.toEqual([
         {
@@ -728,7 +728,7 @@ describe('AssetsController', () => {
       await request(app.getHttpServer())
         .post('/assets/update-verified')
         .set('Authorization', `Bearer ${API_KEY}`)
-        .send({ version: 2, assets: [] });
+        .send({ schemaVersion: 2, assets: [] });
 
       await expect(prisma.verifiedAssetMetadata.findMany({})).resolves.toEqual(
         [],
@@ -744,7 +744,7 @@ describe('AssetsController', () => {
       await request(app.getHttpServer())
         .post('/assets/update-verified')
         .set('Authorization', `Bearer ${API_KEY}`)
-        .send({ version: 2, assets: [metadata] });
+        .send({ schemaVersion: 2, assets: [metadata] });
 
       await expect(
         prisma.verifiedAssetMetadata.findMany({}),

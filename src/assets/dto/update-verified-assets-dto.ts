@@ -16,7 +16,7 @@ export class UpdateVerifiedAssetsDto {
   @ApiProperty({ description: 'Version of the verfied assets schema to use' })
   @IsDefined()
   @IsInt()
-  readonly version!: number;
+  readonly schemaVersion!: number;
 
   @ApiProperty({ description: 'List of assets to update as verified' })
   @IsArray()
