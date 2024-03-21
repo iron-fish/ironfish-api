@@ -725,6 +725,19 @@ describe('AssetsController', () => {
           .map((asset) => expectedDatabaseMetadata(asset))
           .sort(),
       );
+
+      // Both assets should still be in the database
+      await expect(
+        prisma.asset.findMany({
+          where: { identifier: asset1.identifier },
+        }),
+      ).resolves.toHaveLength(1);
+
+      await expect(
+        prisma.asset.findMany({
+          where: { identifier: asset2.identifier },
+        }),
+      ).resolves.toHaveLength(1);
     });
 
     it('deletes metadata if the asset is deleted', async () => {
