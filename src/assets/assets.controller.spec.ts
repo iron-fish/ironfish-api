@@ -570,14 +570,14 @@ describe('AssetsController', () => {
   });
 
   describe('POST /assets/update_verified', () => {
-    it('Adds metadata for all assets that exist', async () => {
+    it('adds metadata for all assets that exist', async () => {
       const { metadata: metadata1 } = await createRandomAsset();
       const { metadata: metadata2 } = await createRandomAsset();
 
       const verifiedMetadata = [metadata1, metadata2];
 
       const { body } = await request(app.getHttpServer())
-        .post('/assets/update-verified')
+        .post('/assets/verified')
         .set('Authorization', `Bearer ${API_KEY}`)
         .send({ schemaVersion: 2, assets: verifiedMetadata });
 
@@ -598,7 +598,7 @@ describe('AssetsController', () => {
       }
     });
 
-    it('Updates metadata for assets that already have metadata', async () => {
+    it('updates metadata for assets that already have metadata', async () => {
       const { asset } = await createRandomAsset();
 
       const assetMetadata1 = {
@@ -610,7 +610,7 @@ describe('AssetsController', () => {
       };
 
       const { body: body1 } = await request(app.getHttpServer())
-        .post('/assets/update-verified')
+        .post('/assets/verified')
         .set('Authorization', `Bearer ${API_KEY}`)
         .send({
           schemaVersion: 2,
@@ -640,7 +640,7 @@ describe('AssetsController', () => {
       };
 
       const { body: body2 } = await request(app.getHttpServer())
-        .post('/assets/update-verified')
+        .post('/assets/verified')
         .set('Authorization', `Bearer ${API_KEY}`)
         .send({ schemaVersion: 2, assets: [assetMetadata2] });
 
@@ -659,7 +659,7 @@ describe('AssetsController', () => {
       ]);
     });
 
-    it('Only updates metadata for assets that exist and returns those not found', async () => {
+    it('only updates metadata for assets that exist and returns those not found', async () => {
       const {
         block: _block,
         transaction: _transaction,
@@ -684,7 +684,7 @@ describe('AssetsController', () => {
       ];
 
       const { body } = await request(app.getHttpServer())
-        .post('/assets/update-verified')
+        .post('/assets/verified')
         .set('Authorization', `Bearer ${API_KEY}`)
         .send({ schemaVersion: 2, assets });
 
@@ -705,11 +705,11 @@ describe('AssetsController', () => {
       ]);
     });
 
-    it('Deletes metadata items that are not in the list', async () => {
+    it('deletes metadata items that are not in the list', async () => {
       const { metadata, asset } = await createRandomAsset();
 
       await request(app.getHttpServer())
-        .post('/assets/update-verified')
+        .post('/assets/verified')
         .set('Authorization', `Bearer ${API_KEY}`)
         .send({ schemaVersion: 2, assets: [metadata] });
 
@@ -726,7 +726,7 @@ describe('AssetsController', () => {
       ]);
 
       await request(app.getHttpServer())
-        .post('/assets/update-verified')
+        .post('/assets/verified')
         .set('Authorization', `Bearer ${API_KEY}`)
         .send({ schemaVersion: 2, assets: [] });
 
@@ -738,11 +738,11 @@ describe('AssetsController', () => {
       await expect(prisma.asset.findMany({})).resolves.toEqual([asset]);
     });
 
-    it('Deletes metadata if the asset is deleted', async () => {
+    it('deletes metadata if the asset is deleted', async () => {
       const { metadata, asset } = await createRandomAsset();
 
       await request(app.getHttpServer())
-        .post('/assets/update-verified')
+        .post('/assets/verified')
         .set('Authorization', `Bearer ${API_KEY}`)
         .send({ schemaVersion: 2, assets: [metadata] });
 

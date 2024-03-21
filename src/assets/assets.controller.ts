@@ -152,9 +152,9 @@ export class AssetsController {
   }
 
   @ApiExcludeEndpoint()
-  @Post('update-verified')
+  @Post('verified')
   @UseGuards(ApiKeyGuard)
-  async update_verified(
+  async updateVerified(
     @Body(
       new ValidationPipe({
         errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
