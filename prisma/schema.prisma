@@ -143,6 +143,8 @@ model VerifiedAssetMetadata {
   logo_uri       String?
   website        String?
   asset          Asset              @relation(fields: [identifier], references: [identifier], onDelete: Cascade)
+
+  @@map("verified_asset_metadata")
 }
 
 model AssetDescription {
