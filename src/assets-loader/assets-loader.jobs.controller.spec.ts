@@ -39,6 +39,7 @@ describe('AssetsLoaderJobsController', () => {
         id: identifier,
         metadata: 'foo',
         name: 'bar',
+        creator: 'baz',
         owner: 'baz',
         value: BigInt(10).toString(),
       };

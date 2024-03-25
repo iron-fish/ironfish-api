@@ -91,6 +91,7 @@ describe('AssetDescriptionsController', () => {
             identifier: uuid(),
             metadata: uuid(),
             name: uuid(),
+            creator: uuid(),
             owner: uuid(),
           },
           transaction,
