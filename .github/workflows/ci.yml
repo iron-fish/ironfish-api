@@ -17,7 +17,7 @@ env:
   INFLUXDB_API_TOKEN: test
   INFLUXDB_BUCKET: test
   INFLUXDB_ORG: Iron Fish
-  INFLUXDB_URL: http://localhost:8004 
+  INFLUXDB_URL: http://localhost:8004
   INCENTIVIZED_TESTNET_URL: http://localhost:3001
   IRONFISH_API_KEY: test
   IRONFISH_POSTGRES_CONTAINER: ironfish_postgres
@@ -31,10 +31,12 @@ jobs:
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v2
+
       - name: Use Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '18.13.0'
+          node-version: '20'
+
       - name: Restore Yarn cache
         id: yarn-cache
         uses: actions/cache@v2
@@ -43,11 +45,14 @@ jobs:
             node_modules
             */*/node_modules
           key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+
       - name: Install packages
         if: steps.yarn-cache.outputs.cache-hit != 'true'
         run: yarn --non-interactive --frozen-lockfile
+
       - name: Generate Prisma schema
         run: npx prisma generate
+
       - name: Lint
         run: yarn lint
 
@@ -57,10 +62,12 @@ jobs:
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v2
+
       - name: Use Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '18.13.0'
+          node-version: '20'
+
       - name: Restore Yarn cache
         id: yarn-cache
         uses: actions/cache@v2
@@ -69,20 +76,27 @@ jobs:
             node_modules
             */*/node_modules
           key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+
       - name: Install packages
         if: steps.yarn-cache.outputs.cache-hit != 'true'
         run: yarn --non-interactive --frozen-lockfile
+
       - name: Generate Prisma schema
         run: npx prisma generate
-      - name: Start Docker 
+
+      - name: Start Docker
         run: yarn docker:start
+
       - name: Wait for Postgres
         run: until docker exec $IRONFISH_POSTGRES_CONTAINER pg_isready; do sleep 5; done
+
       - name: Run migrations
         run: npx prisma migrate deploy
+
       - name: Run tests
         run: yarn test
         env:
           NODE_OPTIONS: --max_old_space_size=8192
+
       - name: Stop Docker
         run: yarn docker:stop

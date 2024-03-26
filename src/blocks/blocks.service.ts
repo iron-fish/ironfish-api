@@ -378,7 +378,7 @@ export class BlocksService {
     }
 
     return {
-      averageBlockTimeMs: dateMetricsResponse[0].average_block_time_ms,
+      averageBlockTimeMs: Number(dateMetricsResponse[0].average_block_time_ms),
       averageDifficulty: dateMetricsResponse[0].average_difficulty,
       averageBlockSize: dateMetricsResponse[0].average_block_size,
       blocksCount: Number(dateMetricsResponse[0].blocks_count),
