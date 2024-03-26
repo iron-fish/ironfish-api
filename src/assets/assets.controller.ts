@@ -19,6 +19,7 @@ import { ApiExcludeEndpoint, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
+import { ASSET_METADATA_SCHEMA_VERSION } from '../common/constants';
 import { handleIfModifiedSince } from '../common/utils/request';
 import { TransactionsService } from '../transactions/transactions.service';
 import { AssetsService } from './assets.service';
@@ -137,7 +138,7 @@ export class AssetsController {
     });
   }
 
-  @ApiOperation({ summary: 'Lists identifiers or verified assets' })
+  @ApiOperation({ summary: 'Lists identifiers of verified assets' })
   @Get('verified')
   @Header('Cache-Control', 's-maxage=60, stale-if-error=60')
   async verified(@Req() req: Request, @Res() res: Response): Promise<void> {
@@ -175,5 +176,35 @@ export class AssetsController {
     await this.assetsService.deleteUnverified(dto.assets);
 
     res.status(HttpStatus.OK).json({ missing });
+  }
+
+  @ApiOperation({ summary: 'Lists all verified asset metadata' })
+  @Get('verified_metadata')
+  @Header('Cache-Control', 's-maxage=60, stale-if-error=60')
+  async verifiedMetadata(
+    @Req() req: Request,
+    @Res() res: Response,
+  ): Promise<void> {
+    const lastUpdate = await this.assetsService.lastUpdate();
+    if (lastUpdate) {
+      handleIfModifiedSince(lastUpdate, req, res);
+    }
+
+    const assetsMetadata = (await this.assetsService.listMetadata()).map(
+      (m) => {
+        return {
+          identifier: m.identifier,
+          symbol: m.symbol,
+          decimals: m.decimals,
+          logoURI: m.logo_uri,
+          website: m.website,
+        };
+      },
+    );
+
+    res.json({
+      schemaVersion: ASSET_METADATA_SCHEMA_VERSION,
+      assets: assetsMetadata,
+    });
   }
 }

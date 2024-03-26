@@ -205,6 +205,22 @@ export class AssetsService {
     });
   }
 
+  listMetadata(): Promise<Partial<VerifiedAssetMetadata>[]> {
+    const orderBy = { created_at: SortOrder.ASC };
+    const select = {
+      identifier: true,
+      symbol: true,
+      decimals: true,
+      logo_uri: true,
+      website: true,
+    };
+
+    return this.prisma.readClient.verifiedAssetMetadata.findMany({
+      orderBy,
+      select,
+    });
+  }
+
   async updateNativeAssetSupply(supply: number): Promise<Asset> {
     return this.prisma.asset.update({
       data: {

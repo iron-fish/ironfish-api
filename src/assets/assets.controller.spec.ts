@@ -9,6 +9,7 @@ import { v4 as uuid } from 'uuid';
 import { BlocksService } from '../blocks/blocks.service';
 import { BlockOperation } from '../blocks/enums/block-operation';
 import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
+import { ASSET_METADATA_SCHEMA_VERSION } from '../common/constants';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { TransactionsService } from '../transactions/transactions.service';
@@ -104,13 +105,16 @@ describe('AssetsController', () => {
 
   function createRandomVerifiedMetadata(
     identifier: string,
+    populateOptionalFields = true,
   ): VerifiedAssetMetadataDto {
     return {
       identifier,
       symbol: uuid(),
-      decimals: Math.floor(Math.random() * 10),
-      logoURI: uuid(),
-      website: uuid(),
+      decimals: populateOptionalFields
+        ? Math.floor(Math.random() * 10)
+        : undefined,
+      logoURI: populateOptionalFields ? uuid() : undefined,
+      website: populateOptionalFields ? uuid() : undefined,
     };
   }
 
@@ -767,6 +771,81 @@ describe('AssetsController', () => {
       await expect(
         prisma.verifiedAssetMetadata.findMany({}),
       ).resolves.toHaveLength(0);
+    });
+  });
+
+  describe('GET /assets/verified_metadata', () => {
+    it('includes the correct schemaVersion', async () => {
+      const response = await request(app.getHttpServer()).get(
+        '/assets/verified_metadata',
+      );
+      expect(response.body.schemaVersion).toEqual(
+        ASSET_METADATA_SCHEMA_VERSION,
+      );
+    });
+
+    it('returns an empty array of assets if none exist', async () => {
+      const response = await request(app.getHttpServer()).get(
+        '/assets/verified_metadata',
+      );
+      expect(response.body.assets).toEqual([]);
+    });
+
+    it('returns all of the verified asset metadata', async () => {
+      const { asset: asset1 } = await createRandomAsset();
+      const asset1Metadata = createRandomVerifiedMetadata(
+        asset1.identifier,
+        false,
+      );
+
+      const { asset: asset2 } = await createRandomAsset();
+      const asset2Metadata = createRandomVerifiedMetadata(asset2.identifier);
+
+      const { asset: asset3 } = await createRandomAsset();
+      const asset3Metadata = createRandomVerifiedMetadata(asset3.identifier);
+
+      // Insert the asset metadata for the test setup
+      const verifiedMetadataJSON = {
+        schemaVersion: 2,
+        assets: [asset1Metadata, asset2Metadata, asset3Metadata],
+      };
+
+      await request(app.getHttpServer())
+        .post('/assets/verified')
+        .set('Authorization', `Bearer ${API_KEY}`)
+        .send(verifiedMetadataJSON);
+
+      // Fetch the verified asset metadata
+      const response = await request(app.getHttpServer()).get(
+        '/assets/verified_metadata',
+      );
+
+      expect(response.body).toEqual({
+        schemaVersion: ASSET_METADATA_SCHEMA_VERSION,
+        assets: [
+          {
+            identifier: asset1Metadata.identifier,
+            symbol: asset1Metadata.symbol,
+            decimals: null,
+            logoURI: null,
+            website: null,
+          },
+          {
+            identifier: asset2Metadata.identifier,
+            symbol: asset2Metadata.symbol,
+            decimals: asset2Metadata.decimals,
+            logoURI: asset2Metadata.logoURI,
+            website: asset2Metadata.website,
+          },
+          {
+            identifier: asset3Metadata.identifier,
+            symbol: asset3Metadata.symbol,
+            decimals: asset3Metadata.decimals,
+            logoURI: asset3Metadata.logoURI,
+            website: asset3Metadata.website,
+          },
+        ],
+      });
     });
   });
 });
