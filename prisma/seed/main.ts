@@ -16,7 +16,7 @@ async function addAsset({
   metadata,
   owner,
   supply,
-  verified_at,
+  verified_metadata,
 }: {
   blockHash: string;
   transactionHash: string;
@@ -25,7 +25,12 @@ async function addAsset({
   metadata: string;
   owner: string;
   supply: number | bigint;
-  verified_at?: Date;
+  verified_metadata?: {
+    symbol: string;
+    decimals?: number;
+    logo_uri?: string;
+    website?: string;
+  };
 }) {
   const transaction = await prisma.transaction.upsert({
     where: {
@@ -80,6 +85,14 @@ async function addAsset({
     },
   });
 
+  const verifiedMetadataCreate = verified_metadata
+    ? {
+        verified_metadata: {
+          create: verified_metadata,
+        },
+      }
+    : {};
+
   await prisma.asset.upsert({
     where: { identifier: identifier },
     update: {},
@@ -89,7 +102,7 @@ async function addAsset({
       name: name,
       owner: owner,
       supply: supply,
-      verified_at: verified_at,
+      ...verifiedMetadataCreate,
       created_transaction: {
         connect: { id: transaction.id },
       },
@@ -111,7 +124,12 @@ async function installTestingFixtures() {
     metadata: 'Iron Fish Native Asset',
     owner: '0000000000000000000000000000000000000000000000000000000000000000',
     supply: BigInt(5000000000),
-    verified_at: new Date(),
+    verified_metadata: {
+      symbol: 'IRON',
+      decimals: 8,
+      logo_uri: 'https://ironfish.network/favicon.ico',
+      website: 'https://ironfish.network/',
+    },
   });
 
   await addAsset({
