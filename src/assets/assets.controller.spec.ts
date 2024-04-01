@@ -89,13 +89,15 @@ describe('AssetsController', () => {
     return { block: block, transaction: transaction, asset: asset };
   }
 
-  async function verifyAsset(asset: Asset): Promise<Asset> {
-    return prisma.asset.update({
+  async function verifyAsset(asset: Asset): Promise<VerifiedAssetMetadata> {
+    const metadata = createRandomVerifiedMetadata(asset.identifier);
+    return prisma.verifiedAssetMetadata.create({
       data: {
-        verified_at: new Date(),
-      },
-      where: {
-        id: asset.id,
+        identifier: metadata.identifier,
+        symbol: metadata.symbol,
+        decimals: metadata.decimals,
+        logo_uri: metadata.logoURI,
+        website: metadata.website,
       },
     });
   }
@@ -215,7 +217,7 @@ describe('AssetsController', () => {
         asset: secondAsset,
       } = await createRandomAsset();
 
-      const verifiedAsset = await verifyAsset(asset);
+      const verifiedAssetMetadata = await verifyAsset(asset);
 
       const { body } = await request(app.getHttpServer())
         .get('/assets')
@@ -246,8 +248,7 @@ describe('AssetsController', () => {
             name: asset.name,
             owner: asset.owner,
             supply: asset.supply.toString(),
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            verified_at: verifiedAsset.verified_at!.toISOString(),
+            verified_at: verifiedAssetMetadata.created_at.toISOString(),
           },
         ],
         metadata: {
@@ -379,7 +380,7 @@ describe('AssetsController', () => {
           asset: _secondAsset,
         } = await createRandomAsset();
 
-        const verifiedAsset = await verifyAsset(asset);
+        const verifiedAssetMetadata = await verifyAsset(asset);
 
         const { body } = await request(app.getHttpServer())
           .get('/assets')
@@ -399,8 +400,7 @@ describe('AssetsController', () => {
               name: asset.name,
               owner: asset.owner,
               supply: asset.supply.toString(),
-              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-              verified_at: verifiedAsset.verified_at!.toISOString(),
+              verified_at: verifiedAssetMetadata.created_at.toISOString(),
             },
           ],
           metadata: {
@@ -500,7 +500,9 @@ describe('AssetsController', () => {
         transaction: _transaction,
         asset,
       } = await createRandomAsset();
-      const lastModified = asset.updated_at.toUTCString();
+
+      const verifiedAssetMetadata = await verifyAsset(asset);
+      const lastModified = verifiedAssetMetadata.created_at.toUTCString();
       await request(app.getHttpServer())
         .get('/assets/verified')
         .expect(HttpStatus.OK)
@@ -513,7 +515,8 @@ describe('AssetsController', () => {
         transaction: _transaction,
         asset,
       } = await createRandomAsset();
-      const lastModified = asset.updated_at.toUTCString();
+      const verifiedAssetMetadata = await verifyAsset(asset);
+      const lastModified = verifiedAssetMetadata.created_at.toUTCString();
       const { text } = await request(app.getHttpServer())
         .get('/assets/verified')
         .set('If-Modified-Since', lastModified)
@@ -528,7 +531,9 @@ describe('AssetsController', () => {
         transaction: _transaction,
         asset,
       } = await createRandomAsset();
-      const lastModified = asset.updated_at.toUTCString();
+      const verifiedAssetMetadata = await verifyAsset(asset);
+      const lastModified = verifiedAssetMetadata.created_at.toUTCString();
+
       const oneMinuteAfterLastModified = new Date(
         asset.updated_at.valueOf() + 60_000,
       ).toUTCString();

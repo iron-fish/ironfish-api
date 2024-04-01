@@ -9,9 +9,12 @@ import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { VerifiedAssetMetadataDto } from './dto/update-verified-assets-dto';
 import { CreateAssetOptions } from './interfaces/create-asset-options';
-import { ListAssetIdsOptions } from './interfaces/list-asset-ids-options';
 import { ListAssetsOptions } from './interfaces/list-assets-options';
 import { Asset, Prisma, Transaction } from '.prisma/client';
+
+export type AssetWithMetadata = Asset & {
+  verified_metadata?: VerifiedAssetMetadata | null | undefined;
+};
 
 @Injectable()
 export class AssetsService {
@@ -36,15 +39,20 @@ export class AssetsService {
     return record;
   }
 
-  async findByIdentifierOrThrow(identifier: string): Promise<Asset> {
+  async findByIdentifierOrThrow(
+    identifier: string,
+  ): Promise<AssetWithMetadata> {
     return this.findByIdentifierOrThrowWithClient(identifier, this.prisma);
   }
 
   async findByIdentifierOrThrowWithClient(
     identifier: string,
     prisma: BasePrismaClient,
-  ): Promise<Asset> {
+  ): Promise<AssetWithMetadata> {
     const record = await prisma.asset.findUnique({
+      include: {
+        verified_metadata: true,
+      },
       where: {
         identifier,
       },
@@ -53,6 +61,18 @@ export class AssetsService {
       throw new NotFoundException();
     }
     return record;
+  }
+
+  async findVerifiedMetadata(
+    identifier: string,
+    prisma?: BasePrismaClient,
+  ): Promise<VerifiedAssetMetadata | null> {
+    const client = prisma ?? this.prisma;
+    return client.verifiedAssetMetadata.findUnique({
+      where: {
+        identifier,
+      },
+    });
   }
 
   async upsert(
@@ -94,7 +114,7 @@ export class AssetsService {
   }
 
   async list(options: ListAssetsOptions): Promise<{
-    data: Asset[];
+    data: AssetWithMetadata[];
     hasNext: boolean;
     hasPrevious: boolean;
   }> {
@@ -114,15 +134,20 @@ export class AssetsService {
     }
     if (options.verified !== undefined) {
       if (options.verified) {
-        where.verified_at = {
-          not: null,
+        where.verified_metadata = {
+          isNot: null,
         };
       } else {
-        where.verified_at = null;
+        where.verified_metadata = {
+          is: null,
+        };
       }
     }
 
     const data = await this.prisma.readClient.asset.findMany({
+      include: {
+        verified_metadata: true,
+      },
       cursor,
       orderBy,
       skip,
@@ -168,25 +193,15 @@ export class AssetsService {
     };
   }
 
-  listIdentifiers(options: ListAssetIdsOptions): Promise<Partial<Asset>[]> {
-    const orderBy = { id: SortOrder.ASC };
-    const select = { identifier: true };
-
-    const where: Prisma.AssetWhereInput = {};
-    if (options.verified !== undefined) {
-      if (options.verified) {
-        where.verified_at = {
-          not: null,
-        };
-      } else {
-        where.verified_at = null;
-      }
-    }
-
+  listVerifiedIdentifiers(): Promise<Partial<Asset>[]> {
     return this.prisma.readClient.asset.findMany({
-      orderBy,
-      where,
-      select,
+      select: { identifier: true },
+      where: {
+        verified_metadata: {
+          isNot: null,
+        },
+      },
+      orderBy: { id: SortOrder.ASC },
     });
   }
 
@@ -203,6 +218,20 @@ export class AssetsService {
 
   async lastUpdate(): Promise<Date | null> {
     const aggregations = await this.prisma.asset.aggregate({
+      _max: {
+        updated_at: true,
+      },
+    });
+
+    const metadataDate = await this.lastMetadataUpdate();
+    const assetDate = aggregations._max.updated_at;
+    return (metadataDate?.valueOf() || 0) > (assetDate?.valueOf() || 0)
+      ? metadataDate
+      : assetDate;
+  }
+
+  async lastMetadataUpdate(): Promise<Date | null> {
+    const aggregations = await this.prisma.verifiedAssetMetadata.aggregate({
       _max: {
         updated_at: true,
       },

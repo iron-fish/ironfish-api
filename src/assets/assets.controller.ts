@@ -73,7 +73,7 @@ export class AssetsController {
       name: asset.name,
       owner: asset.owner,
       supply: asset.supply.toString(),
-      verified_at: asset.verified_at?.toISOString() ?? null,
+      verified_at: asset.verified_metadata?.created_at.toISOString() ?? null,
     };
   }
 
@@ -123,7 +123,7 @@ export class AssetsController {
         name: asset.name,
         owner: asset.owner,
         supply: asset.supply.toString(),
-        verified_at: asset.verified_at?.toISOString() ?? null,
+        verified_at: asset.verified_metadata?.created_at.toISOString() ?? null,
       });
     }
 
@@ -141,12 +141,12 @@ export class AssetsController {
   @Get('verified')
   @Header('Cache-Control', 's-maxage=60, stale-if-error=60')
   async verified(@Req() req: Request, @Res() res: Response): Promise<void> {
-    const lastUpdate = await this.assetsService.lastUpdate();
+    const lastUpdate = await this.assetsService.lastMetadataUpdate();
     if (lastUpdate) {
       handleIfModifiedSince(lastUpdate, req, res);
     }
 
-    const assets = await this.assetsService.listIdentifiers({ verified: true });
+    const assets = await this.assetsService.listVerifiedIdentifiers();
 
     res.json({ assets });
   }
