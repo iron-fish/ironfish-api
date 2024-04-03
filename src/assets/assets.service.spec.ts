@@ -66,7 +66,7 @@ describe('AssetsService', () => {
 
         expect(
           await assetsService.findByIdentifierOrThrow(asset.identifier),
-        ).toEqual(asset);
+        ).toEqual({ ...asset, verified_metadata: null });
       });
     });
   });
@@ -252,7 +252,10 @@ describe('AssetsService', () => {
       );
 
       expect(await assetsService.list({ limit: 2 })).toEqual({
-        data: [thirdAsset, secondAsset],
+        data: [
+          { ...thirdAsset, verified_metadata: null },
+          { ...secondAsset, verified_metadata: null },
+        ],
         hasNext: true,
         hasPrevious: false,
       });
