@@ -112,32 +112,6 @@ async function addAsset({
   console.log(`Created asset ${name}`);
 }
 
-async function addVerifiedAssetMetadata({
-  identifier,
-  symbol,
-  decimals,
-  logoURI,
-  website,
-}: {
-  identifier: string;
-  symbol: string;
-  decimals?: number;
-  logoURI?: string;
-  website?: string;
-}) {
-  await prisma.verifiedAssetMetadata.upsert({
-    where: { identifier: identifier },
-    update: {},
-    create: {
-      identifier: identifier,
-      symbol: symbol,
-      decimals: decimals,
-      logo_uri: logoURI,
-      website: website,
-    },
-  });
-}
-
 async function installTestingFixtures() {
   await addAsset({
     blockHash:
@@ -158,68 +132,56 @@ async function installTestingFixtures() {
     },
   });
 
-  const copperIdentifier =
-    '571de66a31fcc61a6a306030d3946489596a40a4f0bfde57643d41281a385d9b';
-
   await addAsset({
     blockHash:
       '913050766c146a04cc82200816b23cd22f0e8d5751eb00cc837dc532ef7d8dd0',
     transactionHash:
       'f21561e7d67411919784dc0c7a3a37c2905f910214ba2e47f5074efa0a426f6a',
-    identifier: copperIdentifier,
+    identifier:
+      '571de66a31fcc61a6a306030d3946489596a40a4f0bfde57643d41281a385d9b',
     name: '$COPPER',
     metadata: 'Copper',
     owner: 'f7cdb1bf17b3c559c855767e22d74b6ce20a49864190496cbf739c4312693fe7',
     supply: 123456789,
+    verified_metadata: {
+      symbol: '$COPPER',
+    },
   });
-
-  await addVerifiedAssetMetadata({
-    identifier: copperIdentifier,
-    symbol: '$COPPER',
-  });
-
-  const nickelIdentifier =
-    '40dc9626167399480f400120fc476d2697a461a68dec29f69fe08aaaf4fbfa70';
 
   await addAsset({
     blockHash:
       'ba6998750cc990836fe8fa4364cda105a6cb81a6cf1b486df0c1190f58e9879f',
     transactionHash:
       '8dadd7846b21980da791b3f176307330e60ca223b4085e2c81f913ad65a818ac',
-    identifier: nickelIdentifier,
+    identifier:
+      '40dc9626167399480f400120fc476d2697a461a68dec29f69fe08aaaf4fbfa70',
     name: '$NICKEL',
     metadata: 'Nickel',
     owner: '04efe4bcc818f0d11aa49ea83f5cec0c137ce61b38a4d2492558ebba06b7a3ed',
     supply: 123456789,
+    verified_metadata: {
+      symbol: '$NCKL',
+      decimals: 2,
+    },
   });
-
-  await addVerifiedAssetMetadata({
-    identifier: nickelIdentifier,
-    symbol: '$NCKL',
-    decimals: 2,
-  });
-
-  const zincIdentifier =
-    '3b43e71e5d6aa94eb29d3f0f08282c3581336daea61b39e165bab184e0debe8a';
 
   await addAsset({
     blockHash:
       '4343c35647b5de528de535e92cdadcab3822f9a3a33d88efe840136279edf062',
     transactionHash:
       'e6559eab465bf3d401a61ecf2d729e5051e426365db2435a0871bb4b8b0d35dd',
-    identifier: zincIdentifier,
+    identifier:
+      '3b43e71e5d6aa94eb29d3f0f08282c3581336daea61b39e165bab184e0debe8a',
     name: '$ZINC',
     metadata: 'Zinc',
     owner: '29cb8a1f1f4521eded69d2aadd07eeddf630326cce964210078bc3d17de268d6',
     supply: 123456789,
-  });
-
-  await addVerifiedAssetMetadata({
-    identifier: zincIdentifier,
-    symbol: '$ZINC',
-    decimals: 2,
-    logoURI: 'https://example.com/foo.jpg',
-    website: 'https://example.com',
+    verified_metadata: {
+      symbol: '$ZINC',
+      decimals: 2,
+      logo_uri: 'https://example.com/foo.jpg',
+      website: 'https://example.com',
+    },
   });
 }
 
