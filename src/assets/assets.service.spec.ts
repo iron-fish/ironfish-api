@@ -321,6 +321,8 @@ describe('AssetsService', () => {
           decimals: null,
           logo_uri: null,
           website: null,
+          created_at: expect.any(Date),
+          updated_at: expect.any(Date),
         },
         {
           identifier: secondAsset.identifier,
@@ -328,6 +330,8 @@ describe('AssetsService', () => {
           decimals: 2,
           logo_uri: 'https://example.com/foo.jpg',
           website: 'https://example.com/',
+          created_at: expect.any(Date),
+          updated_at: expect.any(Date),
         },
       ]);
     });

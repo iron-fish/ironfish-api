@@ -192,26 +192,13 @@ export class AssetsController {
 
     const assetsMetadata = (await this.assetsService.listMetadata()).map(
       (m) => {
-        const payload: {
-          identifier: string;
-          symbol: string;
-          decimals?: number;
-          logoURI?: string;
-          website?: string;
-        } = {
+        return {
           identifier: m.identifier,
           symbol: m.symbol,
+          ...(m.decimals != null && { decimals: m.decimals }),
+          ...(m.logo_uri != null && { logoURI: m.logo_uri }),
+          ...(m.website != null && { website: m.website }),
         };
-        if (m.decimals != null) {
-          payload.decimals = m.decimals;
-        }
-        if (m.logo_uri != null) {
-          payload.logoURI = m.logo_uri;
-        }
-        if (m.website != null) {
-          payload.website = m.website;
-        }
-        return payload;
       },
     );
 
