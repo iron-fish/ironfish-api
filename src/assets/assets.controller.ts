@@ -199,10 +199,8 @@ export class AssetsController {
           logoURI?: string;
           website?: string;
         } = {
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          identifier: m.identifier!,
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          symbol: m.symbol!,
+          identifier: m.identifier,
+          symbol: m.symbol,
         };
         if (m.decimals != null) {
           payload.decimals = m.decimals;

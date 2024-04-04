@@ -205,19 +205,11 @@ export class AssetsService {
     });
   }
 
-  listMetadata(): Promise<Partial<VerifiedAssetMetadata>[]> {
+  listMetadata(): Promise<VerifiedAssetMetadata[]> {
     const orderBy = { created_at: SortOrder.ASC };
-    const select = {
-      identifier: true,
-      symbol: true,
-      decimals: true,
-      logo_uri: true,
-      website: true,
-    };
 
     return this.prisma.readClient.verifiedAssetMetadata.findMany({
       orderBy,
-      select,
     });
   }
 
