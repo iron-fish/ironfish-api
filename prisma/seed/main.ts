@@ -143,6 +143,9 @@ async function installTestingFixtures() {
     metadata: 'Copper',
     owner: 'f7cdb1bf17b3c559c855767e22d74b6ce20a49864190496cbf739c4312693fe7',
     supply: 123456789,
+    verified_metadata: {
+      symbol: '$COPPER',
+    },
   });
 
   await addAsset({
@@ -156,6 +159,10 @@ async function installTestingFixtures() {
     metadata: 'Nickel',
     owner: '04efe4bcc818f0d11aa49ea83f5cec0c137ce61b38a4d2492558ebba06b7a3ed',
     supply: 123456789,
+    verified_metadata: {
+      symbol: '$NCKL',
+      decimals: 2,
+    },
   });
 
   await addAsset({
@@ -169,6 +176,12 @@ async function installTestingFixtures() {
     metadata: 'Zinc',
     owner: '29cb8a1f1f4521eded69d2aadd07eeddf630326cce964210078bc3d17de268d6',
     supply: 123456789,
+    verified_metadata: {
+      symbol: '$ZINC',
+      decimals: 2,
+      logo_uri: 'https://example.com/foo.jpg',
+      website: 'https://example.com',
+    },
   });
 }
 
