@@ -192,13 +192,28 @@ export class AssetsController {
 
     const assetsMetadata = (await this.assetsService.listMetadata()).map(
       (m) => {
-        return {
-          identifier: m.identifier,
-          symbol: m.symbol,
-          decimals: m.decimals,
-          logoURI: m.logo_uri,
-          website: m.website,
+        const payload: {
+          identifier: string;
+          symbol: string;
+          decimals?: number;
+          logoURI?: string;
+          website?: string;
+        } = {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          identifier: m.identifier!,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          symbol: m.symbol!,
         };
+        if (m.decimals != null) {
+          payload.decimals = m.decimals;
+        }
+        if (m.logo_uri != null) {
+          payload.logoURI = m.logo_uri;
+        }
+        if (m.website != null) {
+          payload.website = m.website;
+        }
+        return payload;
       },
     );
 

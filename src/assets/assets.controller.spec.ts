@@ -826,9 +826,6 @@ describe('AssetsController', () => {
           {
             identifier: asset1Metadata.identifier,
             symbol: asset1Metadata.symbol,
-            decimals: null,
-            logoURI: null,
-            website: null,
           },
           {
             identifier: asset2Metadata.identifier,
