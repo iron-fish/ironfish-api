@@ -185,7 +185,7 @@ export class AssetsController {
     @Req() req: Request,
     @Res() res: Response,
   ): Promise<void> {
-    const lastUpdate = await this.assetsService.lastUpdate();
+    const lastUpdate = await this.assetsService.lastMetadataUpdate();
     if (lastUpdate) {
       handleIfModifiedSince(lastUpdate, req, res);
     }
