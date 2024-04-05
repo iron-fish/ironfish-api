@@ -19,7 +19,10 @@ import { ApiExcludeEndpoint, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
-import { ASSET_METADATA_SCHEMA_VERSION } from '../common/constants';
+import {
+  ASSET_METADATA_SCHEMA_VERSION,
+  NATIVE_ASSET_ID,
+} from '../common/constants';
 import { handleIfModifiedSince } from '../common/utils/request';
 import { TransactionsService } from '../transactions/transactions.service';
 import { AssetsService } from './assets.service';
@@ -138,18 +141,28 @@ export class AssetsController {
     });
   }
 
+  /**
+   * @deprecated
+   * Replaced by the `assets/verified_metadata` endpoint. This endpoint is kept for older nodes.
+   * Older nodes should treat the native asset IRON as the only verified asset since future assets
+   * may require additional fields like `decimals` which this endpoint does not provide.
+   */
   @ApiOperation({ summary: 'Lists identifiers of verified assets' })
   @Get('verified')
   @Header('Cache-Control', 's-maxage=60, stale-if-error=60')
-  async verified(@Req() req: Request, @Res() res: Response): Promise<void> {
-    const lastUpdate = await this.assetsService.lastMetadataUpdate();
+  verified(@Req() req: Request, @Res() res: Response): void {
+    const lastUpdate = new Date('01 Apr 2024 GMT');
     if (lastUpdate) {
       handleIfModifiedSince(lastUpdate, req, res);
     }
 
-    const assets = await this.assetsService.listVerifiedIdentifiers();
-
-    res.json({ assets });
+    res.json({
+      assets: [
+        {
+          identifier: NATIVE_ASSET_ID,
+        },
+      ],
+    });
   }
 
   @ApiExcludeEndpoint()

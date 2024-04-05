@@ -9,7 +9,10 @@ import { v4 as uuid } from 'uuid';
 import { BlocksService } from '../blocks/blocks.service';
 import { BlockOperation } from '../blocks/enums/block-operation';
 import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
-import { ASSET_METADATA_SCHEMA_VERSION } from '../common/constants';
+import {
+  ASSET_METADATA_SCHEMA_VERSION,
+  NATIVE_ASSET_ID,
+} from '../common/constants';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { TransactionsService } from '../transactions/transactions.service';
@@ -462,26 +465,7 @@ describe('AssetsController', () => {
   });
 
   describe('GET /assets/verified', () => {
-    it('returns the IDs of all verified assets', async () => {
-      const {
-        block: _block,
-        transaction: _transaction,
-        asset,
-      } = await createRandomAsset();
-      const {
-        block: _secondBlock,
-        transaction: _secondTransaction,
-        asset: _secondAsset,
-      } = await createRandomAsset();
-      const {
-        block: _thirdBlock,
-        transaction: _thirdTransaction,
-        asset: thirdAsset,
-      } = await createRandomAsset();
-
-      await verifyAsset(asset);
-      await verifyAsset(thirdAsset);
-
+    it('returns the native asset ID', async () => {
       const { body } = await request(app.getHttpServer())
         .get('/assets/verified')
         .expect(HttpStatus.OK);
@@ -489,38 +473,14 @@ describe('AssetsController', () => {
       expect(body).toMatchObject({
         assets: [
           {
-            identifier: asset.identifier,
-          },
-          {
-            identifier: thirdAsset.identifier,
+            identifier: NATIVE_ASSET_ID,
           },
         ],
       });
     });
 
-    it('sets Last-Modified', async () => {
-      const {
-        block: _block,
-        transaction: _transaction,
-        asset,
-      } = await createRandomAsset();
-
-      const verifiedAssetMetadata = await verifyAsset(asset);
-      const lastModified = verifiedAssetMetadata.created_at.toUTCString();
-      await request(app.getHttpServer())
-        .get('/assets/verified')
-        .expect(HttpStatus.OK)
-        .expect('Last-Modified', lastModified);
-    });
-
     it('returns 304 when If-Modified-Since matches Last-Modified', async () => {
-      const {
-        block: _block,
-        transaction: _transaction,
-        asset,
-      } = await createRandomAsset();
-      const verifiedAssetMetadata = await verifyAsset(asset);
-      const lastModified = verifiedAssetMetadata.created_at.toUTCString();
+      const lastModified = new Date('01 Apr 2024 GMT').toUTCString();
       const { text } = await request(app.getHttpServer())
         .get('/assets/verified')
         .set('If-Modified-Since', lastModified)
@@ -530,16 +490,9 @@ describe('AssetsController', () => {
     });
 
     it('returns 304 when If-Modified-Since is after Last-Modified', async () => {
-      const {
-        block: _block,
-        transaction: _transaction,
-        asset,
-      } = await createRandomAsset();
-      const verifiedAssetMetadata = await verifyAsset(asset);
-      const lastModified = verifiedAssetMetadata.created_at.toUTCString();
-
+      const lastModified = new Date('01 Apr 2024 GMT').toUTCString();
       const oneMinuteAfterLastModified = new Date(
-        asset.updated_at.valueOf() + 60_000,
+        new Date(lastModified).valueOf() + 60_000,
       ).toUTCString();
       const { text } = await request(app.getHttpServer())
         .get('/assets/verified')
@@ -550,16 +503,9 @@ describe('AssetsController', () => {
     });
 
     it('returns 200 when If-Modified-Since is before Last-Modified', async () => {
-      const {
-        block: _block,
-        transaction: _transaction,
-        asset,
-      } = await createRandomAsset();
-      await verifyAsset(asset);
-
-      const lastModified = asset.updated_at.toUTCString();
+      const lastModified = new Date('01 Apr 2024 GMT').toUTCString();
       const oneMinuteBeforeLastModified = new Date(
-        asset.updated_at.valueOf() - 60_000,
+        new Date(lastModified).valueOf() - 60_000,
       ).toUTCString();
       const { body } = await request(app.getHttpServer())
         .get('/assets/verified')
@@ -570,21 +516,14 @@ describe('AssetsController', () => {
       expect(body).toMatchObject({
         assets: [
           {
-            identifier: asset.identifier,
+            identifier: NATIVE_ASSET_ID,
           },
         ],
       });
     });
 
     it('returns 200 when If-Modified-Since is an invalid date', async () => {
-      const {
-        block: _block,
-        transaction: _transaction,
-        asset,
-      } = await createRandomAsset();
-      await verifyAsset(asset);
-
-      const lastModified = asset.updated_at.toUTCString();
+      const lastModified = new Date('01 Apr 2024 GMT').toUTCString();
       const { body } = await request(app.getHttpServer())
         .get('/assets/verified')
         .set('If-Modified-Since', 'not a valid date')
@@ -594,7 +533,7 @@ describe('AssetsController', () => {
       expect(body).toMatchObject({
         assets: [
           {
-            identifier: asset.identifier,
+            identifier: NATIVE_ASSET_ID,
           },
         ],
       });

@@ -193,18 +193,6 @@ export class AssetsService {
     };
   }
 
-  listVerifiedIdentifiers(): Promise<Partial<Asset>[]> {
-    return this.prisma.readClient.asset.findMany({
-      select: { identifier: true },
-      where: {
-        verified_metadata: {
-          isNot: null,
-        },
-      },
-      orderBy: { id: SortOrder.ASC },
-    });
-  }
-
   listMetadata(): Promise<VerifiedAssetMetadata[]> {
     const orderBy = { created_at: SortOrder.ASC };
 
