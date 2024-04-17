@@ -32,7 +32,10 @@ import {
   UpdateVerifiedAssetsDto,
   VerifiedAssetMetadataDto,
 } from './dto/update-verified-assets-dto';
-import { SerializedAsset } from './interfaces/serialized-asset';
+import {
+  SerializedAsset,
+  serializeVerifiedAssetMetadata,
+} from './interfaces/serialized-asset';
 
 @ApiTags('Assets')
 @Controller('assets')
@@ -78,6 +81,9 @@ export class AssetsController {
       owner: asset.owner,
       supply: asset.supply.toString(),
       verified_at: asset.verified_metadata?.created_at.toISOString() ?? null,
+      verified_metadata: asset.verified_metadata
+        ? serializeVerifiedAssetMetadata(asset.verified_metadata)
+        : null,
     };
   }
 
@@ -128,6 +134,9 @@ export class AssetsController {
         owner: asset.owner,
         supply: asset.supply.toString(),
         verified_at: asset.verified_metadata?.created_at.toISOString() ?? null,
+        verified_metadata: asset.verified_metadata
+          ? serializeVerifiedAssetMetadata(asset.verified_metadata)
+          : null,
       });
     }
 
