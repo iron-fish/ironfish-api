@@ -15,6 +15,7 @@ import { bootstrapTestApp } from '../test/test-app';
 import { TransactionsService } from '../transactions/transactions.service';
 import { AssetsService } from './assets.service';
 import { VerifiedAssetMetadataDto } from './dto/update-verified-assets-dto';
+import { serializeVerifiedAssetMetadata } from './interfaces/serialized-asset';
 import { Asset, Block, Transaction } from '.prisma/client';
 
 const API_KEY = 'test';
@@ -206,6 +207,7 @@ describe('AssetsController', () => {
           name: asset.name,
           owner: asset.owner,
           supply: asset.supply.toString(),
+          verified_metadata: null,
           verified_at: null,
         });
       });
@@ -240,6 +242,7 @@ describe('AssetsController', () => {
             name: secondAsset.name,
             owner: secondAsset.owner,
             supply: secondAsset.supply.toString(),
+            verified_metadata: null,
             verified_at: null,
           },
           {
@@ -252,6 +255,9 @@ describe('AssetsController', () => {
             name: asset.name,
             owner: asset.owner,
             supply: asset.supply.toString(),
+            verified_metadata: serializeVerifiedAssetMetadata(
+              verifiedAssetMetadata,
+            ),
             verified_at: verifiedAssetMetadata.created_at.toISOString(),
           },
         ],
@@ -334,6 +340,7 @@ describe('AssetsController', () => {
             owner: asset.owner,
             supply: asset.supply.toString(),
             verified_at: null,
+            verified_metadata: null,
           },
         ],
         metadata: {
@@ -366,6 +373,7 @@ describe('AssetsController', () => {
             owner: asset.owner,
             supply: asset.supply.toString(),
             verified_at: null,
+            verified_metadata: null,
           },
         ],
         metadata: {
@@ -405,6 +413,9 @@ describe('AssetsController', () => {
               owner: asset.owner,
               supply: asset.supply.toString(),
               verified_at: verifiedAssetMetadata.created_at.toISOString(),
+              verified_metadata: serializeVerifiedAssetMetadata(
+                verifiedAssetMetadata,
+              ),
             },
           ],
           metadata: {
@@ -450,6 +461,7 @@ describe('AssetsController', () => {
               owner: secondAsset.owner,
               supply: secondAsset.supply.toString(),
               verified_at: null,
+              verified_metadata: null,
             },
           ],
           metadata: {
