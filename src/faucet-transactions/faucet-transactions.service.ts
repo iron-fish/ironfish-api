@@ -72,41 +72,40 @@ export class FaucetTransactionsService {
     options: NextFaucetTransactionsOptions,
   ): Promise<FaucetTransaction[]> {
     const count = options.count ?? 1;
-    return this.prisma.$transaction(async (prisma) => {
-      const currentlyRunningFaucetTransactions =
-        await prisma.faucetTransaction.findMany({
+    const currentlyRunningFaucetTransactions =
+      await this.prisma.faucetTransaction.findMany({
+        where: {
+          started_at: {
+            not: null,
+          },
+          completed_at: null,
+        },
+        orderBy: {
+          created_at: Prisma.SortOrder.asc,
+        },
+        take: count,
+      });
+
+    if (currentlyRunningFaucetTransactions.length < count) {
+      const diff = count - currentlyRunningFaucetTransactions.length;
+      const unfulfilledFaucetTransactions =
+        await this.prisma.faucetTransaction.findMany({
           where: {
-            started_at: {
-              not: null,
-            },
+            started_at: null,
             completed_at: null,
           },
           orderBy: {
             created_at: Prisma.SortOrder.asc,
           },
-          take: count,
+          take: diff,
         });
-      if (currentlyRunningFaucetTransactions.length < count) {
-        const diff = count - currentlyRunningFaucetTransactions.length;
-        const unfulfilledFaucetTransactions =
-          await prisma.faucetTransaction.findMany({
-            where: {
-              started_at: null,
-              completed_at: null,
-            },
-            orderBy: {
-              created_at: Prisma.SortOrder.asc,
-            },
-            take: diff,
-          });
-        return [
-          ...currentlyRunningFaucetTransactions,
-          ...unfulfilledFaucetTransactions,
-        ];
-      }
+      return [
+        ...currentlyRunningFaucetTransactions,
+        ...unfulfilledFaucetTransactions,
+      ];
+    }
 
-      return currentlyRunningFaucetTransactions;
-    });
+    return currentlyRunningFaucetTransactions;
   }
 
   async start(
