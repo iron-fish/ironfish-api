@@ -55,7 +55,7 @@ export class AssetsLoader {
           metadata: mint.metadata,
           name: mint.name,
           creator: mint.creator,
-          owner: mint.owner,
+          owner: mint.creator,
         },
         transaction,
         prisma,
