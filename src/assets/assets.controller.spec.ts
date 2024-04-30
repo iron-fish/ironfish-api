@@ -2,17 +2,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { HttpStatus, INestApplication } from '@nestjs/common';
+import { VerifiedAssetMetadata } from '@prisma/client';
 import faker from 'faker';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
 import { BlocksService } from '../blocks/blocks.service';
 import { BlockOperation } from '../blocks/enums/block-operation';
 import { BlocksTransactionsService } from '../blocks-transactions/blocks-transactions.service';
+import {
+  ASSET_METADATA_SCHEMA_VERSION,
+  NATIVE_ASSET_ID,
+} from '../common/constants';
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { TransactionsService } from '../transactions/transactions.service';
 import { AssetsService } from './assets.service';
+import { VerifiedAssetMetadataDto } from './dto/update-verified-assets-dto';
+import { serializeVerifiedAssetMetadata } from './interfaces/serialized-asset';
 import { Asset, Block, Transaction } from '.prisma/client';
+
+const API_KEY = 'test';
 
 describe('AssetsController', () => {
   let app: INestApplication;
@@ -85,15 +94,51 @@ describe('AssetsController', () => {
     return { block: block, transaction: transaction, asset: asset };
   }
 
-  async function verifyAsset(asset: Asset): Promise<Asset> {
-    return prisma.asset.update({
+  async function verifyAsset(asset: Asset): Promise<VerifiedAssetMetadata> {
+    const metadata = createRandomVerifiedMetadata(asset.identifier);
+    return prisma.verifiedAssetMetadata.create({
       data: {
-        verified_at: new Date(),
-      },
-      where: {
-        id: asset.id,
+        identifier: metadata.identifier,
+        symbol: metadata.symbol,
+        decimals: metadata.decimals,
+        logo_uri: metadata.logoURI,
+        website: metadata.website,
       },
     });
+  }
+
+  function createRandomVerifiedMetadata(
+    identifier: string,
+    populateOptionalFields = true,
+  ): VerifiedAssetMetadataDto {
+    return {
+      identifier,
+      symbol: uuid(),
+      decimals: populateOptionalFields
+        ? Math.floor(Math.random() * 10)
+        : undefined,
+      logoURI: populateOptionalFields ? uuid() : undefined,
+      website: populateOptionalFields ? uuid() : undefined,
+    };
+  }
+
+  /*
+   * Convert a verified asset metadata request object to its database form
+   */
+  function expectedDatabaseMetadata(
+    metadata: VerifiedAssetMetadataDto,
+    created_at?: Date,
+    updated_at?: Date,
+  ): VerifiedAssetMetadata {
+    return {
+      identifier: metadata.identifier,
+      symbol: metadata.symbol,
+      decimals: metadata.decimals === undefined ? null : metadata.decimals,
+      logo_uri: metadata.logoURI === undefined ? null : metadata.logoURI,
+      website: metadata.website === undefined ? null : metadata.website,
+      created_at: created_at || expect.any(Date),
+      updated_at: updated_at || expect.any(Date),
+    };
   }
 
   describe('GET /assets/find', () => {
@@ -165,6 +210,7 @@ describe('AssetsController', () => {
           name: asset.name,
           owner: asset.owner,
           supply: asset.supply.toString(),
+          verified_metadata: null,
           verified_at: null,
         });
       });
@@ -180,7 +226,7 @@ describe('AssetsController', () => {
         asset: secondAsset,
       } = await createRandomAsset();
 
-      const verifiedAsset = await verifyAsset(asset);
+      const verifiedAssetMetadata = await verifyAsset(asset);
 
       const { body } = await request(app.getHttpServer())
         .get('/assets')
@@ -199,6 +245,7 @@ describe('AssetsController', () => {
             name: secondAsset.name,
             owner: secondAsset.owner,
             supply: secondAsset.supply.toString(),
+            verified_metadata: null,
             verified_at: null,
           },
           {
@@ -211,8 +258,10 @@ describe('AssetsController', () => {
             name: asset.name,
             owner: asset.owner,
             supply: asset.supply.toString(),
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            verified_at: verifiedAsset.verified_at!.toISOString(),
+            verified_metadata: serializeVerifiedAssetMetadata(
+              verifiedAssetMetadata,
+            ),
+            verified_at: verifiedAssetMetadata.created_at.toISOString(),
           },
         ],
         metadata: {
@@ -294,6 +343,7 @@ describe('AssetsController', () => {
             owner: asset.owner,
             supply: asset.supply.toString(),
             verified_at: null,
+            verified_metadata: null,
           },
         ],
         metadata: {
@@ -326,6 +376,7 @@ describe('AssetsController', () => {
             owner: asset.owner,
             supply: asset.supply.toString(),
             verified_at: null,
+            verified_metadata: null,
           },
         ],
         metadata: {
@@ -344,7 +395,7 @@ describe('AssetsController', () => {
           asset: _secondAsset,
         } = await createRandomAsset();
 
-        const verifiedAsset = await verifyAsset(asset);
+        const verifiedAssetMetadata = await verifyAsset(asset);
 
         const { body } = await request(app.getHttpServer())
           .get('/assets')
@@ -364,8 +415,10 @@ describe('AssetsController', () => {
               name: asset.name,
               owner: asset.owner,
               supply: asset.supply.toString(),
-              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-              verified_at: verifiedAsset.verified_at!.toISOString(),
+              verified_at: verifiedAssetMetadata.created_at.toISOString(),
+              verified_metadata: serializeVerifiedAssetMetadata(
+                verifiedAssetMetadata,
+              ),
             },
           ],
           metadata: {
@@ -411,6 +464,7 @@ describe('AssetsController', () => {
               owner: secondAsset.owner,
               supply: secondAsset.supply.toString(),
               verified_at: null,
+              verified_metadata: null,
             },
           ],
           metadata: {
@@ -423,26 +477,7 @@ describe('AssetsController', () => {
   });
 
   describe('GET /assets/verified', () => {
-    it('returns the IDs of all verified assets', async () => {
-      const {
-        block: _block,
-        transaction: _transaction,
-        asset,
-      } = await createRandomAsset();
-      const {
-        block: _secondBlock,
-        transaction: _secondTransaction,
-        asset: _secondAsset,
-      } = await createRandomAsset();
-      const {
-        block: _thirdBlock,
-        transaction: _thirdTransaction,
-        asset: thirdAsset,
-      } = await createRandomAsset();
-
-      await verifyAsset(asset);
-      await verifyAsset(thirdAsset);
-
+    it('returns the native asset ID', async () => {
       const { body } = await request(app.getHttpServer())
         .get('/assets/verified')
         .expect(HttpStatus.OK);
@@ -450,35 +485,14 @@ describe('AssetsController', () => {
       expect(body).toMatchObject({
         assets: [
           {
-            identifier: asset.identifier,
-          },
-          {
-            identifier: thirdAsset.identifier,
+            identifier: NATIVE_ASSET_ID,
           },
         ],
       });
     });
 
-    it('sets Last-Modified', async () => {
-      const {
-        block: _block,
-        transaction: _transaction,
-        asset,
-      } = await createRandomAsset();
-      const lastModified = asset.updated_at.toUTCString();
-      await request(app.getHttpServer())
-        .get('/assets/verified')
-        .expect(HttpStatus.OK)
-        .expect('Last-Modified', lastModified);
-    });
-
     it('returns 304 when If-Modified-Since matches Last-Modified', async () => {
-      const {
-        block: _block,
-        transaction: _transaction,
-        asset,
-      } = await createRandomAsset();
-      const lastModified = asset.updated_at.toUTCString();
+      const lastModified = new Date('01 Apr 2024 GMT').toUTCString();
       const { text } = await request(app.getHttpServer())
         .get('/assets/verified')
         .set('If-Modified-Since', lastModified)
@@ -488,14 +502,9 @@ describe('AssetsController', () => {
     });
 
     it('returns 304 when If-Modified-Since is after Last-Modified', async () => {
-      const {
-        block: _block,
-        transaction: _transaction,
-        asset,
-      } = await createRandomAsset();
-      const lastModified = asset.updated_at.toUTCString();
+      const lastModified = new Date('01 Apr 2024 GMT').toUTCString();
       const oneMinuteAfterLastModified = new Date(
-        asset.updated_at.valueOf() + 60_000,
+        new Date(lastModified).valueOf() + 60_000,
       ).toUTCString();
       const { text } = await request(app.getHttpServer())
         .get('/assets/verified')
@@ -506,16 +515,9 @@ describe('AssetsController', () => {
     });
 
     it('returns 200 when If-Modified-Since is before Last-Modified', async () => {
-      const {
-        block: _block,
-        transaction: _transaction,
-        asset,
-      } = await createRandomAsset();
-      await verifyAsset(asset);
-
-      const lastModified = asset.updated_at.toUTCString();
+      const lastModified = new Date('01 Apr 2024 GMT').toUTCString();
       const oneMinuteBeforeLastModified = new Date(
-        asset.updated_at.valueOf() - 60_000,
+        new Date(lastModified).valueOf() - 60_000,
       ).toUTCString();
       const { body } = await request(app.getHttpServer())
         .get('/assets/verified')
@@ -526,21 +528,14 @@ describe('AssetsController', () => {
       expect(body).toMatchObject({
         assets: [
           {
-            identifier: asset.identifier,
+            identifier: NATIVE_ASSET_ID,
           },
         ],
       });
     });
 
     it('returns 200 when If-Modified-Since is an invalid date', async () => {
-      const {
-        block: _block,
-        transaction: _transaction,
-        asset,
-      } = await createRandomAsset();
-      await verifyAsset(asset);
-
-      const lastModified = asset.updated_at.toUTCString();
+      const lastModified = new Date('01 Apr 2024 GMT').toUTCString();
       const { body } = await request(app.getHttpServer())
         .get('/assets/verified')
         .set('If-Modified-Since', 'not a valid date')
@@ -550,7 +545,252 @@ describe('AssetsController', () => {
       expect(body).toMatchObject({
         assets: [
           {
-            identifier: asset.identifier,
+            identifier: NATIVE_ASSET_ID,
+          },
+        ],
+      });
+    });
+  });
+
+  describe('POST /assets/verified', () => {
+    it('adds metadata for all assets that exist', async () => {
+      const { asset: asset1 } = await createRandomAsset();
+      const { asset: asset2 } = await createRandomAsset();
+
+      const verifiedMetadataJSON = {
+        schemaVersion: 2,
+        assets: [
+          createRandomVerifiedMetadata(asset1.identifier),
+          createRandomVerifiedMetadata(asset2.identifier),
+        ],
+      };
+
+      const { body } = await request(app.getHttpServer())
+        .post('/assets/verified')
+        .set('Authorization', `Bearer ${API_KEY}`)
+        .send(verifiedMetadataJSON);
+
+      expect(body).toMatchObject({ missing: [] });
+
+      const allMetadata = await prisma.verifiedAssetMetadata.findMany({});
+      expect(allMetadata.sort()).toEqual(
+        verifiedMetadataJSON.assets
+          .map((asset) => expectedDatabaseMetadata(asset))
+          .sort(),
+      );
+    });
+
+    it('updates metadata for assets that already have metadata', async () => {
+      const { asset } = await createRandomAsset();
+
+      const verifiedMetadataJSON1 = {
+        schemaVersion: 2,
+        assets: [createRandomVerifiedMetadata(asset.identifier)],
+      };
+
+      const { body: body1 } = await request(app.getHttpServer())
+        .post('/assets/verified')
+        .set('Authorization', `Bearer ${API_KEY}`)
+        .send(verifiedMetadataJSON1);
+
+      expect(body1).toMatchObject({ missing: [] });
+
+      await expect(prisma.verifiedAssetMetadata.findMany({})).resolves.toEqual(
+        verifiedMetadataJSON1.assets.map((asset) =>
+          expectedDatabaseMetadata(asset),
+        ),
+      );
+
+      const verifiedMetadataJSON2 = {
+        schemaVersion: 2,
+        assets: [createRandomVerifiedMetadata(asset.identifier)],
+      };
+
+      const { body: body2 } = await request(app.getHttpServer())
+        .post('/assets/verified')
+        .set('Authorization', `Bearer ${API_KEY}`)
+        .send(verifiedMetadataJSON2);
+
+      expect(body2).toMatchObject({ missing: [] });
+
+      await expect(prisma.verifiedAssetMetadata.findMany({})).resolves.toEqual(
+        verifiedMetadataJSON2.assets.map((asset) =>
+          expectedDatabaseMetadata(asset),
+        ),
+      );
+    });
+
+    it('only updates metadata for assets that exist and returns those not found', async () => {
+      const { asset } = await createRandomAsset();
+
+      const verifiedMetadataJSON = {
+        schemaVersion: 2,
+        assets: [
+          createRandomVerifiedMetadata(asset.identifier),
+          createRandomVerifiedMetadata(uuid()),
+        ],
+      };
+
+      const { body } = await request(app.getHttpServer())
+        .post('/assets/verified')
+        .set('Authorization', `Bearer ${API_KEY}`)
+        .send(verifiedMetadataJSON);
+
+      expect(body).toMatchObject({
+        missing: [verifiedMetadataJSON.assets[1]],
+      });
+
+      await expect(prisma.verifiedAssetMetadata.findMany({})).resolves.toEqual([
+        expectedDatabaseMetadata(verifiedMetadataJSON.assets[0]),
+      ]);
+    });
+
+    it('deletes metadata items that are not in the list', async () => {
+      const { asset: asset1 } = await createRandomAsset();
+      const { asset: asset2 } = await createRandomAsset();
+
+      const verifiedMetadataJSON1 = {
+        schemaVersion: 2,
+        assets: [
+          createRandomVerifiedMetadata(asset1.identifier),
+          createRandomVerifiedMetadata(asset2.identifier),
+        ],
+      };
+
+      await request(app.getHttpServer())
+        .post('/assets/verified')
+        .set('Authorization', `Bearer ${API_KEY}`)
+        .send(verifiedMetadataJSON1);
+
+      const allMetadata1 = await prisma.verifiedAssetMetadata.findMany({});
+      expect(allMetadata1.sort()).toEqual(
+        verifiedMetadataJSON1.assets
+          .map((asset) => expectedDatabaseMetadata(asset))
+          .sort(),
+      );
+
+      const verifiedMetadataJSON2 = {
+        schemaVersion: 2,
+        assets: [createRandomVerifiedMetadata(asset1.identifier)],
+      };
+
+      await request(app.getHttpServer())
+        .post('/assets/verified')
+        .set('Authorization', `Bearer ${API_KEY}`)
+        .send(verifiedMetadataJSON2);
+
+      const allMetadata2 = await prisma.verifiedAssetMetadata.findMany({});
+      expect(allMetadata2.sort()).toEqual(
+        verifiedMetadataJSON2.assets
+          .map((asset) => expectedDatabaseMetadata(asset))
+          .sort(),
+      );
+
+      // Both assets should still be in the database
+      await expect(
+        prisma.asset.findMany({
+          where: { identifier: asset1.identifier },
+        }),
+      ).resolves.toHaveLength(1);
+
+      await expect(
+        prisma.asset.findMany({
+          where: { identifier: asset2.identifier },
+        }),
+      ).resolves.toHaveLength(1);
+    });
+
+    it('deletes metadata if the asset is deleted', async () => {
+      const { asset } = await createRandomAsset();
+
+      const verifiedMetadataJSON = {
+        schemaVersion: 2,
+        assets: [createRandomVerifiedMetadata(asset.identifier)],
+      };
+
+      await request(app.getHttpServer())
+        .post('/assets/verified')
+        .set('Authorization', `Bearer ${API_KEY}`)
+        .send(verifiedMetadataJSON);
+
+      await expect(
+        prisma.verifiedAssetMetadata.findMany({}),
+      ).resolves.toHaveLength(1);
+
+      await prisma.asset.delete({ where: { id: asset.id } });
+
+      await expect(
+        prisma.verifiedAssetMetadata.findMany({}),
+      ).resolves.toHaveLength(0);
+    });
+  });
+
+  describe('GET /assets/verified_metadata', () => {
+    it('includes the correct schemaVersion', async () => {
+      const response = await request(app.getHttpServer()).get(
+        '/assets/verified_metadata',
+      );
+      expect(response.body.schemaVersion).toEqual(
+        ASSET_METADATA_SCHEMA_VERSION,
+      );
+    });
+
+    it('returns an empty array of assets if none exist', async () => {
+      const response = await request(app.getHttpServer()).get(
+        '/assets/verified_metadata',
+      );
+      expect(response.body.assets).toEqual([]);
+    });
+
+    it('returns all of the verified asset metadata', async () => {
+      const { asset: asset1 } = await createRandomAsset();
+      const asset1Metadata = createRandomVerifiedMetadata(
+        asset1.identifier,
+        false,
+      );
+
+      const { asset: asset2 } = await createRandomAsset();
+      const asset2Metadata = createRandomVerifiedMetadata(asset2.identifier);
+
+      const { asset: asset3 } = await createRandomAsset();
+      const asset3Metadata = createRandomVerifiedMetadata(asset3.identifier);
+
+      // Insert the asset metadata for the test setup
+      const verifiedMetadataJSON = {
+        schemaVersion: 2,
+        assets: [asset1Metadata, asset2Metadata, asset3Metadata],
+      };
+
+      await request(app.getHttpServer())
+        .post('/assets/verified')
+        .set('Authorization', `Bearer ${API_KEY}`)
+        .send(verifiedMetadataJSON);
+
+      // Fetch the verified asset metadata
+      const response = await request(app.getHttpServer()).get(
+        '/assets/verified_metadata',
+      );
+
+      expect(response.body).toEqual({
+        schemaVersion: ASSET_METADATA_SCHEMA_VERSION,
+        assets: [
+          {
+            identifier: asset1Metadata.identifier,
+            symbol: asset1Metadata.symbol,
+          },
+          {
+            identifier: asset2Metadata.identifier,
+            symbol: asset2Metadata.symbol,
+            decimals: asset2Metadata.decimals,
+            logoURI: asset2Metadata.logoURI,
+            website: asset2Metadata.website,
+          },
+          {
+            identifier: asset3Metadata.identifier,
+            symbol: asset3Metadata.symbol,
+            decimals: asset3Metadata.decimals,
+            logoURI: asset3Metadata.logoURI,
+            website: asset3Metadata.website,
           },
         ],
       });

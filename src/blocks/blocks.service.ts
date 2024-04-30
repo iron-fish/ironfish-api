@@ -24,7 +24,6 @@ import { PrismaService } from '../prisma/prisma.service';
 import { BasePrismaClient } from '../prisma/types/base-prisma-client';
 import { BlockOperation } from './enums/block-operation';
 import { BlocksDateMetrics } from './interfaces/blocks-date-metrics';
-import { BlocksStatus } from './interfaces/blocks-status';
 import { FindBlockOptions } from './interfaces/find-block-options';
 import { ListBlocksOptions } from './interfaces/list-block-options';
 import { UpsertBlockOptions } from './interfaces/upsert-block-options';
@@ -379,7 +378,7 @@ export class BlocksService {
     }
 
     return {
-      averageBlockTimeMs: dateMetricsResponse[0].average_block_time_ms,
+      averageBlockTimeMs: Number(dateMetricsResponse[0].average_block_time_ms),
       averageDifficulty: dateMetricsResponse[0].average_difficulty,
       averageBlockSize: dateMetricsResponse[0].average_block_size,
       blocksCount: Number(dateMetricsResponse[0].blocks_count),
@@ -392,43 +391,6 @@ export class BlocksService {
       ),
       transactionsCount: Number(dateMetricsResponse[0].transactions_count),
       uniqueGraffiti: Number(dateMetricsResponse[0].unique_graffiti_count),
-    };
-  }
-
-  async getStatus(): Promise<BlocksStatus> {
-    const networkVersion = this.config.get<number>('NETWORK_VERSION');
-    const [chainHeight, markedBlocks] = await this.prisma.$transaction([
-      this.prisma.block.count({
-        where: {
-          main: true,
-          network_version: networkVersion,
-        },
-      }),
-      this.prisma.block.count({
-        where: {
-          main: true,
-          graffiti: {
-            not: '',
-          },
-          network_version: networkVersion,
-        },
-      }),
-    ]);
-
-    // There's currently a bug in Prisma in which 'distinct' is not actually supported
-    // in count despite it being included in the documentation.
-    // See more: https://github.com/prisma/prisma/issues/4228
-    const uniqueGraffiti = (
-      await this.prisma.$queryRawUnsafe<{ count: bigint }[]>(
-        'SELECT COUNT(*) FROM (SELECT DISTINCT graffiti FROM blocks WHERE main = true AND network_version = $1) AS main_blocks;',
-        networkVersion,
-      )
-    )[0].count;
-    const percentageMarked = markedBlocks / chainHeight;
-    return {
-      chainHeight,
-      percentageMarked,
-      uniqueGraffiti: Number(uniqueGraffiti),
     };
   }
 

@@ -66,7 +66,7 @@ describe('AssetsService', () => {
 
         expect(
           await assetsService.findByIdentifierOrThrow(asset.identifier),
-        ).toEqual(asset);
+        ).toEqual({ ...asset, verified_metadata: null });
       });
     });
   });
@@ -252,10 +252,88 @@ describe('AssetsService', () => {
       );
 
       expect(await assetsService.list({ limit: 2 })).toEqual({
-        data: [thirdAsset, secondAsset],
+        data: [
+          { ...thirdAsset, verified_metadata: null },
+          { ...secondAsset, verified_metadata: null },
+        ],
         hasNext: true,
         hasPrevious: false,
       });
+    });
+  });
+
+  describe('listMetadata', () => {
+    it('returns an empty list if there are no records', async () => {
+      expect(await assetsService.listMetadata()).toEqual([]);
+    });
+
+    it('returns verified asset metadata', async () => {
+      const transaction = (
+        await transactionsService.createMany([
+          {
+            fee: 0,
+            hash: uuid(),
+            notes: [],
+            size: 0,
+            spends: [],
+          },
+        ])
+      )[0];
+
+      const firstAsset = await assetsService.upsert(
+        {
+          identifier: uuid(),
+          metadata: uuid(),
+          name: uuid(),
+          owner: uuid(),
+        },
+        transaction,
+        prisma,
+      );
+      const secondAsset = await assetsService.upsert(
+        {
+          identifier: uuid(),
+          metadata: uuid(),
+          name: uuid(),
+          owner: uuid(),
+        },
+        transaction,
+        prisma,
+      );
+
+      await assetsService.updateVerified({
+        identifier: firstAsset.identifier,
+        symbol: 'FOO',
+      });
+
+      await assetsService.updateVerified({
+        identifier: secondAsset.identifier,
+        symbol: 'BAR',
+        decimals: 2,
+        logoURI: 'https://example.com/foo.jpg',
+        website: 'https://example.com/',
+      });
+
+      expect(await assetsService.listMetadata()).toEqual([
+        {
+          identifier: firstAsset.identifier,
+          symbol: 'FOO',
+          decimals: null,
+          logo_uri: null,
+          website: null,
+          created_at: expect.any(Date),
+          updated_at: expect.any(Date),
+        },
+        {
+          identifier: secondAsset.identifier,
+          symbol: 'BAR',
+          decimals: 2,
+          logo_uri: 'https://example.com/foo.jpg',
+          website: 'https://example.com/',
+          created_at: expect.any(Date),
+          updated_at: expect.any(Date),
+        },
+      ]);
     });
   });
 

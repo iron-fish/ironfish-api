@@ -27,6 +27,7 @@ export function serializedTransactionFromRecord(
     hash: transaction.hash,
     fee: transaction.fee.toString(),
     ...(transaction.expiration ? { expiration: transaction.expiration } : {}),
+    seen_sequence: transaction.seen_sequence,
     size: transaction.size,
     notes: transaction.notes,
     spends: transaction.spends,
