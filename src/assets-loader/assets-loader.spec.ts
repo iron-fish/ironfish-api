@@ -52,6 +52,7 @@ describe('AssetsLoader', () => {
             id: identifier,
             metadata: 'foo',
             name: 'bar',
+            creator: 'baz',
             owner: 'baz',
             value: BigInt(10).toString(),
           };
@@ -88,6 +89,7 @@ describe('AssetsLoader', () => {
             identifier: mint.id,
             metadata: mint.metadata,
             name: mint.name,
+            creator: mint.creator,
             owner: mint.owner,
           });
           expect(assetsUpsert.mock.calls[0][1]).toEqual(transaction);
@@ -147,6 +149,7 @@ describe('AssetsLoader', () => {
             id: identifier,
             metadata: 'foo',
             name: 'bar',
+            creator: 'baz',
             owner: 'baz',
             value: BigInt(10).toString(),
           };
@@ -182,6 +185,7 @@ describe('AssetsLoader', () => {
             identifier: mint.id,
             metadata: mint.metadata,
             name: mint.name,
+            creator: mint.creator,
             owner: mint.owner,
           });
           expect(assetsUpsert.mock.calls[0][1]).toEqual(transaction);
@@ -230,6 +234,7 @@ describe('AssetsLoader', () => {
           id: identifier,
           metadata: 'foo',
           name: 'bar',
+          creator: 'baz',
           owner: 'baz',
           value: BigInt(10).toString(),
         };
@@ -286,6 +291,7 @@ describe('AssetsLoader', () => {
         {
           metadata: 'Iron Fish Native Asset',
           name: '$IRON',
+          creator: '0',
           owner: '0',
           identifier: NATIVE_ASSET_ID,
         },

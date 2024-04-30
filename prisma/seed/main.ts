@@ -14,6 +14,7 @@ async function addAsset({
   identifier,
   name,
   metadata,
+  creator,
   owner,
   supply,
   verified_metadata,
@@ -23,6 +24,7 @@ async function addAsset({
   identifier: string;
   name: string;
   metadata: string;
+  creator: string;
   owner: string;
   supply: number | bigint;
   verified_metadata?: {
@@ -100,6 +102,7 @@ async function addAsset({
       identifier: identifier,
       metadata: metadata,
       name: name,
+      creator: creator,
       owner: owner,
       supply: supply,
       ...verifiedMetadataCreate,
@@ -122,6 +125,7 @@ async function installTestingFixtures() {
       '51f33a2f14f92735e562dc658a5639279ddca3d5079a6d1242b2a588a9cbf44c',
     name: '$IRON',
     metadata: 'Iron Fish Native Asset',
+    creator: '0000000000000000000000000000000000000000000000000000000000000000',
     owner: '0000000000000000000000000000000000000000000000000000000000000000',
     supply: BigInt(5000000000),
     verified_metadata: {
@@ -141,6 +145,7 @@ async function installTestingFixtures() {
       '571de66a31fcc61a6a306030d3946489596a40a4f0bfde57643d41281a385d9b',
     name: '$COPPER',
     metadata: 'Copper',
+    creator: 'f7cdb1bf17b3c559c855767e22d74b6ce20a49864190496cbf739c4312693fe7',
     owner: 'f7cdb1bf17b3c559c855767e22d74b6ce20a49864190496cbf739c4312693fe7',
     supply: 123456789,
     verified_metadata: {
@@ -157,6 +162,7 @@ async function installTestingFixtures() {
       '40dc9626167399480f400120fc476d2697a461a68dec29f69fe08aaaf4fbfa70',
     name: '$NICKEL',
     metadata: 'Nickel',
+    creator: '04efe4bcc818f0d11aa49ea83f5cec0c137ce61b38a4d2492558ebba06b7a3ed',
     owner: '04efe4bcc818f0d11aa49ea83f5cec0c137ce61b38a4d2492558ebba06b7a3ed',
     supply: 123456789,
     verified_metadata: {
@@ -174,6 +180,7 @@ async function installTestingFixtures() {
       '3b43e71e5d6aa94eb29d3f0f08282c3581336daea61b39e165bab184e0debe8a',
     name: '$ZINC',
     metadata: 'Zinc',
+    creator: '29cb8a1f1f4521eded69d2aadd07eeddf630326cce964210078bc3d17de268d6',
     owner: '29cb8a1f1f4521eded69d2aadd07eeddf630326cce964210078bc3d17de268d6',
     supply: 123456789,
     verified_metadata: {

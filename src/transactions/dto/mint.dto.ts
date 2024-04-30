@@ -14,6 +14,9 @@ export class MintDto {
   readonly name!: string;
 
   @IsString()
+  readonly creator!: string;
+
+  @IsString()
   readonly owner!: string;
 
   @IsString()

@@ -123,6 +123,7 @@ model Asset {
   identifier             String                  @unique(map: "uq_assets_on_identifier")
   metadata               String
   name                   String
+  creator                String
   owner                  String
   supply                 BigInt
   verified_metadata      VerifiedAssetMetadata?

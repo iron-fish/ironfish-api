@@ -58,6 +58,7 @@ describe('AssetsService', () => {
             identifier: 'foo',
             metadata: 'test',
             name: 'bar',
+            creator: 'baz',
             owner: 'baz',
           },
           transaction,
@@ -89,12 +90,14 @@ describe('AssetsService', () => {
         const identifier = 'fooasdf';
         const metadata = 'test';
         const name = 'bar';
+        const creator = 'baz';
         const owner = 'baz';
         const asset = await assetsService.upsert(
           {
             identifier,
             metadata,
             name,
+            creator,
             owner,
           },
           transaction,
@@ -128,12 +131,14 @@ describe('AssetsService', () => {
         const identifier = 'fooasdf';
         const metadata = 'test';
         const name = 'bar';
+        const creator = 'baz';
         const owner = 'baz';
         await assetsService.upsert(
           {
             identifier,
             metadata,
             name,
+            creator,
             owner,
           },
           transaction,
@@ -157,6 +162,7 @@ describe('AssetsService', () => {
             identifier,
             metadata,
             name,
+            creator,
             owner,
           },
           secondTransaction,
@@ -195,6 +201,7 @@ describe('AssetsService', () => {
           identifier,
           metadata: 'foo',
           name: 'bar',
+          creator: 'baz',
           owner: 'baz',
           supply,
         },
@@ -225,6 +232,7 @@ describe('AssetsService', () => {
           identifier: uuid(),
           metadata: uuid(),
           name: uuid(),
+          creator: uuid(),
           owner: uuid(),
         },
         transaction,
@@ -235,6 +243,7 @@ describe('AssetsService', () => {
           identifier: uuid(),
           metadata: uuid(),
           name: uuid(),
+          creator: uuid(),
           owner: uuid(),
         },
         transaction,
@@ -245,6 +254,7 @@ describe('AssetsService', () => {
           identifier: uuid(),
           metadata: uuid(),
           name: uuid(),
+          creator: uuid(),
           owner: uuid(),
         },
         transaction,
@@ -286,6 +296,7 @@ describe('AssetsService', () => {
           metadata: uuid(),
           name: uuid(),
           owner: uuid(),
+          creator: uuid(),
         },
         transaction,
         prisma,
@@ -296,6 +307,7 @@ describe('AssetsService', () => {
           metadata: uuid(),
           name: uuid(),
           owner: uuid(),
+          creator: uuid(),
         },
         transaction,
         prisma,
@@ -360,6 +372,7 @@ describe('AssetsService', () => {
           identifier: uuid(),
           metadata: uuid(),
           name: uuid(),
+          creator: uuid(),
           owner: uuid(),
         },
         transaction,
@@ -370,6 +383,7 @@ describe('AssetsService', () => {
           identifier: uuid(),
           metadata: uuid(),
           name: uuid(),
+          creator: uuid(),
           owner: uuid(),
         },
         transaction,
