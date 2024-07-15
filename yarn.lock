@@ -1006,9 +1006,10 @@
   version "0.27.8"
   resolved "https://registry.yarnpkg.com/@sinclair/typebox/-/typebox-0.27.8.tgz#6667fac16c436b5434a387a34dedb013198f6e6e"
 
-"@sindresorhus/is@4.6.0":
-  version "4.6.0"
-  resolved "https://registry.npmjs.org/@sindresorhus/is/-/is-4.6.0.tgz"
+"@sindresorhus/is@7.0.0":
+  version "7.0.0"
+  resolved "https://registry.yarnpkg.com/@sindresorhus/is/-/is-7.0.0.tgz#af4d8061cd325782355e7716633e03f7758d4f17"
+  integrity sha512-WDTlVTyvFivSOuyvMeedzg2hdoBLZ3f1uNVuEida2Rl9BrfjrIRjWA/VZIrMRLvSwJYCAlCRA3usDt1THytxWQ==
 
 "@sinonjs/commons@^1.7.0":
   version "1.8.3"
