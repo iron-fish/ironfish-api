@@ -48,12 +48,14 @@ async function bootstrap(): Promise<void> {
       ]
     : defaultOrigins;
 
-  app.enableCors({
-    origin: enabledOrigins,
-    methods: 'GET, POST, PUT, OPTIONS',
-    allowedHeaders: ['Content-Type', 'Accept', 'Authorization'],
-    credentials: true,
-  });
+  if (config.get<boolean>('CORS_ENABLED')) {
+    app.enableCors({
+      origin: enabledOrigins,
+      methods: 'GET, POST, PUT, OPTIONS',
+      allowedHeaders: ['Content-Type', 'Accept', 'Authorization'],
+      credentials: true,
+    });
+  }
 
   app.use(compression());
   app.use(helmet());
