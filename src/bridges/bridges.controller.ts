@@ -1,0 +1,110 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+import {
+  Controller,
+  Get,
+  HttpStatus,
+  Param,
+  Query,
+  ValidationPipe,
+} from '@nestjs/common';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { List } from '../common/interfaces/list';
+import {
+  ChainportIronFishMetadata,
+  ChainportNetwork,
+  ChainportPort,
+  ChainportService,
+  ChainportToken,
+} from './chainport.service';
+import { TransactionsCreateDto } from './dto/transactions-create.dto';
+import { TransactionsStatusDto } from './dto/transactions-status.dto';
+
+@ApiTags('Bridges')
+@Controller('bridges')
+export class BridgesController {
+  constructor(private readonly chainportService: ChainportService) {}
+
+  @ApiOperation({
+    summary: 'Lists Iron Fish assets that can be bridged to other networks',
+  })
+  @Get('tokens')
+  async tokens(): Promise<List<ChainportToken>> {
+    const tokens = await this.chainportService.getVerifiedTokens();
+
+    return {
+      object: 'list',
+      data: tokens,
+    };
+  }
+
+  @ApiOperation({
+    summary:
+      'Given a bridgeable token ID, returns destination networks for that token',
+  })
+  @Get('tokens/:token_id/networks')
+  async tokenNetworks(
+    @Param(
+      'token_id',
+      new ValidationPipe({
+        transform: true,
+        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+      }),
+    )
+    token_id: number,
+  ): Promise<List<ChainportNetwork>> {
+    const networks = await this.chainportService.getTokenPaths(token_id);
+
+    return {
+      object: 'list',
+      data: networks,
+    };
+  }
+
+  @ApiOperation({
+    summary:
+      'Returns Iron Fish outputs and metadata required for creating a bridge transaction',
+  })
+  @Get('transactions/create')
+  async transactionsCreate(
+    @Query(
+      new ValidationPipe({
+        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        transform: true,
+      }),
+    )
+    query: TransactionsCreateDto,
+  ): Promise<ChainportIronFishMetadata> {
+    const transactionOutputs = await this.chainportService.getIronFishMetadata(
+      query.amount,
+      query.asset_id,
+      query.target_network_id,
+      query.target_address,
+    );
+
+    return transactionOutputs;
+  }
+
+  @ApiOperation({
+    summary:
+      'Given a bridgeable token ID, returns destination networks for that token',
+  })
+  @Get('transactions/status')
+  async transactionsStatus(
+    @Query(
+      new ValidationPipe({
+        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        transform: true,
+      }),
+    )
+    query: TransactionsStatusDto,
+  ): Promise<ChainportPort> {
+    const transactionOutputs = await this.chainportService.getPort(
+      query.hash,
+      query.network_id,
+    );
+
+    return transactionOutputs;
+  }
+}
