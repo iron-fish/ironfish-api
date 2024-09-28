@@ -11,10 +11,14 @@ import { ApiConfigService } from '../api-config/api-config.service';
 import { LoggerService } from '../logger/logger.service';
 
 export type ChainportNetwork = {
+  chainport_network_id: number;
+  explorer_url: string;
   label: string;
 };
 
 const chainportNetworkSchema = Joi.object<ChainportNetwork>({
+  chainport_network_id: Joi.number().positive().integer().required(),
+  explorer_url: Joi.string().required(),
   label: Joi.string().required(),
 });
 
@@ -143,6 +147,40 @@ export class ChainportService {
     );
   }
 
+  private async getMeta(): Promise<{
+    maintenance: boolean;
+    cp_network_ids: Record<string, ChainportNetwork>;
+  }> {
+    const apiurl = this.config.get<string>('CHAINPORT_API_URL');
+    const url = new URL(`/meta`, apiurl);
+
+    const result = await this.makeChainportRequest<{
+      maintenance: boolean;
+      cp_network_ids: Record<string, ChainportNetwork>;
+    }>(url.toString());
+
+    return result.data;
+  }
+
+  async getNetworks(): Promise<ChainportNetwork[]> {
+    const meta = await this.getMeta();
+
+    const validateResult = chainportNetworkArraySchema.validate(
+      Object.values(meta.cp_network_ids),
+      {
+        stripUnknown: true,
+      },
+    );
+
+    if (validateResult.error) {
+      throw new Error(
+        `Invalid Chainport response: ${validateResult.error.message}`,
+      );
+    }
+
+    return validateResult.value;
+  }
+
   async getVerifiedTokens(): Promise<ChainportToken[]> {
     const version = this.config.get<number>('CHAINPORT_API_VERSION');
     const apiurl = this.config.get<string>('CHAINPORT_API_URL');
@@ -178,16 +216,7 @@ export class ChainportService {
     const version = this.config.get<number>('CHAINPORT_API_VERSION');
     const apiurl = this.config.get<string>('CHAINPORT_API_URL');
 
-    const metaUrl = new URL(`/meta`, apiurl);
-    const metaResult = await this.makeChainportRequest<{
-      maintenance: boolean;
-      cp_network_ids: Record<
-        string,
-        {
-          label: string;
-        }
-      >;
-    }>(metaUrl.toString());
+    const metaResult = await this.getMeta();
 
     let networkList: { label: string }[] = [];
     if (version === 1) {
@@ -206,7 +235,7 @@ export class ChainportService {
       }
 
       networkList = sourceToken.target_networks.flatMap((n) => {
-        const network = metaResult.data.cp_network_ids[n.toString()];
+        const network = metaResult.cp_network_ids[n.toString()];
         if (!network) {
           this.logger.error(
             `Network ${n} for token ${tokenId} not found in meta`,
@@ -225,7 +254,7 @@ export class ChainportService {
       );
 
       networkList = tokenPathResult.data.flatMap((t) => {
-        const network = metaResult.data.cp_network_ids[t.network_id.toString()];
+        const network = metaResult.cp_network_ids[t.network_id.toString()];
         if (!network) {
           this.logger.error(
             `Network ${t.network_id} for token ${tokenId} not found in meta`,

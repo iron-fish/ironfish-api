@@ -28,6 +28,37 @@ describe.skip('ChainportService', () => {
     jest.restoreAllMocks();
   });
 
+  describe('getNetworks', () => {
+    it('works with v1', async () => {
+      const originalGet = config.get.bind(config);
+      jest.spyOn(config, 'get').mockImplementation((val) => {
+        if (val === 'CHAINPORT_API_VERSION') {
+          return 1;
+        }
+        if (val === 'CHAINPORT_API_URL') {
+          return 'https://api.chainport.io/';
+        }
+        return originalGet(val);
+      });
+      const results = await chainport.getNetworks();
+
+      expect(results.length).toBeGreaterThan(0);
+    }, 10000);
+
+    it('works with v2', async () => {
+      const originalGet = config.get.bind(config);
+      jest.spyOn(config, 'get').mockImplementation((val) => {
+        if (val === 'CHAINPORT_API_VERSION') {
+          return 2;
+        }
+        return originalGet(val);
+      });
+      const results = await chainport.getNetworks();
+
+      expect(results.length).toBeGreaterThan(0);
+    }, 10000);
+  });
+
   describe('getVerifiedTokens', () => {
     it('works with v1', async () => {
       const originalGet = config.get.bind(config);

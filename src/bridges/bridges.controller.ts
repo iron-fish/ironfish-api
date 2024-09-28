@@ -40,6 +40,20 @@ export class BridgesController {
   }
 
   @ApiOperation({
+    summary:
+      'Lists all networks available by the bridge provider (some may not be bridgeable from Iron Fish)',
+  })
+  @Get('networks')
+  async networks(): Promise<List<ChainportNetwork>> {
+    const networks = await this.chainportService.getNetworks();
+
+    return {
+      object: 'list',
+      data: networks,
+    };
+  }
+
+  @ApiOperation({
     summary: 'Returns destination networks for a bridgeable token ID',
   })
   @Get('tokens/:token_id/networks')
