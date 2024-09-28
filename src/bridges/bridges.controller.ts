@@ -40,8 +40,7 @@ export class BridgesController {
   }
 
   @ApiOperation({
-    summary:
-      'Given a bridgeable token ID, returns destination networks for that token',
+    summary: 'Returns destination networks for a bridgeable token ID',
   })
   @Get('tokens/:token_id/networks')
   async tokenNetworks(
@@ -88,7 +87,7 @@ export class BridgesController {
 
   @ApiOperation({
     summary:
-      'Given a bridgeable token ID, returns destination networks for that token',
+      'Returns transaction status for a source transaction hash and bridge network ID',
   })
   @Get('transactions/status')
   async transactionsStatus(
