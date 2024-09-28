@@ -52,6 +52,7 @@ export const REST_MODULES = [
         API_URL: joi.string().required(),
         BLOCK_EXPLORER_URL: joi.string().required(),
         BLOCK_LOADER_TRANSACTION_TIMEOUT: joi.number().optional(),
+        CORS_ENABLED: joi.boolean().default(true),
         DATABASE_CONNECTION_POOL_URL: joi.string().required(),
         DATABASE_URL: joi.string().required(),
         DATADOG_URL: joi.string().required(),
