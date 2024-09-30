@@ -57,6 +57,7 @@ export const REST_MODULES = [
         CHAINPORT_API_URL: joi.string().required(),
         CHAINPORT_API_VERSION: joi.number().required(),
         CHAINPORT_NETWORK_ID: joi.string().required(),
+        CORS_ENABLED: joi.boolean().default(true),
         DATABASE_CONNECTION_POOL_URL: joi.string().required(),
         DATABASE_URL: joi.string().required(),
         DATADOG_URL: joi.string().required(),
