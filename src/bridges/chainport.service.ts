@@ -153,8 +153,13 @@ export class ChainportService {
     maintenance: boolean;
     cp_network_ids: Record<string, ChainportNetwork>;
   }> {
+    const version = this.config.get<number>('CHAINPORT_API_VERSION');
     const apiurl = this.config.get<string>('CHAINPORT_API_URL');
+
     const url = new URL(`/meta`, apiurl);
+    if (version > 1) {
+      url.searchParams.append('non_abi', 'true');
+    }
 
     const result = await this.makeChainportRequest<{
       maintenance: boolean;
