@@ -14,23 +14,7 @@
 
 ## Environment
 
-You'll need a `.env` file with the following keys:
-
-- `API_URL`
-- `BLOCK_EXPLORER_URL`
-- `DATABASE_CONNECTION_POOL_URL`
-- `DATABASE_URL`
-- `DATADOG_URL`
-- `INFLUXDB_API_TOKEN`
-- `INFLUXDB_BUCKET`
-- `INFLUXDB_ORG`
-- `INFLUXDB_URL`
-- `IRONFISH_API_KEY`
-- `NETWORK_VERSION`
-- `NODE_ENV`
-- `WORKER_COUNT`
-
-You can copy `.env.template` to your own `.env` file
+You'll need a `.env` file including keys listed in `env.template`. We recommend copying `.env.template` to your own `.env` file.
 
 ## Running
 
