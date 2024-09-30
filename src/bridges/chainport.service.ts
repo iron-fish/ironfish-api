@@ -141,7 +141,7 @@ export class ChainportService {
             `Chainport Error: ${url} - Status Code ${
               e.status ?? 'Unknown'
             } - ${JSON.stringify(e.response?.data)}`,
-            new Error().stack ?? '',
+            e.stack ?? '',
           );
           throw e;
         }),
