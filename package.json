@@ -16,8 +16,8 @@
   "scripts": {
     "build": "tsc -b",
     "clean": "rm -rf ./build",
-    "docker:start": "docker-compose up -d",
-    "docker:stop": "docker-compose down",
+    "docker:start": "docker compose up -d",
+    "docker:stop": "docker compose down",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "prestart": "bash bin/check_for_dotenv.sh",
