@@ -1,16 +1,16 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`TransactionsController GET /transactions/find with block info not requested with an invalid hash returns a 404 1`] = `
-Object {
+{
   "message": "Not Found",
   "statusCode": 404,
 }
 `;
 
 exports[`TransactionsController GET /transactions/find with block info not requested with an undefined hash returns a 422 1`] = `
-Object {
+{
   "error": "Unprocessable Entity",
-  "message": Array [
+  "message": [
     "hash must be a string",
   ],
   "statusCode": 422,
@@ -18,16 +18,16 @@ Object {
 `;
 
 exports[`TransactionsController GET /transactions/find with block info requested with an invalid hash returns a 404 1`] = `
-Object {
+{
   "message": "Not Found",
   "statusCode": 404,
 }
 `;
 
 exports[`TransactionsController GET /transactions/find with block info requested with an undefined hash returns a 422 1`] = `
-Object {
+{
   "error": "Unprocessable Entity",
-  "message": Array [
+  "message": [
     "hash must be a string",
   ],
   "statusCode": 422,
