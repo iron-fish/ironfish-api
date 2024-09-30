@@ -38,10 +38,7 @@ async function bootstrap(): Promise<void> {
   const config = app.get(ApiConfigService);
   const logger = app.get(LoggerService);
 
-  const defaultOrigins = [
-    config.get<string>('BLOCK_EXPLORER_URL'),
-    config.get<string>('BRIDGE_WEBSITE_URL'),
-  ];
+  const defaultOrigins = [/ironfish.network$/];
   const enabledOrigins = config.isStaging()
     ? [
         ...defaultOrigins,

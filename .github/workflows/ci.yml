@@ -10,7 +10,6 @@ on:
 
 env:
   API_URL: http://localhost:8003
-  BLOCK_EXPLORER_URL: http://localhost:3000
   DATABASE_CONNECTION_POOL_URL: postgres://postgres:password@localhost:5432/ironfish_api_test
   DATABASE_URL: postgres://postgres:password@localhost:5432/ironfish_api_test
   DATADOG_URL: 127.0.0.1

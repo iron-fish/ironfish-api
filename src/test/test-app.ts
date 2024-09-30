@@ -19,9 +19,7 @@ export async function bootstrapTestApp(): Promise<INestApplication> {
         isGlobal: true,
         validationSchema: joi.object({
           API_URL: joi.string().required(),
-          BLOCK_EXPLORER_URL: joi.string().required(),
           BLOCK_LOADER_TRANSACTION_TIMEOUT: joi.number().optional(),
-          BRIDGE_WEBSITE_URL: joi.string().required(),
           CHAINPORT_API_URL: joi.string().required(),
           CHAINPORT_API_VERSION: joi.number().required(),
           CHAINPORT_NETWORK_ID: joi.string().required(),
