@@ -2,7 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { HttpService } from '@nestjs/axios';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadGatewayException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { AxiosError, AxiosResponse } from 'axios';
 import Joi from 'joi';
 import { URL } from 'node:url';
@@ -143,7 +147,7 @@ export class ChainportService {
             } - ${JSON.stringify(e.response?.data)}`,
             e.stack ?? '',
           );
-          throw e;
+          throw new BadGatewayException(e);
         }),
       ),
     );
@@ -180,7 +184,7 @@ export class ChainportService {
     );
 
     if (validateResult.error) {
-      throw new Error(
+      throw new BadGatewayException(
         `Invalid Chainport response: ${validateResult.error.message}`,
       );
     }
@@ -212,7 +216,7 @@ export class ChainportService {
     );
 
     if (validateResult.error) {
-      throw new Error(
+      throw new BadGatewayException(
         `Invalid Chainport response: ${validateResult.error.message}`,
       );
     }
@@ -278,7 +282,7 @@ export class ChainportService {
     });
 
     if (validateResult.error) {
-      throw new Error(
+      throw new BadGatewayException(
         `Invalid Chainport response: ${validateResult.error.message}`,
       );
     }
@@ -318,7 +322,7 @@ export class ChainportService {
     );
 
     if (validateResult.error) {
-      throw new Error(
+      throw new BadGatewayException(
         `Invalid Chainport response: ${validateResult.error.message}`,
       );
     }
