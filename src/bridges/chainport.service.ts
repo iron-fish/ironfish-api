@@ -14,12 +14,14 @@ export type ChainportNetwork = {
   chainport_network_id: number;
   explorer_url: string;
   label: string;
+  network_icon: string;
 };
 
 const chainportNetworkSchema = Joi.object<ChainportNetwork>({
   chainport_network_id: Joi.number().positive().integer().required(),
   explorer_url: Joi.string().required(),
   label: Joi.string().required(),
+  network_icon: Joi.string().required(),
 });
 
 const chainportNetworkArraySchema = Joi.array<ChainportNetwork[]>().items(
