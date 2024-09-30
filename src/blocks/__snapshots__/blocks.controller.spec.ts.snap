@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`BlocksController GET /blocks with invalid sequence_gte and sequence_lt parameters when sequence_gte > sequence_lt returns a 422 1`] = `
-Object {
+{
   "error": "Unprocessable Entity",
   "message": "'sequence_gte' must be strictly less than 'sequence_lt'.",
   "statusCode": 422,
@@ -9,9 +9,9 @@ Object {
 `;
 
 exports[`BlocksController GET /blocks with invalid sequence_gte and sequence_lt parameters when sequence_gte and sequence_lt are not at least 1 returns a 422 1`] = `
-Object {
+{
   "error": "Unprocessable Entity",
-  "message": Array [
+  "message": [
     "sequence_gte must not be less than 1",
     "sequence_lt must not be less than 1",
   ],
@@ -20,7 +20,7 @@ Object {
 `;
 
 exports[`BlocksController GET /blocks with invalid sequence_gte and sequence_lt parameters when the range is too long returns a 422 1`] = `
-Object {
+{
   "error": "Unprocessable Entity",
   "message": "Range is too long. Max sequence difference is 1000.",
   "statusCode": 422,
@@ -28,19 +28,19 @@ Object {
 `;
 
 exports[`BlocksController GET /blocks/find with neither a matching hash nor sequence returns a 404 1`] = `
-Object {
+{
   "message": "Not Found",
   "statusCode": 404,
 }
 `;
 
 exports[`BlocksController GET /blocks/find with neither a valid hash nor sequence returns a 422 1`] = `
-Object {
+{
   "error": "Unprocessable Entity",
-  "message": Array [
-    "\\"hash\\" or \\"sequence\\" required to query for single block",
+  "message": [
+    ""hash" or "sequence" required to query for single block",
     "hash must be a string",
-    "\\"hash\\" or \\"sequence\\" required to query for single block",
+    ""hash" or "sequence" required to query for single block",
     "sequence must be an integer number",
     "sequence must not be less than 1",
     "sequence must not be greater than 9007199254740991",
@@ -50,7 +50,7 @@ Object {
 `;
 
 exports[`BlocksController GET /blocks/metrics with a time range longer than the supported range returns a 422 1`] = `
-Object {
+{
   "error": "Unprocessable Entity",
   "message": "Time range too long",
   "statusCode": 422,
@@ -58,49 +58,49 @@ Object {
 `;
 
 exports[`BlocksController GET /blocks/metrics with invalid granularity returns a 422 1`] = `
-Object {
+{
   "error": "Unprocessable Entity",
-  "message": "\\"granularity\\" must be \\"day\\"",
+  "message": ""granularity" must be "day"",
   "statusCode": 422,
 }
 `;
 
 exports[`BlocksController GET /blocks/metrics with missing arguments returns a 422 1`] = `
-Object {
+{
   "error": "Unprocessable Entity",
-  "message": Array [
+  "message": [
     "start must be a Date instance",
     "end must be a Date instance",
-    "granularity must be a valid enum value",
+    "granularity must be one of the following values: day, lifetime, total",
   ],
   "statusCode": 422,
 }
 `;
 
 exports[`BlocksController GET /blocks/metrics with start after end returns a 422 1`] = `
-Object {
+{
   "error": "Unprocessable Entity",
-  "message": "\\"start\\" must be stricly less than \\"end\\"",
+  "message": ""start" must be strictly less than "end"",
   "statusCode": 422,
 }
 `;
 
 exports[`BlocksController POST /blocks with a missing api key returns a 401 1`] = `
-Object {
+{
   "message": "Unauthorized",
   "statusCode": 401,
 }
 `;
 
 exports[`BlocksController POST /blocks with missing arguments returns a 422 1`] = `
-Object {
+{
   "error": "Unprocessable Entity",
-  "message": Array [
+  "message": [
     "blocks.0.hash must be a string",
     "blocks.0.sequence must be an integer number",
     "blocks.0.sequence must not be greater than 9007199254740991",
     "blocks.0.difficulty must be an integer number",
-    "blocks.0.type must be a valid enum value",
+    "blocks.0.type must be one of the following values: connected, disconnected, fork",
     "blocks.0.timestamp must be a Date instance",
     "blocks.0.graffiti must be a string",
     "blocks.0.size must be a positive number",
@@ -114,26 +114,26 @@ Object {
 `;
 
 exports[`BlocksController POST /blocks with too many blocks returns a 422 1`] = `
-Object {
+{
   "error": "Unprocessable Entity",
-  "message": Array [
-    "blocks must contain not more than 3000 elements",
+  "message": [
+    "blocks must contain no more than 3000 elements",
   ],
   "statusCode": 422,
 }
 `;
 
 exports[`BlocksController POST /blocks/disconnect with a missing api key returns a 401 1`] = `
-Object {
+{
   "message": "Unauthorized",
   "statusCode": 401,
 }
 `;
 
 exports[`BlocksController POST /blocks/disconnect with missing arguments returns a 422 1`] = `
-Object {
+{
   "error": "Unprocessable Entity",
-  "message": Array [
+  "message": [
     "sequence_gt must be an integer number",
     "sequence_gt must not be less than 1",
     "sequence_gt must not be greater than 9007199254740991",
