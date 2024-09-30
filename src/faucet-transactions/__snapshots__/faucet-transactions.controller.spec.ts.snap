@@ -1,23 +1,23 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`FaucetTransactionsController GET /faucet_transactions/next with a missing api key returns a 401 1`] = `
-Object {
+{
   "message": "Unauthorized",
   "statusCode": 401,
 }
 `;
 
 exports[`FaucetTransactionsController POST /faucet_transactions with DISABLE_FAUCET set returns a 403 1`] = `
-Object {
+{
   "message": "The faucet has been disabled, try joining a mining pool!",
   "status": 403,
 }
 `;
 
 exports[`FaucetTransactionsController POST /faucet_transactions with empty arguments returns a 422 1`] = `
-Object {
+{
   "error": "Unprocessable Entity",
-  "message": Array [
+  "message": [
     "email must be an email",
     "public_key should not be empty",
   ],
@@ -26,9 +26,9 @@ Object {
 `;
 
 exports[`FaucetTransactionsController POST /faucet_transactions with missing arguments returns a 422 1`] = `
-Object {
+{
   "error": "Unprocessable Entity",
-  "message": Array [
+  "message": [
     "public_key must be a string",
     "public_key should not be empty",
   ],
@@ -37,14 +37,14 @@ Object {
 `;
 
 exports[`FaucetTransactionsController POST /faucet_transactions/:id/complete with a missing api key returns a 401 1`] = `
-Object {
+{
   "message": "Unauthorized",
   "statusCode": 401,
 }
 `;
 
 exports[`FaucetTransactionsController POST /faucet_transactions/:id/start with a missing api key returns a 401 1`] = `
-Object {
+{
   "message": "Unauthorized",
   "statusCode": 401,
 }
