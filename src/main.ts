@@ -38,13 +38,13 @@ async function bootstrap(): Promise<void> {
   const config = app.get(ApiConfigService);
   const logger = app.get(LoggerService);
 
-  const defaultOrigins = [config.get<string>('BLOCK_EXPLORER_URL')];
+  const defaultOrigins = [/ironfish.network$/];
   const enabledOrigins = config.isStaging()
     ? [
         ...defaultOrigins,
         /localhost/,
-        /block-explorer.*\.vercel\.app/,
-        /website-testnet.*\.vercel\.app/,
+        /block-explorer.*ironfish\.vercel\.app$/,
+        /oreowallet-bridge.*ironfish\.vercel\.app$/,
       ]
     : defaultOrigins;
 
