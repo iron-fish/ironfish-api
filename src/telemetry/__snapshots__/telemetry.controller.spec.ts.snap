@@ -1,9 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`TelemetryController POST /telemetry with empty or invalid arguments returns a 422 1`] = `
-Object {
+{
   "error": "Unprocessable Entity",
-  "message": Array [
+  "message": [
     "points.0.fields.0.type must be one of the following values: boolean, float, integer, string",
     "points.0.fields.1.value must be a boolean value",
     "points.0.fields.2.value must not be less than 0",
@@ -25,10 +25,10 @@ Object {
 `;
 
 exports[`TelemetryController POST /telemetry with missing arguments returns a 422 1`] = `
-Object {
+{
   "error": "Unprocessable Entity",
-  "message": Array [
-    "points must contain not more than 3000 elements",
+  "message": [
+    "points must contain no more than 3000 elements",
     "points must be an array",
   ],
   "statusCode": 422,
