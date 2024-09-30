@@ -12,7 +12,7 @@ import { GraphileWorkerService } from '../graphile-worker/graphile-worker.servic
 import { PrismaService } from '../prisma/prisma.service';
 import { bootstrapTestApp } from '../test/test-app';
 import { BlocksService } from './blocks.service';
-import { UpsertBlocksDto } from './dto/upsert-blocks.dto';
+import { BlockDto, UpsertBlocksDto } from './dto/upsert-blocks.dto';
 import { BlockOperation } from './enums/block-operation';
 import { SerializedBlockWithTransactions } from './interfaces/serialized-block-with-transactions';
 
@@ -85,7 +85,7 @@ describe('BlocksController', () => {
 
     describe('with too many blocks', () => {
       it('returns a 422', async () => {
-        const blocks = [];
+        const blocks: BlockDto[] = [];
         for (let i = 0; i < 3001; i++) {
           blocks.push({
             hash: uuid(),
@@ -94,7 +94,6 @@ describe('BlocksController', () => {
             type: BlockOperation.CONNECTED,
             sequence: faker.datatype.number(),
             timestamp: new Date(),
-            transactions_count: 0,
             graffiti: uuid(),
             previous_block_hash: uuid(),
             size: faker.datatype.number({ min: 1 }),

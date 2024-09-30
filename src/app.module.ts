@@ -17,6 +17,7 @@ import { AuthModule } from './auth/auth.module';
 import { BlocksRestModule } from './blocks/blocks.rest.module';
 import { BlocksDailyJobsModule } from './blocks-daily/blocks-daily.jobs.module';
 import { BlocksDailyRestModule } from './blocks-daily/blocks-daily.rest.module';
+import { BridgesRestModule } from './bridges/bridges.rest.module';
 import { RequireSslMiddleware } from './common/middlewares/require-ssl.middleware';
 import { DatadogModule } from './datadog/datadog.module';
 import { FaucetTransactionsRestModule } from './faucet-transactions/faucet-transactions.rest.module';
@@ -34,6 +35,7 @@ export const REST_MODULES = [
   AssetsRestModule,
   BlocksDailyRestModule,
   BlocksRestModule,
+  BridgesRestModule,
   FaucetTransactionsRestModule,
   HealthRestModule,
   SupplyRestModule,
@@ -52,6 +54,9 @@ export const REST_MODULES = [
         API_URL: joi.string().required(),
         BLOCK_EXPLORER_URL: joi.string().required(),
         BLOCK_LOADER_TRANSACTION_TIMEOUT: joi.number().optional(),
+        CHAINPORT_API_URL: joi.string().required(),
+        CHAINPORT_API_VERSION: joi.number().required(),
+        CHAINPORT_NETWORK_ID: joi.string().required(),
         CORS_ENABLED: joi.boolean().default(true),
         DATABASE_CONNECTION_POOL_URL: joi.string().required(),
         DATABASE_URL: joi.string().required(),

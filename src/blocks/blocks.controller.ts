@@ -319,7 +319,7 @@ export class BlocksController {
     if (start >= end) {
       return {
         isValid: false,
-        error: '"start" must be stricly less than "end"',
+        error: '"start" must be strictly less than "end"',
       };
     }
 

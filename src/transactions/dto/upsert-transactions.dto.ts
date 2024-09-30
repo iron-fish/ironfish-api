@@ -44,18 +44,22 @@ export class TransactionDto {
 
   @IsArray()
   @ValidateNested({ each: true })
+  @Type(() => NoteDto)
   readonly notes!: NoteDto[];
 
   @IsArray()
   @ValidateNested({ each: true })
+  @Type(() => SpendDto)
   readonly spends!: SpendDto[];
 
   @IsArray()
   @ValidateNested({ each: true })
+  @Type(() => MintDto)
   readonly mints!: MintDto[];
 
   @IsArray()
   @ValidateNested({ each: true })
+  @Type(() => BurnDto)
   readonly burns!: BurnDto[];
 }
 
