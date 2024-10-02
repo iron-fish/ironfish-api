@@ -202,4 +202,21 @@ describe.skip('ChainportService', () => {
       );
     }, 20000);
   });
+
+  describe('getStatus', () => {
+    it('returns the status of the chainport bridge', () => {
+      const status = chainport.getStatus();
+      expect(status).toMatchObject({
+        active: config.get('CHAINPORT_ACTIVE'),
+        maintenance: config.get('CHAINPORT_MAINTENANCE'),
+        outgoing_addresses: [
+          '576ffdcc27e11d81f5180d3dc5690294941170d492b2d9503c39130b1f180405',
+          '7ac2d6a59e19e66e590d014af013cd5611dc146e631fa2aedf0ee3ed1237eebe',
+        ],
+        incoming_addresses: [
+          '1216302193e8f1ad020f458b54a163039403d803e98673c6a85e59b5f4a1a900',
+        ],
+      });
+    });
+  });
 });

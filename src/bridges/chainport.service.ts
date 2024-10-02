@@ -15,6 +15,7 @@ import { ApiConfigService } from '../api-config/api-config.service';
 import { AssetsService } from '../assets/assets.service';
 import { DatadogService } from '../datadog/datadog.service';
 import { LoggerService } from '../logger/logger.service';
+import { BridgeStatus } from './interfaces/bridge-status';
 
 export type ChainportNetwork = {
   chainport_network_id: number;
@@ -395,5 +396,31 @@ Chainport: ${token.decimals}`;
     );
 
     return portResult.data;
+  }
+
+  getStatus(): BridgeStatus {
+    return {
+      active: this.config.get<boolean>('CHAINPORT_ACTIVE'),
+      maintenance: this.config.get<boolean>('CHAINPORT_MAINTENANCE'),
+      outgoing_addresses: [
+        '576ffdcc27e11d81f5180d3dc5690294941170d492b2d9503c39130b1f180405',
+        '7ac2d6a59e19e66e590d014af013cd5611dc146e631fa2aedf0ee3ed1237eebe',
+      ],
+      incoming_addresses: [
+        '1216302193e8f1ad020f458b54a163039403d803e98673c6a85e59b5f4a1a900',
+      ],
+      metadata: {
+        outgoing_addresses: {
+          '576ffdcc27e11d81f5180d3dc5690294941170d492b2d9503c39130b1f180405':
+            'Send Iron Fish custom assets here to bridge to other chains',
+          '7ac2d6a59e19e66e590d014af013cd5611dc146e631fa2aedf0ee3ed1237eebe':
+            'Send native IRON to bridge to other chains',
+        },
+        incoming_addresses: {
+          '1216302193e8f1ad020f458b54a163039403d803e98673c6a85e59b5f4a1a900':
+            'User will receive tokens and IRON from this address from other chains',
+        },
+      },
+    };
   }
 }

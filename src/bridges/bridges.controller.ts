@@ -20,6 +20,7 @@ import {
 } from './chainport.service';
 import { TransactionsCreateDto } from './dto/transactions-create.dto';
 import { TransactionsStatusDto } from './dto/transactions-status.dto';
+import { BridgesStatus } from './interfaces/bridge-status';
 
 @ApiTags('Bridges')
 @Controller('bridges')
@@ -119,5 +120,15 @@ export class BridgesController {
     );
 
     return transactionOutputs;
+  }
+
+  @ApiOperation({
+    summary: 'Returns the status for the supported bridges',
+  })
+  @Get('status')
+  status(): BridgesStatus {
+    return {
+      chainport: this.chainportService.getStatus(),
+    };
   }
 }
