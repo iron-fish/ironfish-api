@@ -38,21 +38,17 @@ async function bootstrap(): Promise<void> {
   const config = app.get(ApiConfigService);
   const logger = app.get(LoggerService);
 
-  const defaultOrigins = [/ironfish.network$/, /localhost/];
-  const enabledOrigins = config.isStaging()
-    ? [
-        ...defaultOrigins,
-        /block-explorer.*ironfish\.vercel\.app$/,
-        /oreowallet-bridge.*ironfish\.vercel\.app$/,
-      ]
-    : defaultOrigins;
+  const enabledOrigins = [
+    /ironfish.network$/,
+    /.*ironfish\.vercel\.app$/,
+    /localhost/,
+  ];
 
   if (config.get<boolean>('CORS_ENABLED')) {
     app.enableCors({
       origin: enabledOrigins,
       methods: 'GET, POST, PUT, OPTIONS',
       allowedHeaders: ['Content-Type', 'Accept', 'Authorization'],
-      credentials: true,
     });
   }
 
