@@ -232,7 +232,21 @@ export class ChainportService {
       const asset = await this.assetsService.findByIdentifier(
         token.web3_address,
       );
-      if (!asset || !asset.verified_metadata) {
+      if (!asset) {
+        this.datadogService.event(
+          'Mismatched asset',
+          `Could not find asset ${token.web3_address}`,
+          { alert_type: 'error' },
+        );
+        continue;
+      }
+
+      if (!asset.verified_metadata) {
+        this.datadogService.event(
+          'Unverified asset',
+          `Asset ${asset.identifier} is unverified`,
+          { alert_type: 'warning' },
+        );
         continue;
       }
 
@@ -243,6 +257,7 @@ Chainport: ${token.decimals}`;
         this.datadogService.event(
           'Mismatched verified asset decimals',
           message,
+          { alert_type: 'warning' },
         );
         continue;
       }
