@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
-import { StatsD, Tags } from 'hot-shots';
+import { EventOptions, StatsD, Tags } from 'hot-shots';
 import { ApiConfigService } from '../api-config/api-config.service';
 
 const DEFAULT_PORT = 8125;
@@ -29,6 +29,15 @@ export class DatadogService implements OnModuleDestroy {
 
   increment(stat: string, value: number, tags?: Tags): void {
     this.datadogClient.increment(stat, value, tags);
+  }
+
+  event(
+    title: string,
+    text?: string,
+    options?: EventOptions,
+    tags?: Tags,
+  ): void {
+    this.datadogClient.event(title, text, options, tags);
   }
 
   onModuleDestroy(): void {

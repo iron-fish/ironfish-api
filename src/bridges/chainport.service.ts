@@ -12,6 +12,8 @@ import Joi from 'joi';
 import { URL } from 'node:url';
 import { catchError, firstValueFrom } from 'rxjs';
 import { ApiConfigService } from '../api-config/api-config.service';
+import { AssetsService } from '../assets/assets.service';
+import { DatadogService } from '../datadog/datadog.service';
 import { LoggerService } from '../logger/logger.service';
 
 export type ChainportNetwork = {
@@ -130,7 +132,9 @@ export type ChainportPort =
 @Injectable()
 export class ChainportService {
   constructor(
+    private readonly assetsService: AssetsService,
     private readonly config: ApiConfigService,
+    private readonly datadogService: DatadogService,
     private readonly httpService: HttpService,
     private readonly logger: LoggerService,
   ) {}
@@ -220,7 +224,48 @@ export class ChainportService {
         `Invalid Chainport response: ${validateResult.error.message}`,
       );
     }
-    return validateResult.value;
+
+    const verifiedTokens = [];
+
+    const chainportTokens = validateResult.value;
+    for (const token of chainportTokens) {
+      const asset = await this.assetsService.findByIdentifier(
+        token.web3_address,
+      );
+      if (!asset) {
+        this.datadogService.event(
+          'Mismatched asset',
+          `Could not find asset ${token.web3_address}`,
+          { alert_type: 'error' },
+        );
+        continue;
+      }
+
+      if (!asset.verified_metadata) {
+        this.datadogService.event(
+          'Unverified asset',
+          `Asset ${asset.identifier} is unverified`,
+          { alert_type: 'warning' },
+        );
+        continue;
+      }
+
+      if (asset.verified_metadata.decimals !== token.decimals) {
+        const message = `${asset.identifier}
+Iron Fish: ${asset.verified_metadata.decimals ?? 'null'}
+Chainport: ${token.decimals}`;
+        this.datadogService.event(
+          'Mismatched verified asset decimals',
+          message,
+          { alert_type: 'warning' },
+        );
+        continue;
+      }
+
+      verifiedTokens.push(token);
+    }
+
+    return verifiedTokens;
   }
 
   async getTokenPaths(tokenId: number): Promise<ChainportNetwork[]> {
