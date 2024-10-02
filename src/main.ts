@@ -49,7 +49,6 @@ async function bootstrap(): Promise<void> {
       origin: enabledOrigins,
       methods: 'GET, POST, PUT, OPTIONS',
       allowedHeaders: ['Content-Type', 'Accept', 'Authorization'],
-      credentials: true,
     });
   }
 
