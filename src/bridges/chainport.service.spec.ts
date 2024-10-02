@@ -205,6 +205,10 @@ describe.skip('ChainportService', () => {
 
   describe('getStatus', () => {
     it('returns the status of the chainport bridge', () => {
+      jest.spyOn(config, 'isProduction').mockImplementation(() => {
+        return true;
+      });
+
       const status = chainport.getStatus();
       expect(status).toMatchObject({
         active: config.get('CHAINPORT_ACTIVE'),
