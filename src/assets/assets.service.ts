@@ -39,6 +39,15 @@ export class AssetsService {
     return record;
   }
 
+  async findByIdentifier(
+    identifier: string,
+  ): Promise<AssetWithMetadata | null> {
+    return this.prisma.asset.findUnique({
+      where: { identifier },
+      include: { verified_metadata: true },
+    });
+  }
+
   async findByIdentifierOrThrow(
     identifier: string,
   ): Promise<AssetWithMetadata> {

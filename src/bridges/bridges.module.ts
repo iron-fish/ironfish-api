@@ -4,12 +4,20 @@
 import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { ApiConfigModule } from '../api-config/api-config.module';
+import { AssetsModule } from '../assets/assets.module';
+import { DatadogModule } from '../datadog/datadog.module';
 import { LoggerModule } from '../logger/logger.module';
 import { ChainportService } from './chainport.service';
 
 @Module({
   exports: [ChainportService],
-  imports: [ApiConfigModule, HttpModule, LoggerModule],
+  imports: [
+    ApiConfigModule,
+    AssetsModule,
+    DatadogModule,
+    HttpModule,
+    LoggerModule,
+  ],
   providers: [ChainportService],
 })
 export class BridgesModule {}
