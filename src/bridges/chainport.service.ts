@@ -15,6 +15,7 @@ import { ApiConfigService } from '../api-config/api-config.service';
 import { AssetsService } from '../assets/assets.service';
 import { DatadogService } from '../datadog/datadog.service';
 import { LoggerService } from '../logger/logger.service';
+import { BridgeStatus } from './interfaces/bridge-status';
 
 export type ChainportNetwork = {
   chainport_network_id: number;
@@ -395,5 +396,52 @@ Chainport: ${token.decimals}`;
     );
 
     return portResult.data;
+  }
+
+  getStatus(): BridgeStatus {
+    const testnetOutgoingAddresses = [
+      '06102d319ab7e77b914a1bd135577f3e266fd82a3e537a02db281421ed8b3d13',
+      'db2cf6ec67addde84cc1092378ea22e7bb2eecdeecac5e43febc1cb8fb64b5e5',
+      '3be494deb669ff8d943463bb6042eabcf0c5346cf444d569e07204487716cb85',
+    ];
+    const testnetIncomingAddresses = [
+      '06102d319ab7e77b914a1bd135577f3e266fd82a3e537a02db281421ed8b3d13',
+    ];
+
+    const mainnetOutgoingAddresses = [
+      '576ffdcc27e11d81f5180d3dc5690294941170d492b2d9503c39130b1f180405',
+      '7ac2d6a59e19e66e590d014af013cd5611dc146e631fa2aedf0ee3ed1237eebe',
+    ];
+    const mainnetIncomingAddresses = [
+      '1216302193e8f1ad020f458b54a163039403d803e98673c6a85e59b5f4a1a900',
+    ];
+    const mainnetMetadata = {
+      outgoing_addresses: {
+        '576ffdcc27e11d81f5180d3dc5690294941170d492b2d9503c39130b1f180405':
+          'Send Iron Fish custom assets here to bridge to other chains',
+        '7ac2d6a59e19e66e590d014af013cd5611dc146e631fa2aedf0ee3ed1237eebe':
+          'Send native IRON to bridge to other chains',
+      },
+      incoming_addresses: {
+        '1216302193e8f1ad020f458b54a163039403d803e98673c6a85e59b5f4a1a900':
+          'User will receive tokens and IRON from this address from other chains',
+      },
+    };
+
+    const outgoingAddresses = this.config.isProduction()
+      ? mainnetOutgoingAddresses
+      : testnetOutgoingAddresses;
+    const incomingAddresses = this.config.isProduction()
+      ? mainnetIncomingAddresses
+      : testnetIncomingAddresses;
+    const metadata = this.config.isProduction() ? mainnetMetadata : undefined;
+
+    return {
+      active: this.config.get<boolean>('CHAINPORT_ACTIVE'),
+      maintenance: this.config.get<boolean>('CHAINPORT_MAINTENANCE'),
+      outgoing_addresses: outgoingAddresses,
+      incoming_addresses: incomingAddresses,
+      metadata,
+    };
   }
 }

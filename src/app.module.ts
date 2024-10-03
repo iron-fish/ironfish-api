@@ -53,8 +53,10 @@ export const REST_MODULES = [
       validationSchema: joi.object({
         API_URL: joi.string().required(),
         BLOCK_LOADER_TRANSACTION_TIMEOUT: joi.number().optional(),
+        CHAINPORT_ACTIVE: joi.boolean().required(),
         CHAINPORT_API_URL: joi.string().required(),
         CHAINPORT_API_VERSION: joi.number().required(),
+        CHAINPORT_MAINTENANCE: joi.boolean().required(),
         CHAINPORT_NETWORK_ID: joi.string().required(),
         CORS_ENABLED: joi.boolean().default(true),
         DATABASE_CONNECTION_POOL_URL: joi.string().required(),
