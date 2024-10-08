@@ -300,9 +300,6 @@ Chainport: ${token.decimals}`;
   async getTokenPaths(tokenId: number): Promise<ChainportTokenWithNetwork[]> {
     const apiurl = this.config.get<string>('CHAINPORT_API_URL');
 
-    const tokenPathUrl = new URL(`/token/paths`, apiurl);
-    tokenPathUrl.searchParams.append('token_id', tokenId.toString());
-
     const metaResult = await this.getMeta();
     const networkList: ChainportTokenWithNetwork[] = [];
 
@@ -350,6 +347,8 @@ Chainport: ${token.decimals}`;
         });
       }
     } else {
+      const tokenPathUrl = new URL(`/token/paths`, apiurl);
+      tokenPathUrl.searchParams.append('token_id', tokenId.toString());
       const tokenPathResult = await this.makeChainportRequest<ChainportToken[]>(
         tokenPathUrl.toString(),
       );
