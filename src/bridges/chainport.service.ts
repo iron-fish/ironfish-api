@@ -2,7 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { HttpService } from '@nestjs/axios';
-import { BadGatewayException, Injectable } from '@nestjs/common';
+import {
+  BadGatewayException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { AxiosError, AxiosResponse } from 'axios';
 import Joi from 'joi';
 import { URL } from 'node:url';
@@ -299,23 +303,69 @@ Chainport: ${token.decimals}`;
     const tokenPathUrl = new URL(`/token/paths`, apiurl);
     tokenPathUrl.searchParams.append('token_id', tokenId.toString());
 
-    const tokenPathResult = await this.makeChainportRequest<ChainportToken[]>(
-      tokenPathUrl.toString(),
-    );
     const metaResult = await this.getMeta();
-
     const networkList: ChainportTokenWithNetwork[] = [];
-    for (const token of tokenPathResult.data) {
-      const network = metaResult.cp_network_ids[token.network_id.toString()];
-      if (!network) {
-        this.logger.error(
-          `Network ${token.network_id} for token ${tokenId} not found in meta`,
-          new Error().stack ?? '',
-        );
-        continue;
+
+    const version = this.config.get<number>('CHAINPORT_API_VERSION');
+    if (version === 1) {
+      const tokenListUrl = new URL(`/token/list`, apiurl);
+      tokenListUrl.searchParams.append('network_name', 'IRONFISH');
+
+      const tokenListResult = await this.makeChainportRequest<{
+        verified_tokens: { id: number; target_networks: number[] }[];
+      }>(tokenListUrl.toString());
+      const sourceToken = tokenListResult.data.verified_tokens.find(
+        (t) => t.id === tokenId,
+      );
+
+      if (!sourceToken) {
+        throw new NotFoundException();
       }
 
-      networkList.push({ ...token, ...network });
+      for (const n of sourceToken.target_networks) {
+        const network = metaResult.cp_network_ids[n.toString()];
+        if (!network) {
+          this.logger.error(
+            `Network ${n} for token ${tokenId} not found in meta`,
+            new Error().stack ?? '',
+          );
+          continue;
+        }
+
+        networkList.push({
+          ...network,
+          id: 0,
+          decimals: 0,
+          name: '',
+          pinned: false,
+          web3_address: '',
+          symbol: '',
+          token_image: '',
+          chain_id: 0,
+          network_name: '',
+          network_id: 0,
+          blockchain_type: '',
+          is_stable: false,
+          is_lifi: false,
+        });
+      }
+    } else {
+      const tokenPathResult = await this.makeChainportRequest<ChainportToken[]>(
+        tokenPathUrl.toString(),
+      );
+
+      for (const token of tokenPathResult.data) {
+        const network = metaResult.cp_network_ids[token.network_id.toString()];
+        if (!network) {
+          this.logger.error(
+            `Network ${token.network_id} for token ${tokenId} not found in meta`,
+            new Error().stack ?? '',
+          );
+          continue;
+        }
+
+        networkList.push({ ...token, ...network });
+      }
     }
 
     const validateResult = chainportTokenWithNetworkArraySchema.validate(
