@@ -70,28 +70,33 @@ const chainportTokenSchema = Joi.object<ChainportToken>({
   is_lifi: Joi.boolean().required(),
 });
 
-export type ChainportTokenWithNetwork = ChainportToken & ChainportNetwork;
+export type ChainportTokenWithNetwork = {
+  network: ChainportNetwork;
+  token: ChainportToken;
+};
 
 const chainportTokenWithNetworkSchema = Joi.object<ChainportTokenWithNetwork>({
-  // Network
-  chainport_network_id: Joi.number().positive().integer().required(),
-  explorer_url: Joi.string().required(),
-  label: Joi.string().required(),
-  network_icon: Joi.string().required(),
-  // Token
-  id: Joi.number().required(),
-  decimals: Joi.number().required(),
-  name: Joi.string().required(),
-  pinned: Joi.boolean().required(),
-  web3_address: Joi.string().required(),
-  symbol: Joi.string().required(),
-  token_image: Joi.string().required(),
-  chain_id: Joi.number().allow(null).required(),
-  network_name: Joi.string().required(),
-  network_id: Joi.number().required(),
-  blockchain_type: Joi.string().required(),
-  is_stable: Joi.boolean().required(),
-  is_lifi: Joi.boolean().required(),
+  network: Joi.object<ChainportNetwork>({
+    chainport_network_id: Joi.number().positive().integer().required(),
+    explorer_url: Joi.string().required(),
+    label: Joi.string().required(),
+    network_icon: Joi.string().required(),
+  }),
+  token: Joi.object<ChainportToken>({
+    id: Joi.number().required(),
+    decimals: Joi.number().required(),
+    name: Joi.string().required(),
+    pinned: Joi.boolean().required(),
+    web3_address: Joi.string().required(),
+    symbol: Joi.string().required(),
+    token_image: Joi.string().required(),
+    chain_id: Joi.number().allow(null).required(),
+    network_name: Joi.string().required(),
+    network_id: Joi.number().required(),
+    blockchain_type: Joi.string().required(),
+    is_stable: Joi.boolean().required(),
+    is_lifi: Joi.boolean().required(),
+  }),
 });
 
 const chainportTokenWithNetworkArraySchema = Joi.array<
@@ -330,20 +335,22 @@ Chainport: ${token.decimals}`;
         }
 
         networkList.push({
-          ...network,
-          id: 0,
-          decimals: 0,
-          name: '',
-          pinned: false,
-          web3_address: '',
-          symbol: '',
-          token_image: '',
-          chain_id: 0,
-          network_name: '',
-          network_id: 0,
-          blockchain_type: '',
-          is_stable: false,
-          is_lifi: false,
+          network,
+          token: {
+            id: 0,
+            decimals: 0,
+            name: '',
+            pinned: false,
+            web3_address: '',
+            symbol: '',
+            token_image: '',
+            chain_id: 0,
+            network_name: '',
+            network_id: 0,
+            blockchain_type: '',
+            is_stable: false,
+            is_lifi: false,
+          },
         });
       }
     } else {
@@ -363,7 +370,7 @@ Chainport: ${token.decimals}`;
           continue;
         }
 
-        networkList.push({ ...token, ...network });
+        networkList.push({ token, network });
       }
     }
 

@@ -17,6 +17,7 @@ import {
   ChainportPort,
   ChainportService,
   ChainportToken,
+  ChainportTokenWithNetwork,
 } from './chainport.service';
 import { TransactionsCreateDto } from './dto/transactions-create.dto';
 import { TransactionsStatusDto } from './dto/transactions-status.dto';
@@ -67,7 +68,7 @@ export class BridgesController {
       }),
     )
     token_id: number,
-  ): Promise<List<ChainportNetwork>> {
+  ): Promise<List<ChainportTokenWithNetwork>> {
     const networks = await this.chainportService.getTokenPaths(token_id);
 
     return {
