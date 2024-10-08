@@ -2,10 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 import { HttpService } from '@nestjs/axios';
-import {
-  BadGatewayException,
-  Injectable,
-} from '@nestjs/common';
+import { BadGatewayException, Injectable } from '@nestjs/common';
 import { AxiosError, AxiosResponse } from 'axios';
 import Joi from 'joi';
 import { URL } from 'node:url';
