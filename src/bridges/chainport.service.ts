@@ -302,11 +302,15 @@ Chainport: ${token.decimals}`;
     return verifiedTokens;
   }
 
-  async getTokenPaths(tokenId: number): Promise<ChainportTokenWithNetwork[]> {
+  async getTokenPaths(
+    tokenId: number,
+    withTokens = false,
+  ): Promise<ChainportNetwork[] | ChainportTokenWithNetwork[]> {
     const apiurl = this.config.get<string>('CHAINPORT_API_URL');
 
     const metaResult = await this.getMeta();
-    const networkList: ChainportTokenWithNetwork[] = [];
+    const networkList: ChainportNetwork[] = [];
+    const networkListWithTokens: ChainportTokenWithNetwork[] = [];
 
     const version = this.config.get<number>('CHAINPORT_API_VERSION');
     if (version === 1) {
@@ -334,7 +338,8 @@ Chainport: ${token.decimals}`;
           continue;
         }
 
-        networkList.push({
+        networkList.push(network);
+        networkListWithTokens.push({
           network,
           token: {
             id: 0,
@@ -370,16 +375,25 @@ Chainport: ${token.decimals}`;
           continue;
         }
 
-        networkList.push({ token, network });
+        networkList.push(network);
+        networkListWithTokens.push({ token, network });
       }
     }
 
-    const validateResult = chainportTokenWithNetworkArraySchema.validate(
-      networkList,
-      {
+    let validateResult;
+
+    if (withTokens) {
+      validateResult = chainportTokenWithNetworkArraySchema.validate(
+        networkListWithTokens,
+        {
+          stripUnknown: true,
+        },
+      );
+    } else {
+      validateResult = chainportNetworkArraySchema.validate(networkList, {
         stripUnknown: true,
-      },
-    );
+      });
+    }
 
     if (validateResult.error) {
       throw new BadGatewayException(
