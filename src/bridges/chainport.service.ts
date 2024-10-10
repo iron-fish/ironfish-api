@@ -70,6 +70,39 @@ const chainportTokenSchema = Joi.object<ChainportToken>({
   is_lifi: Joi.boolean().required(),
 });
 
+export type ChainportTokenWithNetwork = {
+  network: ChainportNetwork;
+  token: ChainportToken;
+};
+
+const chainportTokenWithNetworkSchema = Joi.object<ChainportTokenWithNetwork>({
+  network: Joi.object<ChainportNetwork>({
+    chainport_network_id: Joi.number().positive().integer().required(),
+    explorer_url: Joi.string().required(),
+    label: Joi.string().required(),
+    network_icon: Joi.string().required(),
+  }),
+  token: Joi.object<ChainportToken>({
+    id: Joi.number().required(),
+    decimals: Joi.number().required(),
+    name: Joi.string().required(),
+    pinned: Joi.boolean().required(),
+    web3_address: Joi.string().required(),
+    symbol: Joi.string().required(),
+    token_image: Joi.string().required(),
+    chain_id: Joi.number().allow(null).required(),
+    network_name: Joi.string().required(),
+    network_id: Joi.number().required(),
+    blockchain_type: Joi.string().required(),
+    is_stable: Joi.boolean().required(),
+    is_lifi: Joi.boolean().required(),
+  }),
+});
+
+const chainportTokenWithNetworkArraySchema = Joi.array<
+  ChainportTokenWithNetwork[]
+>().items(chainportTokenWithNetworkSchema);
+
 const chainportTokenArraySchema =
   Joi.array<ChainportToken[]>().items(chainportTokenSchema);
 
@@ -269,13 +302,17 @@ Chainport: ${token.decimals}`;
     return verifiedTokens;
   }
 
-  async getTokenPaths(tokenId: number): Promise<ChainportNetwork[]> {
-    const version = this.config.get<number>('CHAINPORT_API_VERSION');
+  async getTokenPaths(
+    tokenId: number,
+    withTokens = false,
+  ): Promise<ChainportNetwork[] | ChainportTokenWithNetwork[]> {
     const apiurl = this.config.get<string>('CHAINPORT_API_URL');
 
     const metaResult = await this.getMeta();
+    const networkList: ChainportNetwork[] = [];
+    const networkListWithTokens: ChainportTokenWithNetwork[] = [];
 
-    let networkList: { label: string }[] = [];
+    const version = this.config.get<number>('CHAINPORT_API_VERSION');
     if (version === 1) {
       const tokenListUrl = new URL(`/token/list`, apiurl);
       tokenListUrl.searchParams.append('network_name', 'IRONFISH');
@@ -291,41 +328,72 @@ Chainport: ${token.decimals}`;
         throw new NotFoundException();
       }
 
-      networkList = sourceToken.target_networks.flatMap((n) => {
+      for (const n of sourceToken.target_networks) {
         const network = metaResult.cp_network_ids[n.toString()];
         if (!network) {
           this.logger.error(
             `Network ${n} for token ${tokenId} not found in meta`,
             new Error().stack ?? '',
           );
-          return [];
+          continue;
         }
-        return [network];
-      });
+
+        networkList.push(network);
+        networkListWithTokens.push({
+          network,
+          token: {
+            id: 0,
+            decimals: 0,
+            name: '',
+            pinned: false,
+            web3_address: '',
+            symbol: '',
+            token_image: '',
+            chain_id: 0,
+            network_name: '',
+            network_id: 0,
+            blockchain_type: '',
+            is_stable: false,
+            is_lifi: false,
+          },
+        });
+      }
     } else {
       const tokenPathUrl = new URL(`/token/paths`, apiurl);
-
       tokenPathUrl.searchParams.append('token_id', tokenId.toString());
       const tokenPathResult = await this.makeChainportRequest<ChainportToken[]>(
         tokenPathUrl.toString(),
       );
 
-      networkList = tokenPathResult.data.flatMap((t) => {
-        const network = metaResult.cp_network_ids[t.network_id.toString()];
+      for (const token of tokenPathResult.data) {
+        const network = metaResult.cp_network_ids[token.network_id.toString()];
         if (!network) {
           this.logger.error(
-            `Network ${t.network_id} for token ${tokenId} not found in meta`,
+            `Network ${token.network_id} for token ${tokenId} not found in meta`,
             new Error().stack ?? '',
           );
-          return [];
+          continue;
         }
-        return [network];
-      });
+
+        networkList.push(network);
+        networkListWithTokens.push({ token, network });
+      }
     }
 
-    const validateResult = chainportNetworkArraySchema.validate(networkList, {
-      stripUnknown: true,
-    });
+    let validateResult;
+
+    if (withTokens) {
+      validateResult = chainportTokenWithNetworkArraySchema.validate(
+        networkListWithTokens,
+        {
+          stripUnknown: true,
+        },
+      );
+    } else {
+      validateResult = chainportNetworkArraySchema.validate(networkList, {
+        stripUnknown: true,
+      });
+    }
 
     if (validateResult.error) {
       throw new BadGatewayException(

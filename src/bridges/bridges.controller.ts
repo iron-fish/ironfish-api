@@ -17,7 +17,9 @@ import {
   ChainportPort,
   ChainportService,
   ChainportToken,
+  ChainportTokenWithNetwork,
 } from './chainport.service';
+import { TokenPathsQueryDto } from './dto/token-paths-query.dto';
 import { TransactionsCreateDto } from './dto/transactions-create.dto';
 import { TransactionsStatusDto } from './dto/transactions-status.dto';
 import { BridgesStatus } from './interfaces/bridge-status';
@@ -67,8 +69,18 @@ export class BridgesController {
       }),
     )
     token_id: number,
-  ): Promise<List<ChainportNetwork>> {
-    const networks = await this.chainportService.getTokenPaths(token_id);
+    @Query(
+      new ValidationPipe({
+        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        transform: true,
+      }),
+    )
+    query: TokenPathsQueryDto,
+  ): Promise<List<ChainportTokenWithNetwork | ChainportNetwork>> {
+    const networks = await this.chainportService.getTokenPaths(
+      token_id,
+      query.with_tokens,
+    );
 
     return {
       object: 'list',
