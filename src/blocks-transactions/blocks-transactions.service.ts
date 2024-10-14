@@ -103,14 +103,15 @@ export class BlocksTransactionsService {
   }
 
   async findBlocksByTransaction(transaction: Transaction): Promise<Block[]> {
-    const blocksTransactions = await this.prisma.blockTransaction.findMany({
-      where: {
-        transaction_id: transaction.id,
-      },
-      include: {
-        block: true,
-      },
-    });
+    const blocksTransactions =
+      await this.prisma.readClient.blockTransaction.findMany({
+        where: {
+          transaction_id: transaction.id,
+        },
+        include: {
+          block: true,
+        },
+      });
     return blocksTransactions.map((blockTransaction) => blockTransaction.block);
   }
 
