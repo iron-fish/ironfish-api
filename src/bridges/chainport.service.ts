@@ -60,7 +60,7 @@ const chainportTokenSchema = Joi.object<ChainportToken>({
   name: Joi.string().required(),
   pinned: Joi.boolean().required(),
   web3_address: Joi.string().required(),
-  symbol: Joi.string().required(),
+  symbol: Joi.string().required().allow(''),
   token_image: Joi.string().required(),
   chain_id: Joi.number().allow(null).required(),
   network_name: Joi.string().required(),
