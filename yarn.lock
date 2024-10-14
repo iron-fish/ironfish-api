@@ -637,9 +637,10 @@
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-2.0.1.tgz#e5211452df060fa8522b55c7b3c0c4d1981cb044"
 
-"@influxdata/influxdb-client@1.33.2":
-  version "1.33.2"
-  resolved "https://registry.npmjs.org/@influxdata/influxdb-client/-/influxdb-client-1.33.2.tgz"
+"@influxdata/influxdb-client@1.35.0":
+  version "1.35.0"
+  resolved "https://registry.yarnpkg.com/@influxdata/influxdb-client/-/influxdb-client-1.35.0.tgz#74a3eadb034d9ed9997d7a0b29a837d68d548b1e"
+  integrity sha512-woWMi8PDpPQpvTsRaUw4Ig+nOGS/CWwAwS66Fa1Vr/EkW+NEwxI8YfPBsdBMn33jK2Y86/qMiiuX/ROHIkJLTw==
 
 "@istanbuljs/load-nyc-config@^1.0.0":
   version "1.1.0"

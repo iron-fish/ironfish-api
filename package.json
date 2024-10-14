@@ -69,7 +69,7 @@
     "webpack-node-externals": "3.0.0"
   },
   "dependencies": {
-    "@influxdata/influxdb-client": "1.33.2",
+    "@influxdata/influxdb-client": "1.35.0",
     "@nestjs/axios": "3.0.3",
     "@nestjs/common": "8.4.7",
     "@nestjs/config": "3.1.1",
