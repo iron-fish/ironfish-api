@@ -156,7 +156,7 @@ export class TransactionsService {
     where: Prisma.TransactionWhereInput,
     includeBlocks: boolean,
   ): Promise<Transaction[] | (Transaction & { blocks: Block[] })[]> {
-    const transactions = await this.prisma.transaction.findMany({
+    const transactions = await this.prisma.readClient.transaction.findMany({
       orderBy,
       take: limit,
       where,
