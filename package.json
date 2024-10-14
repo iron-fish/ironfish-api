@@ -79,7 +79,7 @@
     "@nestjs/platform-express": "8.4.7",
     "@nestjs/swagger": "5.2.1",
     "@prisma/client": "5.20.0",
-    "@sindresorhus/is": "4.6.0",
+    "@sindresorhus/is": "7.0.1",
     "assert": "2.0.0",
     "axios": "1.7.7",
     "class-transformer": "0.5.1",
