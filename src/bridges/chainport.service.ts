@@ -267,32 +267,29 @@ export class ChainportService {
         token.web3_address,
       );
       if (!asset) {
-        this.datadogService.event(
-          'Mismatched asset',
-          `Could not find asset ${token.web3_address}`,
-          { alert_type: 'error' },
-        );
+        this.datadogService.increment('chainport.errors', 1, {
+          type: 'missing_asset',
+          asset: token.web3_address,
+        });
         continue;
       }
 
       if (!asset.verified_metadata) {
-        this.datadogService.event(
-          'Unverified asset',
-          `Asset ${asset.identifier} is unverified`,
-          { alert_type: 'warning' },
-        );
+        this.datadogService.increment('chainport.errors', 1, {
+          type: 'unverified_asset',
+          asset: asset.identifier,
+        });
         continue;
       }
 
       if (asset.verified_metadata.decimals !== token.decimals) {
-        const message = `${asset.identifier}
-Iron Fish: ${asset.verified_metadata.decimals ?? 'null'}
-Chainport: ${token.decimals}`;
-        this.datadogService.event(
-          'Mismatched verified asset decimals',
-          message,
-          { alert_type: 'warning' },
-        );
+        this.datadogService.increment('chainport.errors', 1, {
+          type: 'mismatched_decimals',
+          iron_fish_decimals: (
+            asset.verified_metadata.decimals ?? 0
+          ).toString(),
+          chainport_decimals: token.decimals.toString(),
+        });
         continue;
       }
 
