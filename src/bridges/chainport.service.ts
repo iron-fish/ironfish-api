@@ -6,6 +6,7 @@ import {
   BadGatewayException,
   Injectable,
   NotFoundException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { AxiosError, AxiosResponse } from 'axios';
 import Joi from 'joi';
@@ -163,6 +164,22 @@ export type ChainportPort =
       port_in_ack: boolean | null;
     };
 
+export type ChainportError = {
+  error: {
+    code: string;
+    description: string;
+  };
+  status: string;
+};
+
+const chainportErrorSchema = Joi.object<ChainportError>({
+  error: Joi.object({
+    code: Joi.string().required(),
+    description: Joi.string().required(),
+  }).required(),
+  status: Joi.string().required(),
+});
+
 @Injectable()
 export class ChainportService {
   constructor(
@@ -185,6 +202,16 @@ export class ChainportService {
             } - ${JSON.stringify(e.response?.data)}`,
             e.stack ?? '',
           );
+
+          const validationResult = chainportErrorSchema.validate(
+            e.response?.data,
+          );
+          if (!validationResult.error) {
+            throw new UnprocessableEntityException(
+              validationResult.value.error.description,
+            );
+          }
+
           throw new BadGatewayException(e);
         }),
       ),
