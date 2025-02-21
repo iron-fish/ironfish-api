@@ -402,7 +402,7 @@ export class BlocksService {
     limit: number,
     includeTransactions: boolean,
   ): Promise<Block[] | (Block & { transactions: Transaction[] })[]> {
-    const blocks = await this.prisma.block.findMany({
+    const blocks = await this.prisma.readClient.block.findMany({
       cursor,
       orderBy,
       where,
