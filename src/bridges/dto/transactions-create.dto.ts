@@ -1,9 +1,15 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, TransformFnParams, Type } from 'class-transformer';
-import { IsDefined, IsInt, IsPositive, IsString } from 'class-validator';
+import {
+  IsDefined,
+  IsInt,
+  IsOptional,
+  IsPositive,
+  IsString,
+} from 'class-validator';
 import { stringToPositiveBigint } from '../../common/utils/bigint';
 
 export class TransactionsCreateDto {
@@ -45,4 +51,12 @@ export class TransactionsCreateDto {
   })
   @IsString()
   readonly target_address!: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Address on the source network that will send the bridged asset',
+  })
+  @IsOptional()
+  @IsString()
+  readonly source_address: string | undefined;
 }
