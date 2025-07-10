@@ -5,7 +5,11 @@ import { INestApplication } from '@nestjs/common';
 import { ApiConfigService } from '../api-config/api-config.service';
 import { NATIVE_ASSET_ID } from '../common/constants';
 import { bootstrapTestApp } from '../test/test-app';
-import { ChainportService } from './chainport.service';
+import {
+  ChainportBridgeFeeV1,
+  ChainportBridgeFeeV2,
+  ChainportService,
+} from './chainport.service';
 
 // eslint-disable-next-line jest/no-disabled-tests
 describe.skip('ChainportService', () => {
@@ -159,6 +163,54 @@ describe.skip('ChainportService', () => {
       );
 
       expect(results).not.toBeNull();
+    }, 20000);
+
+    it('works with bridge fee v1', async () => {
+      const originalGet = config.get.bind(config);
+      jest.spyOn(config, 'get').mockImplementation((val) => {
+        if (val === 'CHAINPORT_BRIDGE_FEE_VERSION') {
+          return 1;
+        }
+        return originalGet(val);
+      });
+      const results = await chainport.getIronFishMetadata(
+        100n,
+        NATIVE_ASSET_ID,
+        15,
+        '0xF1d90Af0D4638cD947971d858053696DC72bd241',
+      );
+
+      expect(results).not.toBeNull();
+      expect(results.bridge_fee).toMatchObject({
+        source_token_fee_amount: expect.any(String),
+        portx_fee_amount: expect.any(String),
+        is_portx_fee_payment: expect.any(Boolean),
+      } as ChainportBridgeFeeV1);
+    }, 20000);
+
+    it('works with bridge fee v2', async () => {
+      const originalGet = config.get.bind(config);
+      jest.spyOn(config, 'get').mockImplementation((val) => {
+        if (val === 'CHAINPORT_BRIDGE_FEE_VERSION') {
+          return 2;
+        }
+        return originalGet(val);
+      });
+      const results = await chainport.getIronFishMetadata(
+        100n,
+        NATIVE_ASSET_ID,
+        15,
+        '0xF1d90Af0D4638cD947971d858053696DC72bd241',
+        '2cabe0bddf475a478f4b3903f8fc2d2c70b52526f991bacea8267793da63f44b',
+      );
+
+      expect(results).not.toBeNull();
+      expect(results.bridge_fee).toMatchObject({
+        publicAddress: expect.any(String),
+        source_token_fee_amount: expect.any(String),
+        memo: expect.any(String),
+        assetId: expect.any(String),
+      } as ChainportBridgeFeeV2);
     }, 20000);
   });
 

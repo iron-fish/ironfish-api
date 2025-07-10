@@ -4,6 +4,7 @@
 import { HttpService } from '@nestjs/axios';
 import {
   BadGatewayException,
+  BadRequestException,
   Injectable,
   NotFoundException,
   UnprocessableEntityException,
@@ -111,6 +112,32 @@ type ChainportTokenListResponse = {
   verified_tokens: ChainportToken[];
 };
 
+export type ChainportBridgeFeeV1 = {
+  source_token_fee_amount: string;
+  portx_fee_amount: string;
+  is_portx_fee_payment: boolean;
+};
+
+const chainportBridgeFeeV1Schema = Joi.object<ChainportBridgeFeeV1>({
+  source_token_fee_amount: Joi.string().required(),
+  portx_fee_amount: Joi.string().required(),
+  is_portx_fee_payment: Joi.boolean().required(),
+});
+
+export type ChainportBridgeFeeV2 = {
+  publicAddress: string;
+  source_token_fee_amount: string;
+  memo: string;
+  assetId: string;
+};
+
+const chainportBridgeFeeV2Schema = Joi.object<ChainportBridgeFeeV2>({
+  publicAddress: Joi.string().required(),
+  source_token_fee_amount: Joi.string().required(),
+  memo: Joi.string().required(),
+  assetId: Joi.string().required(),
+});
+
 export type ChainportIronFishMetadata = {
   bridge_output: {
     publicAddress: string;
@@ -123,11 +150,7 @@ export type ChainportIronFishMetadata = {
     amount: string;
     memo: string;
   };
-  bridge_fee: {
-    source_token_fee_amount: string;
-    portx_fee_amount: string;
-    is_portx_fee_payment: boolean;
-  };
+  bridge_fee: ChainportBridgeFeeV1 | ChainportBridgeFeeV2;
 };
 
 const chainportIronFishMetadataSchema = Joi.object<ChainportIronFishMetadata>({
@@ -142,11 +165,9 @@ const chainportIronFishMetadataSchema = Joi.object<ChainportIronFishMetadata>({
     amount: Joi.string().required(),
     memo: Joi.string().required(),
   }).required(),
-  bridge_fee: Joi.object({
-    source_token_fee_amount: Joi.string().required(),
-    portx_fee_amount: Joi.string().required(),
-    is_portx_fee_payment: Joi.boolean().required(),
-  }).required(),
+  bridge_fee: Joi.alternatives()
+    .try(chainportBridgeFeeV1Schema, chainportBridgeFeeV2Schema)
+    .required(),
 });
 
 export type ChainportPort =
@@ -432,8 +453,12 @@ export class ChainportService {
     assetId: string,
     targetNetworkId: number,
     targetWeb3Address: string,
+    sourceAddress?: string,
   ): Promise<ChainportIronFishMetadata> {
     const apiurl = this.config.get<string>('CHAINPORT_API_URL');
+    const bridgeFeeVersion = this.config.get<number>(
+      'CHAINPORT_BRIDGE_FEE_VERSION',
+    );
 
     const ironfishMetadataUrl = new URL(`/ironfish/metadata`, apiurl);
     ironfishMetadataUrl.searchParams.append('raw_amount', amount.toString());
@@ -446,6 +471,22 @@ export class ChainportService {
       'target_web3_address',
       targetWeb3Address,
     );
+
+    if (bridgeFeeVersion === 1 && sourceAddress) {
+      throw new BadRequestException(
+        'Source address is not supported for bridge fee version 1',
+      );
+    } else if (bridgeFeeVersion === 2 && !sourceAddress) {
+      throw new BadRequestException(
+        'Source address is required for bridge fee version 2',
+      );
+    }
+    if (sourceAddress) {
+      ironfishMetadataUrl.searchParams.append(
+        'ironfish_user_address',
+        sourceAddress,
+      );
+    }
 
     const ironfishMetadataResult =
       await this.makeChainportRequest<ChainportIronFishMetadata>(

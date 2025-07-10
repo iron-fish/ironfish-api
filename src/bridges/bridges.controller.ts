@@ -107,6 +107,7 @@ export class BridgesController {
       query.asset_id,
       query.target_network_id,
       query.target_address,
+      query.source_address,
     );
 
     return transactionOutputs;

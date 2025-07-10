@@ -56,6 +56,7 @@ export const REST_MODULES = [
         CHAINPORT_ACTIVE: joi.boolean().required(),
         CHAINPORT_API_URL: joi.string().required(),
         CHAINPORT_API_VERSION: joi.number().required(),
+        CHAINPORT_BRIDGE_FEE_VERSION: joi.number().required(),
         CHAINPORT_MAINTENANCE: joi.boolean().required(),
         CHAINPORT_NETWORK_ID: joi.string().required(),
         CORS_ENABLED: joi.boolean().default(true),
