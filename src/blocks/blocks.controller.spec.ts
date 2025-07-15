@@ -149,6 +149,16 @@ describe('BlocksController', () => {
                   mints: [],
                   burns: [],
                 },
+                {
+                  hash: uuid(),
+                  fee: faker.datatype.number(),
+                  size: faker.datatype.number(),
+                  notes: [{ commitment: uuid() }],
+                  spends: [{ nullifier: uuid() }],
+                  mints: [],
+                  burns: [],
+                  serialized: 'serialized',
+                },
               ],
             },
           ],
@@ -168,10 +178,14 @@ describe('BlocksController', () => {
           difficulty: block.difficulty,
           sequence: block.sequence,
           timestamp: block.timestamp.toISOString(),
-          transactions_count: 1,
+          transactions_count: 2,
           previous_block_hash: block.previous_block_hash,
           size: block.size,
         });
+
+        const serializedBlock = data[0] as SerializedBlockWithTransactions;
+        expect(serializedBlock.transactions[0].serialized).toBeNull();
+        expect(serializedBlock.transactions[1].serialized).toBe('serialized');
       });
     });
   });
